@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	int j = 0;
 	char name[16];
 	
-	netmd = init_netmd();
+	netmd = netmd_init();
 
 	printf("\n\n");
 	if(!netmd)
@@ -47,17 +47,17 @@ int main(int argc, char* argv[])
 
 	printf("Found a NetMD device!\n");
 
-	devh = open_netmd(netmd);
+	devh = netmd_open(netmd);
 	if(!devh)
 	{
 		printf("Error opening netmd\n%s\n", strerror(errno));
 		return -1;
 	}
 
-	get_devname(devh, name, 16);
+	netmd_get_devname(devh, name, 16);
 	printf("%s\n", name);
 
-	initialize_disc_info(devh, md);
+	netmd_initialize_disc_info(devh, md);
 	printf("Disc Title: %s\n\n", md->groups[0].name);
 
 	if(argc > 1)
@@ -65,36 +65,36 @@ int main(int argc, char* argv[])
 		if(strcmp("rename", argv[1]) == 0)
 		{
 			i = strtol(argv[2], NULL, 10);
- 			set_title(devh, i, argv[3], strlen(argv[3]));
+ 			netmd_set_title(devh, i, argv[3], strlen(argv[3]));
 		}
 		else if(strcmp("move", argv[1]) == 0)
 		{
 			i = strtol(argv[2], NULL, 10);
 			j = strtol(argv[3], NULL, 10);
-			move_track(devh, i, j);
+			netmd_move_track(devh, i, j);
 		}
 		else if(strcmp("groupmove", argv[1]) == 0)
 		{
 			i = strtol(argv[2], NULL, 10);
 			j = strtol(argv[3], NULL, 10);
-			move_group(devh, md, j, i);
+			netmd_move_group(devh, md, j, i);
 		}
 		else if(strcmp("write", argv[1]) == 0)
 		{
-			if(write_track(devh, argv[2]) < 0)
+			if(netmd_write_track(devh, argv[2]) < 0)
 			{
 				fprintf(stderr, "Error writing track %i\n", errno);
 			}
 		}
 		else if(strcmp("newgroup", argv[1]) == 0)
 		{
-			create_group(devh, argv[2]);
+			netmd_create_group(devh, argv[2]);
 		}
 		else if(strcmp("group", argv[1]) == 0)
 		{
 			i = strtol(argv[2], NULL, 10);
 			j = strtol(argv[3], NULL, 10);
-			if(!put_track_in_group(devh, md, i, j))
+			if(!netmd_put_track_in_group(devh, md, i, j))
 			{
 				printf("Something screwy happened\n");
 			}
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 		else if(strcmp("retitle", argv[1]) == 0)
 		{
 			i = strtol(argv[2], NULL, 10);
-			set_group_title(devh, md, i, argv[3]);
+			netmd_set_group_title(devh, md, i, argv[3]);
 		}
 		else if(strcmp("writeheader", argv[1]) == 0)
 		{
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 			i = strtol(argv[2], NULL, 10);
 			md->groups[i].start = strtol(argv[3], NULL, 10);
 			md->groups[i].finish = strtol(argv[4], NULL, 10);
-			write_disc_header(devh, md);
+			netmd_write_disc_header(devh, md);
 		}
 		else if(strcmp("play", argv[1]) == 0)
 		{
@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 		else if(strcmp("deletegroup", argv[1]) == 0)
 		{
 			i = strtol(argv[2], NULL, 10);
-			delete_group(devh, md, i);
+			netmd_delete_group(devh, md, i);
 		}
 		else if(strcmp("status", argv[1]) == 0) {
 			print_current_track_info(devh);	
@@ -170,8 +170,8 @@ int main(int argc, char* argv[])
 	else
 		print_disc_info(devh, md);
 
-	clean_disc_info(md);
-	clean_netmd(devh);
+	netmd_clean_disc_info(md);
+	netmd_clean(devh);
 
 	return 0;
 }
@@ -186,7 +186,7 @@ void print_current_track_info(usb_dev_handle* devh) {
 	f = netmd_get_playback_position(devh);
 	i = netmd_get_current_track(devh);
 
-	size = request_title(devh, i, buffer, 256);
+	size = netmd_request_title(devh, i, buffer, 256);
 
 	if(size < 0)
 	{
@@ -214,7 +214,7 @@ void print_disc_info(usb_dev_handle* devh, minidisc* md)
 
 	for(i = 0; size >= 0; i++)
 	{
-		size = request_title(devh, i, buffer, 256);
+		size = netmd_request_title(devh, i, buffer, 256);
 
 		if(size < 0)
 		{
@@ -245,9 +245,9 @@ void print_disc_info(usb_dev_handle* devh, minidisc* md)
 			printf("  ");
 		}
 
-		request_track_time(devh, i, &time);
-		request_track_codec(devh, i, &codec_id);
-		request_track_bitrate(devh, i, &bitrate_id);
+		netmd_request_track_time(devh, i, &time);
+		netmd_request_track_codec(devh, i, &codec_id);
+		netmd_request_track_bitrate(devh, i, &bitrate_id);
 
 		codec = find_pair(codec_id, codecs);
 		bitrate = find_pair(bitrate_id, bitrates);
@@ -336,7 +336,7 @@ void import_m3u_playlist(usb_dev_handle* devh, const char *file)
 				{
 					s++;
 					printf( "Title track %d - %s\n", track, s );
-					set_title(devh, track, s, strlen( s )); /* XXX Handle errors */
+					netmd_set_title(devh, track, s, strlen( s )); /* XXX Handle errors */
 					discard = 1;	/* don't fallback to titling by filename */
 				}
 			}
@@ -364,7 +364,7 @@ void import_m3u_playlist(usb_dev_handle* devh, const char *file)
 					s++;
 
 				printf( "Title track %d - %s\n", track, s );
-				set_title(devh, track, s, strlen( s )); /* XXX Handle errors */
+				netmd_set_title(devh, track, s, strlen( s )); /* XXX Handle errors */
 			}
 			track++;
 		}
