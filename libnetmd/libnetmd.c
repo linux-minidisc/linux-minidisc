@@ -33,7 +33,8 @@ struct netmd_devices const known_devices[DEVICE_COUNT] =
 	{0x54c, 0x84}, /* Sony MZ-N505 */
 	{0x54c, 0x81}, /* Sony Unknown Unit */
 	{0x54c, 0x80}, /* Sony Unknown Unit */
-	{0x54c, 0x75}  /* Sony MZ-N1 */
+	{0x54c, 0x75},  /* Sony MZ-N1 */
+	{0x54c, 0xc6}  /* Sony MZ-N10 */
 };
 
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
