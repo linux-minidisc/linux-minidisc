@@ -21,16 +21,11 @@ static int exch_secure_msg(netmd_dev_handle *dev, unsigned char *cmd, int cmdlen
 {
 	int len;
 
-	fprintf(stdout, "Secure command:\n");
-	print_hex(cmd, cmdlen);
-
 	len = netmd_exch_message(dev, cmd, cmdlen, rsp);
 	if (len < 0) {
 		fprintf(stdout, "Exchange failed %d\n", len);
 		return len;
 	}
-	fprintf(stdout, "Secure response:\n");
-	print_hex(rsp, len);
 	switch (rsp[0]) {
 	case 0x08:
 		fprintf(stderr, "Command rejected\n");
