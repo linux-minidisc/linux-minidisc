@@ -1,7 +1,22 @@
 #!/bin/bash
+
+# hack: wait 1 second to improve chance that /proc/bus/usb file is present during add
+sleep 1
+
+# handle add event
 if [ "${ACTION}" = "add" ] && [ -f "${DEVICE}" ]
 then
 	logger -t netmd NetMD plugged in at $DEVICE
 	chown root.usb $DEVICE
 	chmod ug+w $DEVICE
+
+	# create symbolic link to catch remove event
+        mkdir -p `dirname $REMOVER`
+        ln -s $0 $REMOVER	
+fi
+
+# handle remove event
+if [ "${ACTION}" = "remove" ]
+then
+	logger -t netmd NetMD unplugged from $DEVICE
 fi
