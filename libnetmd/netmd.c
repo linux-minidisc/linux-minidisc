@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 	int i = 0;
 	int j = 0;
 	char name[16];
-	int	cmdid, track;
+	int	cmdid, track, playmode;
 
 	netmd = netmd_init();
 
@@ -273,6 +273,21 @@ int main(int argc, char* argv[])
 		}
 		else if (strcmp("raw", argv[1]) == 0) {
 			send_raw_message(devh, argv[2]);
+		}
+		else if (strcmp("setplaymode", argv[1]) == 0) {
+			playmode = 0;
+			for (i = 2; i < argc; i++) {
+				if (strcmp(argv[i], "single") == 0) {
+					playmode |= NETMD_PLAYMODE_SINGLE;
+				}
+				if (strcmp(argv[i], "repeat") == 0) {
+					playmode |= NETMD_PLAYMODE_REPEAT;
+				}
+				if (strcmp(argv[i], "shuffle") == 0) {
+					playmode |= NETMD_PLAYMODE_SHUFFLE;
+				}
+			}
+			netmd_set_playmode(devh, playmode);
 		}
 		else if (strcmp("secure", argv[1]) == 0) {
 			cmdid = strtol(argv[2], NULL, 16);
@@ -517,6 +532,7 @@ void print_syntax()
 	printf("delete #1 - delete track\n");
 	printf("m3uimport - import playlist - and title current disc using it.\n");
 	printf("raw - send raw command (hex)\n");
+	printf("setplaymode (single, repeat, shuffle) - set play mode\n");
 	printf("newgroup <string> - create a new group named <string>\n");
 	printf("secure #1 #2 - execute secure command #1 on track #2 (where applicable)\n");
 	printf("  --- general ---\n");

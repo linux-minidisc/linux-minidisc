@@ -1140,6 +1140,24 @@ int netmd_stop(usb_dev_handle* dev)
 
 	return 1;
 }
+
+
+int netmd_set_playmode(usb_dev_handle* dev, int playmode)
+{
+	unsigned char cmd[] = {0x00, 0x18, 0xd1, 0xff, 0x01, 0x00, 0x00, 0x00, 0x88, 0x08, 0x00, 0x00, 0x00};
+	unsigned char rsp[255];
+	int rsplen;
+	
+	cmd[10] = (playmode >> 8) & 0xFF;
+	cmd[11] = (playmode >> 0) & 0xFF;
+	rsplen = netmd_exch_message(dev, cmd, sizeof(cmd), rsp);
+	if (rsplen < 0) {
+		printf("Error: netmd_exch_message failed %d\n", rsplen);
+	}
+	return rsplen;
+}
+
+
 int netmd_write_disc_header(usb_dev_handle* devh, minidisc *md)
 {
 	int i;

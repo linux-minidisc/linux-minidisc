@@ -35,6 +35,14 @@
 #define NETMDERR_CMD_FAILED		-4	/* minidisc responded with 08 response */
 #define NETMDERR_CMD_INVALID	-5	/* minidisc responded with 0A response */
 
+/** Playmode values to be sent to netmd_set_playmode.
+    These can be combined by OR-ing them to do shuffle repeat for example.
+    See also: http://article.gmane.org/gmane.comp.audio.netmd.devel/848
+*/
+#define NETMD_PLAYMODE_SINGLE	0x0040
+#define NETMD_PLAYMODE_REPEAT	0x0080
+#define NETMD_PLAYMODE_SHUFFLE	0x0100
+
 /** Struct to hold the vendor and product id's for each unit. */
 struct netmd_devices {
 	int	idVendor;
@@ -233,6 +241,7 @@ int netmd_stop(usb_dev_handle* dev);
 int netmd_pause(usb_dev_handle* dev);
 int netmd_rewind(usb_dev_handle* dev);
 int netmd_fast_forward(usb_dev_handle* dev);
+int netmd_set_playmode(usb_dev_handle* dev, int playmode);
 
 int netmd_delete_track(usb_dev_handle* dev, int track);
 
