@@ -1,3 +1,10 @@
+* March 24, 2004, Bertrik Sikken <bertrik@zonnet.nl> v.Unstable
+- Updated netmd_exch_message function to make it compatible with the Sony
+  MDS-JB980 with help of Chris Croughton (0x0F responses are ignored now)
+
+* March 23, 2004, Bertrik Sikken <bertrik@zonnet.nl> v.Unstable
+- Added test functions related to check-in/check-out (added libnetmd_secure.c)
+
 * March 21 2004 Bertrik Sikken <bertrik@zonnet.nl> v.Unstable
 - Removed duplicate strdup in function netmd_initialize_disc_info
 - Removed DEVICE_COUNT #define, now using terminating pair in netmd_devices
