@@ -309,7 +309,8 @@ int main(int argc, char* argv[])
 		print_disc_info(devh, md);
 
 	netmd_clean_disc_info(md);
-	netmd_clean(devh);
+	netmd_close(devh);
+	netmd_clean(device_list);
 
 	return 0;
 }
