@@ -38,3 +38,8 @@ netmd: netmd.c libnetmd.c libnetmd.h libnetmd_secure.c
 dist: clean
 	cd .. && $(TAR) --exclude={CVS,cvs} -cvzf $(PKG_NAME)-$(DATE).tar.gz \
         $(PKG_NAME)
+
+install-hotplug:
+	cp hotplug-netmd /etc/hotplug/usb/minidisc
+	chmod +x /etc/hotplug/usb/minidisc
+	cp minidisc.usermap /etc/hotplug/usb
