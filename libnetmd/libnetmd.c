@@ -71,53 +71,27 @@ static void waitforsync(usb_dev_handle* dev)
 
 static char* sendcommand(netmd_dev_handle* devh, char* str, int len, char* response, int rlen)
 {
-  int i;
-  int ret;
-  int size;
-  char size_request[4];
-  char* buf;
-  usb_dev_handle *dev;
+	int i, ret, size;
+	static char buf[256];
+  
+	ret = netmd_exch_message(devh, str, len, buf);
+	if (ret < 0) {
+		fprintf(stderr, "bad ret code, returning early\n");
+		return NULL;
+	}
+	
+	// Calculate difference to expected response
+	if (response != NULL) {
+		int c=0;
+		for (i=0; i < min(rlen, size); i++) {
+			if (response[i] != buf[i]) {
+				c++;
+			}
+		}
+		fprintf(stderr, "Differ: %d\n",c);
+	}
 
-  dev = (usb_dev_handle *)devh;
-  waitforsync(dev);
-  netmd_trace(NETMD_TRACE_INFO, "Sending command: \n");
-  netmd_trace_hex(NETMD_TRACE_INFO, str, len);
-  ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, str, len, 800);
-
-  if(ret < 0)
-    {
-      fprintf(stderr, "bad ret code, returning early\n");
-      return NULL;
-    }
-  usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 500);
-  netmd_trace(NETMD_TRACE_INFO, "Recieving response: \n");
-  netmd_trace_hex(NETMD_TRACE_INFO, size_request, 4);
-  size = size_request[2];
-  if (size<1) {
-    fprintf(stderr, "Invalid size ignoring\n");
-    return NULL;
-  }
-  buf = malloc(size);
-  usb_control_msg(dev, 0xc1, 0x81, 0, 0, buf, size, 500);
-  netmd_trace_hex(NETMD_TRACE_INFO, buf, size);
-  switch(buf[0]) {   // Attempt to map the error codes
-  case 0x0f: fprintf(stderr,"Success for record like command"); break;
-  case 0x0c: fprintf(stderr,"** Unknown Header\n"); break;
-  case 0x09: fprintf(stderr,"Command Successful\n"); break;
-  case 0x08: fprintf(stderr,"** Unknown Command\n"); break;
-  case 0x0a: fprintf(stderr,"** Error on record\n"); break;
-  default: fprintf(stderr,"*** Unknown return code\n"); break;
-  }
-  // Calculate difference to expected response
-  if (response!=NULL) {
-    int c=0;
-    for (i=0;i<min(rlen,size);i++) {
-      if (response[i]!=buf[i]) c++;
-    }
-    fprintf(stderr, "Differ: %d\n",c);
-  }
-
-  return buf;
+	return buf;
 }
 
 static int request_disc_title(netmd_dev_handle* dev, char* buffer, int size)
@@ -1130,7 +1104,6 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 
 	buf = sendcommand(devh, movetoendstartrecord, 30, movetoendresp, 0x1e);
 	track_number = buf[0x12];
-	free(buf); // clear the result
 
 
 	/********** Prepare to send data ***********/
@@ -1230,12 +1203,11 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 
 	/******** Title the transfered song *******/
 	buf = sendcommand(devh, begintitle, 8, NULL, 0);
-	free(buf);
 
 	fprintf(stderr,"Renaming track %d to test\n",track_number);
 	netmd_set_title(devh, track_number, "test");
 
-	buf = sendcommand(devh, endrecord, 8, NULL, 0); free(buf);
+	buf = sendcommand(devh, endrecord, 8, NULL, 0);
 
 
 	/********* End TOC Edit **********/
@@ -1379,5 +1351,4 @@ void test(netmd_dev_handle* devh)
   char* ret=NULL;
   
   ret = sendcommand(devh, movetoendstartrecord, 30, movetoendresp, 30);
-  free(ret);
 }
