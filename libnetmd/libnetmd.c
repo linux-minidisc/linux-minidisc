@@ -47,53 +47,6 @@ struct netmd_pair const bitrates[] =
 
 struct netmd_pair const unknown_pair = {0x00, "UNKNOWN"};
 
-void print_hex(unsigned char* buf, size_t size)
-{
-	int i = 0;
-	int j = 0;
-	int breakpoint = 0;
-
-	for(;i < size; i++)
-	{
-		printf("%02x ", buf[i]);
-		breakpoint++;
-		if(!((i + 1)%16) && i)
-		{
-			printf("\t\t");
-			for(j = ((i+1) - 16); j < ((i+1)/16) * 16; j++)
-			{
-				if(buf[j] < 30)
-					printf(".");
-				else
-					printf("%c", buf[j]);
-			}
-			printf("\n");
-			breakpoint = 0;
-		}
-	}
-
-	if(breakpoint == 16)
-	{
-		printf("\n");
-		return;
-	}
-
-	for(; breakpoint < 16; breakpoint++)
-	{
-		printf("   ");
-	}
-	printf("\t\t");
-
-	for(j = size - (size%16); j < size; j++)
-	{
-		if(buf[j] < 30)
-			printf(".");
-		else
-			printf("%c", buf[j]);
-	}
-	printf("\n");
-}
-
 struct netmd_pair const* find_pair(int hex, struct netmd_pair const* array)
 {
 	int i = 0;
@@ -127,8 +80,8 @@ static char* sendcommand(netmd_dev_handle* devh, char* str, int len, char* respo
 
   dev = (usb_dev_handle *)devh;
   waitforsync(dev);
-  fprintf(stderr,"Sending command: \n");
-  print_hex(str,len);
+  netmd_trace(NETMD_TRACE_INFO, "Sending command: \n");
+  netmd_trace_hex(NETMD_TRACE_INFO, str, len);
   ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, str, len, 800);
 
   if(ret < 0)
@@ -137,8 +90,8 @@ static char* sendcommand(netmd_dev_handle* devh, char* str, int len, char* respo
       return NULL;
     }
   usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 500);
-  fprintf(stderr,"Recieving response: \n");
-  print_hex(size_request,4);
+  netmd_trace(NETMD_TRACE_INFO, "Recieving response: \n");
+  netmd_trace_hex(NETMD_TRACE_INFO, size_request, 4);
   size = size_request[2];
   if (size<1) {
     fprintf(stderr, "Invalid size ignoring\n");
@@ -146,7 +99,7 @@ static char* sendcommand(netmd_dev_handle* devh, char* str, int len, char* respo
   }
   buf = malloc(size);
   usb_control_msg(dev, 0xc1, 0x81, 0, 0, buf, size, 500);
-  print_hex(buf,size);
+  netmd_trace_hex(NETMD_TRACE_INFO, buf, size);
   switch(buf[0]) {   // Attempt to map the error codes
   case 0x0f: fprintf(stderr,"Success for record like command"); break;
   case 0x0c: fprintf(stderr,"** Unknown Header\n"); break;
@@ -216,9 +169,6 @@ int netmd_request_track_bitrate(netmd_dev_handle*dev, int track, unsigned char* 
 
 	size = ret;
 
-	/* 	printf("\nBitrate Reply:\n"); */
-	/* 	print_hex(reply, size); */
-
 	*data = reply[size - 2];
 	return ret;
 }
@@ -240,8 +190,6 @@ int netmd_request_track_flags(netmd_dev_handle*dev, int track, char* data)
 
 	size = ret;
 
-	/* 	printf("\nCodec Reply:\n"); */
-	/* 	print_hex(reply, size); */
 	*data = reply[size - 1];
 	return ret;
 }
@@ -925,10 +873,6 @@ static int netmd_playback_control(netmd_dev_handle* dev, unsigned char code)
 		return -1;
 	}
 
-	printf( "Reply: " );
-	print_hex( buf, size );
-	printf( "\n" );
-
 	return 1;
 }
 
@@ -1253,8 +1197,8 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 			  }
 		  }
 
-		  fprintf(stderr,"Sending %d bytes to md\n",bytes_to_send);
-		  print_hex(data, min(0x4000,bytes_to_send));
+		  netmd_trace(NETMD_TRACE_INFO, "Sending %d bytes to md\n", bytes_to_send);
+		  netmd_trace_hex(NETMD_TRACE_INFO, data, min(0x4000, bytes_to_send));
 		  ret = usb_bulk_write(dev,0x02, data, bytes_to_send, 5000);
 	} /* End while */
 
@@ -1270,8 +1214,8 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 	        usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 5000);
 	} while  (memcmp(size_request,"\0\0\0\0",4)==0);
 
-	fprintf(stderr,"Recieving response: \n");
-	print_hex(size_request,4);
+	netmd_trace(NETMD_TRACE_INFO, "Recieving response: \n");
+	netmd_trace_hex(NETMD_TRACE_INFO, size_request, 4);
 	size = size_request[2];
 	if (size<1) {
 	        fprintf(stderr, "Invalid size\n");
@@ -1279,7 +1223,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 	}
 	buf = malloc(size);
 	usb_control_msg(dev, 0xc1, 0x81, 0, 0, buf, size, 500);
-	print_hex(buf,size);
+	netmd_trace_hex(NETMD_TRACE_INFO, buf, size);
 	free(buf);
 
 	/******** Title the transfered song *******/
