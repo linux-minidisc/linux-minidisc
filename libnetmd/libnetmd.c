@@ -524,6 +524,7 @@ static int get_group_count(usb_dev_handle* devh, minidisc* md)
 	int track;
 	char disc[256];
 	char *tok = 0;
+	char *next_tok;
 	char *semicolon;		/* Pointers to markers in group data */
 	
 	int g = 0;
@@ -535,9 +536,13 @@ static int get_group_count(usb_dev_handle* devh, minidisc* md)
 	{	
 		track = strtol(disc, NULL, 10); // returns 0 on 0 or non conversion
 		
-		tok = strtok(disc, "//");
-		while(0 != tok)
+		tok = disc;
+		next_tok = strstr(disc, "//");
+		while(0 != next_tok)
 		{
+			*next_tok = 0;
+			next_tok += 2;
+			
 			semicolon = strchr( tok, ';' );
 			if((!track && g == 0) && tok[0] != ';') {
 			}
@@ -551,7 +556,8 @@ static int get_group_count(usb_dev_handle* devh, minidisc* md)
 				/* Terminate string at the semicolon for easier parsing */
 			}
 			g++;
-			tok = strtok(NULL, "//");
+			tok = next_tok;
+			next_tok = strstr(tok, "//");
 		}
 	}
 
@@ -598,6 +604,7 @@ int netmd_initialize_disc_info(usb_dev_handle* devh, minidisc* md)
 	int track;
 	char disc[256];
 	char *tok = 0;
+	char *next_tok;
 	char *hyphen, *semicolon;		/* Pointers to markers in group data */
 	char *name;
 	
@@ -622,9 +629,13 @@ int netmd_initialize_disc_info(usb_dev_handle* devh, minidisc* md)
 	{	
 		track = strtol(disc, NULL, 10); // returns 0 on 0 or non conversion
 		
-		tok = strtok(disc, "//");
-		while(0 != tok)
+		tok = disc;
+		next_tok = strstr(disc, "//");
+		while(0 != next_tok)
 		{
+			*next_tok = 0;
+			next_tok += 2;
+
 			semicolon = strchr( tok, ';' );
 			if((!track && g == 0) && tok[0] != ';') {
 
@@ -638,7 +649,7 @@ int netmd_initialize_disc_info(usb_dev_handle* devh, minidisc* md)
 				}
 				else
 				{
-				
+					/* TODO: following code looks buggy: unreachable */
 					if(semicolon == 0) 
 					{
 						/* ;group// */
@@ -693,7 +704,8 @@ int netmd_initialize_disc_info(usb_dev_handle* devh, minidisc* md)
 				set_group_data(md, g, name, start, finish);
 			}
 			g++;
-			tok = strtok(NULL, "//");
+			tok = next_tok;
+			next_tok = strstr(tok, "//");
 		}
 	}
 	return disc_size;
