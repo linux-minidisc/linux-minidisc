@@ -303,7 +303,6 @@ usb_dev_handle* netmd_open(struct usb_device* dev)
 {
 	usb_dev_handle* dh = usb_open(dev);
 
-	usb_set_configuration(dh, 1);
 	usb_claim_interface(dh, 0);
 
 	return dh;
