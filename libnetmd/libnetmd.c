@@ -42,6 +42,7 @@ struct netmd_devices const known_devices[] =
 	{0x54c, 0x85}, /* Sony MZ-S1 */
 	{0x54c, 0x86}, /* Sony MZ-N707 */
 	{0x54c, 0xc6}, /* Sony MZ-N10 */
+	{0x54c, 0xc8}, /* Sony MZ-N710/N810 */
 	{0x54c, 0xc9}, /* Sony MZ-N510/N610 */
 	{0, 0} /* terminating pair */
 };
