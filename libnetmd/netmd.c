@@ -136,15 +136,11 @@ static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
 	}
 
 	/* send it */
-	printf("Sending command:\n");
-	print_hex(cmd, cmdlen);
 	rsplen = netmd_exch_message(devh, cmd, cmdlen, rsp);
 	if (rsplen < 0) {
 		printf("Error: netmd_exch_message failed with %d\n", rsplen);
 		return;
 	}
-	printf("Received response:\n");
-	print_hex(rsp, rsplen);
 }
 
 
@@ -156,7 +152,7 @@ int main(int argc, char* argv[])
 	int i = 0;
 	int j = 0;
 	char name[16];
-	int	cmdid, track, playmode, num_dev;
+	int	cmdid, track, playmode, num_dev, c;
 
 	num_dev = netmd_init(&device_list);
 	printf("Found %d NetMD device(s).\n", num_dev);
@@ -184,6 +180,27 @@ int main(int argc, char* argv[])
 	netmd_initialize_disc_info(devh, md);
 	printf("Disc Title: %s\n\n", md->groups[0].name);
 
+	/* parse options */
+	while (1) {
+		c = getopt(argc, argv, "t");
+		if (c == -1) {
+			break;
+		}
+		switch (c) {
+		case 't':
+			netmd_trace_level(NETMD_TRACE_INFO);
+			break;
+		default:
+			fprintf(stderr, "Unknown option '%c'\n", c);
+			break;
+		}
+	}
+
+	/* update argv and argc after parsing options */
+	argv = &argv[optind - 1];
+	argc -= (optind - 1);
+	
+	/* parse commands */
 	if(argc > 1)
 	{
 		if(strcmp("rename", argv[1]) == 0)
@@ -527,7 +544,9 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
 
 void print_syntax()
 {
-	printf("\nNetMD test suite usage syntax\n");
+	printf("\nNetMD test suite.\nUsage: netmd [options] command args\n");
+	printf("Options:\n  -t enable tracing of USB command and response data\n");
+	printf("Commands:\n");
 	printf("rename # <string> - rename track # to <string> track numbers are off by one (ie track 1 is 0)\n");
 	printf("move #1 #2 - make track #1 track #2\n");
 	printf("groupmove #1 #2 - make group #1 start at track #2 !BUGGY!\n");
