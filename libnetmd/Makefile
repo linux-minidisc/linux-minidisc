@@ -33,8 +33,8 @@ clean:
 libnetmd.o: libnetmd.c libnetmd.h libnetmd_secure.c
 	$(CC) -c ${INCLUDE} ${CFLAGS} -fPIC $<
 
-netmd: netmd.c libnetmd.c libnetmd.h libnetmd_secure.c
-	$(CC) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c libnetmd_secure.c `libusb-config --libs`
+netmd: netmd.c libnetmd.c libnetmd.h libnetmd_secure.c netmd_dev.c netmd_dev.h
+	$(CC) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c libnetmd_secure.c netmd_dev.c `libusb-config --libs`
 
 dist: clean
 	cd .. && $(TAR) --exclude={CVS,cvs} -cvzf $(PKG_NAME)-$(DATE).tar.gz \
