@@ -180,6 +180,9 @@ int main(int argc, char* argv[])
 	netmd_initialize_disc_info(devh, md);
 	printf("Disc Title: %s\n\n", md->groups[0].name);
 
+	/* by default, log only errors */
+	netmd_trace_level(NETMD_TRACE_ERROR);
+	
 	/* parse options */
 	while (1) {
 		c = getopt(argc, argv, "t");
