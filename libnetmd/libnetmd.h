@@ -87,7 +87,7 @@ void print_hex(unsigned char* buf, size_t size);
 
 /** enum through an array of pairs looking for a specific hex code.
 	\param hex hex code to find.
-	\pair array of pairs to look through.
+	\param pair array of pairs to look through.
 */
 struct netmd_pair const* find_pair(int hex, struct netmd_pair const* pair);
 
@@ -166,7 +166,7 @@ int netmd_initialize_disc_info(usb_dev_handle* dev, minidisc* md);
 int netmd_create_group(usb_dev_handle* devh, char* name);
 
 /*! Creates disc header out of groups and writes it to disc
-  \param dev pointer to device returned by netmd_open
+  \param devh pointer to device returned by netmd_open
   \param md pointer to minidisc structure
 */
 int netmd_write_disc_header(usb_dev_handle* devh, minidisc *md);
@@ -190,7 +190,7 @@ int netmd_move_group(usb_dev_handle* dev, minidisc* md, int track, int group);
 /*! Deletes group from disc (but not the tracks in it)
   \param dev pointer to device returned by netmd_open
   \param md pointer to minidisc structure
-  \param track Zero based track to delete
+  \param group Zero based track to delete
 */
 int netmd_delete_group(usb_dev_handle* dev, minidisc* md, int group);
 
