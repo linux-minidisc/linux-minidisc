@@ -1,6 +1,7 @@
 #!/bin/bash
-logger -t netmd netmd plugged in
-logger -t netmd Device $DEVICE
-chown root.usb $DEVICE
-chmod ug+w $DEVICE
-
+if [ "${ACTION}" = "add" ] && [ -f "${DEVICE}" ]
+then
+	logger -t netmd NetMD plugged in at $DEVICE
+	chown root.usb $DEVICE
+	chmod ug+w $DEVICE
+fi
