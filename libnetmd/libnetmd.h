@@ -1,6 +1,6 @@
-/* libnetmd.h 
+/* libnetmd.h
  *      Copyright (C) 2002, 2003 Marc Britten
- *      
+ *
  * This file is part of libnetmd.
  *
  * libnetmd is free software; you can redistribute it and/or modify
@@ -26,12 +26,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h> 
+#include <errno.h>
 
 /** Error codes of the USB transport layer */
-#define NETMDERR_USB			-1	/* general USB error */
-#define NETMDERR_NOTREADY	-2	/* player not ready for command */
-#define NETMDERR_TIMEOUT	-3	/* timeout while waiting for response */
+#define NETMDERR_USB					-1	/* general USB error */
+#define NETMDERR_NOTREADY			-2	/* player not ready for command */
+#define NETMDERR_TIMEOUT			-3	/* timeout while waiting for response */
+#define NETMDERR_CMD_FAILED		-4	/* minidisc responded with 08 response */
+#define NETMDERR_CMD_INVALID	-5	/* minidisc responded with 0A response */
 
 /** Struct to hold the vendor and product id's for each unit. */
 struct netmd_devices {
@@ -85,7 +87,7 @@ extern struct netmd_pair const unknown_pair;
   \param buf buffer to print.
   \param size length of buffer to print.
 */
-//void print_hex(unsigned char* buf, size_t size);
+void print_hex(unsigned char* buf, size_t size);
 
 /** enum through an array of pairs looking for a specific hex code.
 	\param hex hex code to find.
@@ -107,7 +109,7 @@ struct usb_device* netmd_init();
 */
 usb_dev_handle* netmd_open(struct usb_device* dev);
 
-/*! Get the device name stored in USB device 
+/*! Get the device name stored in USB device
   \param dev pointer to device returned by netmd_open
   \param buf buffer to hold the name.
   \param buffsize of buf.
@@ -117,6 +119,16 @@ int netmd_get_devname(usb_dev_handle* dev, unsigned char* buf, int buffsize);
 
 /*! Function for internal use by init_disc_info */
 // int request_disc_title(usb_dev_handle* dev, char* buffer, int size);
+
+/*! Function to exchange command/response buffer with minidisc
+	\param dev device handle
+	\param cmd command buffer
+	\param cmdlen length of command
+	\param rsp response buffer
+	\return number of bytes received if >0, or error if <0
+*/
+int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
+	unsigned char *rsp);
 
 /*! Get the codec used to encode a specific track.
   \param dev pointer to device returned by netmd_open
@@ -224,6 +236,19 @@ int netmd_fast_forward(usb_dev_handle* dev);
 
 int netmd_delete_track(usb_dev_handle* dev, int track);
 
+int netmd_secure_cmd_80(usb_dev_handle *dev);
+int netmd_secure_cmd_11(usb_dev_handle *dev, unsigned int *player_id);
+int netmd_secure_cmd_12(usb_dev_handle *dev, unsigned char *ekb_head, unsigned char *ekb_body);
+int netmd_secure_cmd_20(usb_dev_handle *dev, unsigned char *rand_in, unsigned char *rand_out);
+int netmd_secure_cmd_21(usb_dev_handle *dev);
+int netmd_secure_cmd_81(usb_dev_handle *dev);
+int netmd_secure_cmd_22(usb_dev_handle *dev, unsigned char *hash);
+int netmd_secure_cmd_28(usb_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
+	unsigned int length, unsigned int *track_nr);
+int netmd_secure_cmd_48(usb_dev_handle *dev, unsigned int track_nr, unsigned char *hash);
+int netmd_secure_cmd_23(usb_dev_handle *dev, unsigned int track_nr, unsigned char *hash_id);
+int netmd_secure_cmd_40(usb_dev_handle *dev, unsigned int track_nr, unsigned char *signature);
+
 /*! Writes atrac file to device
   \param dev pointer to device returned by netmd_open
   \param szFile Full path to file to write.
@@ -237,7 +262,7 @@ int netmd_write_track(usb_dev_handle* dev, char* szFile);
 */
 void netmd_clean_disc_info(minidisc* md);
 
-/*! closes the usb descriptors 
+/*! closes the usb descriptors
   \param dev pointer to device returned by netmd_open
 */
 void netmd_clean(usb_dev_handle* dev);
@@ -262,7 +287,7 @@ int netmd_get_current_track(usb_dev_handle* dev);
 */
 //void set_group_data(minidisc* md, int group, char* name, int start, int finish);
 
-/*! Sends a command to the MD unit and compare the result with response unless response is NULL 
+/*! Sends a command to the MD unit and compare the result with response unless response is NULL
   \param dev a handler to the usb device
   \param str the string that should be sent
   \param len length of the string
@@ -272,8 +297,8 @@ int netmd_get_current_track(usb_dev_handle* dev);
 */
 //char* sendcommand(usb_dev_handle* dev, char* str, int len, char* response, int rlen);
 
-/*! Wait for syncronisation signal from minidisc 
+/*! Wait for syncronisation signal from minidisc
   \param dev a handler to the usb device
-*/ 
+*/
 //void waitforsync(usb_dev_handle* dev);
 
