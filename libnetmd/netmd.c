@@ -27,6 +27,18 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 /* Max line length we support in M3U files... should match MD TOC max */
 #define M3U_LINE_MAX	128
 
+
+static void print_hex(unsigned char *buf, int len)
+{
+	int i;
+
+	for (i = 0; i < len; i++) {
+		printf("%02X ", buf[i]);
+	}
+	printf("\n");
+}
+
+
 static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
 {
 	unsigned int player_id;
