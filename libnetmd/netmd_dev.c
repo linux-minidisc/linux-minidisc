@@ -63,7 +63,7 @@ static int netmd_poll(usb_dev_handle *dev, unsigned char *buf, int tries)
 		if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
 												USB_RECIP_INTERFACE, 0x01, 0, 0, buf, 4,
 												NETMD_POLL_TIMEOUT) < 0) {
-			fprintf(stderr, "netmd_poll: usb_control_msg failed\n");
+			netmd_trace(NETMD_TRACE_ERROR, "netmd_poll: usb_control_msg failed\n");
 			return NETMDERR_USB;
 		}
 		if (buf[0] != 0) {
@@ -99,7 +99,7 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 	/* poll to see if we can send data */
 	len = netmd_poll(dev, pollbuf, 1);
 	if (len != 0) {
-		fprintf(stderr, "netmd_exch_message: netmd_poll failed\n");
+		netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: netmd_poll failed\n");
 		return (len > 0) ? NETMDERR_NOTREADY : len;
 	}
 
@@ -109,7 +109,7 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 	if (usb_control_msg(dev, USB_ENDPOINT_OUT | USB_TYPE_VENDOR |
 			 								USB_RECIP_INTERFACE, 0x80, 0, 0, cmd, cmdlen,
 			 								NETMD_SEND_TIMEOUT) < 0) {
-		fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
+		netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: usb_control_msg failed\n");
 		return NETMDERR_USB;
 	}
 
@@ -117,7 +117,7 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 		/* poll for data that minidisc wants to send */
 		len = netmd_poll(dev, pollbuf, NETMD_RECV_TRIES);
 		if (len <= 0) {
-			fprintf(stderr, "netmd_exch_message: netmd_poll failed\n");
+			netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: netmd_poll failed\n");
 			return (len == 0) ? NETMDERR_TIMEOUT : len;
 		}
 
@@ -125,7 +125,7 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 		if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
 											 	USB_RECIP_INTERFACE, pollbuf[1], 0, 0, rsp, len,
 											 	NETMD_RECV_TIMEOUT) < 0) {
-			fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
+			netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: usb_control_msg failed\n");
 			return NETMDERR_USB;
 		}
 		
@@ -206,7 +206,7 @@ int netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, int buffsize)
 	
 	dev = (usb_dev_handle *)devh;
 	if (usb_get_string_simple(dev, 2, buf, buffsize) < 0) {
-		fprintf(stderr, "usb_get_string_simple failed, %s (%d)\n", strerror(errno), errno);
+		netmd_trace(NETMD_TRACE_ERROR, "usb_get_string_simple failed, %s (%d)\n", strerror(errno), errno);
 		buf[0] = 0;
 		return 0;
 	}
