@@ -181,7 +181,7 @@ int netmd_request_track_flags(netmd_dev_handle*dev, int track, char* data)
 	char reply[255];
 
 	request[8] = track;
-	ret = netmd_exch_message(dev, request, 0x13, reply);
+	ret = netmd_exch_message(dev, request, 15, reply);
 	if(ret < 0)
 	{
 		fprintf(stderr, "bad ret code, returning early\n");
