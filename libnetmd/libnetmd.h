@@ -143,10 +143,9 @@ int netmd_request_track_time(netmd_dev_handle* dev, int track, struct netmd_trac
   \param dev pointer to device returned by netmd_open
   \param track Zero based index of track your requesting.
   \param buffer buffer to hold the name.
-  \param size of buf.
   \return returns 0 for fail 1 for success.
 */
-int netmd_set_title(netmd_dev_handle* dev, int track, char* buffer, int size);
+int netmd_set_title(netmd_dev_handle* dev, int track, char* buffer);
 
 /*! Sets title for the specified track.
   \param dev pointer to device returned by netmd_open

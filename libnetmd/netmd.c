@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
 		if(strcmp("rename", argv[1]) == 0)
 		{
 			i = strtol(argv[2], NULL, 10);
- 			netmd_set_title(devh, i, argv[3], strlen(argv[3]));
+ 			netmd_set_title(devh, i, argv[3]);
 		}
 		else if(strcmp("move", argv[1]) == 0)
 		{
@@ -487,7 +487,7 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
 				{
 					s++;
 					printf( "Title track %d - %s\n", track, s );
-					netmd_set_title(devh, track, s, strlen( s )); /* XXX Handle errors */
+					netmd_set_title(devh, track, s); /* XXX Handle errors */
 					discard = 1;	/* don't fallback to titling by filename */
 				}
 			}
@@ -515,7 +515,7 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
 					s++;
 
 				printf( "Title track %d - %s\n", track, s );
-				netmd_set_title(devh, track, s, strlen( s )); /* XXX Handle errors */
+				netmd_set_title(devh, track, s); /* XXX Handle errors */
 			}
 			track++;
 		}

@@ -256,7 +256,7 @@ int netmd_request_title(netmd_dev_handle* dev, int track, char* buffer, int size
 	return title_size - 25;
 }
 
-int netmd_set_title(netmd_dev_handle* dev, int track, char* buffer, int size)
+int netmd_set_title(netmd_dev_handle* dev, int track, char* buffer)
 {
 	int ret = 1;
 	char *title_request = NULL;
@@ -264,7 +264,9 @@ int netmd_set_title(netmd_dev_handle* dev, int track, char* buffer, int size)
 				 0x00, 0x30, 0x00, 0x0a, 0x00, 0x50, 0x00, 0x00,
 				 0x0a, 0x00, 0x00, 0x00, 0x0d};
 	char reply[255];
+	int size;
 
+	size = strlen(buffer);
 	title_request = malloc(sizeof(char) * (0x15 + size));
 	memcpy(title_request, title_header, 0x15);
 	memcpy((title_request + 0x15), buffer, size);
@@ -1231,7 +1233,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 	free(buf);
 
 	fprintf(stderr,"Renaming track %d to test\n",track_number);
-	netmd_set_title(devh, track_number, "test", 4);
+	netmd_set_title(devh, track_number, "test");
 
 	buf = sendcommand(devh, endrecord, 8, NULL, 0); free(buf);
 
