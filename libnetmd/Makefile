@@ -24,8 +24,8 @@ all: app utils
 clean:
 	rm -fr *~ *.o *.so* *.a $(APP) $(UTILS) $(LIB) $(LIBRARY) documentation/html documentation/latex
 
-libnetmd.o: libnetmd.c libnetmd.h
+libnetmd.o: libnetmd.c libnetmd.h libnetmd_secure.c
 	$(CC) -c ${INCLUDE} ${CFLAGS} -fPIC $<
 
-netmd: netmd.c libnetmd.c libnetmd.h
-	$(CC) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c `libusb-config --libs`
+netmd: netmd.c libnetmd.c libnetmd.h libnetmd_secure.c
+	$(CC) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c libnetmd_secure.c `libusb-config --libs`
