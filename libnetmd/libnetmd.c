@@ -19,6 +19,8 @@
  */
 #include "libnetmd.h"
 
+#define DEVICE_COUNT 8
+
 
 int min(int a,int b)
 {
