@@ -142,7 +142,9 @@ static int netmd_poll(usb_dev_handle *dev, unsigned char *buf, int tries)
 	for (i = 0; i < tries; i++) {
 		/* send a poll message */
 		memset(buf, 0, 4);
-		if (usb_control_msg(dev, 0xc1, 0x01, 0, 0, buf, 4, NETMD_POLL_TIMEOUT) < 0) {
+		if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
+												USB_RECIP_INTERFACE, 0x01, 0, 0, buf, 4,
+												NETMD_POLL_TIMEOUT) < 0) {
 			fprintf(stderr, "netmd_poll: usb_control_msg failed\n");
 			return NETMDERR_USB;
 		}
@@ -179,7 +181,9 @@ static int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdle
 	}	
 	
 	/* send data */
-	if (usb_control_msg(dev, 0x41, 0x80, 0, 0, cmd, cmdlen, NETMD_SEND_TIMEOUT) < 0) {
+	if (usb_control_msg(dev, USB_ENDPOINT_OUT | USB_TYPE_VENDOR |
+			 								USB_RECIP_INTERFACE, 0x80, 0, 0, cmd, cmdlen,
+			 								NETMD_SEND_TIMEOUT) < 0) {
 		fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
 		return NETMDERR_USB;
 	}
@@ -192,7 +196,9 @@ static int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdle
 	}
 	
 	/* receive data */
-	if (usb_control_msg(dev, 0xc1, pollbuf[1], 0, 0, rsp, len, NETMD_RECV_TIMEOUT) < 0) {
+	if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
+										 	USB_RECIP_INTERFACE, pollbuf[1], 0, 0, rsp, len,
+										 	NETMD_RECV_TIMEOUT) < 0) {
 		fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
 		return NETMDERR_USB;
 	}
