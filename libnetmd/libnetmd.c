@@ -65,7 +65,7 @@ struct netmd_pair const bitrates[] =
 
 struct netmd_pair const unknown_pair = {0x00, "UNKNOWN"};
 
-static void print_hex(unsigned char* buf, size_t size)
+void print_hex(unsigned char* buf, size_t size)
 {
 	int i = 0;
 	int j = 0;
@@ -167,8 +167,8 @@ static int netmd_poll(usb_dev_handle *dev, unsigned char *buf, int tries)
 	
 	Returns >0 on success, <0 on failure
 */
-static int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
-															unsigned char *rsp)
+int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
+	unsigned char *rsp)
 {
 	unsigned char	pollbuf[4];
 	int		len;
