@@ -90,6 +90,7 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 	unsigned char *rsp)
 {
 	unsigned char	pollbuf[4];
+	unsigned char	rsp_code;
 	int		len;
 	usb_dev_handle	*dev;
 
@@ -127,10 +128,22 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 			fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
 			return NETMDERR_USB;
 		}
+		
 		netmd_trace(NETMD_TRACE_INFO, "Response:\n");
 		netmd_trace_hex(NETMD_TRACE_INFO, rsp, len);
+		
+		rsp_code = rsp[0];
+		switch (rsp_code) {
+		case 0x0f:	netmd_trace(NETMD_TRACE_INFO, "Command acknowledged\n"); break;
+		case 0x0c:	netmd_trace(NETMD_TRACE_INFO, "** Unknown Header\n"); break;
+		case 0x09:	netmd_trace(NETMD_TRACE_INFO, "Command successful\n"); break;
+		case 0x08:	netmd_trace(NETMD_TRACE_INFO, "** Unknown Command\n"); break;
+		case 0x0a:	netmd_trace(NETMD_TRACE_INFO, "** Error on record\n"); break;
+		default: 	netmd_trace(NETMD_TRACE_INFO, "** Unknown return code\n"); break;
+		}
+		
 		/* get response again if player responds with 0x0F.	*/
-	} while (rsp[0] == 0x0F);
+	} while (rsp_code == 0x0F);
 
 	/* return length */
 	return len;
