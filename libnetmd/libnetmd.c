@@ -35,12 +35,12 @@ int min(int a,int b)
 /*! list of known vendor/prod id's for NetMD devices */
 struct netmd_devices const known_devices[] = 
 {
-	{0x54c, 0x86}, /* Sony MZ-N707 */
-	{0x54c, 0x85}, /* Sony MZ-S1 */
-	{0x54c, 0x84}, /* Sony MZ-N505 */
-	{0x54c, 0x81}, /* Sony Unknown Unit */
-	{0x54c, 0x80}, /* Sony Unknown Unit */
 	{0x54c, 0x75}, /* Sony MZ-N1 */
+	{0x54c, 0x80}, /* Sony LAM-1 */
+	{0x54c, 0x81}, /* Sony MDS-JB980 */
+	{0x54c, 0x84}, /* Sony MZ-N505 */
+	{0x54c, 0x85}, /* Sony MZ-S1 */
+	{0x54c, 0x86}, /* Sony MZ-N707 */
 	{0x54c, 0xc6}, /* Sony MZ-N10 */
 	{0x54c, 0xc9}, /* Sony MZ-N510/N610 */
 	{0, 0} /* terminating pair */
