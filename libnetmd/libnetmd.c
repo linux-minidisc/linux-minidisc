@@ -49,10 +49,12 @@ struct netmd_devices const known_devices[] =
 };
 
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
-struct netmd_pair const codecs[] = 
+/*! Bertrik: the original interpretation of these numbers as codecs appears incorrect.
+    These values look like track protection values instead */
+struct netmd_pair const trprot_settings[] = 
 {
-	{0x00, "ATRAC"},
-	{0x03, "ATRAC3"},
+	{0x00, "UnPROT"},
+	{0x03, "TrPROT"},
 	{0, 0} /* terminating pair */
 };
 
@@ -376,7 +378,7 @@ int netmd_request_track_bitrate(usb_dev_handle*dev, int track, unsigned char* da
 	return ret;
 }
 
-int netmd_request_track_codec(usb_dev_handle*dev, int track, char* data)
+int netmd_request_track_flags(usb_dev_handle*dev, int track, char* data)
 {
 	int ret = 0;
 	int size = 0;

@@ -330,12 +330,12 @@ void print_disc_info(usb_dev_handle* devh, minidisc* md)
 	int i = 0;
 	int size = 1;
 	int g, group = 0, lastgroup = 0;
-	unsigned char codec_id, bitrate_id;
+	unsigned char flags, bitrate_id;
 	char *name, buffer[256];
 	struct netmd_track time;
-	struct netmd_pair const *codec, *bitrate;
+	struct netmd_pair const *trprot, *bitrate;
 
-	codec = bitrate = 0;
+	trprot = bitrate = 0;
 
 	for(i = 0; size >= 0; i++)
 	{
@@ -371,10 +371,10 @@ void print_disc_info(usb_dev_handle* devh, minidisc* md)
 		}
 
 		netmd_request_track_time(devh, i, &time);
-		netmd_request_track_codec(devh, i, &codec_id);
+		netmd_request_track_flags(devh, i, &flags);
 		netmd_request_track_bitrate(devh, i, &bitrate_id);
 
-		codec = find_pair(codec_id, codecs);
+		trprot = find_pair(flags, trprot_settings);
 		bitrate = find_pair(bitrate_id, bitrates);
 
 		/* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
@@ -388,7 +388,7 @@ void print_disc_info(usb_dev_handle* devh, minidisc* md)
 		}
 
 		printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
-			   i, codec->name, bitrate->name, time.minute,
+			   i, trprot->name, bitrate->name, time.minute,
 			   time.second, time.tenth, name);
 	}
 

@@ -79,7 +79,7 @@ typedef struct {
 	There will be enough for group_count total in the alloced memory
 */
 extern struct netmd_group* groups;
-extern struct netmd_pair const codecs[];
+extern struct netmd_pair const trprot_settings[];
 extern struct netmd_pair const bitrates[];
 extern struct netmd_pair const unknown_pair;
 
@@ -130,12 +130,12 @@ int netmd_get_devname(usb_dev_handle* dev, unsigned char* buf, int buffsize);
 int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
 	unsigned char *rsp);
 
-/*! Get the codec used to encode a specific track.
+/*! Get the flags used for a specific track.
   \param dev pointer to device returned by netmd_open
   \param track Zero based index of track your requesting.
   \param data pointer to store the hex code representing the codec.
 */
-int netmd_request_track_codec(usb_dev_handle*dev, int track, char* data);
+int netmd_request_track_flags(usb_dev_handle*dev, int track, char* data);
 
 /*! Get the bitrate used to encode a specific track.
   \param dev pointer to device returned by netmd_open
