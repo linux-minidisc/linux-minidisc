@@ -651,7 +651,7 @@ int netmd_initialize_disc_info(usb_dev_handle* devh, minidisc* md)
 					printf( "Title parse error\n" );
 					return -1;
 				}
-				set_group_data(md, g, strdup(name), start, finish);
+				set_group_data(md, g, name, start, finish);
 			}
 			g++;
 			tok = strtok(NULL, "//");
