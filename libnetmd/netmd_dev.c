@@ -19,7 +19,6 @@
  */
 
 #include "libnetmd.h"
-#include "netmd_dev.h"
 
 #define NETMD_POLL_TIMEOUT	1000	/* miliseconds */
 #define NETMD_SEND_TIMEOUT	1000
