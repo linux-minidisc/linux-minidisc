@@ -54,7 +54,11 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	netmd_get_devname(devh, name, 16);
+	if(!netmd_get_devname(devh, name, 16))
+	{
+		printf("Could not get device name\n");
+		return -1;
+	}
 	printf("%s\n", name);
 
 	netmd_initialize_disc_info(devh, md);
