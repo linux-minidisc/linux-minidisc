@@ -314,6 +314,7 @@ int netmd_get_devname(usb_dev_handle* dh, unsigned char* buf, int buffsize)
 					   (USB_DT_STRING << 8) | 0x02, 0, b, 256, 5000) < 0)
 	{
 		fprintf(stdout, "cannot get config descriptor %d, %s (%d)\n", buf[15], strerror(errno), errno);
+		buf[0] = 0;
 		return 0;
 	}
 
