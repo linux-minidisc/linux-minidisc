@@ -38,7 +38,7 @@ typedef struct netmd_device_t {
 	struct usb_device	*usb_dev;
 } netmd_device_t;
 
-typedef usb_dev_handle*		*netmd_dev_handle;
+typedef usb_dev_handle*		netmd_dev_handle;
 
 
 /** Struct to hold the vendor and product id's for each unit. */
@@ -47,21 +47,24 @@ struct netmd_devices {
 	int	idProduct;
 };
 
-/** Finds netmd device and returns pointer to its device handle */
+/** intialises the netmd device layer, scans the USB and fills in a list of supported devices
+  \param device_list head of linked list of netmd_device_t structures to fill
+  \return the number of devices found, or <0 on error.
+*/
 int netmd_init(netmd_device_t **device_list);
 
-/*! Initialize USB subsystem for talking to NetMD
-  \param dev Pointer returned by netmd_init.
+/*! Opens a NetMD device
+  \param devh Pointer returned by netmd_init.
 */
-netmd_dev_handle* netmd_open(netmd_device_t *netmd_dev);
+netmd_dev_handle* netmd_open(netmd_device_t *devh);
 
 /*! Get the device name stored in USB device
-  \param dev pointer to device returned by netmd_open
+  \param devh pointer to device returned by netmd_open
   \param buf buffer to hold the name.
   \param buffsize of buf.
   \return Actual size of buffer, if your buffer is too small resize buffer and recall function.
 */
-int netmd_get_devname(netmd_dev_handle* dh, unsigned char* buf, int buffsize);
+int netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, int buffsize);
 
 /*! Function for internal use by init_disc_info */
 // int request_disc_title(usb_dev_handle* dev, char* buffer, int size);
@@ -79,6 +82,11 @@ int netmd_exch_message(netmd_dev_handle *dev, unsigned char *cmd, int cmdlen,
 /*! closes the usb descriptors
   \param dev pointer to device returned by netmd_open
 */
-void netmd_clean(netmd_dev_handle* dev);
+void netmd_close(netmd_dev_handle* dev);
+
+/*! cleans structures created by netmd_init
+  \param device_list list of devices returned by netmd_init
+*/
+void netmd_clean(netmd_device_t *device_list);
 
 #endif /* _NETMD_DEV_H_ */

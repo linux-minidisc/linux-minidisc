@@ -27,7 +27,7 @@
 #define NETMD_RECV_TRIES		30
 
 /*! list of known vendor/prod id's for NetMD devices */
-struct netmd_devices const known_devices[] =
+static struct netmd_devices const known_devices[] =
 {
 	{0x54c, 0x75}, /* Sony MZ-N1 */
 	{0x54c, 0x80}, /* Sony LAM-1 */
@@ -134,10 +134,6 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 }
 
 
-/** intialises the netmd device layer, scans the USB and fills in a list of supported devices
-	\param device_list head of linked list of netmd_device_t structures to fill
-	\return the number of devices found.
-*/
 int netmd_init(netmd_device_t **device_list)
 {
 	struct usb_bus *bus;
@@ -151,6 +147,7 @@ int netmd_init(netmd_device_t **device_list)
 	usb_find_busses();
 	usb_find_devices();
 
+	*device_list = NULL;
 	num_devices = 0;
 	for(bus = usb_busses; bus; bus = bus->next)
 	{
@@ -202,12 +199,25 @@ int netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, int buffsize)
 }
 
 
-void netmd_clean(netmd_dev_handle* devh)
+void netmd_close(netmd_dev_handle* devh)
 {
 	usb_dev_handle *dev;
 	
 	dev = (usb_dev_handle *)devh;
 	usb_release_interface(dev, 0);
 	usb_close(dev);
+}
+
+
+void netmd_clean(netmd_device_t *device_list)
+{
+	netmd_device_t *tmp, *device;
+
+	device = device_list;
+	while (device != NULL) {
+		tmp = device->link;
+		free(device);
+		device = tmp;
+	}
 }
 
