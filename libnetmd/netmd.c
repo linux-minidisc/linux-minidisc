@@ -1,6 +1,6 @@
-/* netmd.c 
+/* netmd.c
  *      Copyright (C) 2002, 2003 Marc Britten
- *      
+ *
  * This file is part of libnetmd.
  *
  * libnetmd is free software; you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
- 
+
 #include "libnetmd.h"
 
 void print_disc_info(usb_dev_handle* devh, minidisc *md);
@@ -27,6 +27,76 @@ void import_m3u_playlist(usb_dev_handle* devh, const char *file);
 /* Max line length we support in M3U files... should match MD TOC max */
 #define M3U_LINE_MAX	128
 
+static void handle_secure_cmd(usb_dev_handle* devh, int cmdid, int track)
+{
+	unsigned int player_id;
+	unsigned char ekb_head[] = {
+		0x01, 0xca, 0xbe, 0x07, 0x2c, 0x4d, 0xa7, 0xae,
+		0xf3, 0x6c, 0x8d, 0x73, 0xfa, 0x60, 0x2b, 0xd1};
+	unsigned char ekb_body[] = {
+		0x0f, 0xf4, 0x7d, 0x45, 0x9c, 0x72, 0xda, 0x81,
+		0x85, 0x16, 0x9d, 0x73, 0x49, 0x00, 0xff, 0x6c,
+		0x6a, 0xb9, 0x61, 0x6b, 0x03, 0x04, 0xf9, 0xce};
+	unsigned char rand_in[8], rand_out[8];
+	unsigned char hash8[8];
+	unsigned char hash32[32];
+
+	switch (cmdid) {
+	case 0x11:
+		if (netmd_secure_cmd_11(devh, &player_id) > 0) {
+			fprintf(stdout, "Player id = %04d\n", player_id);
+		}
+		break;
+	case 0x12:
+		netmd_secure_cmd_12(devh, ekb_head, ekb_body);
+		break;
+	case 0x20:
+		memset(rand_in, 0, sizeof(rand_in));
+		if (netmd_secure_cmd_20(devh, rand_in, rand_out) > 0) {
+			fprintf(stdout, "Random =\n");
+			print_hex(rand_out, sizeof(rand_out));
+		}
+		break;
+	case 0x21:
+		netmd_secure_cmd_21(devh);
+		break;
+	case 0x22:
+		memset(hash32, 0, sizeof(hash32));
+		netmd_secure_cmd_22(devh, hash32);
+		break;
+	case 0x23:
+		if (netmd_secure_cmd_23(devh, track, hash8) > 0) {
+			fprintf(stdout, "Hash id of track %d =\n", track);
+			print_hex(hash8, sizeof(hash8));
+		}
+		break;
+/*case 0x28: TODO */
+	case 0x40:
+		if (netmd_secure_cmd_40(devh, track, hash8) > 0) {
+			fprintf(stdout, "Signature of deleted track %d =\n", track);
+			print_hex(hash8, sizeof(hash8));
+		}				
+		break;
+	case 0x48:
+		memset(hash8, 0, sizeof(hash8));
+		if (netmd_secure_cmd_48(devh, track, hash8) > 0) {
+			fprintf(stdout, "Signature of downloaded track %d =\n", track);
+			print_hex(hash8, sizeof(hash8));
+		}				
+		break;
+	case 0x80:
+		netmd_secure_cmd_80(devh);
+		break;
+	case 0x81:
+		netmd_secure_cmd_81(devh);
+		break;
+	default:
+		fprintf(stderr, "unsupported secure command\n");
+		break;
+	}
+}
+
+
 int main(int argc, char* argv[])
 {
 	struct usb_device* netmd;
@@ -35,7 +105,8 @@ int main(int argc, char* argv[])
 	int i = 0;
 	int j = 0;
 	char name[16];
-	
+	int	cmdid, track;
+
 	netmd = netmd_init();
 
 	printf("\n\n");
@@ -159,7 +230,15 @@ int main(int argc, char* argv[])
 			netmd_delete_group(devh, md, i);
 		}
 		else if(strcmp("status", argv[1]) == 0) {
-			print_current_track_info(devh);	
+			print_current_track_info(devh);
+		}
+		else if (strcmp("secure", argv[1]) == 0) {
+			cmdid = strtol(argv[2], NULL, 16);
+			track = 0;
+			if (argc > 3) {
+				track = strtol(argv[3], NULL, 10);
+			}			
+			handle_secure_cmd(devh, cmdid, track);
 		}
 		else if(strcmp("help", argv[1]) == 0)
 		{
@@ -185,8 +264,8 @@ void print_current_track_info(usb_dev_handle* devh) {
 	int i = 0;
 	int size = 0;
 	char buffer[256];
-	
-	
+
+
 	f = netmd_get_playback_position(devh);
 	i = netmd_get_current_track(devh);
 
@@ -196,7 +275,7 @@ void print_current_track_info(usb_dev_handle* devh) {
 	{
 		printf("something really really nasty just happened.");
 	}
-	else {	
+	else {
 		printf("Current track: %s \n", buffer);
 	}
 
@@ -265,9 +344,9 @@ void print_disc_info(usb_dev_handle* devh, minidisc* md)
 		{
 			name = buffer + 3;
 		}
-		
-		printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n", 
-			   i, codec->name, bitrate->name, time.minute, 
+
+		printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
+			   i, codec->name, bitrate->name, time.minute,
 			   time.second, time.tenth, name);
 	}
 
@@ -281,7 +360,7 @@ void print_disc_info(usb_dev_handle* devh, minidisc* md)
 		}
 
 	}
-	
+
 	printf("\n\n");
 }
 
@@ -291,7 +370,7 @@ void import_m3u_playlist(usb_dev_handle* devh, const char *file)
     char buffer[M3U_LINE_MAX + 1];
     char *s;
     int track, discard;
-    
+
     if( file == NULL )
     {
 		printf( "No filename specified\n" );
@@ -321,7 +400,7 @@ void import_m3u_playlist(usb_dev_handle* devh, const char *file)
 		s = strchr( buffer, '\n' );
 		if( s )
 			*s = '\0';
-	
+
 		if( buffer[0] == '#' )
 		{
 			/* comment, ext3inf etc... we only care about ext3inf */
@@ -396,6 +475,21 @@ void print_syntax()
 	printf("delete #1 - delete track\n");
 	printf("m3uimport - import playlist - and title current disc using it.\n");
 	printf("newgroup <string> - create a new group named <string>\n");
+	printf("secure #1 #2 - execute secure command #1 on track #2 (where applicable)\n");
+	printf("  --- general ---\n");
+	printf("  0x80 = start secure session\n");
+	printf("  0x11 = get player id\n");
+	printf("  0x12 = send ekb\n");
+	printf("  0x20 = exchange randoms\n");
+	printf("  0x21 = discard randoms\n");
+	printf("  0x81 = end secure session\n");
+	printf("  --- check-out ---\n");
+	printf("  0x22 = submit 32-byte hash\n");
+	printf("  0x28 = prepare download\n");
+	printf("  0x48 = verify downloaded track #\n");
+	printf("  --- check-in ---\n");
+	printf("  0x23 = get hash id for track #\n");
+	printf("  0x40 = secure delete track #\n");
 	printf("help - print this stuff\n");
 }
 
