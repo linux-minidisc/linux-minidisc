@@ -188,23 +188,26 @@ int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
 		return NETMDERR_USB;
 	}
 
-	/* poll for data that minidisc wants to send */
-	len = netmd_poll(dev, pollbuf, NETMD_RECV_TRIES);
-	if (len <= 0) {
-		fprintf(stderr, "netmd_exch_message: netmd_poll failed\n");
-		return (len == 0) ? NETMDERR_TIMEOUT : len;
-	}
-	
-	/* receive data */
-	if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
-										 	USB_RECIP_INTERFACE, pollbuf[1], 0, 0, rsp, len,
-										 	NETMD_RECV_TIMEOUT) < 0) {
-		fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
-		return NETMDERR_USB;
-	}
+	do {
+		/* poll for data that minidisc wants to send */
+		len = netmd_poll(dev, pollbuf, NETMD_RECV_TRIES);
+		if (len <= 0) {
+			fprintf(stderr, "netmd_exch_message: netmd_poll failed\n");
+			return (len == 0) ? NETMDERR_TIMEOUT : len;
+		}
+		
+		/* receive data */
+		if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
+											 	USB_RECIP_INTERFACE, pollbuf[1], 0, 0, rsp, len,
+											 	NETMD_RECV_TIMEOUT) < 0) {
+			fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
+			return NETMDERR_USB;
+		}
+		/* get response again if player responds with 0x0F.	*/
+	} while (rsp[0] == 0x0F);
 
 	/* return length */
-	return pollbuf[2];
+	return len;
 }
 
 static void waitforsync(usb_dev_handle* dev)
