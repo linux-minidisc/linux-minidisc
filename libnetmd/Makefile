@@ -36,8 +36,8 @@ clean:
 libnetmd.o: libnetmd.c libnetmd.h libnetmd_secure.c
 	$(CC) -c ${INCLUDE} ${CFLAGS} -fPIC $<
 
-netmd: netmd.c libnetmd.c libnetmd.h libnetmd_secure.c netmd_dev.c netmd_dev.h
-	$(CC) $(CFLAGS) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c libnetmd_secure.c netmd_dev.c $(LDFLAGS)
+netmd: netmd.c libnetmd.c libnetmd.h libnetmd_secure.c netmd_dev.c netmd_dev.h netmd_trace.c
+	$(CC) $(CFLAGS) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c libnetmd_secure.c netmd_dev.c netmd_trace.c $(LDFLAGS)
 
 dist: clean
 	cd .. && $(TAR) --exclude={CVS,cvs} -cvzf $(PKG_NAME)-$(DATE).tar.gz \
