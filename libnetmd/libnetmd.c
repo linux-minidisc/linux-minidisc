@@ -19,9 +19,6 @@
  */
 #include "libnetmd.h"
 
-#define DEVICE_COUNT 8
-
-
 int min(int a,int b)
 {
 	if (a<b) return a;
@@ -29,7 +26,7 @@ int min(int a,int b)
 }
 
 /*! list of known vendor/prod id's for NetMD devices */
-struct netmd_devices const known_devices[DEVICE_COUNT] = 
+struct netmd_devices const known_devices[] = 
 {
 	{0x54c, 0x86}, /* Sony MZ-N707 */
 	{0x54c, 0x85}, /* Sony MZ-S1 */
@@ -38,7 +35,8 @@ struct netmd_devices const known_devices[DEVICE_COUNT] =
 	{0x54c, 0x80}, /* Sony Unknown Unit */
 	{0x54c, 0x75}, /* Sony MZ-N1 */
 	{0x54c, 0xc6}, /* Sony MZ-N10 */
-	{0x54c, 0xc9}  /* Sony MZ-N510/N610 */
+	{0x54c, 0xc9}, /* Sony MZ-N510/N610 */
+	{0, 0} /* terminating pair */
 };
 
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
@@ -193,7 +191,7 @@ struct usb_device* netmd_init()
 	{
 		for(dev = bus->devices; dev; dev = dev->next) 
 		{
-			for(count = 0; count < DEVICE_COUNT; count++)
+			for(count = 0; (known_devices[count].idVendor != 0); count++)
 			{
 				if(dev->descriptor.idVendor == known_devices[count].idVendor
 				   && dev->descriptor.idProduct == known_devices[count].idProduct)
