@@ -116,14 +116,16 @@ static void waitforsync(usb_dev_handle* dev)
 
 }
 
-static char* sendcommand(usb_dev_handle* dev, char* str, int len, char* response, int rlen)
+static char* sendcommand(netmd_dev_handle* devh, char* str, int len, char* response, int rlen)
 {
   int i;
   int ret;
   int size;
   char size_request[4];
   char* buf;
+  usb_dev_handle *dev;
 
+  dev = (usb_dev_handle *)devh;
   waitforsync(dev);
   fprintf(stderr,"Sending command: \n");
   print_hex(str,len);
@@ -165,7 +167,7 @@ static char* sendcommand(usb_dev_handle* dev, char* str, int len, char* response
   return buf;
 }
 
-static int request_disc_title(usb_dev_handle* dev, char* buffer, int size)
+static int request_disc_title(netmd_dev_handle* dev, char* buffer, int size)
 {
 	int ret = -1;
 	int title_size = 0;
@@ -197,7 +199,7 @@ static int request_disc_title(usb_dev_handle* dev, char* buffer, int size)
 	return title_size - 25;
 }
 
-int netmd_request_track_bitrate(usb_dev_handle*dev, int track, unsigned char* data)
+int netmd_request_track_bitrate(netmd_dev_handle*dev, int track, unsigned char* data)
 {
 	int ret = 0;
 	int size = 0;
@@ -221,7 +223,7 @@ int netmd_request_track_bitrate(usb_dev_handle*dev, int track, unsigned char* da
 	return ret;
 }
 
-int netmd_request_track_flags(usb_dev_handle*dev, int track, char* data)
+int netmd_request_track_flags(netmd_dev_handle*dev, int track, char* data)
 {
 	int ret = 0;
 	int size = 0;
@@ -248,7 +250,7 @@ int netmd_request_track_flags(usb_dev_handle*dev, int track, char* data)
  	sprintf(tmp, "%02x", time_request[ 	time = strtol(tmp, NULL, 10); */
 #define BCD_TO_PROPER(x) (((((x) & 0xf0) >> 4) * 10) + ((x) & 0x0f))
 
-int netmd_request_track_time(usb_dev_handle* dev, int track, struct netmd_track* buffer)
+int netmd_request_track_time(netmd_dev_handle* dev, int track, struct netmd_track* buffer)
 {
 	int ret = 0;
 	int size = 0;
@@ -273,7 +275,7 @@ int netmd_request_track_time(usb_dev_handle* dev, int track, struct netmd_track*
 	return 1;
 }
 
-int netmd_request_title(usb_dev_handle* dev, int track, char* buffer, int size)
+int netmd_request_title(netmd_dev_handle* dev, int track, char* buffer, int size)
 {
 	int ret = -1;
 	int title_size = 0;
@@ -306,7 +308,7 @@ int netmd_request_title(usb_dev_handle* dev, int track, char* buffer, int size)
 	return title_size - 25;
 }
 
-int netmd_set_title(usb_dev_handle* dev, int track, char* buffer, int size)
+int netmd_set_title(netmd_dev_handle* dev, int track, char* buffer, int size)
 {
 	int ret = 1;
 	char *title_request = NULL;
@@ -334,7 +336,7 @@ int netmd_set_title(usb_dev_handle* dev, int track, char* buffer, int size)
 	return 1;
 }
 
-int netmd_move_track(usb_dev_handle* dev, int start, int finish)
+int netmd_move_track(netmd_dev_handle* dev, int start, int finish)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x43, 0xff, 0x00, 0x00, 0x20, 0x10, 0x01, 0x00, 0x04, 0x20, 0x10, 0x01, 0x00, 0x03};
@@ -354,7 +356,7 @@ int netmd_move_track(usb_dev_handle* dev, int start, int finish)
 	return 1;
 }
 
-static int get_group_count(usb_dev_handle* devh, minidisc* md)
+static int get_group_count(netmd_dev_handle* devh, minidisc* md)
 {
 
 	int disc_size = 0;
@@ -401,7 +403,7 @@ static int get_group_count(usb_dev_handle* devh, minidisc* md)
 	return (g);
 }
 
-int netmd_set_group_title(usb_dev_handle* dev, minidisc* md, int group, char* title)
+int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, int group, char* title)
 {
 	int size = strlen(title);
 
@@ -435,7 +437,7 @@ static void set_group_data(minidisc* md, int group, char* name, int start, int f
 	 *
 	 */
 
-int netmd_initialize_disc_info(usb_dev_handle* devh, minidisc* md)
+int netmd_initialize_disc_info(netmd_dev_handle* devh, minidisc* md)
 {
 	int disc_size = 0;
 	int track;
@@ -558,7 +560,7 @@ void print_groups(minidisc *md)
 	printf("\n");
 }
 
-int netmd_create_group(usb_dev_handle* devh, char* name)
+int netmd_create_group(netmd_dev_handle* devh, char* name)
 {
 	int disc_size;
 	int seperator = 0;
@@ -629,7 +631,7 @@ int netmd_create_group(usb_dev_handle* devh, char* name)
 }
 
 /* move track, then manipulate title string */
-int netmd_put_track_in_group(usb_dev_handle* dev, minidisc *md, int track, int group)
+int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc *md, int track, int group)
 {
 	int i = 0;
 	int j = 0;
@@ -749,7 +751,7 @@ int netmd_put_track_in_group(usb_dev_handle* dev, minidisc *md, int track, int g
 	return netmd_write_disc_header(dev, md);
 }
 
-int netmd_move_group(usb_dev_handle* dev, minidisc* md, int track, int group)
+int netmd_move_group(netmd_dev_handle* dev, minidisc* md, int track, int group)
 {
 	int index = 0;
 	int i = 0;
@@ -838,7 +840,7 @@ int netmd_move_group(usb_dev_handle* dev, minidisc* md, int track, int group)
 	return 0;
 }
 
-int netmd_delete_group(usb_dev_handle* dev, minidisc* md, int group)
+int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, int group)
 {
 	int index = 0;
 	struct netmd_group *p;
@@ -875,7 +877,7 @@ int netmd_delete_group(usb_dev_handle* dev, minidisc* md, int group)
 	return 0;
 }
 
-int netmd_set_track( usb_dev_handle* dev, int track)
+int netmd_set_track( netmd_dev_handle* dev, int track)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x50, 0xff, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};  // Change track
@@ -906,7 +908,7 @@ int netmd_set_track( usb_dev_handle* dev, int track)
 #define NETMD_REWIND	0x49
 #define NETMD_FFORWARD	0x39
 
-static int netmd_playback_control(usb_dev_handle* dev, unsigned char code)
+static int netmd_playback_control(netmd_dev_handle* dev, unsigned char code)
 {
 	int ret = 0;
 	unsigned char request[] = {0x00, 0x18, 0xc3, 0xff, 0x75, 0x00, 0x00, 0x00};                   // Play
@@ -931,35 +933,35 @@ static int netmd_playback_control(usb_dev_handle* dev, unsigned char code)
 }
 
 
-int netmd_play( usb_dev_handle *dev )
+int netmd_play( netmd_dev_handle *dev )
 {
 
 	fprintf(stderr,"Starting playback\n");
 	return netmd_playback_control( dev, NETMD_PLAY );
 }
 
-int netmd_pause( usb_dev_handle *dev )
+int netmd_pause( netmd_dev_handle *dev )
 {
 
 	fprintf(stderr,"Pausing\n");
 	return netmd_playback_control( dev, NETMD_PAUSE );
 }
 
-int netmd_fast_forward( usb_dev_handle *dev )
+int netmd_fast_forward( netmd_dev_handle *dev )
 {
 
 	fprintf(stderr,"Starting fast forward\n");
 	return netmd_playback_control( dev, NETMD_FFORWARD );
 }
 
-int netmd_rewind( usb_dev_handle *dev )
+int netmd_rewind( netmd_dev_handle *dev )
 {
 
 	fprintf(stderr,"Starting rewind\n");
 	return netmd_playback_control( dev, NETMD_REWIND );
 }
 
-int netmd_stop(usb_dev_handle* dev)
+int netmd_stop(netmd_dev_handle* dev)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0xc5, 0xff, 0x00, 0x00, 0x00, 0x00};  // Stop
@@ -985,7 +987,7 @@ int netmd_stop(usb_dev_handle* dev)
 }
 
 
-int netmd_set_playmode(usb_dev_handle* dev, int playmode)
+int netmd_set_playmode(netmd_dev_handle* dev, int playmode)
 {
 	unsigned char cmd[] = {0x00, 0x18, 0xd1, 0xff, 0x01, 0x00, 0x00, 0x00, 0x88, 0x08, 0x00, 0x00, 0x00};
 	unsigned char rsp[255];
@@ -1001,7 +1003,7 @@ int netmd_set_playmode(usb_dev_handle* dev, int playmode)
 }
 
 
-int netmd_write_disc_header(usb_dev_handle* devh, minidisc *md)
+int netmd_write_disc_header(netmd_dev_handle* devh, minidisc *md)
 {
 	int i;
 	int dash = 0;
@@ -1119,7 +1121,7 @@ int netmd_write_disc_header(usb_dev_handle* devh, minidisc *md)
 }
 
 
-int netmd_write_track(usb_dev_handle* dev, char* szFile)
+int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 {
         int ret = 0;
 	int fd = open(szFile, O_RDONLY); /* File descriptor to omg file */
@@ -1149,6 +1151,10 @@ int netmd_write_track(usb_dev_handle* dev, char* szFile)
 	int data_size_i; /* the size of the data part, later it will be used to point out the last byte in file */
 	unsigned int size;
 	char* buf=NULL; /* A buffer for recieving file info */
+	usb_dev_handle	*dev;
+	
+	dev = (usb_dev_handle *)devh;
+	
 	if(fd < 0)
 		return fd;
 
@@ -1176,7 +1182,7 @@ int netmd_write_track(usb_dev_handle* dev, char* szFile)
 	movetoendstartrecord[28]=(size >> 8) & 255;
 	movetoendstartrecord[29]=size & 255;
 
-	buf = sendcommand(dev,movetoendstartrecord,30,movetoendresp,0x1e);
+	buf = sendcommand(devh, movetoendstartrecord, 30, movetoendresp, 0x1e);
 	track_number = buf[0x12];
 	free(buf); // clear the result
 
@@ -1277,13 +1283,13 @@ int netmd_write_track(usb_dev_handle* dev, char* szFile)
 	free(buf);
 
 	/******** Title the transfered song *******/
-	buf=sendcommand(dev,begintitle,8,NULL,0);
+	buf = sendcommand(devh, begintitle, 8, NULL, 0);
 	free(buf);
 
 	fprintf(stderr,"Renaming track %d to test\n",track_number);
-	netmd_set_title(dev,track_number,"test",4);
+	netmd_set_title(devh, track_number, "test", 4);
 
-	buf=sendcommand(dev,endrecord,8,NULL,0); free(buf);
+	buf = sendcommand(devh, endrecord, 8, NULL, 0); free(buf);
 
 
 	/********* End TOC Edit **********/
@@ -1297,7 +1303,7 @@ int netmd_write_track(usb_dev_handle* dev, char* szFile)
 	return ret;
 }
 
-int netmd_delete_track(usb_dev_handle* dev, int track)
+int netmd_delete_track(netmd_dev_handle* dev, int track)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x40, 0xff, 0x01, 0x00, 0x20, 0x10, 0x01, 0x00, 0x00};
@@ -1309,7 +1315,7 @@ int netmd_delete_track(usb_dev_handle* dev, int track)
 	return ret;
 }
 
-int netmd_get_current_track(usb_dev_handle* dev)
+int netmd_get_current_track(netmd_dev_handle* dev)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04, 0x30, 0x88, 0x02, 0x00, 0x30, 0x88, 0x05, 0x00, 0x30, 0x00, 0x03, 0x00, 0x30, 0x00, 0x02, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -1326,7 +1332,7 @@ int netmd_get_current_track(usb_dev_handle* dev)
 
 }
 
-float netmd_get_playback_position(usb_dev_handle* dev)
+float netmd_get_playback_position(netmd_dev_handle* dev)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04, 0x30, 0x88, 0x02, 0x00, 0x30, 0x88, 0x05, 0x00, 0x30, 0x00, 0x03, 0x00, 0x30, 0x00, 0x02, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -1370,7 +1376,7 @@ void netmd_clean_disc_info(minidisc *md)
 }
 
 /*! testing function for testing weird unknown commands */
-void test(usb_dev_handle* dev)
+void test(netmd_dev_handle* devh)
 {
   // 75 76 77 --- 7c
   // 7d
@@ -1425,7 +1431,7 @@ void test(usb_dev_handle* dev)
 						  0x01, 0x00, 0x11, 0x00, 0x94, 0x02, 0x00, 0x00,
 						  0x43, 0x8c, 0x00, 0x32, 0xbc, 0x50};
   char* ret=NULL;
-  ret = sendcommand(dev,movetoendstartrecord,30,movetoendresp,30);
+  ret = sendcommand(devh, movetoendstartrecord, 30, movetoendresp, 30);
   free(ret);
 
 }

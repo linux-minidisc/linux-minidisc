@@ -87,12 +87,15 @@ static int netmd_poll(usb_dev_handle *dev, unsigned char *buf, int tries)
 
 	Returns >0 on success, <0 on failure
 */
-int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
+int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 	unsigned char *rsp)
 {
 	unsigned char	pollbuf[4];
 	int		len;
+	usb_dev_handle	*dev;
 
+	dev = (usb_dev_handle *)devh;
+	
 	/* poll to see if we can send data */
 	len = netmd_poll(dev, pollbuf, 1);
 	if (len != 0) {
@@ -131,17 +134,24 @@ int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
 }
 
 
-struct usb_device* netmd_init()
+/** intialises the netmd device layer, scans the USB and fills in a list of supported devices
+	\param device_list head of linked list of netmd_device_t structures to fill
+	\return the number of devices found.
+*/
+int netmd_init(netmd_device_t **device_list)
 {
 	struct usb_bus *bus;
 	struct usb_device *dev;
 	int count = 0;
+	int num_devices;
+	netmd_device_t	*new_device;
 
 	usb_init();
 
 	usb_find_busses();
 	usb_find_devices();
 
+	num_devices = 0;
 	for(bus = usb_busses; bus; bus = bus->next)
 	{
 		for(dev = bus->devices; dev; dev = dev->next)
@@ -151,29 +161,38 @@ struct usb_device* netmd_init()
 				if(dev->descriptor.idVendor == known_devices[count].idVendor
 				   && dev->descriptor.idProduct == known_devices[count].idProduct)
 				{
-					return dev;
+					/* TODO: check if linked list stuff is really correct */
+					new_device = malloc(sizeof(netmd_device_t));
+					new_device->usb_dev = dev;
+					new_device->link = *device_list;
+					*device_list = new_device;
+					num_devices++;
 				}
 			}
 		}
 	}
 
-	return 0;
+	return num_devices;
 }
 
 
-usb_dev_handle* netmd_open(struct usb_device* dev)
+netmd_dev_handle* netmd_open(netmd_device_t *netmd_dev)
 {
-	usb_dev_handle* dh = usb_open(dev);
-
+	usb_dev_handle* dh;
+	
+	dh = usb_open(netmd_dev->usb_dev);
 	usb_claim_interface(dh, 0);
 
-	return dh;
+	return (netmd_dev_handle *)dh;
 }
 
 
-int netmd_get_devname(usb_dev_handle* dh, unsigned char* buf, int buffsize)
+int netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, int buffsize)
 {
-	if (usb_get_string_simple(dh, 2, buf, buffsize) < 0) {
+	usb_dev_handle *dev;
+	
+	dev = (usb_dev_handle *)devh;
+	if (usb_get_string_simple(dev, 2, buf, buffsize) < 0) {
 		fprintf(stderr, "usb_get_string_simple failed, %s (%d)\n", strerror(errno), errno);
 		buf[0] = 0;
 		return 0;
@@ -183,8 +202,11 @@ int netmd_get_devname(usb_dev_handle* dh, unsigned char* buf, int buffsize)
 }
 
 
-void netmd_clean(usb_dev_handle* dev)
+void netmd_clean(netmd_dev_handle* devh)
 {
+	usb_dev_handle *dev;
+	
+	dev = (usb_dev_handle *)devh;
 	usb_release_interface(dev, 0);
 	usb_close(dev);
 }

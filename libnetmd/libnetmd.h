@@ -95,21 +95,21 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* pair);
 	\param dev USB device handle.
 	\return size of buffer to alloc.
 */
-//unsigned int request_buffer_length(usb_dev_handle* dev);
+//unsigned int request_buffer_length(netmd_dev_handle* dev);
 
 /*! Get the flags used for a specific track.
   \param dev pointer to device returned by netmd_open
   \param track Zero based index of track your requesting.
   \param data pointer to store the hex code representing the codec.
 */
-int netmd_request_track_flags(usb_dev_handle*dev, int track, char* data);
+int netmd_request_track_flags(netmd_dev_handle*dev, int track, char* data);
 
 /*! Get the bitrate used to encode a specific track.
   \param dev pointer to device returned by netmd_open
   \param track Zero based index of track your requesting.
   \param data pointer to store the hex code representing the bitrate.
 */
-int netmd_request_track_bitrate(usb_dev_handle*dev, int track, unsigned char* data);
+int netmd_request_track_bitrate(netmd_dev_handle*dev, int track, unsigned char* data);
 
 /*! Get the title for a specific track.
   \param dev pointer to device returned by netmd_open
@@ -118,9 +118,9 @@ int netmd_request_track_bitrate(usb_dev_handle*dev, int track, unsigned char* da
   \param size of buf.
   \return Actual size of buffer, if your buffer is too small resize buffer and recall function.
 */
-int netmd_request_title(usb_dev_handle* dev, int track, char* buffer, int size);
+int netmd_request_title(netmd_dev_handle* dev, int track, char* buffer, int size);
 
-int netmd_request_track_time(usb_dev_handle* dev, int track, struct netmd_track* buffer);
+int netmd_request_track_time(netmd_dev_handle* dev, int track, struct netmd_track* buffer);
 
 /*! Sets title for the specified track.
   \param dev pointer to device returned by netmd_open
@@ -129,7 +129,7 @@ int netmd_request_track_time(usb_dev_handle* dev, int track, struct netmd_track*
   \param size of buf.
   \return returns 0 for fail 1 for success.
 */
-int netmd_set_title(usb_dev_handle* dev, int track, char* buffer, int size);
+int netmd_set_title(netmd_dev_handle* dev, int track, char* buffer, int size);
 
 /*! Sets title for the specified track.
   \param dev pointer to device returned by netmd_open
@@ -138,7 +138,7 @@ int netmd_set_title(usb_dev_handle* dev, int track, char* buffer, int size);
   \param title buffer holding the name.
   \return returns 0 for fail 1 for success.
 */
-int netmd_set_group_title(usb_dev_handle* dev, minidisc* md, int group, char* title);
+int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, int group, char* title);
 
 /*! Moves track around the disc.
   \param dev pointer to device returned by netmd_open
@@ -146,14 +146,14 @@ int netmd_set_group_title(usb_dev_handle* dev, minidisc* md, int group, char* ti
   \param finish Zero based track to make it
   \return 0 for fail 1 for success
 */
-int netmd_move_track(usb_dev_handle* dev, int start, int finish);
+int netmd_move_track(netmd_dev_handle* dev, int start, int finish);
 
 /*! used internally - use the int group_count var.
   \param dev pointer to device returned by netmd_open
   \param md pointer to minidisc structure
   \return Number of groups, counting disc title as a group (which it is)
 */
-//int get_group_count(usb_dev_handle* dev, minidisc* md);
+//int get_group_count(netmd_dev_handle* dev, minidisc* md);
 
 /*! sets up buffer containing group info.
   \param dev pointer to device returned by netmd_open
@@ -161,15 +161,15 @@ int netmd_move_track(usb_dev_handle* dev, int start, int finish);
   \return total size of disc header
   Group[0] is disc name.  You need to make sure you call clean_disc_info before recalling
 */
-int netmd_initialize_disc_info(usb_dev_handle* dev, minidisc* md);
+int netmd_initialize_disc_info(netmd_dev_handle* dev, minidisc* md);
 
-int netmd_create_group(usb_dev_handle* devh, char* name);
+int netmd_create_group(netmd_dev_handle* devh, char* name);
 
 /*! Creates disc header out of groups and writes it to disc
   \param devh pointer to device returned by netmd_open
   \param md pointer to minidisc structure
 */
-int netmd_write_disc_header(usb_dev_handle* devh, minidisc *md);
+int netmd_write_disc_header(netmd_dev_handle* devh, minidisc *md);
 
 /*! Moves track into group
   \param dev pointer to device returned by netmd_open
@@ -177,7 +177,7 @@ int netmd_write_disc_header(usb_dev_handle* devh, minidisc *md);
   \param track Zero based track to add to group.
   \param group number of group (0 is title group).
 */
-int netmd_put_track_in_group(usb_dev_handle* dev, minidisc* md, int track, int group);
+int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc* md, int track, int group);
 
 /*! Moves group around the disc.
   \param dev pointer to device returned by netmd_open
@@ -185,37 +185,37 @@ int netmd_put_track_in_group(usb_dev_handle* dev, minidisc* md, int track, int g
   \param track Zero based track to make group start at.
   \param group number of group (0 is title group).
 */
-int netmd_move_group(usb_dev_handle* dev, minidisc* md, int track, int group);
+int netmd_move_group(netmd_dev_handle* dev, minidisc* md, int track, int group);
 
 /*! Deletes group from disc (but not the tracks in it)
   \param dev pointer to device returned by netmd_open
   \param md pointer to minidisc structure
   \param group Zero based track to delete
 */
-int netmd_delete_group(usb_dev_handle* dev, minidisc* md, int group);
+int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, int group);
 
-int netmd_set_track(usb_dev_handle* dev, int track);
-int netmd_play(usb_dev_handle* dev);
-int netmd_stop(usb_dev_handle* dev);
-int netmd_pause(usb_dev_handle* dev);
-int netmd_rewind(usb_dev_handle* dev);
-int netmd_fast_forward(usb_dev_handle* dev);
-int netmd_set_playmode(usb_dev_handle* dev, int playmode);
+int netmd_set_track(netmd_dev_handle* dev, int track);
+int netmd_play(netmd_dev_handle* dev);
+int netmd_stop(netmd_dev_handle* dev);
+int netmd_pause(netmd_dev_handle* dev);
+int netmd_rewind(netmd_dev_handle* dev);
+int netmd_fast_forward(netmd_dev_handle* dev);
+int netmd_set_playmode(netmd_dev_handle* dev, int playmode);
 
-int netmd_delete_track(usb_dev_handle* dev, int track);
+int netmd_delete_track(netmd_dev_handle* dev, int track);
 
-int netmd_secure_cmd_80(usb_dev_handle *dev);
-int netmd_secure_cmd_11(usb_dev_handle *dev, unsigned int *player_id);
-int netmd_secure_cmd_12(usb_dev_handle *dev, unsigned char *ekb_head, unsigned char *ekb_body);
-int netmd_secure_cmd_20(usb_dev_handle *dev, unsigned char *rand_in, unsigned char *rand_out);
-int netmd_secure_cmd_21(usb_dev_handle *dev);
-int netmd_secure_cmd_81(usb_dev_handle *dev);
-int netmd_secure_cmd_22(usb_dev_handle *dev, unsigned char *hash);
-int netmd_secure_cmd_28(usb_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
+int netmd_secure_cmd_80(netmd_dev_handle *dev);
+int netmd_secure_cmd_11(netmd_dev_handle *dev, unsigned int *player_id);
+int netmd_secure_cmd_12(netmd_dev_handle *dev, unsigned char *ekb_head, unsigned char *ekb_body);
+int netmd_secure_cmd_20(netmd_dev_handle *dev, unsigned char *rand_in, unsigned char *rand_out);
+int netmd_secure_cmd_21(netmd_dev_handle *dev);
+int netmd_secure_cmd_81(netmd_dev_handle *dev);
+int netmd_secure_cmd_22(netmd_dev_handle *dev, unsigned char *hash);
+int netmd_secure_cmd_28(netmd_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
 	unsigned int length, unsigned int *track_nr);
-int netmd_secure_cmd_48(usb_dev_handle *dev, unsigned int track_nr, unsigned char *hash);
-int netmd_secure_cmd_23(usb_dev_handle *dev, unsigned int track_nr, unsigned char *hash_id);
-int netmd_secure_cmd_40(usb_dev_handle *dev, unsigned int track_nr, unsigned char *signature);
+int netmd_secure_cmd_48(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash);
+int netmd_secure_cmd_23(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash_id);
+int netmd_secure_cmd_40(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *signature);
 
 /*! Writes atrac file to device
   \param dev pointer to device returned by netmd_open
@@ -223,24 +223,24 @@ int netmd_secure_cmd_40(usb_dev_handle *dev, unsigned int track_nr, unsigned cha
   \return < 0 on fail else 1
   \bug doesnt work yet
 */
-int netmd_write_track(usb_dev_handle* dev, char* szFile);
+int netmd_write_track(netmd_dev_handle* dev, char* szFile);
 
 /*! Cleans memory allocated for the name of each group, then cleans groups pointer
   \param md pointer to minidisc structure
 */
 void netmd_clean_disc_info(minidisc* md);
 
-void test(usb_dev_handle* dev);
+void test(netmd_dev_handle* dev);
 
 /*! gets the position within the currently playing track in seconds.hundreds
   \param dev pointer to device returned by netmd_open
  */
-float netmd_get_playback_position(usb_dev_handle* dev);
+float netmd_get_playback_position(netmd_dev_handle* dev);
 
 /*! gets the currently playing track
   \param dev pointer to device returned by netmd_open
  */
-int netmd_get_current_track(usb_dev_handle* dev);
+int netmd_get_current_track(netmd_dev_handle* dev);
 
 /*! sets group data
   \param md
@@ -259,10 +259,10 @@ int netmd_get_current_track(usb_dev_handle* dev);
   \param length of the expected response
   \return the response. NOTE: this has to be freed up after calling.
 */
-//char* sendcommand(usb_dev_handle* dev, char* str, int len, char* response, int rlen);
+//char* sendcommand(netmd_dev_handle* dev, char* str, int len, char* response, int rlen);
 
 /*! Wait for syncronisation signal from minidisc
   \param dev a handler to the usb device
 */
-//void waitforsync(usb_dev_handle* dev);
+//void waitforsync(netmd_dev_handle* dev);
 

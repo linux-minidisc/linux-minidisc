@@ -31,6 +31,16 @@
 #define NETMDERR_CMD_INVALID	-5	/* minidisc responded with 0A response */
 
 
+
+typedef struct netmd_device_t {
+	struct netmd_device_t	*link;
+	char			name[32];
+	struct usb_device	*usb_dev;
+} netmd_device_t;
+
+typedef usb_dev_handle*		*netmd_dev_handle;
+
+
 /** Struct to hold the vendor and product id's for each unit. */
 struct netmd_devices {
 	int	idVendor;
@@ -38,12 +48,12 @@ struct netmd_devices {
 };
 
 /** Finds netmd device and returns pointer to its device handle */
-struct usb_device* netmd_init();
+int netmd_init(netmd_device_t **device_list);
 
 /*! Initialize USB subsystem for talking to NetMD
   \param dev Pointer returned by netmd_init.
 */
-usb_dev_handle* netmd_open(struct usb_device* dev);
+netmd_dev_handle* netmd_open(netmd_device_t *netmd_dev);
 
 /*! Get the device name stored in USB device
   \param dev pointer to device returned by netmd_open
@@ -51,7 +61,7 @@ usb_dev_handle* netmd_open(struct usb_device* dev);
   \param buffsize of buf.
   \return Actual size of buffer, if your buffer is too small resize buffer and recall function.
 */
-int netmd_get_devname(usb_dev_handle* dev, unsigned char* buf, int buffsize);
+int netmd_get_devname(netmd_dev_handle* dh, unsigned char* buf, int buffsize);
 
 /*! Function for internal use by init_disc_info */
 // int request_disc_title(usb_dev_handle* dev, char* buffer, int size);
@@ -63,12 +73,12 @@ int netmd_get_devname(usb_dev_handle* dev, unsigned char* buf, int buffsize);
 	\param rsp response buffer
 	\return number of bytes received if >0, or error if <0
 */
-int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
+int netmd_exch_message(netmd_dev_handle *dev, unsigned char *cmd, int cmdlen,
 	unsigned char *rsp);
 
 /*! closes the usb descriptors
   \param dev pointer to device returned by netmd_open
 */
-void netmd_clean(usb_dev_handle* dev);
+void netmd_clean(netmd_dev_handle* dev);
 
 #endif /* _NETMD_DEV_H_ */

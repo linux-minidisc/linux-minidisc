@@ -20,14 +20,14 @@
 
 #include "libnetmd.h"
 
-void print_disc_info(usb_dev_handle* devh, minidisc *md);
-void print_current_track_info(usb_dev_handle* devh);
+void print_disc_info(netmd_dev_handle* devh, minidisc *md);
+void print_current_track_info(netmd_dev_handle* devh);
 void print_syntax();
-void import_m3u_playlist(usb_dev_handle* devh, const char *file);
+void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 /* Max line length we support in M3U files... should match MD TOC max */
 #define M3U_LINE_MAX	128
 
-static void handle_secure_cmd(usb_dev_handle* devh, int cmdid, int track)
+static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
 {
 	unsigned int player_id;
 	unsigned char ekb_head[] = {
@@ -97,7 +97,7 @@ static void handle_secure_cmd(usb_dev_handle* devh, int cmdid, int track)
 }
 
 
-static void send_raw_message(usb_dev_handle* devh, char *pszRaw)
+static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
 {
 	unsigned char cmd[255], rsp[255];
 	unsigned int data;
@@ -138,24 +138,22 @@ static void send_raw_message(usb_dev_handle* devh, char *pszRaw)
 
 int main(int argc, char* argv[])
 {
-	struct usb_device* netmd;
-	usb_dev_handle* devh;
+	netmd_dev_handle* devh;
 	minidisc my_minidisc, *md = &my_minidisc;
+	netmd_device_t	*device_list, *netmd;
 	int i = 0;
 	int j = 0;
 	char name[16];
-	int	cmdid, track, playmode;
+	int	cmdid, track, playmode, num_dev;
 
-	netmd = netmd_init();
-
-	printf("\n\n");
-	if(!netmd)
-	{
-		printf( "No NetMD devices detected.\n" );
+	num_dev = netmd_init(&device_list);
+	printf("Found %d NetMD device(s).\n", num_dev);
+	if (num_dev != 1) {
 		return -1;
 	}
 
-	printf("Found a NetMD device!\n");
+	/* pick first available device */
+	netmd = device_list;
 
 	devh = netmd_open(netmd);
 	if(!devh)
@@ -316,7 +314,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-void print_current_track_info(usb_dev_handle* devh) {
+void print_current_track_info(netmd_dev_handle* devh) {
 	float f = 0;
 	int i = 0;
 	int size = 0;
@@ -340,7 +338,7 @@ void print_current_track_info(usb_dev_handle* devh) {
 
 }
 
-void print_disc_info(usb_dev_handle* devh, minidisc* md)
+void print_disc_info(netmd_dev_handle* devh, minidisc* md)
 {
 	int i = 0;
 	int size = 1;
@@ -421,7 +419,7 @@ void print_disc_info(usb_dev_handle* devh, minidisc* md)
 	printf("\n\n");
 }
 
-void import_m3u_playlist(usb_dev_handle* devh, const char *file)
+void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
 {
     FILE *fp;
     char buffer[M3U_LINE_MAX + 1];
