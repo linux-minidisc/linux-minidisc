@@ -39,7 +39,7 @@ void netmd_trace_level(int level)
 
 void netmd_trace_hex(int level, unsigned char *buf, int len)
 {
- 	int i = 0;
+ 	int i;
 	int j = 0;
 	int breakpoint = 0;
 
@@ -47,7 +47,7 @@ void netmd_trace_hex(int level, unsigned char *buf, int len)
 		return;
 	}
 	
-	for(;i < len; i++)
+	for (i = 0; i < len; i++)
 	{
 		printf("%02x ", buf[i]);
 		breakpoint++;
