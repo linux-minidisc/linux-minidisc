@@ -1,3 +1,16 @@
+* June 21 - July 11th, 2004, Bertrik Sikken <bertrik@zonnet.nl> v.Unstable
+- hotplug-netmd: Added sleep 1 and handling of remove event.
+- netmd.c: Added 'raw' command to send a raw hex command.
+- moved netmd usb device function from libnetmd.c/.h into netmd_dev.c/.h
+- libnetmd.c/netmd.c: Added 'setplaymode' command.
+- renamed usb_dev_handle into netmd_dev_handle
+- updated netmd_init function. It now returns a list of supported devices.
+- added netmd_close function. This does the opposite of netmd_open.
+- updated netmd_clean function. Instead of just closing the netmd device,
+  it cleans up the stuff left behind by netmd_init.
+- added netmd_trace.c file that implements simple tracing functions
+- added support for setting options from the command line
+  
 * March 25 - April 26, 2004, Bertrik Sikken <bertrik@zonnet.nl> v.Unstable
 - Makefile: Added install-hotplug rule that installs the minidisc hotplug
   scripts/files into /etc/hotplug/usb.
