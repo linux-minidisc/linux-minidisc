@@ -47,7 +47,7 @@ struct netmd_devices const known_devices[] =
 };
 
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
-struct netmd_pair const codecs[CODECS + 1] = 
+struct netmd_pair const codecs[] = 
 {
 	{0x00, "ATRAC"},
 	{0x03, "ATRAC3"},
@@ -55,7 +55,7 @@ struct netmd_pair const codecs[CODECS + 1] =
 };
 
 /*! list of known bitrates (mapped to protocol ID) that can be used in NetMD devices */
-struct netmd_pair const bitrates[BITRATES + 1] = 
+struct netmd_pair const bitrates[] = 
 {
 	{0x90, "Stereo"},
 	{0x92, "LP2"},
