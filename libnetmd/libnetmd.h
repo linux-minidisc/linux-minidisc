@@ -28,9 +28,6 @@
 #include <string.h>
 #include <errno.h> 
 
-#define	CODECS 2
-#define BITRATES 3
-
 /** Error codes of the USB transport layer */
 #define NETMDERR_USB			-1	/* general USB error */
 #define NETMDERR_NOTREADY	-2	/* player not ready for command */
@@ -80,8 +77,8 @@ typedef struct {
 	There will be enough for group_count total in the alloced memory
 */
 extern struct netmd_group* groups;
-extern struct netmd_pair const codecs[CODECS + 1];
-extern struct netmd_pair const bitrates[BITRATES + 1];
+extern struct netmd_pair const codecs[];
+extern struct netmd_pair const bitrates[];
 extern struct netmd_pair const unknown_pair;
 
 /** Utility function for checking data.
