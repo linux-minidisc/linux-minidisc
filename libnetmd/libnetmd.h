@@ -28,7 +28,6 @@
 #include <string.h>
 #include <errno.h> 
 
-#define DEVICE_COUNT 7
 #define	CODECS 2
 #define BITRATES 3
 
