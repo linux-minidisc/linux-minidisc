@@ -149,7 +149,7 @@ int netmd_init(netmd_device_t **device_list)
 
 	*device_list = NULL;
 	num_devices = 0;
-	for(bus = usb_busses; bus; bus = bus->next)
+	for(bus = usb_get_busses(); bus; bus = bus->next)
 	{
 		for(dev = bus->devices; dev; dev = dev->next)
 		{
