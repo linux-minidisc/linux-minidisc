@@ -17,7 +17,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
-#include <usb.h>
+
+#include "netmd_dev.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,13 +29,6 @@
 #include <string.h>
 #include <errno.h>
 
-/** Error codes of the USB transport layer */
-#define NETMDERR_USB					-1	/* general USB error */
-#define NETMDERR_NOTREADY			-2	/* player not ready for command */
-#define NETMDERR_TIMEOUT			-3	/* timeout while waiting for response */
-#define NETMDERR_CMD_FAILED		-4	/* minidisc responded with 08 response */
-#define NETMDERR_CMD_INVALID	-5	/* minidisc responded with 0A response */
-
 /** Playmode values to be sent to netmd_set_playmode.
     These can be combined by OR-ing them to do shuffle repeat for example.
     See also: http://article.gmane.org/gmane.comp.audio.netmd.devel/848
@@ -42,12 +36,6 @@
 #define NETMD_PLAYMODE_SINGLE	0x0040
 #define NETMD_PLAYMODE_REPEAT	0x0080
 #define NETMD_PLAYMODE_SHUFFLE	0x0100
-
-/** Struct to hold the vendor and product id's for each unit. */
-struct netmd_devices {
-	int	idVendor;
-	int	idProduct;
-};
 
 /** Data about a group, start track, finish track and name.
   Used to generate disc header info.
@@ -108,35 +96,6 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* pair);
 	\return size of buffer to alloc.
 */
 //unsigned int request_buffer_length(usb_dev_handle* dev);
-
-/** Finds netmd device and returns pointer to its device handle */
-struct usb_device* netmd_init();
-
-/*! Initialize USB subsystem for talking to NetMD
-  \param dev Pointer returned by netmd_init.
-*/
-usb_dev_handle* netmd_open(struct usb_device* dev);
-
-/*! Get the device name stored in USB device
-  \param dev pointer to device returned by netmd_open
-  \param buf buffer to hold the name.
-  \param buffsize of buf.
-  \return Actual size of buffer, if your buffer is too small resize buffer and recall function.
-*/
-int netmd_get_devname(usb_dev_handle* dev, unsigned char* buf, int buffsize);
-
-/*! Function for internal use by init_disc_info */
-// int request_disc_title(usb_dev_handle* dev, char* buffer, int size);
-
-/*! Function to exchange command/response buffer with minidisc
-	\param dev device handle
-	\param cmd command buffer
-	\param cmdlen length of command
-	\param rsp response buffer
-	\return number of bytes received if >0, or error if <0
-*/
-int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
-	unsigned char *rsp);
 
 /*! Get the flags used for a specific track.
   \param dev pointer to device returned by netmd_open
@@ -271,10 +230,6 @@ int netmd_write_track(usb_dev_handle* dev, char* szFile);
 */
 void netmd_clean_disc_info(minidisc* md);
 
-/*! closes the usb descriptors
-  \param dev pointer to device returned by netmd_open
-*/
-void netmd_clean(usb_dev_handle* dev);
 void test(usb_dev_handle* dev);
 
 /*! gets the position within the currently playing track in seconds.hundreds
