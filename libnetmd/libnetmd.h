@@ -18,8 +18,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include "netmd_dev.h"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -28,6 +26,72 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#include <usb.h>
+
+/** Error codes of the USB transport layer */
+#define NETMDERR_USB					-1	/* general USB error */
+#define NETMDERR_NOTREADY			-2	/* player not ready for command */
+#define NETMDERR_TIMEOUT			-3	/* timeout while waiting for response */
+#define NETMDERR_CMD_FAILED		-4	/* minidisc responded with 08 response */
+#define NETMDERR_CMD_INVALID	-5	/* minidisc responded with 0A response */
+
+
+typedef struct netmd_device_t {
+	struct netmd_device_t	*link;
+	char			name[32];
+	struct usb_device	*usb_dev;
+} netmd_device_t;
+
+typedef usb_dev_handle*		netmd_dev_handle;
+
+/** Struct to hold the vendor and product id's for each unit. */
+struct netmd_devices {
+	int	idVendor;
+	int	idProduct;
+};
+
+/** intialises the netmd device layer, scans the USB and fills in a list of supported devices
+  \param device_list head of linked list of netmd_device_t structures to fill
+  \return the number of devices found, or <0 on error.
+*/
+int netmd_init(netmd_device_t **device_list);
+
+/*! Opens a NetMD device
+  \param devh Pointer returned by netmd_init.
+*/
+netmd_dev_handle* netmd_open(netmd_device_t *devh);
+
+/*! Get the device name stored in USB device
+  \param devh pointer to device returned by netmd_open
+  \param buf buffer to hold the name.
+  \param buffsize of buf.
+  \return Actual size of buffer, if your buffer is too small resize buffer and recall function.
+*/
+int netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, int buffsize);
+
+/*! Function for internal use by init_disc_info */
+// int request_disc_title(usb_dev_handle* dev, char* buffer, int size);
+
+/*! Function to exchange command/response buffer with minidisc
+	\param dev device handle
+	\param cmd command buffer
+	\param cmdlen length of command
+	\param rsp response buffer
+	\return number of bytes received if >0, or error if <0
+*/
+int netmd_exch_message(netmd_dev_handle *dev, unsigned char *cmd, int cmdlen,
+	unsigned char *rsp);
+
+/*! closes the usb descriptors
+  \param dev pointer to device returned by netmd_open
+*/
+void netmd_close(netmd_dev_handle* dev);
+
+/*! cleans structures created by netmd_init
+  \param device_list list of devices returned by netmd_init
+*/
+void netmd_clean(netmd_device_t *device_list);
 
 /** Playmode values to be sent to netmd_set_playmode.
     These can be combined by OR-ing them to do shuffle repeat for example.
