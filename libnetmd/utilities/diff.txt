@@ -1,0 +1,173 @@
+Index: logparse.pl
+===================================================================
+RCS file: /var/cvs/libnetmd/utilities/logparse.pl,v
+retrieving revision 1.1
+diff -u -r1.1 logparse.pl
+--- logparse.pl	15 May 2002 21:37:14 -0000	1.1
++++ logparse.pl	17 May 2002 16:13:57 -0000
+@@ -10,8 +10,9 @@
+ my $PeekFlag = 0;	# Lookahead flag (ugh!)
+ my $UrbTime = 0;	# Time elapsed when this URB was sent
+ my $LastUrbTime = 0;	# Time elapsed when previous URB was sent
++my $FreeStyle = 0;	# Allow lines with no obvious timestamp or line tag
+ 
+-my $LastVendor;		# Last vendor request
++my $LastVendor= '';	# Last vendor request
+ 
+ my %UrbTypeMap = (
+    'URB_FUNCTION_CONTROL_TRANSFER'		=>	'Control Transfer',
+@@ -36,10 +37,10 @@
+ # Main loop
+ 
+ while( PeekLine() ) {
+-    if( $Line =~ /^>>>>>>/ ) {
++    if( $Line =~ /^>>>/ ) {
+ 	ParseOutgoing();
+     }
+-    elsif( $Line =~ /^<<<<<</ ) {
++    elsif( $Line =~ /^<<</ ) {
+ 	ParseIncoming();
+     }
+     else {
+@@ -57,11 +58,11 @@
+ 
+     # Read and parse the URB direction & number header
+     ReadLine() or die "Read error\n";
+-    if( $Line =~ />>>>>>> URB (\d+) going down/ ) {
++    if( $Line =~ />> +URB (\d+) going down/ ) {
+ 	$UrbId = $1;			# Save the ID number
+ 	# Read and parse the URB type
+ 	ReadLine() or die "Read error\n";
+-	if( $Line =~ /^-- (\S+):/ ) {
++	if( $Line =~ /^-- ?(\S+):/ ) {
+ 	    $UrbType = $1;
+ 	}
+ 	else {
+@@ -88,11 +89,11 @@
+ 
+     # Read and parse the URB direction & number header
+     ReadLine() or die "Read error\n";
+-    if( $Line =~ /<<<<<<< URB (\d+) coming back/ ) {
++    if( $Line =~ /<< +URB (\d+) coming back/ ) {
+ 	$UrbId = $1;			# Save the ID number
+ 	# Read and parse the URB type
+ 	ReadLine() or die "Read error\n";
+-	if( $Line =~ /^-- (\S+):/ ) {
++	if( $Line =~ /^-- ?(\S+):/ ) {
+ 	    $UrbType = $1;
+ 	}
+ 	else {
+@@ -114,7 +115,7 @@
+ 
+     while( PeekLine() ) {
+ 	# Handle 'key = value' lines;
+-	if( $Line =~ /^(.*\S)\s+=\s+(.*)/ ) {
++	if( $Line =~ /^(.*\S)\s*=\s+(.*)/ ) {
+ 	    my $key = $1;
+ 	    my $value = $2;
+ 	    $Params{$key} = $value;
+@@ -122,6 +123,9 @@
+ 	    if( $value =~ /^[0-9a-f]+ \(/ ) {
+ 		$value =~ s/ .*//;
+ 	    }
++	    if( $value =~ /^00+/ ) {
++		$value =~ s/^00+/0/;
++	    }
+ 	    $TerseParams{$key} = $value;
+ 	}
+ 	# Handle hex data (eg transfers)
+@@ -176,24 +180,24 @@
+ 	print "$UrbDir $UrbId $TypeName: ";
+ 
+ 	if ( $UrbType eq 'URB_FUNCTION_CONTROL_TRANSFER' ) {
+-	    print "Buflen $TerseParams{'TransferBufferLength'} ";
++	    print "Buflen=$TerseParams{'TransferBufferLength'}  ";
+ 	    unless( $Quiet ) {
+-		print "Flags $TerseParams{'TransferFlags'} ";
+-		print "Pipe $TerseParams{'PipeHandle'} ";
++		print "Flags=$TerseParams{'TransferFlags'}  ";
++		print "Pipe=$TerseParams{'PipeHandle'}  ";
+ 	    }
+ 	} elsif ( $UrbType eq 'URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE' ) {
+-	    print "Index $TerseParams{'Index'} ";
+-	    print "Type $TerseParams{'DescriptorType'} ";
+-	    print "Lang $TerseParams{'LanguageId'} ";
++	    print "Index=$TerseParams{'Index'}  ";
++	    print "Type=$TerseParams{'DescriptorType'}  ";
++	    print "Lang=$TerseParams{'LanguageId'}  ";
+ 	} elsif ( $UrbType eq 'URB_FUNCTION_SELECT_CONFIGURATION' ) {
+ 	    # Nothing here yet :)
+ 	} elsif ( $UrbType eq 'URB_FUNCTION_VENDOR_INTERFACE' ) {
+-	    print "Req $TerseParams{'Request'} ";
++	    print "Req=$TerseParams{'Request'}  ";
+ 	    unless( $Quiet ) {
+-		print "Value $TerseParams{'Value'} ";
+-		print "Index $TerseParams{'Index'} ";
+-		print "Res Bits $TerseParams{'RequestTypeReservedBits'} ";
+-		print "Pipe $TerseParams{'PipeHandle'} " if( $Params{'PipeHandle'});
++		print "Value=$TerseParams{'Value'}  ";
++		print "Index=$TerseParams{'Index'}  ";
++		print "Res Bits=$TerseParams{'RequestTypeReservedBits'}  ";
++		print "Pipe=$TerseParams{'PipeHandle'}  " if( $Params{'PipeHandle'});
+ 	    }
+ 	}
+ 	print "\n";
+@@ -235,20 +239,52 @@
+     }
+     while( <> ) {
+ 	# split out the line number and time fields
+-	if( /^(\d+)\s+([0-9.]+)\s+(.*)$/ ) {
++	if( /^(\d+)\s+([0-9.]+)\s+(.*)$/ ) {	# "old" usbsnoopy format
+ 	    $LineNo = $1;
+ 	    $LineTime = $2;
+ 	    $Line = $3;
+-	    next unless $Line;			# SKIP blank lines
+-	    next if( $Line =~ /^UsbSnoop/ );	# Skip UsbSnoop internal stuff
+-	    next if( $Line =~ /^\d+:\s+/ );	# Skip hexdump 'count' lines
+-	    $Line =~ s/\s+$//;			# Trim trailing whitespace
+ 	    $Line =~ s/ : / = /g;		# Convert for easier parsing later
+-	    return 1;
++	}
++	elsif( /^\[(\d+) ms\] (.*)$/ ) {	# 'new' usbsnoop format
++	    $LineTime = $1;
++	    $Line = $2;
++	    if( $LineNo ) {			# Could line numbers ourself
++		$LineNo++;
++	    }
++	    else {
++		$LineNo = 1;			# Count line number ourself
++		$FreeStyle = 1;			# Allow 'freestyle' lines
++	    }
++	}
++	elsif( $FreeStyle ) {
++	    s/^\s*//;
++	    s/^[0-9a-f]+: //;	# Nasty hack to get rid of markers in hex data
++	    $Line = $_;
++	    if( $Line =~ /^SetupPacket/ ) {
++		# Even nastier hack for the way setup packets are dumped
++		my $t = <>;
++		if( $t ) {
++		    $t =~ s/^\s*//;
++		    $t =~ s/\s+$//;
++		    $t =~ s/^[0-9a-f]+: //;
++		    $Line = "$Line $t";
++		}
++	    }
++	    $LineNo++;
+ 	}
+ 	else {
+ 	    die "Parse error!";
+ 	}
++	next unless $Line;			# SKIP blank lines
++	$Line =~ s/^\s*//;			# Trim leading whitespace
++	$Line =~ s/\s+$//;			# Trim trailing whitespace
++	next if( $Line =~ /^UsbSnoop/ );	# Skip UsbSnoop internal stuff
++	next if( $Line =~ /^fido=/ );
++	next if( $Line =~ /^fdo=/ );
++	next if( $Line =~ /^pdx=/ );
++	next if( $Line =~ /^\d+:\s*$/ );	# Skip hexdump 'count' lines
++	#print "$LineNo/$LineTime '$Line'\n";
++	return 1;
+     }
+     $Line = undef;
+     return undef;

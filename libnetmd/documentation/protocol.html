@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<title>NetMD USB Protocol</title>
+	</head>
+	<body>
+		<h1>Index</h1>
+		
+		<ul>
+			<li><a href="#notes">Technical Notes</a></li>
+			<li><a href="#req_disc">Request Disc Header</a></li>
+			<li><a href="#req_track">Request Track Title</a></li>
+			<li><a href="#set_disc">Set Disc Header</a></li>
+			<li><a href="#set_track">Set Track Title</a></li>
+			<li><a href="#move_track">Move Track</a></li>
+			<li><a href="#track_time">Get Track Time</a></li>
+			<li><a href="#codec">Get Track Codec</a></li>
+			<li><a href="#bitrate">Get Track Bitrate</a></li>
+			<li><a href="#header">Header layout</a></li>
+		</ul>
+		<hr>
+		<a name=notes><h3>Technical notes.</h3></a>
+		<ul>
+			<li>All Value and Index values in the URB's are 0 for all URB's that I've discovered</li>
+			<li>Reqeust 80 means the setup packet should start with 41h</li>
+			<li>Reqeust 81 means the setup packet should start with C1h</li>
+			<li>Reqeust 01 means the setup packet should start with C1h</li>
+			<li>Track numbers are zero based, so track 1 on the disc is refered to as 00 in the protocol</li>
+			<li>Almost all numbers are in hex, get used to it.</li>
+			<li>Out indicates data leaving the PC</li>
+			<li>In indicates data coming from the USB device.</li>
+		</ul>
+	
+		<h3><a name="req_disc">Request Disc Header</a></h3>
+		Direction: Out<br>
+		Request: 80<br>
+		Data Length: 13<br>
+		Data: 00 18 06 02 20 18 02 00 00 30 00 0a 00 ff 00 00 00 00 00
+		<P>
+		Direction: Out<br>
+		Request: 01<br>
+		Data Length: 04<br>
+		Data: buffer of length 4<p>
+		Upon completion buffer is filled in for you as 01 81 hh 00 where hh is the length of the buffer
+		needed to hold the Disc Header (plus protocol information)
+		<P>
+		Request: 81<br>
+		Data Lenth: hh from above<br>
+		Data: buffer of length hh<p>
+		Upon completion the buffer holds hh bytes of data. The first 19h bytes are protocol information, 
+		you are interested in the remaining data.<br>
+		
+		<hr>
+		
+		<h3><a name="req_track">Request Track Title</a></h3>
+		Direction: Out<br>
+		Request: 80<br>
+		Data Length: 13<br>
+		Data: 00 18 06 02 20 18 01 00 HH 30 00 0a 00 ff 00 00 00 00 00<P>
+		HH is the track number.
+		<P>
+		Direction: Out<br>
+		Request: 01<br>
+		Data Length: 04<br>
+		Data: buffer of length 4<p>
+		Upon completion buffer is filled in for you as 01 81 hh 00 where hh is the length of the buffer
+		needed to hold the Track Title (plus protocol information)
+		<P>
+		Request: 81<br>
+		Data Lenth: hh from above<br>
+		Data: buffer of length hh<p>
+		Upon completion the buffer holds hh bytes of data. The first 19h bytes are protocol information, 
+		you are interested in the remaining data.<br>
+
+		<hr>
+		
+		<h3><a name="set_disc">Set Disc Header</a></h3>
+		Direction: Out<br>
+		Request: 80<br>
+		Data Length: 13<br>
+		Data: 00 18 07 02 20 18 01 00 00 30 00 0a 00 50 00 00<Br>
+		HH 00 00 00 JJ (Header)<P>
+		Where HH is the length of the Header, JJ is the length the header used to be, and (Header) is the full complete Header List<BR>
+		See <a href="#header">Header</a> for information on how the Disc Header is structured.
+
+		<hr>
+		
+		<h3><a name="set_track">Set Track Title</a></h3>
+		Direction: Out<br>
+		Request: 80<br>
+		Data Length: 13<br>
+		Data: 00 18 07 02 20 18 02 00 00 30 00 0a 00 50 00 00<Br>
+		HH 00 00 00 HH (Title)<P>
+		Where HH is the length of the Title and (Title) is the Track Title, remember that LP: is not inserted for you.<BR>
+
+		<hr>
+
+		<h3><a name="move_track">Move Track</a></h3>
+		Direction: Out<br>
+		Request: 80<br>
+		Data Length: 13<br>
+		Data: 00 18 43 ff 00 00 20 10 HH 00 04 20 10 01 00 JJ<P>
+		Where HH is the track number to move and JJ is the track number to make it.<br>
+		
+		<hr>
+		<h3><a name="track_time">Get Track Time</a></h3>
+		Request: 80<br>
+		Data Length: 13<br>
+		Data: 00 18 06 02 20 10 01 00 TT 30 00 01 00 ff 00 00 00 00 00<P>
+		TT is the track number.
+		<P>
+		Request: 01<br>
+		Data Length: 04<br>
+		Data: buffer of length 4<p>
+		Upon completion buffer is filled in for you as 01 81 hh 00 where hh is the length of the buffer
+		needed to hold the Disc Header (plus protocol information)
+		<P>
+		Request: 81<br>
+		Data Lenth: hh from above<br>
+		Data: buffer of length hh<p>
+		Upon completion the buffer holds hh (seems to be 1f every time since its the same data per track)
+		bytes of data. The last 3 bytes are Binary Coded Decimal representations of the track times.<P>
+		<pre>#define BCD_TO_PROPER(x) (((((x) & 0xf0) >> 4) * 10) + ((x) & 0x0f))</pre> <P>
+		This is a C macro which will return the proper decimal for use.
+		<P>
+		<hr>
+		<h3><a name="codec">Get Track Codec</a></h3>
+		Request: 80<br>
+		Data Length: 13<br>
+		Data: 00 18 06 01 20 10 01 00 tt ff 00 00 01 00 08<BR>
+		tt is the track number.
+		<P>
+		Request: 01<br>
+		Data Length: 04<br>
+		Data: buffer of length 4<p>
+		Upon completion buffer is filled in for you as 01 81 hh 00 where hh is the length of the buffer
+		needed to hold reply
+		<P>
+		Request: 81<br>
+		Data Lenth: hh from above<br>
+		Data: buffer of length hh<p>
+		Upon completion the buffer holds hh (seems to be 1f every time since its the same data per track)
+		bytes of data. The last byte holds a hex value representing the bitrate<P>
+		<b>Known Values</b>
+		<ol>
+			<li>00 - ATRAC</li>
+			<li>03 - ATRAC3</li>
+		</ol>
+		<P>
+		<hr>
+		<h3><a name="bitrate">Get Track Bitrate</a></h3>
+		Request: 80<br>
+		Data Length: 13<br>
+		Data: 00 18 06 02 20 10 01 00 tt 30 80 07 00 ff 00 00 00 00 00<BR>
+		tt is the track number.
+		<P>
+		Request: 01<br>
+		Data Length: 04<br>
+		Data: buffer of length 4<p>
+		Upon completion buffer is filled in for you as 01 81 hh 00 where hh is the length of the buffer
+		needed to hold reply
+		<P>
+		Request: 81<br>
+		Data Lenth: hh from above<br>
+		Data: buffer of length hh<p>
+		Upon completion the buffer holds hh (seems to be 1f every time since its the same data per track)
+		bytes of data. The second to last byte holds a hex value representing the bitrate<P>
+		<b>Known Values</b>
+		<ol>
+			<li>90 - Stereo</li>
+			<li>92 - LP2</li>
+		</ol>
+		<P>
+		<HR>
+		<h3><a name="header">Header layout</a></h3>
+		The way Sony implemented groups is interesting, its a text string stored with the disc name.<P>
+		So if you had a MD with the Title GroovyMix and 2 groups Thumpen and Bumpen it could look like this:<BR>
+		0;GroovyMix//1-5;Thumpen//6-8;Bumpen//
+		
+		Where 1-5 and 6-8 are the NON zero based track numbers that the group contains. 
+		I ephasize non because the protocol refers to all track numbers in a zero based manner, making information tracking interesting<P>
+		
+	<body>
+</html>

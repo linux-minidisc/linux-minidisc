@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>So you want to reverse engineer a USB protocol</title>
+  </head>
+
+  <body>
+    <h1>So you want to reverse engineer a USB protocol</h1>
+
+	<p>
+	  So you bought the new fancy (insert device here) and it's all USB
+	  capable n stuff. Problem is (company name here) doesn't support
+	  your OS, and no one is working on software for it so you can't
+	  just sit back and wait.</p> <p>No problem you say, I'm a
+	  hard-core (insert OS name here) user, I can make my own
+	  stuff.</p> <p>Good for you, now lets get down to work.</p>
+
+	  <h2>Getting set up</h2> 
+
+	<p>If you're rich, have a sugar
+	  daddy/momma who is, or have a good company budget on your side
+	  the way to go is to have a dedicated machine running one of the
+	  supported OS's and have a hardware/software combo bus and
+	  protocol analyzer like the one from <a
+	  href="http://www.catc.com/products/chief.html">CATC</a>.</p>
+
+	<p>On the other hand if you're a person of moderate income, cheap
+	  or for whatever reason something like this is not an option, a
+	  few guys came to your rescue and produced <a
+	  href="http://www.wingmanteam.com/usbsnoopy/">USB Snoopy</a>. A software
+	  based decoder that works for most versions of Microsoft
+	  Windows.</p>
+
+	<p>The next problem for some people is getting something set up to
+	  run the supported OS. If you do not have dedicated hardware for
+	  this one solution is <a href="http://www.vmware.com">VMWare
+		Workstation</a><p>
+
+	<P>VMWare allows you to run an Operating System
+	  inside of a virtual machine which shows up as a window in your
+	  current Operating System. The cost is somewhat prohibitive at
+	  300 USD, and that of course does not include a license for the
+	  needed OS.</P>
+
+	<P>2 open source solutions may be viable, however I have not tested
+	  them. <a href="http://www.plex86.org">Plex86</a> and 
+	  <a href="http://bochs.sourceforge.net/">Bochs</a>.</p>
+
+	<p>Bochs is the only solution for someone running non Intel
+	  compatible hardware and needs to run Microsoft Windows or other
+	  Intel based OS, as Bochs
+	  is a emulator not a hardware virtualizer (I'm not prepared to go
+	  into the difference, however the latter uses the existing
+	  hardware while the former pretends it IS hardware).</P>
+
+	<p>Plex86 recently moved so the 
+	  <a href="http://savannah.gnu.org">Savannah project management
+		site</a>. It takes a more VMWare based virtualization approach
+	  from what I understand. The project is closely related to Bochs
+	  and they share code/have a similar user interface.</p>
+
+	<h2>OK, I'm running the OS and have a way of getting the USB
+	  data.</h2> 
+
+	<p>Any examples I give have the assumption that you chose VMWare
+	  and USB Snoopy as that's what I'm using.</p>
+
+	<p>What you need to do is get your protocol analyzer in place and
+	  ready to capture, then install the driver/software that drives
+	  the USB device. After that you need to break down the
+	  capabilities of the device that you are interested in. Rank
+	  these capabilities in terms of how easy you think they will be
+	  to figure out. Remember, baby steps. Not only will small
+	  successes bolster your ego and drive to keep going, but it will
+	  get you familiar with the protocol that you are dealing
+	  with.</p>
+
+	<p>Some protocols are well put together, simple to understand and
+	  are easy to work with. You will probably never see one of these
+	  protocols as they are like many other mythical things, often
+	  talked about, never seen.</p>
+
+	<p>Now we begin, with everything in place start up the software
+	  that will talk to the device, the logger should be
+	  running. When the software has finished starting up if it
+	  communicated with the device you should have data, some software
+	  polls different status information on the device while running,
+	  if this is true you should see patterns in the data and pulses
+	  going down the USB port (a nice thing about VMWare is the icon
+	  that represents the USB port will flash to show data). Stop the
+	  logger, save the data using a name like applicationstartup.log
+	  or whatever and move down your list a couple of times getting
+	  different data samples to work with, nothing complex just 2 or 3
+	  different samples to compare.</p>
+
+	<p>An understanding of the URB format is critical at this point,
+	  an URB is the basic structure for every USB request (URB stands
+	  for USB Request Block), its not an overly complex structure so
+	  take a minute to review it</p>
+
+	<p>This is where a bad protocol gets frustrating, the data looks
+	  like garbage, the analyzer probably saves everything in hex
+	  making life even harder when trying to deal with simple
+	  text. Using hex is good however, because binary data wouldn't
+	  look like much and hex is portable across platforms and
+	  languages.</p>
+
+	<p>If you will be dealing with simple text I have 
+	  <a href="http://gargoyles.monochromatic.net/cgi-bin/viewcvs.cgi/netmd">some
+	source</a> which takes in chars and outputs hex, and takes in hex
+	and output's simple printable chars or .'s</p>
+
+	<p>From here every protocol is different, things to look for and
+	  take notes on are Request #'s Index #'s and of course Value,
+	  which is the binary data. Transfer flags and URBLink's may also
+	  come into play on your device, URBLinks connect URB's
+	  together.</p>
+
+	<p>A few sample protocol spec's that can be found on the web are
+	  the one for the <a
+						 href="http://rio500.sourceforge.net/rio_protocol.html">Rio500</a>
+	  and the one I'm working on for 
+	  <a
+		 href="http://gargoyles.monochromatic.net/cgi-bin/viewcvs.cgi/netmd">Sony's NetMD Minidisc products.</a>
+	</p>
+
+    <hr>
+    <address><a href="yugami@monochromatic.net">Marc Britten</a></address>
+<!-- Created: Sat Apr 27 10:01:23 EDT 2002 -->
+<!-- hhmts start -->
+Last modified: Sun May 12 00:49:16 EDT 2002
+<!-- hhmts end -->
+  </body>
+</html>
+<!--  LocalWords:  USB
+ -->
