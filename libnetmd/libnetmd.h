@@ -92,7 +92,7 @@ void netmd_trace_level(int level);
 /** Shows a hexdump of binary data
   \param level Trace level
   \param data pointer to binary data to trace
-  \param number of bytes to trace
+  \param len number of bytes to trace
 */
 void netmd_trace_hex(int level, unsigned char *data, int len);
 /** Printf like trace function
