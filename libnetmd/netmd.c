@@ -75,14 +75,14 @@ static void handle_secure_cmd(usb_dev_handle* devh, int cmdid, int track)
 		if (netmd_secure_cmd_40(devh, track, hash8) > 0) {
 			fprintf(stdout, "Signature of deleted track %d =\n", track);
 			print_hex(hash8, sizeof(hash8));
-		}				
+		}
 		break;
 	case 0x48:
 		memset(hash8, 0, sizeof(hash8));
 		if (netmd_secure_cmd_48(devh, track, hash8) > 0) {
 			fprintf(stdout, "Signature of downloaded track %d =\n", track);
 			print_hex(hash8, sizeof(hash8));
-		}				
+		}
 		break;
 	case 0x80:
 		netmd_secure_cmd_80(devh);
@@ -94,6 +94,45 @@ static void handle_secure_cmd(usb_dev_handle* devh, int cmdid, int track)
 		fprintf(stderr, "unsupported secure command\n");
 		break;
 	}
+}
+
+
+static void send_raw_message(usb_dev_handle* devh, char *pszRaw)
+{
+	unsigned char cmd[255], rsp[255];
+	unsigned int data;
+	char szBuf[4];
+	int cmdlen, rsplen;
+
+	/* check raw message length */
+	if ((strlen(pszRaw) % 2) != 0) {
+		printf("Error: invalid length of raw message!\n");
+		return;
+	}
+
+	/* convert hex message to bin */
+	cmdlen = 0;
+	while (*pszRaw != 0) {
+		szBuf[0] = *pszRaw++;
+		szBuf[1] = *pszRaw++;
+		szBuf[2] = '\0';
+		if (sscanf(szBuf, "%02X", &data) != 1) {
+			printf("Error: invalid character at byte %d ('%s')\n", cmdlen, szBuf);
+			return;
+		}
+		cmd[cmdlen++] = data;
+	}
+
+	/* send it */
+	printf("Sending command:\n");
+	print_hex(cmd, cmdlen);
+	rsplen = netmd_exch_message(devh, cmd, cmdlen, rsp);
+	if (rsplen < 0) {
+		printf("Error: netmd_exch_message failed with %d\n", rsplen);
+		return;
+	}
+	printf("Received response:\n");
+	print_hex(rsp, rsplen);
 }
 
 
@@ -232,12 +271,15 @@ int main(int argc, char* argv[])
 		else if(strcmp("status", argv[1]) == 0) {
 			print_current_track_info(devh);
 		}
+		else if (strcmp("raw", argv[1]) == 0) {
+			send_raw_message(devh, argv[2]);
+		}
 		else if (strcmp("secure", argv[1]) == 0) {
 			cmdid = strtol(argv[2], NULL, 16);
 			track = 0;
 			if (argc > 3) {
 				track = strtol(argv[3], NULL, 10);
-			}			
+			}
 			handle_secure_cmd(devh, cmdid, track);
 		}
 		else if(strcmp("help", argv[1]) == 0)
@@ -474,6 +516,7 @@ void print_syntax()
 	printf("stop - stop the unit\n");
 	printf("delete #1 - delete track\n");
 	printf("m3uimport - import playlist - and title current disc using it.\n");
+	printf("raw - send raw command (hex)\n");
 	printf("newgroup <string> - create a new group named <string>\n");
 	printf("secure #1 #2 - execute secure command #1 on track #2 (where applicable)\n");
 	printf("  --- general ---\n");
