@@ -104,6 +104,8 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 	}
 
 	/* send data */
+	netmd_trace(NETMD_TRACE_INFO, "Command:\n");
+	netmd_trace_hex(NETMD_TRACE_INFO, cmd, cmdlen);
 	if (usb_control_msg(dev, USB_ENDPOINT_OUT | USB_TYPE_VENDOR |
 			 								USB_RECIP_INTERFACE, 0x80, 0, 0, cmd, cmdlen,
 			 								NETMD_SEND_TIMEOUT) < 0) {
@@ -126,6 +128,8 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
 			fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
 			return NETMDERR_USB;
 		}
+		netmd_trace(NETMD_TRACE_INFO, "Response:\n");
+		netmd_trace_hex(NETMD_TRACE_INFO, rsp, len);
 		/* get response again if player responds with 0x0F.	*/
 	} while (rsp[0] == 0x0F);
 
