@@ -1,6 +1,7 @@
 CC=gcc
 #CC=gcc-3.1
 TAR=tar
+INSTALL=install -c
 
 UTILS = utilities/hex-to-char utilities/char-to-hex
 LIBRARY = libnetmd.o
@@ -40,6 +41,5 @@ dist: clean
         $(PKG_NAME)
 
 install-hotplug:
-	cp hotplug-netmd /etc/hotplug/usb/minidisc
-	chmod +x /etc/hotplug/usb/minidisc
-	cp minidisc.usermap /etc/hotplug/usb
+	$(INSTALL) -m 755 hotplug-netmd /etc/hotplug/usb/minidisc
+	$(INSTALL) -m 644 minidisc.usermap /etc/hotplug/usb
