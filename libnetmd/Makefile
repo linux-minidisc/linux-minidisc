@@ -9,6 +9,9 @@ LIB = libnetmd.0.1.so
 APP = netmd
 PEDANTIC = -Wall
 
+LDFLAGS = `libusb-config --libs`
+CFLAGS = `libusb-config --cflags`
+
 PKG_NAME	= unstable
 DATE		= $$(date +%Y%m%d)
 
@@ -20,7 +23,7 @@ pedantic: $(APP)
 utils: $(UTILS)
 
 lib: $(LIBRARY)
-	$(CC) $(CFLAGS) -lm `libusb-config --libs` -shared -Wl,-soname,${LIB} -o ${LIB} $(LIBRARY)
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -Wl,-soname,${LIB} -o ${LIB} $(LIBRARY)
 
 docs: libnetmd.h
 	doxygen Doxyfile
@@ -34,7 +37,7 @@ libnetmd.o: libnetmd.c libnetmd.h libnetmd_secure.c
 	$(CC) -c ${INCLUDE} ${CFLAGS} -fPIC $<
 
 netmd: netmd.c libnetmd.c libnetmd.h libnetmd_secure.c netmd_dev.c netmd_dev.h
-	$(CC) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c libnetmd_secure.c netmd_dev.c `libusb-config --libs`
+	$(CC) $(CFLAGS) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c libnetmd_secure.c netmd_dev.c $(LDFLAGS)
 
 dist: clean
 	cd .. && $(TAR) --exclude={CVS,cvs} -cvzf $(PKG_NAME)-$(DATE).tar.gz \
