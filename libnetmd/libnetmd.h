@@ -37,6 +37,11 @@
 #define NETMD_PLAYMODE_REPEAT	0x0080
 #define NETMD_PLAYMODE_SHUFFLE	0x0100
 
+/** trace levels for netmd_trace calls */
+#define NETMD_TRACE_NONE	0
+#define NETMD_TRACE_ERROR	1
+#define NETMD_TRACE_INFO	2
+
 /** Data about a group, start track, finish track and name.
   Used to generate disc header info.
 */
@@ -79,11 +84,23 @@ extern struct netmd_pair const trprot_settings[];
 extern struct netmd_pair const bitrates[];
 extern struct netmd_pair const unknown_pair;
 
-/** Utility function for checking data.
-  \param buf buffer to print.
-  \param size length of buffer to print.
+/* Functions from netmd_trace.c */
+/** Sets the global trace level
+  \param level The trace level
 */
-void print_hex(unsigned char* buf, size_t size);
+void netmd_trace_level(int level);
+/** Shows a hexdump of binary data
+  \param level Trace level
+  \param data pointer to binary data to trace
+  \param number of bytes to trace
+*/
+void netmd_trace_hex(int level, unsigned char *data, int len);
+/** Printf like trace function
+  \param level Trace level
+  \param fmt printf-like format string
+*/
+void netmd_trace(int level, char *fmt, ...);
+
 
 /** enum through an array of pairs looking for a specific hex code.
 	\param hex hex code to find.
