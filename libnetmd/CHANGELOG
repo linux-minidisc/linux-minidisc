@@ -1,3 +1,16 @@
+* March 25 - April 26, 2004, Bertrik Sikken <bertrik@zonnet.nl> v.Unstable
+- Makefile: Added install-hotplug rule that installs the minidisc hotplug
+  scripts/files into /etc/hotplug/usb.
+- Makefile: Added dist rule to Makefile that creates a timestamped tar.gz of
+  the sources.
+- hotplug-netmd: Added check on action (should be 'add') and existence of
+  device file.
+- libnetmd.c: Removed usb_set_configuration (not needed, yet was giving
+  problems with hotplug).
+- libnetmd.c: Simplified function netmd_get_devname (now uses libusb function
+  usb_get_string_simple).
+- libnetmd.c: Added USB IDs of Sony MZ-N710/N810
+
 * March 24, 2004, Bertrik Sikken <bertrik@zonnet.nl> v.Unstable
 - Updated netmd_exch_message function to make it compatible with the Sony
   MDS-JB980 with help of Chris Croughton (0x0F responses are ignored now)
