@@ -17,7 +17,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
+
+#include <unistd.h>
 #include "libnetmd.h"
+
+#define NETMD_POLL_TIMEOUT	1000	/* miliseconds */
+#define NETMD_SEND_TIMEOUT	1000
+#define NETMD_RECV_TIMEOUT	1000
+#define NETMD_RECV_TRIES		30
 
 int min(int a,int b)
 {
@@ -115,6 +122,83 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* array)
 	}
 
 	return &unknown_pair;
+}
+
+/*
+	polls to see if minidisc wants to send data
+	
+	IN	dev			  USB device handle
+		  buf			  pointer to poll buffer
+		  tries			maximum attempts to poll the minidisc
+		
+	Return value
+	<0	if error
+	>=0	number of bytes that md wants to send
+*/
+static int netmd_poll(usb_dev_handle *dev, unsigned char *buf, int tries)
+{
+	int i;
+
+	for (i = 0; i < tries; i++) {
+		/* send a poll message */
+		memset(buf, 0, 4);
+		if (usb_control_msg(dev, 0xc1, 0x01, 0, 0, buf, 4, NETMD_POLL_TIMEOUT) < 0) {
+			fprintf(stderr, "netmd_poll: usb_control_msg failed\n");
+			return NETMDERR_USB;
+		}
+		if (buf[0] != 0) {
+			break;
+		}
+		if (i > 0) {
+			sleep(1);
+		}
+	}	
+	return buf[2];
+}
+
+/*
+	exchanges a message with the minidisc
+	
+	IN	dev		USB device handle
+			buf		pointer to buffer to send
+			len		length of data to send
+	
+	Returns >0 on success, <0 on failure
+*/
+static int netmd_exch_message(usb_dev_handle *dev, unsigned char *cmd, int cmdlen,
+															unsigned char *rsp)
+{
+	unsigned char	pollbuf[4];
+	int		len;
+
+	/* poll to see if we can send data */
+	len = netmd_poll(dev, pollbuf, 1);
+	if (len != 0) {
+		fprintf(stderr, "netmd_exch_message: netmd_poll failed\n");
+		return (len > 0) ? NETMDERR_NOTREADY : len;
+	}	
+	
+	/* send data */
+	if (usb_control_msg(dev, 0x41, 0x80, 0, 0, cmd, cmdlen, NETMD_SEND_TIMEOUT) < 0) {
+		fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
+		return NETMDERR_USB;
+	}
+
+	/* poll for data that minidisc wants to send */
+	len = netmd_poll(dev, pollbuf, NETMD_RECV_TRIES);
+	if (len <= 0) {
+		fprintf(stderr, "netmd_exch_message: netmd_poll failed\n");
+		return (len == 0) ? NETMDERR_TIMEOUT : len;
+	}
+	
+	/* receive data */
+	if (usb_control_msg(dev, 0xc1, pollbuf[1], 0, 0, rsp, len, NETMD_RECV_TIMEOUT) < 0) {
+		fprintf(stderr, "netmd_exch_message: usb_control_msg failed\n");
+		return NETMDERR_USB;
+	}
+
+	/* return length */
+	return pollbuf[2];
 }
 
 static void waitforsync(usb_dev_handle* dev)
@@ -237,29 +321,21 @@ int netmd_get_devname(usb_dev_handle* dh, unsigned char* buf, int buffsize)
 	return i;
 }
 
-static unsigned int request_buffer_length(usb_dev_handle* dev)
-{
-	unsigned char size_request[4] = {1, 2, 0, 1};
-	usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 500);
-	return size_request[2];
-}
-
 static int request_disc_title(usb_dev_handle* dev, char* buffer, int size)
 {
 	int ret = -1;
 	int title_size = 0;
 	char title_request[0x13] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x18, 0x01, 0x00, 0x00, 0x30, 0x00, 0xa, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
-	char *title = 0;
+	char title[255];
 
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, title_request, 0x13, 800);
+	ret = netmd_exch_message(dev, title_request, 0x13, title);
 	if(ret < 0)
 	{
 		fprintf(stderr, "request_disc_title: bad ret code, returning early\n");
 		return 0;
 	}
-
 	
-	title_size = request_buffer_length(dev);
+	title_size = ret;
 	
 	if(title_size == 0 || title_size == 0x13)
 		return -1; /* bail early somethings wrong */
@@ -270,20 +346,10 @@ static int request_disc_title(usb_dev_handle* dev, char* buffer, int size)
 		return -1;
 	}
 		
-	title = malloc(title_size);
-	memset(title, 0, (sizeof(char) * title_size));
-
-	if(usb_control_msg(dev, 0xc1, 0x81, 0, 0, title, title_size, 5000) < 0)
-	{
-		printf("Bad return on title request\n");
-		return -1;
-	}
-
 	memset(buffer, 0, size);
 	strncpy(buffer, (title + 25), title_size - 25);
 	/* buffer[size + 1] = 0;   XXX Huh? This is outside the bounds passed in! */
 
-	free(title);
 	return title_size - 25;
 }
 
@@ -292,25 +358,17 @@ int netmd_request_track_bitrate(usb_dev_handle*dev, int track, unsigned char* da
 	int ret = 0;
 	int size = 0;
 	char request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x10, 0x01, 0x00, 0xDD, 0x30, 0x80, 0x07, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
-	char* reply = 0;
+	char reply[255];
 
 	request[8] = track;
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 0x13, 800);
+	ret = netmd_exch_message(dev, request, 0x13, reply);
 	if(ret < 0)
 	{
 		fprintf(stderr, "bad ret code, returning early\n");
 		return 0;
 	}
 
-	size = request_buffer_length(dev);
-	reply = malloc(size);
-	memset(reply, 0, size);
-
-	if(usb_control_msg(dev, 0xc1, 0x81, 0, 0, reply, size, 5000) < 0)
-	{
-		printf("Bad return on title request\n");
-		return 0;
-	}
+	size = ret;
 	
 	/* 	printf("\nBitrate Reply:\n"); */
 	/* 	print_hex(reply, size); */
@@ -324,24 +382,17 @@ int netmd_request_track_codec(usb_dev_handle*dev, int track, char* data)
 	int ret = 0;
 	int size = 0;
 	char request[] = {0x00, 0x18, 0x06, 0x01, 0x20, 0x10, 0x01, 0x00, 0xDD, 0xff, 0x00, 0x00, 0x01, 0x00, 0x08};
-	char* reply = 0;
+	char reply[255];
 
 	request[8] = track;
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 0x13, 800);
+	ret = netmd_exch_message(dev, request, 0x13, reply);
 	if(ret < 0)
 	{
 		fprintf(stderr, "bad ret code, returning early\n");
 		return 0;
 	}
 	
-	size = request_buffer_length(dev);
-	reply = malloc(size);
-
-	if(usb_control_msg(dev, 0xc1, 0x81, 0, 0, reply, size, 5000) < 0)
-	{
-		printf("Bad return on title request\n");
-		return 0;
-	}
+	size = ret;
 	
 	/* 	printf("\nCodec Reply:\n"); */
 	/* 	print_hex(reply, size); */
@@ -358,31 +409,22 @@ int netmd_request_track_time(usb_dev_handle* dev, int track, struct netmd_track*
 	int ret = 0;
 	int size = 0;
 	char request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x10, 0x01, 0x00, 0x01, 0x30, 0x00, 0x01, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
-	char *time_request = 0;
+	char time_request[255];
 	
 	request[8] = track;
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 0x13, 800);
+	ret = netmd_exch_message(dev, request, 0x13, time_request);
 	if(ret < 0)
 	{
 		fprintf(stderr, "bad ret code, returning early\n");
 		return 0;
 	}
 
-	size = request_buffer_length(dev);
-	time_request = malloc(size);
-
-	if(usb_control_msg(dev, 0xc1, 0x81, 0, 0, time_request, size, 5000) < 0)
-	{
-		printf("Bad return on title request\n");
-		return 0;
-	}
+	size = ret;
 
 	buffer->minute = BCD_TO_PROPER(time_request[28]);
 	buffer->second = BCD_TO_PROPER(time_request[29]);
 	buffer->tenth = BCD_TO_PROPER(time_request[30]);
 	buffer->track = track;
-
-	free(time_request);
 
 	return 1;
 }
@@ -392,17 +434,17 @@ int netmd_request_title(usb_dev_handle* dev, int track, char* buffer, int size)
 	int ret = -1;
 	int title_size = 0;
 	char title_request[0x13] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x18, 0x02, 0x00, 0x00, 0x30, 0x00, 0xa, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
-	char *title = 0;
+	char title[255];
 
 	title_request[8] = track;
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, title_request, 0x13, 800);
+	ret = netmd_exch_message(dev, title_request, 0x13, title);
 	if(ret < 0)
 	{
 		fprintf(stderr, "bad ret code, returning early\n");
 		return -1;
 	}
 
-	title_size = request_buffer_length(dev);
+	title_size = ret;
 
 	if(title_size == 0 || title_size == 0x13)
 		return -1; /* bail early somethings wrong or no track */
@@ -413,20 +455,10 @@ int netmd_request_title(usb_dev_handle* dev, int track, char* buffer, int size)
 		return -1;
 	}
 		
-	title = malloc(title_size);
-	memset(title, 0, (sizeof(char) * title_size));
-
-	if(usb_control_msg(dev, 0xc1, 0x81, 0, 0, title, title_size, 5000) < 0)
-	{
-		printf("Bad return on title request\n");
-		return -1;
-	}
-
 	memset(buffer, 0, size);
 	strncpy(buffer, (title + 25), title_size - 25);
 	buffer[size + 1] = 0;
 
-	free(title);
 	return title_size - 25;
 }
 
@@ -437,6 +469,7 @@ int netmd_set_title(usb_dev_handle* dev, int track, char* buffer, int size)
 	char title_header[21] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18, 0x02, 0x00, 
 				 0x00, 0x30, 0x00, 0x0a, 0x00, 0x50, 0x00, 0x00, 
 				 0x0a, 0x00, 0x00, 0x00, 0x0d};
+	char reply[255];
 
 	title_request = malloc(sizeof(char) * (0x15 + size));
 	memcpy(title_request, title_header, 0x15);
@@ -446,7 +479,7 @@ int netmd_set_title(usb_dev_handle* dev, int track, char* buffer, int size)
 	title_request[16] = size;
 	title_request[20] = size;
 
-   	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, title_request, (int)(0x15 + size), 800);
+	ret = netmd_exch_message(dev, title_request, (int)(0x15 + size), reply);
 	if(ret < 0)
 	{
 		fprintf(stderr, "bad ret code, returning early\n");
@@ -461,11 +494,12 @@ int netmd_move_track(usb_dev_handle* dev, int start, int finish)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x43, 0xff, 0x00, 0x00, 0x20, 0x10, 0x01, 0x00, 0x04, 0x20, 0x10, 0x01, 0x00, 0x03};
+	char reply[255];
 	
 	request[10] = start;
 	request[15] = finish;
 
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 16, 800);
+	ret = netmd_exch_message(dev, request, 16, reply);
 
 	if(ret < 0)
 	{
@@ -676,7 +710,8 @@ int netmd_create_group(usb_dev_handle* devh, char* name)
 	char* new_title = 0;
 	char* p = 0;
 	char* request = 0;
-
+	char reply[255];
+	int ret;
 	char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18, 0x01, 0x00, 0x00, 0x30, 0x00, 0x0a, 0x00, 0x50, 0x00, 0x00};
 
 	disc_size = request_disc_title(devh, disc, 60);
@@ -733,7 +768,8 @@ int netmd_create_group(usb_dev_handle* devh, char* name)
 	p = request + 21;
 	memcpy(p, new_title, disc_size);
 
-	return usb_control_msg(devh, 0x41, 0x80, 0, 0, request, (int)(0x15 + disc_size), 800);
+	ret = netmd_exch_message(devh, request, (int)(0x15 + disc_size), reply);
+	return ret;
 }
 
 /* move track, then manipulate title string */
@@ -986,31 +1022,25 @@ int netmd_delete_group(usb_dev_handle* dev, minidisc* md, int group)
 int netmd_set_track( usb_dev_handle* dev, int track)
 {
 	int ret = 0;
-	char size_request[4];
 	char request[] = {0x00, 0x18, 0x50, 0xff, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};  // Change track
 	int size;
-	char *buf=0;
+	char buf[255];
 
 	fprintf(stderr,"Selecting track: %d \n",track); 
 	request[10] = track-1;
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 11, 800);
+	ret = netmd_exch_message(dev, request, 11, buf);
 
 	if(ret < 0)
 	{
 		fprintf(stderr, "bad ret code, returning early\n");
 		return 0;
 	}
-	usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 500);
 
-	size = size_request[2];
+	size = ret;
 	if (size<1) {
 		fprintf(stderr, "Invalid size\n");
 		return -1;
 	}
-	buf = malloc(size);
-	usb_control_msg(dev, 0xc1, 0x01, 0, 0, buf, size, 500);
-
-	free(buf);
 
 	return 1;
 }
@@ -1023,31 +1053,24 @@ int netmd_set_track( usb_dev_handle* dev, int track)
 static int netmd_playback_control(usb_dev_handle* dev, unsigned char code)
 {
 	int ret = 0;
-	char size_request[4];
 	unsigned char request[] = {0x00, 0x18, 0xc3, 0xff, 0x75, 0x00, 0x00, 0x00};                   // Play
 	int size;
-	unsigned char *buf=0;
+	unsigned char buf[255];
         
 	request[4] = code;
 	
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 8, 800);
+	ret = netmd_exch_message(dev, request, 8, buf);
 
-	usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 500);
-
-	size = size_request[2];
+	size = ret;
 	if (size<1) {
 		fprintf(stderr, "Invalid size\n");
 		return -1;
 	}
-	buf = malloc(size);
-	usb_control_msg(dev, 0xc1, 0x81, 0, 0, buf, size, 500);
 
 	printf( "Reply: " );
 	print_hex( buf, size );
 	printf( "\n" );
 	
-	free(buf);
-
 	return 1;
 }
 
@@ -1083,30 +1106,24 @@ int netmd_rewind( usb_dev_handle *dev )
 int netmd_stop(usb_dev_handle* dev)
 {
 	int ret = 0;
-	char size_request[4];
 	char request[] = {0x00, 0x18, 0xc5, 0xff, 0x00, 0x00, 0x00, 0x00};  // Stop
 	int size;
-	char *buf=0;
+	char buf[255];
         
 	fprintf(stderr,"Stopping minidisc \n"); 
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 8, 800);
+	ret = netmd_exch_message(dev, request, 8, buf);
 
 	if(ret < 0)
 	{
 		fprintf(stderr, "bad ret code, returning early\n");
 		return 0;
 	}
-	usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 500);
 
-	size = size_request[2];
+	size = ret;
 	if (size<1) {
 		fprintf(stderr, "Invalid size\n");
 		return -1;
 	}
-	buf = malloc(size);
-	usb_control_msg(dev, 0xc1, 0x01, 0, 0, buf, size, 500);
-
-	free(buf);
 
 	return 1;
 }
@@ -1121,6 +1138,7 @@ int netmd_write_disc_header(usb_dev_handle* devh, minidisc *md)
 	char* tmp = 0;
 	char* request = 0;
 	char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18, 0x01, 0x00, 0x00, 0x30, 0x00, 0x0a, 0x00, 0x50, 0x00, 0x00};
+	char reply[255];
 	
 	/* calculate header length */
 	for(i = 0; i < md->group_count; i++)
@@ -1220,7 +1238,7 @@ int netmd_write_disc_header(usb_dev_handle* devh, minidisc *md)
 	tmp = request + 21;
 	memcpy(tmp, header, header_size);
 
-	ret = usb_control_msg(devh, 0x41, 0x80, 0, 0, request, (header_size + 20), 800); 
+	ret = netmd_exch_message(devh, request, (header_size + 20), reply); 
 	free(request);
 
 	return ret;
@@ -1409,9 +1427,10 @@ int netmd_delete_track(usb_dev_handle* dev, int track)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x40, 0xff, 0x01, 0x00, 0x20, 0x10, 0x01, 0x00, 0x00};
+	char reply[255];
 	
 	request[10] = track;
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 11, 800);
+	ret = netmd_exch_message(dev, request, 11, reply);
 
 	return ret;
 }
@@ -1420,23 +1439,13 @@ int netmd_get_current_track(usb_dev_handle* dev)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04, 0x30, 0x88, 0x02, 0x00, 0x30, 0x88, 0x05, 0x00, 0x30, 0x00, 0x03, 0x00, 0x30, 0x00, 0x02, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
-	char size_request[4];
-	int size = 0;
 	
 	int track = 0;
 	
-	char * buf;
+	char buf[255];
 	
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 28, 800);
+	ret = netmd_exch_message(dev, request, 28, buf);
 
-	usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 500);
-
-	size = size_request[2];
-
-	buf = malloc(size);
-
-	usb_control_msg(dev, 0xc1, 0x81, 0, 0, buf, size, 500);
-	
 	track = buf[36];
 
 	return track;
@@ -1447,8 +1456,6 @@ float netmd_get_playback_position(usb_dev_handle* dev)
 {
 	int ret = 0;
 	char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04, 0x30, 0x88, 0x02, 0x00, 0x30, 0x88, 0x05, 0x00, 0x30, 0x00, 0x03, 0x00, 0x30, 0x00, 0x02, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
-	char size_request[4];
-	int size = 0;
 	
 	float position = 0.0f;
 	
@@ -1456,18 +1463,10 @@ float netmd_get_playback_position(usb_dev_handle* dev)
 	int seconds = 0;
 	int hundreds = 0;
 	
-	char * buf;
+	char buf[255];
 	
-	ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, request, 28, 800);
+	ret = netmd_exch_message(dev, request, 28, buf);
 
-	usb_control_msg(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 500);
-
-	size = size_request[2];
-
-	buf = malloc(size);
-
-	usb_control_msg(dev, 0xc1, 0x81, 0, 0, buf, size, 500);
-	
 	minutes = BCD_TO_PROPER(buf[38]);
 	seconds = BCD_TO_PROPER(buf[39]);
 	hundreds = BCD_TO_PROPER(buf[40]);
