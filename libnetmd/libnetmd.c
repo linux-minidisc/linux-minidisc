@@ -311,25 +311,13 @@ usb_dev_handle* netmd_open(struct usb_device* dev)
 
 int netmd_get_devname(usb_dev_handle* dh, unsigned char* buf, int buffsize)
 {
-	char b[256];
-	int i = 0;
-
-	if(usb_control_msg(dh, 0 | USB_ENDPOINT_IN, USB_REQ_GET_DESCRIPTOR, 
-					   (USB_DT_STRING << 8) | 0x02, 0, b, 256, 5000) < 0)
-	{
-		fprintf(stdout, "cannot get config descriptor %d, %s (%d)\n", buf[15], strerror(errno), errno);
+	if (usb_get_string_simple(dh, 2, buf, buffsize) < 0) {
+		fprintf(stderr, "usb_get_string_simple failed, %s (%d)\n", strerror(errno), errno);
 		buf[0] = 0;
 		return 0;
-	}
+	}	
 
-	/* I think they left room for unicode chars, only use every other byte */
-	for (i = 0; i < ((b[0] - 2) / 2); i++)
-	{
-		buf[i] = b[2+2*i];
-	}
-	buf[i] = 0;
-
-	return i;
+	return strlen(buf);
 }
 
 static int request_disc_title(usb_dev_handle* dev, char* buffer, int size)
