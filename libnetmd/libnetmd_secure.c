@@ -17,7 +17,7 @@
 
 
 /** Helper function to make life a little simpler for other netmd_secure_cmd_* functions */
-static int exch_secure_msg(usb_dev_handle *dev, unsigned char *cmd, int cmdlen, unsigned char *rsp)
+static int exch_secure_msg(netmd_dev_handle *dev, unsigned char *cmd, int cmdlen, unsigned char *rsp)
 {
 	int len;
 
@@ -57,7 +57,7 @@ static int exch_secure_msg(usb_dev_handle *dev, unsigned char *cmd, int cmdlen, 
 */
 
 /** Start secure session? */
-int netmd_secure_cmd_80(usb_dev_handle *dev)
+int netmd_secure_cmd_80(netmd_dev_handle *dev)
 {
 	unsigned char cmd[] = {SECURE_CMD_HDR, 0x80, 0xff};
 	unsigned char rsp[255];
@@ -67,7 +67,7 @@ int netmd_secure_cmd_80(usb_dev_handle *dev)
 
 
 /** Get 4-byte player ID? */
-int netmd_secure_cmd_11(usb_dev_handle *dev, unsigned int *player_id)
+int netmd_secure_cmd_11(netmd_dev_handle *dev, unsigned int *player_id)
 {
 	unsigned char cmd[] = {SECURE_CMD_HDR, 0x11, 0xff};
 	unsigned char rsp[255];
@@ -86,7 +86,7 @@ int netmd_secure_cmd_11(usb_dev_handle *dev, unsigned int *player_id)
 
 
 /** Send 40-byte EKB (enabling key block)? */
-int netmd_secure_cmd_12(usb_dev_handle *dev, unsigned char *ekb_head, unsigned char *ekb_body)
+int netmd_secure_cmd_12(netmd_dev_handle *dev, unsigned char *ekb_head, unsigned char *ekb_body)
 {
 	unsigned char cmdhdr[] = {SECURE_CMD_HDR, 0x12, 0xff, 0x00, 0x38, 0x00, 0x00,
 		0x00, 0x38, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
@@ -109,7 +109,7 @@ int netmd_secure_cmd_12(usb_dev_handle *dev, unsigned char *ekb_head, unsigned c
 
 
 /** Exchange 8-byte random? */
-int netmd_secure_cmd_20(usb_dev_handle *dev, unsigned char *rand_in, unsigned char *rand_out)
+int netmd_secure_cmd_20(netmd_dev_handle *dev, unsigned char *rand_in, unsigned char *rand_out)
 {
 	unsigned char cmdhdr[] = {SECURE_CMD_HDR, 0x20, 0xff, 0x00, 0x00, 0x00};
 	unsigned char cmd[sizeof(cmdhdr) + 8];
@@ -133,7 +133,7 @@ int netmd_secure_cmd_20(usb_dev_handle *dev, unsigned char *rand_in, unsigned ch
 
 
 /** Discard random? */
-int netmd_secure_cmd_21(usb_dev_handle *dev)
+int netmd_secure_cmd_21(netmd_dev_handle *dev)
 {
 	unsigned char cmd[] = {SECURE_CMD_HDR, 0x21, 0xff, 0x00, 0x00, 0x00};
 	unsigned char rsp[255];
@@ -143,7 +143,7 @@ int netmd_secure_cmd_21(usb_dev_handle *dev)
 
 
 /** End secure session? */
-int netmd_secure_cmd_81(usb_dev_handle *dev)
+int netmd_secure_cmd_81(netmd_dev_handle *dev)
 {
 	unsigned char cmd[] = {SECURE_CMD_HDR, 0x81, 0xff};
 	unsigned char rsp[255];
@@ -157,7 +157,7 @@ int netmd_secure_cmd_81(usb_dev_handle *dev)
 */
 
 /** Send 32-byte hash? */
-int netmd_secure_cmd_22(usb_dev_handle *dev, unsigned char *hash)
+int netmd_secure_cmd_22(netmd_dev_handle *dev, unsigned char *hash)
 {
 	unsigned char cmdhdr[] = {SECURE_CMD_HDR, 0x22, 0xff, 0x00, 0x00};
 	unsigned char cmd[sizeof(cmdhdr) + 32];
@@ -181,7 +181,7 @@ int netmd_secure_cmd_22(usb_dev_handle *dev, unsigned char *hash)
 	\param length length of USB download
 	\param *track_nr new track number
 */
-int netmd_secure_cmd_28(usb_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
+int netmd_secure_cmd_28(netmd_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
 	unsigned int length, unsigned int *track_nr)
 {
 	unsigned char cmdhdr[] = {SECURE_CMD_HDR, 0x28, 0xff, 0x00, 0x01, 0x00, 0x10,
@@ -214,7 +214,7 @@ int netmd_secure_cmd_28(usb_dev_handle *dev, unsigned int track_type, unsigned i
 
 
 /** Verify track with 8-byte hash? */
-int netmd_secure_cmd_48(usb_dev_handle *dev, unsigned int track_nr, unsigned char *hash)
+int netmd_secure_cmd_48(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash)
 {
 	unsigned char cmdhdr[] = {SECURE_CMD_HDR, 0x48, 0xff, 0x00, 0x10, 0x01};
 	unsigned char cmd[sizeof(cmdhdr) + 10];
@@ -238,7 +238,7 @@ int netmd_secure_cmd_48(usb_dev_handle *dev, unsigned int track_nr, unsigned cha
 */
 
 /** Get 8-byte hash id of a track? */
-int netmd_secure_cmd_23(usb_dev_handle *dev, unsigned int track_nr, unsigned char *hash_id)
+int netmd_secure_cmd_23(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash_id)
 {
 	unsigned char cmdhdr[] = {SECURE_CMD_HDR, 0x23, 0xff, 0x10, 0x01};
 	unsigned char cmd[sizeof(cmdhdr) + 2];
@@ -265,7 +265,7 @@ int netmd_secure_cmd_23(usb_dev_handle *dev, unsigned int track_nr, unsigned cha
 	\param track_nr track number to delete?
 	\param signature 8-byte signature of deleted track
 */
-int netmd_secure_cmd_40(usb_dev_handle *dev, unsigned int track_nr, unsigned char *signature)
+int netmd_secure_cmd_40(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *signature)
 {
 	unsigned char cmdhdr[] = {SECURE_CMD_HDR, 0x40, 0xff, 0x00, 0x10, 0x01};
 	unsigned char cmd[sizeof(cmdhdr) + 2];
