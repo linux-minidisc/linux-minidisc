@@ -31,6 +31,11 @@
 #define	CODECS 2
 #define BITRATES 3
 
+/** Error codes of the USB transport layer */
+#define NETMDERR_USB			-1	/* general USB error */
+#define NETMDERR_NOTREADY	-2	/* player not ready for command */
+#define NETMDERR_TIMEOUT	-3	/* timeout while waiting for response */
+
 /** Struct to hold the vendor and product id's for each unit. */
 struct netmd_devices {
 	int	idVendor;
