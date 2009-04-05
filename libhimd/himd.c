@@ -181,17 +181,11 @@ void himd_free(void * data)
     g_free(data);
 }
 
-char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
+char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length)
 {
     int curidx;
     int len;
-    char * out;
-    GError * err = NULL;
-    char * srcencoding;
-    unsigned char * tempstr;
-    g_return_val_if_fail(idx >= 1, NULL);
-    g_return_val_if_fail(idx < 4096, NULL);
-    
+    char * rawstr;
     /* Not the head of a string */
     if(himd->strings[idx].stringtype < 8)
     {
@@ -228,8 +222,8 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
     }
 
     /* collect fragments */
-    tempstr = malloc(len*14);
-    if(!tempstr)
+    rawstr = g_malloc(len*14);
+    if(!rawstr)
     {
         himd->status = HIMD_ERROR_OUT_OF_MEMORY;
         g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
@@ -242,10 +236,29 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
     for(curidx = idx; curidx != 0; 
           curidx = himd->strings[curidx].nextstring)
     {
-        memcpy(tempstr+len*14,himd->strings[curidx].data,14);
+        memcpy(rawstr+len*14,himd->strings[curidx].data,14);
         len++;
     }
-    switch(tempstr[0])
+
+    *length = 14*len;
+    return rawstr;
+}
+
+char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
+{
+    int length;
+    char * out;
+    char * srcencoding;
+    char * rawstr;
+    GError * err = NULL;
+    g_return_val_if_fail(idx >= 1, NULL);
+    g_return_val_if_fail(idx < 4096, NULL);
+    
+    rawstr = himd_get_string_raw(himd, idx, type, &length);
+    if(!rawstr)
+        return NULL;
+
+    switch((unsigned char)rawstr[0])
     {
         case HIMD_ENCODING_LATIN1:
             srcencoding = "ISO-8859-1";
@@ -260,12 +273,12 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
             himd->status = HIMD_ERROR_UNKNOWN_ENCODING;
             g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
                        "string %d has unknown encoding with ID %d",
-                       idx, tempstr[0]);
-            free(tempstr);
+                       idx, rawstr[0]);
+            free(rawstr);
             return NULL;
     }
-    out = g_convert(tempstr+1,len*14-1,"UTF-8",srcencoding,NULL,NULL,&err);
-    free(tempstr);
+    out = g_convert(rawstr+1,length-1,"UTF-8",srcencoding,NULL,NULL,&err);
+    g_free(rawstr);
     if(err)
     {
         himd->status = HIMD_ERROR_STRING_ENCODING_ERROR;
