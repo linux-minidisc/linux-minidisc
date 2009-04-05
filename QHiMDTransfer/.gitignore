@@ -1,0 +1,6 @@
+debug
+release
+Makefile*
+ui_*.h
+moc_*.cpp
+QHiMDTransfer
