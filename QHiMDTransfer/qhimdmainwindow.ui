@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>QHiMDMainWindowClass</class>
+ <widget class="QMainWindow" name="QHiMDMainWindowClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>652</width>
+    <height>494</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>QHiMDTransfer</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="pushButton_3">
+        <property name="text">
+         <string>&amp;Download</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/download_to_md.png</normaloff>icons/download_to_md.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_2">
+        <property name="text">
+         <string>&amp;Upload</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/upload_from_md.png</normaloff>icons/upload_from_md.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_4">
+        <property name="text">
+         <string>D&amp;elete</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/delete.png</normaloff>icons/delete.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_5">
+        <property name="text">
+         <string>&amp;Rename</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/rename.png</normaloff>icons/rename.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_6">
+        <property name="text">
+         <string>&amp;Format</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/format.png</normaloff>icons/format.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_7">
+        <property name="text">
+         <string>Add &amp;Group</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/add_group.png</normaloff>icons/add_group.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_8">
+        <property name="text">
+         <string>&amp;Quit</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/quit.png</normaloff>icons/quit.png</iconset>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QListWidget" name="listWidget"/>
+      </item>
+      <item>
+       <widget class="QListWidget" name="TrackList"/>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>652</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_Action">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="action_Download_to_device"/>
+    <addaction name="action_Upload_to_PC"/>
+    <addaction name="separator"/>
+    <addaction name="actionD_elete_selected"/>
+    <addaction name="actionRe_name_selected"/>
+    <addaction name="separator"/>
+    <addaction name="action_Format_disk"/>
+    <addaction name="separator"/>
+    <addaction name="action_Quit_2"/>
+   </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>&amp;?</string>
+    </property>
+    <addaction name="action_Help"/>
+    <addaction name="action_About"/>
+   </widget>
+   <addaction name="menu_Action"/>
+   <addaction name="menu"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <action name="action_Download_to_device">
+   <property name="text">
+    <string>&amp;Download to device</string>
+   </property>
+  </action>
+  <action name="action_Upload_to_PC">
+   <property name="text">
+    <string>&amp;Upload to PC</string>
+   </property>
+  </action>
+  <action name="actionRe_name_selected">
+   <property name="text">
+    <string>Re&amp;name selected</string>
+   </property>
+  </action>
+  <action name="actionD_elete_selected">
+   <property name="text">
+    <string>D&amp;elete selected</string>
+   </property>
+  </action>
+  <action name="action_Help">
+   <property name="text">
+    <string>&amp;Help</string>
+   </property>
+  </action>
+  <action name="action_About">
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="action_Format_disk">
+   <property name="text">
+    <string>&amp;Format disk</string>
+   </property>
+  </action>
+  <action name="action_Quit_2">
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>
