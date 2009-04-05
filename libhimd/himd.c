@@ -40,13 +40,13 @@ static unsigned int beword16(unsigned char * c)
 static int read_tracks(struct himd * himd, FILE * idxfile)
 {
     int i;
-    unsigned char trackbuffer[64];
+    unsigned char trackbuffer[80];
 
     fseek(idxfile,0x8000L, SEEK_SET);
     for(i = 0;i < 2048;i++)
     {
         struct trackinfo * t = &himd->tracks[i];
-        if(fread(trackbuffer, 64, 1, idxfile) != 1)
+        if(fread(trackbuffer, 80, 1, idxfile) != 1)
         {
             himd->status = HIMD_ERROR_CANT_READ_TRACKS;
             g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't read track %d info"), i);
