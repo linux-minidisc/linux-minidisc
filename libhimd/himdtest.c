@@ -1,8 +1,53 @@
 #include <stdio.h>
 #include <glib.h>
 #include <locale.h>
+#include <string.h>
 
 #include "himd.h"
+
+char * codecstr(struct trackinfo * track)
+{
+    static char buffer[5];
+    if(track->codec_id == CODEC_LPCM)
+        return "LPCM";
+    if(track->codec_id == CODEC_LOSSY && track->codecinfo[0] == 3)
+        return "MPEG";
+    sprintf(buffer,"%4d",track->codec_id);
+    return buffer;
+}
+
+char * get_locale_str(struct himd * himd, int idx)
+{
+    char * str, * outstr;
+    str = himd_get_string_utf8(himd, idx, NULL);
+    if(!str)
+        return NULL;
+
+    outstr = g_locale_from_utf8(str,-1,NULL,NULL,NULL);
+    himd_free(str);
+    return outstr;
+}
+
+void himd_trackdump(struct himd * himd)
+{
+    int i;
+    for(i = 1;i < 2048;i++)
+    {
+        struct trackinfo * const t = &himd->tracks[i];
+        if(t->firstpart != 0)
+        {
+            char * title = get_locale_str(himd, t->title);
+            char * artist = get_locale_str(himd, t->artist);
+            char * album = get_locale_str(himd, t->album);
+            printf("%4d: %d:%d %s %s:%s (%s %d)\n",
+                    i, t->seconds/60,t->seconds % 60, codecstr(t),
+                    artist, title, album, t->trackinalbum);
+            g_free(title);
+            g_free(artist);
+            g_free(album);
+        }
+    }
+}
 
 void himd_stringdump(struct himd * himd)
 {
@@ -44,10 +89,13 @@ int main(int argc, char ** argv)
     }
     h = himd_new(argv[1]);
     if(h->status != HIMD_OK)
-        puts(h->statusmsg);
-    else
     {
-        himd_stringdump(h);
+        puts(h->statusmsg);
+        return 1;
     }
+    if(argc == 2 || strcmp(argv[2],"strings") == 0)
+        himd_stringdump(h);
+    else if(strcmp(argv[2],"tracks") == 0)
+        himd_trackdump(h);
     return 0;
 }
