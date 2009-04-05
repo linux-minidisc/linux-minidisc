@@ -1,0 +1,4 @@
+
+CFLAGS=-Wall
+
+all: minikey
