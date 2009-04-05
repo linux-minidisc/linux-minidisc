@@ -1,4 +1,4 @@
 
 CFLAGS=-Wall
 
-all: minikey
+all: minikey mp3key
