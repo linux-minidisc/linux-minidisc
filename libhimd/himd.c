@@ -215,6 +215,22 @@ const unsigned char * himd_get_discid(struct himd * himd)
     return himd->discid;
 }
 
+int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * info)
+{
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(idx >= HIMD_FIRST_TRACK, -1);
+    g_return_val_if_fail(idx <= HIMD_LAST_TRACK, -1);
+    g_return_val_if_fail(info != NULL, -1);
+    if(himd->tracks[idx].firstpart == 0)
+    {
+        himd->status = HIMD_ERROR_NO_SUCH_TRACK;
+        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Track %d is not present on disc"), idx);
+        return -1;
+    }
+    memcpy(info, &himd->tracks[idx], sizeof(*info));
+    return 0;
+}
+
 void himd_close(struct himd * himd)
 {
     g_free(himd->rootpath);

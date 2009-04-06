@@ -31,17 +31,17 @@ char * get_locale_str(struct himd * himd, int idx)
 void himd_trackdump(struct himd * himd)
 {
     int i;
-    for(i = 1;i < 2048;i++)
+    for(i = HIMD_FIRST_TRACK;i <= HIMD_LAST_TRACK;i++)
     {
-        struct trackinfo * const t = &himd->tracks[i];
-        if(t->firstpart != 0)
+        struct trackinfo t;
+        if(himd_get_track_info(himd, i, &t)  >= 0)
         {
-            char * title = get_locale_str(himd, t->title);
-            char * artist = get_locale_str(himd, t->artist);
-            char * album = get_locale_str(himd, t->album);
+            char * title = get_locale_str(himd, t.title);
+            char * artist = get_locale_str(himd, t.artist);
+            char * album = get_locale_str(himd, t.album);
             printf("%4d: %d:%d %s %s:%s (%s %d)\n",
-                    i, t->seconds/60,t->seconds % 60, codecstr(t),
-                    artist, title, album, t->trackinalbum);
+                    i, t.seconds/60, t.seconds % 60, codecstr(&t),
+                    artist, title, album, t.trackinalbum);
             g_free(title);
             g_free(artist);
             g_free(album);

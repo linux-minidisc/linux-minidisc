@@ -12,6 +12,15 @@
 #define STRING_TYPE_ALBUM 10
 #define STRING_TYPE_GROUP 12 /*reportedly disk/group name */
 
+#define HIMD_FIRST_TRACK 1
+#define HIMD_LAST_TRACK 2047
+
+#define HIMD_FIRST_FRAGMENT 1
+#define HIMD_LAST_FRAGMENT 4095
+
+#define HIMD_FIRST_STRING 1
+#define HIMD_LAST_STRING 4095
+
 enum himdstatus { HIMD_OK,
                   HIMD_ERROR_CANT_OPEN_MCLIST,
                   HIMD_ERROR_CANT_READ_MCLIST,
@@ -21,6 +30,7 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_CANT_ACCESS_HMDHIFI,
                   HIMD_ERROR_NO_TRACK_INDEX,
                   HIMD_ERROR_CANT_OPEN_TRACK_INDEX,
+                  HIMD_ERROR_NO_SUCH_TRACK,
                   HIMD_ERROR_STRING_CHAIN_BROKEN,
                   HIMD_ERROR_STRING_ENCODING_ERROR,
                   HIMD_ERROR_NOT_STRING_HEAD,
@@ -73,6 +83,8 @@ char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* l
 char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type);
 void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd);
+
+int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track);
 
 typedef unsigned char mp3key[4];
 int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key);
