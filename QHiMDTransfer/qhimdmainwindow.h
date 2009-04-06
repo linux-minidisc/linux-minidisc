@@ -2,6 +2,7 @@
 #define QHIMDMAINWINDOW_H
 
 #include <QtGui/QMainWindow>
+#include "qhimdaboutdialog.h"
 
 namespace Ui
 {
@@ -18,6 +19,7 @@ public:
 
 private:
     Ui::QHiMDMainWindowClass *ui;
+    QHiMDAboutDialog * aboutDialog;
 
 private slots:
     void on_action_About_triggered();

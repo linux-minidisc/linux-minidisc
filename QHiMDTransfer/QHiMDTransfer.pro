@@ -4,9 +4,10 @@
 TARGET = QHiMDTransfer
 TEMPLATE = app
 SOURCES += main.cpp \
-    qhimdmainwindow.cpp
+    qhimdmainwindow.cpp \
+    qhimdaboutdialog.cpp
 HEADERS += qhimdmainwindow.h \
-    ui_qhimdaboutdialog.h \
+    qhimdaboutdialog.h \
     qhimdaboutdialog.h
 FORMS += qhimdmainwindow.ui \
     qhimdaboutdialog.ui
