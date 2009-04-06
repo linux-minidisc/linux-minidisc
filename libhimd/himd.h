@@ -65,7 +65,11 @@ struct himd {
 };
 
 int himd_open(struct himd * himd, const char * himdroot);
+void himd_close(struct himd * himd);
 struct himd * himd_new(const char * pathname);
 char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length);
 char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type);
 void himd_free(void * p);
+
+typedef unsigned char mp3key[4];
+void himd_obtain_mp3key(struct himd * himd, int track, mp3key * key);

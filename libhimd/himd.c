@@ -198,6 +198,12 @@ int himd_open(struct himd * himd, const char * himdroot)
     return 0;
 }
 
+void himd_close(struct himd * himd)
+{
+    g_free(himd->rootpath);
+    free(himd);
+}
+
 void himd_free(void * data)
 {
     g_free(data);
