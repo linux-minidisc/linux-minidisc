@@ -18,6 +18,9 @@ public:
 
 private:
     Ui::QHiMDMainWindowClass *ui;
+
+private slots:
+    void on_action_About_triggered();
 };
 
 #endif // QHIMDMAINWINDOW_H

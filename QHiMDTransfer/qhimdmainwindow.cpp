@@ -11,3 +11,8 @@ QHiMDMainWindow::~QHiMDMainWindow()
 {
     delete ui;
 }
+
+void QHiMDMainWindow::on_action_About_triggered()
+{
+
+}
