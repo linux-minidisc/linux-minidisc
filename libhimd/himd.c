@@ -198,6 +198,11 @@ int himd_open(struct himd * himd, const char * himdroot)
     return 0;
 }
 
+const unsigned char * himd_get_discid(struct himd * himd)
+{
+    return himd->discid;
+}
+
 void himd_close(struct himd * himd)
 {
     g_free(himd->rootpath);

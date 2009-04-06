@@ -81,9 +81,10 @@ void himd_stringdump(struct himd * himd)
 void himd_dumpdiscid(struct himd * h)
 {
     int i;
+    const unsigned char * discid = himd_get_discid(h);
     printf("Disc ID: ");
     for(i = 0;i < 16;++i)
-        printf("%02X",h->discid[i]);
+        printf("%02X",discid[i]);
     puts("");        
 }
 
