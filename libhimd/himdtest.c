@@ -89,6 +89,7 @@ void himd_dumpdiscid(struct himd * h)
 
 int main(int argc, char ** argv)
 {
+    int idx;
     struct himd * h;
     setlocale(LC_ALL,"");
     if(argc < 2)
@@ -108,6 +109,15 @@ int main(int argc, char ** argv)
         himd_trackdump(h);
     else if(strcmp(argv[2],"discid") == 0)
         himd_dumpdiscid(h);
+    else if(strcmp(argv[2],"mp3key") == 0 && argc > 3)
+    {
+        mp3key k;
+        idx = 1;
+        sscanf(argv[3], "%d", &idx);
+        himd_obtain_mp3key(h, idx, &k);
+        printf("Track key: %02x%02x%02x%02x\n", k[0], k[1], k[2], k[3]);
+    }
+
     himd_close(h);
     return 0;
 }
