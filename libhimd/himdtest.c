@@ -108,5 +108,6 @@ int main(int argc, char ** argv)
         himd_trackdump(h);
     else if(strcmp(argv[2],"discid") == 0)
         himd_dumpdiscid(h);
+    himd_close(h);
     return 0;
 }
