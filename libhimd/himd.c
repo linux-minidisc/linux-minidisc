@@ -143,6 +143,28 @@ int himd_open(struct himd * himd, const char * himdroot)
         g_strlcpy(himd->statusmsg, _("No track index file found"), sizeof himd->statusmsg);
         return -1;		/* ERROR: track index not found */
     }
+    
+    sprintf(indexfilename,"mclist%02d.hma",himd->datanum);
+    filepath = g_build_filename(himdroot,"hmdhifi",indexfilename,NULL);
+    idxfile = fopen(filepath,"rb");
+    g_free(filepath);
+
+    if(!idxfile)
+    {
+        himd->status = HIMD_ERROR_CANT_OPEN_MCLIST;
+        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't open mclist file: %s\n"), g_strerror(errno));
+        return -1;
+    }
+
+    fseek(idxfile,0x40L,SEEK_SET);
+    if(fread(himd->discid,16,1,idxfile) != 1)
+    {
+        himd->status = HIMD_ERROR_CANT_READ_MCLIST;
+        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't read mclist file: %s\n"), g_strerror(errno));
+        fclose(idxfile);
+        return -1;
+    }
+    fclose(idxfile);
 
     sprintf(indexfilename,"trkidx%02d.hma",himd->datanum);
     filepath = g_build_filename(himdroot,"hmdhifi",indexfilename,NULL);

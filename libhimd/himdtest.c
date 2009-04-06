@@ -78,6 +78,15 @@ void himd_stringdump(struct himd * himd)
     }
 }
 
+void himd_dumpdiscid(struct himd * h)
+{
+    int i;
+    printf("Disc ID: ");
+    for(i = 0;i < 16;++i)
+        printf("%02X",h->discid[i]);
+    puts("");        
+}
+
 int main(int argc, char ** argv)
 {
     struct himd * h;
@@ -97,5 +106,7 @@ int main(int argc, char ** argv)
         himd_stringdump(h);
     else if(strcmp(argv[2],"tracks") == 0)
         himd_trackdump(h);
+    else if(strcmp(argv[2],"discid") == 0)
+        himd_dumpdiscid(h);
     return 0;
 }
