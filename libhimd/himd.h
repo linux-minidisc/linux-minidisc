@@ -58,6 +58,7 @@ struct himd {
     char statusmsg[64];
     /* everything below this line is private, i.e. no API stability. */
     char * rootpath;
+    int discid_valid;
     unsigned char discid[16];
     int datanum;
     struct trackinfo tracks[2048];
@@ -74,4 +75,4 @@ void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd);
 
 typedef unsigned char mp3key[4];
-void himd_obtain_mp3key(struct himd * himd, int track, mp3key * key);
+int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key);

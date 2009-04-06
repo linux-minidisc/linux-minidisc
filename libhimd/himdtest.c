@@ -82,6 +82,11 @@ void himd_dumpdiscid(struct himd * h)
 {
     int i;
     const unsigned char * discid = himd_get_discid(h);
+    if(!discid)
+    {
+        fprintf(stderr,"Error obtaining disc ID: %s", h->statusmsg);
+        return;
+    }
     printf("Disc ID: ");
     for(i = 0;i < 16;++i)
         printf("%02X",discid[i]);

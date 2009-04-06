@@ -112,6 +112,37 @@ static int read_strings(struct himd * himd, FILE * idxfile)
     return 0;
 }
 
+static int himd_read_discid(struct himd * himd)
+{
+    char mclistname[13];
+    FILE * mclistfile;
+    char * filepath;
+
+    sprintf(mclistname,"mclist%02d.hma",himd->datanum);
+    filepath = g_build_filename(himd->rootpath,"hmdhifi",mclistname,NULL);
+    mclistfile = fopen(filepath,"rb");
+    g_free(filepath);
+
+    if(!mclistfile)
+    {
+        himd->status = HIMD_ERROR_CANT_OPEN_MCLIST;
+        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't open mclist file: %s\n"), g_strerror(errno));
+        return -1;
+    }
+
+    fseek(mclistfile,0x40L,SEEK_SET);
+    if(fread(himd->discid,16,1,mclistfile) != 1)
+    {
+        himd->status = HIMD_ERROR_CANT_READ_MCLIST;
+        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't read mclist file: %s\n"), g_strerror(errno));
+        fclose(mclistfile);
+        return -1;
+    }
+    fclose(mclistfile);
+    himd->discid_valid = 1;
+    return 0;
+}
+
 int himd_open(struct himd * himd, const char * himdroot)
 {
     char * filepath;
@@ -144,28 +175,6 @@ int himd_open(struct himd * himd, const char * himdroot)
         return -1;		/* ERROR: track index not found */
     }
     
-    sprintf(indexfilename,"mclist%02d.hma",himd->datanum);
-    filepath = g_build_filename(himdroot,"hmdhifi",indexfilename,NULL);
-    idxfile = fopen(filepath,"rb");
-    g_free(filepath);
-
-    if(!idxfile)
-    {
-        himd->status = HIMD_ERROR_CANT_OPEN_MCLIST;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't open mclist file: %s\n"), g_strerror(errno));
-        return -1;
-    }
-
-    fseek(idxfile,0x40L,SEEK_SET);
-    if(fread(himd->discid,16,1,idxfile) != 1)
-    {
-        himd->status = HIMD_ERROR_CANT_READ_MCLIST;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't read mclist file: %s\n"), g_strerror(errno));
-        fclose(idxfile);
-        return -1;
-    }
-    fclose(idxfile);
-
     sprintf(indexfilename,"trkidx%02d.hma",himd->datanum);
     filepath = g_build_filename(himdroot,"hmdhifi",indexfilename,NULL);
     idxfile = fopen(filepath,"rb");
@@ -194,12 +203,15 @@ int himd_open(struct himd * himd, const char * himdroot)
 
     himd->rootpath = g_strdup(himdroot);
     himd->status = HIMD_OK;
+    himd->discid_valid = 0;
 
     return 0;
 }
 
 const unsigned char * himd_get_discid(struct himd * himd)
 {
+    if(!himd->discid_valid && himd_read_discid(himd) < 0)
+        return 0;
     return himd->discid;
 }
 
