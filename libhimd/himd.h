@@ -13,6 +13,8 @@
 #define STRING_TYPE_GROUP 12 /*reportedly disk/group name */
 
 enum himdstatus { HIMD_OK,
+                  HIMD_ERROR_CANT_OPEN_MCLIST,
+                  HIMD_ERROR_CANT_READ_MCLIST,
                   HIMD_ERROR_CANT_READ_TRACKS,
                   HIMD_ERROR_CANT_READ_PARTS,
                   HIMD_ERROR_CANT_READ_STRINGS,
@@ -53,7 +55,7 @@ struct himdstring {
 
 struct himd {
     char * rootpath;
-    char discid[16];
+    unsigned char discid[16];
     int datanum;
     struct trackinfo tracks[2048];
     struct partinfo parts[4096];
@@ -64,5 +66,6 @@ struct himd {
 
 int himd_open(struct himd * himd, const char * himdroot);
 struct himd * himd_new(const char * pathname);
+char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length);
 char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type);
 void himd_free(void * p);
