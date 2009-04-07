@@ -100,7 +100,7 @@
     <value type="QString" >CONFIG+=debug</value>
    </valuelist>
    <value key="abstractProcess.command" type="QString" >/usr/bin/qmake-qt4</value>
-   <value key="abstractProcess.enabled" type="bool" >true</value>
+   <value key="abstractProcess.enabled" type="bool" >false</value>
    <value key="abstractProcess.workingDirectory" type="QString" >/home/glaubitz/linux-minidisc/QHiMDTransfer</value>
    <value key="buildConfiguration" type="int" >10</value>
   </valuemap>

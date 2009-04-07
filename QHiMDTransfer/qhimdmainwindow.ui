@@ -24,7 +24,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="QHiMDDownloadButton">
         <property name="text">
          <string>&amp;Download</string>
         </property>
@@ -35,7 +35,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="QHiMDUploadButton">
         <property name="text">
          <string>&amp;Upload</string>
         </property>
@@ -46,7 +46,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_4">
+       <widget class="QPushButton" name="QHiMDDeleteButton">
         <property name="text">
          <string>D&amp;elete</string>
         </property>
@@ -57,7 +57,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_5">
+       <widget class="QPushButton" name="QHiMDRenameButton">
         <property name="text">
          <string>&amp;Rename</string>
         </property>
@@ -68,7 +68,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_6">
+       <widget class="QPushButton" name="QHiMDFormatButton">
         <property name="text">
          <string>&amp;Format</string>
         </property>
@@ -79,7 +79,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_7">
+       <widget class="QPushButton" name="QHiMDAddGroupButton">
         <property name="text">
          <string>Add &amp;Group</string>
         </property>
@@ -90,7 +90,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_8">
+       <widget class="QPushButton" name="QHiMDQuitButton">
         <property name="text">
          <string>&amp;Quit</string>
         </property>
@@ -105,10 +105,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QListWidget" name="listWidget"/>
-      </item>
-      <item>
-       <widget class="QListWidget" name="TrackList"/>
+       <widget class="QTreeView" name="TrackList"/>
       </item>
      </layout>
     </item>
@@ -127,15 +124,15 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="action_Download_to_device"/>
-    <addaction name="action_Upload_to_PC"/>
+    <addaction name="action_Download"/>
+    <addaction name="action_Upload"/>
     <addaction name="separator"/>
-    <addaction name="actionD_elete_selected"/>
-    <addaction name="actionRe_name_selected"/>
+    <addaction name="action_Delete"/>
+    <addaction name="action_Rename"/>
     <addaction name="separator"/>
-    <addaction name="action_Format_disk"/>
+    <addaction name="action_Format"/>
     <addaction name="separator"/>
-    <addaction name="action_Quit_2"/>
+    <addaction name="action_Quit"/>
    </widget>
    <widget class="QMenu" name="menu">
     <property name="title">
@@ -156,22 +153,25 @@
     <bool>false</bool>
    </attribute>
   </widget>
-  <action name="action_Download_to_device">
+  <action name="action_Download">
    <property name="text">
-    <string>&amp;Download to device</string>
+    <string>&amp;Download tracks onto MD</string>
    </property>
   </action>
-  <action name="action_Upload_to_PC">
+  <action name="action_Upload">
    <property name="text">
-    <string>&amp;Upload to PC</string>
+    <string>&amp;Upload tracks from MD</string>
    </property>
   </action>
-  <action name="actionRe_name_selected">
+  <action name="action_Rename">
    <property name="text">
-    <string>Re&amp;name selected</string>
+    <string>Re&amp;name</string>
+   </property>
+   <property name="toolTip">
+    <string>Rename selected</string>
    </property>
   </action>
-  <action name="actionD_elete_selected">
+  <action name="action_Delete">
    <property name="text">
     <string>D&amp;elete selected</string>
    </property>
@@ -186,12 +186,15 @@
     <string>&amp;About</string>
    </property>
   </action>
-  <action name="action_Format_disk">
+  <action name="action_Format">
    <property name="text">
-    <string>&amp;Format disk</string>
+    <string>&amp;Format MD</string>
+   </property>
+   <property name="toolTip">
+    <string>Format MD</string>
    </property>
   </action>
-  <action name="action_Quit_2">
+  <action name="action_Quit">
    <property name="text">
     <string>&amp;Quit</string>
    </property>
@@ -201,20 +204,125 @@
  <resources/>
  <connections>
   <connection>
-   <sender>pushButton_8</sender>
+   <sender>QHiMDDownloadButton</sender>
    <signal>clicked()</signal>
    <receiver>QHiMDMainWindowClass</receiver>
-   <slot>close()</slot>
+   <slot>on_trigger_Download()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>714</x>
-     <y>73</y>
+     <x>56</x>
+     <y>59</y>
     </hint>
     <hint type="destinationlabel">
-     <x>733</x>
-     <y>136</y>
+     <x>5</x>
+     <y>53</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>QHiMDFormatButton</sender>
+   <signal>clicked()</signal>
+   <receiver>QHiMDMainWindowClass</receiver>
+   <slot>on_trigger_Format()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>459</x>
+     <y>71</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>421</x>
+     <y>51</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>QHiMDQuitButton</sender>
+   <signal>clicked()</signal>
+   <receiver>QHiMDMainWindowClass</receiver>
+   <slot>on_trigger_Quit()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>686</x>
+     <y>74</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>639</x>
+     <y>50</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>QHiMDUploadButton</sender>
+   <signal>clicked()</signal>
+   <receiver>QHiMDMainWindowClass</receiver>
+   <slot>on_trigger_Upload()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>162</x>
+     <y>60</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>123</x>
+     <y>50</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>QHiMDDeleteButton</sender>
+   <signal>clicked()</signal>
+   <receiver>QHiMDMainWindowClass</receiver>
+   <slot>on_trigger_Delete()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>255</x>
+     <y>68</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>220</x>
+     <y>48</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>QHiMDRenameButton</sender>
+   <signal>clicked()</signal>
+   <receiver>QHiMDMainWindowClass</receiver>
+   <slot>on_trigger_Rename()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>354</x>
+     <y>74</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>317</x>
+     <y>62</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>QHiMDAddGroupButton</sender>
+   <signal>clicked()</signal>
+   <receiver>QHiMDMainWindowClass</receiver>
+   <slot>on_trigger_AddGroup()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>553</x>
+     <y>63</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>521</x>
+     <y>56</y>
     </hint>
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>on_trigger_Format()</slot>
+  <slot>on_trigger_Download()</slot>
+  <slot>on_trigger_Quit()</slot>
+  <slot>on_trigger_Upload()</slot>
+  <slot>on_trigger_Delete()</slot>
+  <slot>on_trigger_Rename()</slot>
+  <slot>on_trigger_AddGroup()</slot>
+ </slots>
 </ui>
