@@ -37,78 +37,45 @@ static unsigned int beword16(unsigned char * c)
     return c[0]*256+c[1];
 }
 
-static int read_tracks(struct himd * himd, FILE * idxfile)
+static unsigned char * get_track(struct himd * himd, unsigned int idx)
 {
-    int i;
-    unsigned char trackbuffer[80];
-
-    fseek(idxfile,0x8000L, SEEK_SET);
-    for(i = 0;i < 2048;i++)
-    {
-        struct trackinfo * t = &himd->tracks[i];
-        if(fread(trackbuffer, 80, 1, idxfile) != 1)
-        {
-            himd->status = HIMD_ERROR_CANT_READ_TRACKS;
-            g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't read track %d info"), i);
-            return -1;
-        }
-        t->title = beword16(trackbuffer+8);
-        t->artist = beword16(trackbuffer+10);
-        t->album = beword16(trackbuffer+12);
-        t->trackinalbum = trackbuffer[14];
-        t->codec_id = trackbuffer[32];
-        memcpy(t->codecinfo,trackbuffer+33,3);
-        memcpy(t->codecinfo+3,trackbuffer+44,2);
-        t->firstpart = beword16(trackbuffer+36);
-        t->tracknum = beword16(trackbuffer+38);
-        t->seconds = beword16(trackbuffer+40);
-    }
-    return 0;
+    return himd->tifdata +  0x8000 + 0x50 * idx;
 }
 
-static int read_parts(struct himd * himd, FILE * idxfile)
+static unsigned char * get_strchunk(struct himd * himd, unsigned int idx)
 {
-    int i;
-    unsigned char partbuffer[16];
-
-    fseek(idxfile, 0x30000L, SEEK_SET);
-    for(i = 0;i < 4096;i++)
-    {
-        struct partinfo * p = &himd->parts[i];
-        if(fread(partbuffer, sizeof partbuffer, 1, idxfile) != 1)
-        {
-            himd->status = HIMD_ERROR_CANT_READ_PARTS;
-            g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't read part %d info"), i);
-            return -1;
-        }
-        p->firstblock = beword16(partbuffer+8);
-        p->lastblock = beword16(partbuffer+10);
-        p->firstframe = partbuffer[12];
-        p->lastframe = partbuffer[13];
-        p->nextpart = beword16(partbuffer+14);
-    }
-    return 0;
+    return himd->tifdata + 0x40000 + 0x10 * idx;
 }
 
-static int read_strings(struct himd * himd, FILE * idxfile)
+int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t)
 {
-    int i;
-    unsigned char strbuffer[16];
+    unsigned char * trackbuffer;
+    unsigned int firstpart;
 
-    fseek(idxfile, 0x40000L, SEEK_SET);
-    for(i = 0;i < 4096;i++)
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(idx >= HIMD_FIRST_TRACK, -1);
+    g_return_val_if_fail(idx <= HIMD_LAST_TRACK, -1);
+    g_return_val_if_fail(t != NULL, -1);
+
+    trackbuffer = get_track(himd, idx);
+    firstpart = beword16(trackbuffer+36);
+
+    if(firstpart == 0)
     {
-        struct himdstring * s = &himd->strings[i];
-        if(fread(strbuffer, sizeof strbuffer, 1, idxfile) != 1)
-        {
-            himd->status = HIMD_ERROR_CANT_READ_STRINGS;
-            g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't read string %d"), i);
-            return -1;
-        }
-        memcpy(s->data,strbuffer,14);
-        s->stringtype = strbuffer[14] >> 4;
-        s->nextstring = beword16(strbuffer+14) & 0xFFF;
+        himd->status = HIMD_ERROR_NO_SUCH_TRACK;
+        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Track %d is not present on disc"), idx);
+        return -1;
     }
+    t->title = beword16(trackbuffer+8);
+    t->artist = beword16(trackbuffer+10);
+    t->album = beword16(trackbuffer+12);
+    t->trackinalbum = trackbuffer[14];
+    t->codec_id = trackbuffer[32];
+    memcpy(t->codecinfo,trackbuffer+33,3);
+    memcpy(t->codecinfo+3,trackbuffer+44,2);
+    t->firstpart = firstpart;
+    t->tracknum = beword16(trackbuffer+38);
+    t->seconds = beword16(trackbuffer+40);
     return 0;
 }
 
@@ -147,12 +114,10 @@ int himd_open(struct himd * himd, const char * himdroot)
 {
     char * filepath;
     char indexfilename[13];
+    gsize filelen;
     GDir * dir;
     GError * error = NULL;
-    FILE * idxfile;
     
-    int i;
-
     g_return_val_if_fail(himd != NULL, -1);
     g_return_val_if_fail(himdroot != NULL, -1);
 
@@ -177,29 +142,31 @@ int himd_open(struct himd * himd, const char * himdroot)
     
     sprintf(indexfilename,"trkidx%02d.hma",himd->datanum);
     filepath = g_build_filename(himdroot,"hmdhifi",indexfilename,NULL);
-    idxfile = fopen(filepath,"rb");
-    g_free(filepath);
-
-    if(!idxfile)
+    if(!g_file_get_contents(filepath, (char**)&himd->tifdata, &filelen, &error))
     {
-        himd->status = HIMD_ERROR_CANT_OPEN_TRACK_INDEX;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't open track index file: %s\n"), g_strerror(errno));
+        himd->status = HIMD_ERROR_CANT_READ_TIF;
+        g_snprintf(himd->statusmsg,sizeof himd->statusmsg,_("Can't load TIF data from %s: %s"),filepath, error->message);
+        g_free(filepath);
         return -1;
     }
+    g_free(filepath);
     
-    i = read_tracks(himd, idxfile);
-    if(i < 0)
+    if(filelen != 0x50000)
+    {
+        himd->status = HIMD_ERROR_WRONG_TIF_SIZE;
+        g_snprintf(himd->statusmsg,sizeof himd->statusmsg,_("TIF file is 0x%x bytes instead of 0x50000"),(int)filelen);
+        g_free(himd->tifdata);
         return -1;
+    }
 
-    i = read_parts(himd, idxfile);
-    if(i < 0)
+    if(memcmp(himd->tifdata,"TIF ",4) != 0)
+    {
+        himd->status = HIMD_ERROR_WRONG_TIF_MAGIC;
+        g_snprintf(himd->statusmsg,sizeof himd->statusmsg,_("TIF file starts with wrong magic: %02x %02x %02x %02x"),
+                    himd->tifdata[0],himd->tifdata[1],himd->tifdata[2],himd->tifdata[3]);
+        g_free(himd->tifdata);
         return -1;
-
-    i = read_strings(himd, idxfile);
-    if(i < 0)
-        return -1;
-    
-    fclose(idxfile);
+    }
 
     himd->rootpath = g_strdup(himdroot);
     himd->status = HIMD_OK;
@@ -215,24 +182,9 @@ const unsigned char * himd_get_discid(struct himd * himd)
     return himd->discid;
 }
 
-int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * info)
-{
-    g_return_val_if_fail(himd != NULL, -1);
-    g_return_val_if_fail(idx >= HIMD_FIRST_TRACK, -1);
-    g_return_val_if_fail(idx <= HIMD_LAST_TRACK, -1);
-    g_return_val_if_fail(info != NULL, -1);
-    if(himd->tracks[idx].firstpart == 0)
-    {
-        himd->status = HIMD_ERROR_NO_SUCH_TRACK;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Track %d is not present on disc"), idx);
-        return -1;
-    }
-    memcpy(info, &himd->tracks[idx], sizeof(*info));
-    return 0;
-}
-
 void himd_close(struct himd * himd)
 {
+    g_free(himd->tifdata);
     g_free(himd->rootpath);
     free(himd);
 }
@@ -242,34 +194,47 @@ void himd_free(void * data)
     g_free(data);
 }
 
+static int strtype(unsigned char * stringchunk)
+{
+    return stringchunk[14] >> 4;
+}
+
+static int strlink(unsigned char * stringchunk)
+{
+    return beword16(stringchunk+14) & 0xFFF;
+}
+
 char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length)
 {
     int curidx;
     int len;
     char * rawstr;
+    int actualtype;
+    
+    actualtype = strtype(get_strchunk(himd,idx));
     /* Not the head of a string */
-    if(himd->strings[idx].stringtype < 8)
+    if(actualtype < 8)
     {
         himd->status = HIMD_ERROR_NOT_STRING_HEAD;
         g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
                    _("String table entry %d is not a head: Type %d"),
-                   idx,himd->strings[idx].stringtype);
+                   idx,actualtype);
         return NULL;
     }
     if(type != NULL)
-        *type = himd->strings[idx].stringtype;
+        *type = actualtype;
 
     /* Get length of string */
     len = 1;
-    for(curidx = himd->strings[idx].nextstring; curidx != 0; 
-          curidx = himd->strings[curidx].nextstring)
+    for(curidx = strlink(get_strchunk(himd,idx)); curidx != 0; 
+          curidx = strlink(get_strchunk(himd,curidx)))
     {
-        if(himd->strings[curidx].stringtype != STRING_TYPE_CONTINUATION)
+        if(strtype(get_strchunk(himd,curidx)) != STRING_TYPE_CONTINUATION)
         {
             himd->status = HIMD_ERROR_STRING_CHAIN_BROKEN;
             g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
                        "%dth entry in string chain starting at %d has type %d",
-                       len+1,idx,himd->strings[curidx].stringtype);
+                       len+1,idx,strtype(get_strchunk(himd,curidx)));
             return NULL;
         }
         len++;
@@ -288,16 +253,16 @@ char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* l
     {
         himd->status = HIMD_ERROR_OUT_OF_MEMORY;
         g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
-                   "Can't allocate %d bytes for temp string buffer (string idx %d)",
+                   "Can't allocate %d bytes for raw string (string idx %d)",
                    len, idx);
         return NULL;
     }
 
     len = 0;
     for(curidx = idx; curidx != 0; 
-          curidx = himd->strings[curidx].nextstring)
+          curidx = strlink(get_strchunk(himd,curidx)))
     {
-        memcpy(rawstr+len*14,himd->strings[curidx].data,14);
+        memcpy(rawstr+len*14,get_strchunk(himd,curidx),14);
         len++;
     }
 

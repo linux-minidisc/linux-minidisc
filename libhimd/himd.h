@@ -24,9 +24,9 @@
 enum himdstatus { HIMD_OK,
                   HIMD_ERROR_CANT_OPEN_MCLIST,
                   HIMD_ERROR_CANT_READ_MCLIST,
-                  HIMD_ERROR_CANT_READ_TRACKS,
-                  HIMD_ERROR_CANT_READ_PARTS,
-                  HIMD_ERROR_CANT_READ_STRINGS,
+                  HIMD_ERROR_CANT_READ_TIF,
+                  HIMD_ERROR_WRONG_TIF_SIZE,
+                  HIMD_ERROR_WRONG_TIF_MAGIC,
                   HIMD_ERROR_CANT_ACCESS_HMDHIFI,
                   HIMD_ERROR_NO_TRACK_INDEX,
                   HIMD_ERROR_CANT_OPEN_TRACK_INDEX,
@@ -68,12 +68,10 @@ struct himd {
     char statusmsg[64];
     /* everything below this line is private, i.e. no API stability. */
     char * rootpath;
+    unsigned char * tifdata;
     int discid_valid;
     unsigned char discid[16];
     int datanum;
-    struct trackinfo tracks[2048];
-    struct partinfo parts[4096];
-    struct himdstring strings[4096];
 };
 
 int himd_open(struct himd * himd, const char * himdroot);
