@@ -67,6 +67,10 @@ char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* l
     int len;
     char * rawstr;
     int actualtype;
+
+    g_return_val_if_fail(himd != NULL, NULL);
+    g_return_val_if_fail(idx >= 1, NULL);
+    g_return_val_if_fail(idx < 4096, NULL);
     
     actualtype = strtype(get_strchunk(himd,idx));
     /* Not the head of a string */
@@ -134,6 +138,7 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
     char * srcencoding;
     char * rawstr;
     GError * err = NULL;
+    g_return_val_if_fail(himd != NULL, NULL);
     g_return_val_if_fail(idx >= 1, NULL);
     g_return_val_if_fail(idx < 4096, NULL);
     
