@@ -186,7 +186,6 @@ void himd_close(struct himd * himd)
 {
     g_free(himd->tifdata);
     g_free(himd->rootpath);
-    free(himd);
 }
 
 void himd_free(void * data)
@@ -314,14 +313,4 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
         return NULL;
     }
     return out;
-}
-
-struct himd * himd_new(const char * himdroot)
-{
-    struct himd * himd;
-    himd = malloc(sizeof(*himd));
-    if(!himd)
-        return NULL;
-    himd_open(himd, himdroot);
-    return himd;
 }

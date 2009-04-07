@@ -96,34 +96,34 @@ void himd_dumpdiscid(struct himd * h)
 int main(int argc, char ** argv)
 {
     int idx;
-    struct himd * h;
+    struct himd h;
     setlocale(LC_ALL,"");
     if(argc < 2)
     {
         fputs("Please specify mountpoint of image\n",stderr);
         return 1;
     }
-    h = himd_new(argv[1]);
-    if(h->status != HIMD_OK)
+    himd_open(&h,argv[1]);
+    if(h.status != HIMD_OK)
     {
-        puts(h->statusmsg);
+        puts(h.statusmsg);
         return 1;
     }
     if(argc == 2 || strcmp(argv[2],"strings") == 0)
-        himd_stringdump(h);
+        himd_stringdump(&h);
     else if(strcmp(argv[2],"tracks") == 0)
-        himd_trackdump(h);
+        himd_trackdump(&h);
     else if(strcmp(argv[2],"discid") == 0)
-        himd_dumpdiscid(h);
+        himd_dumpdiscid(&h);
     else if(strcmp(argv[2],"mp3key") == 0 && argc > 3)
     {
         mp3key k;
         idx = 1;
         sscanf(argv[3], "%d", &idx);
-        himd_obtain_mp3key(h, idx, &k);
+        himd_obtain_mp3key(&h, idx, &k);
         printf("Track key: %02x%02x%02x%02x\n", k[0], k[1], k[2], k[3]);
     }
 
-    himd_close(h);
+    himd_close(&h);
     return 0;
 }
