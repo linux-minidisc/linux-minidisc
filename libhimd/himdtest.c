@@ -39,7 +39,7 @@ void himd_trackdump(struct himd * himd, int verbose)
             char * title = get_locale_str(himd, t.title);
             char * artist = get_locale_str(himd, t.artist);
             char * album = get_locale_str(himd, t.album);
-            printf("%4d: %d:%d %s %s:%s (%s %d)\n",
+            printf("%4d: %d:%02d %s %s:%s (%s %d)\n",
                     i, t.seconds/60, t.seconds % 60, codecstr(&t),
                     artist, title, album, t.trackinalbum);
             g_free(title);
