@@ -43,18 +43,20 @@ struct trackinfo {
     int trackinalbum;
     unsigned char codec_id;
     unsigned char codecinfo[5];
-    int firstpart;	/* index into parts table */
+    int firstfrag;	/* index into parts table */
     int tracknum;	/* always equal to own index in used tracks? */
     int seconds;
 };
 
 /* a fragment in the audio file */
-struct partinfo {
+struct fraginfo {
+    unsigned char key[8];
     unsigned int firstblock;
     unsigned int lastblock;
     unsigned int firstframe;
     unsigned int lastframe;
-    unsigned int nextpart;
+    unsigned int fragtype;
+    unsigned int nextfrag;
 };
 
 struct himdstring {
@@ -82,6 +84,7 @@ void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd);
 
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track);
+int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f);
 
 typedef unsigned char mp3key[4];
 int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key);

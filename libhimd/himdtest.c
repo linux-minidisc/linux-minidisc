@@ -28,7 +28,7 @@ char * get_locale_str(struct himd * himd, int idx)
     return outstr;
 }
 
-void himd_trackdump(struct himd * himd)
+void himd_trackdump(struct himd * himd, int verbose)
 {
     int i;
     for(i = HIMD_FIRST_TRACK;i <= HIMD_LAST_TRACK;i++)
@@ -45,6 +45,17 @@ void himd_trackdump(struct himd * himd)
             g_free(title);
             g_free(artist);
             g_free(album);
+            if(verbose)
+            {
+                struct fraginfo f;
+                int fnum = t.firstfrag;
+                while(fnum != 0)
+                {
+                    himd_get_fragment_info(himd, fnum, &f);
+                    printf("     %3d@%05d .. %3d@%05d\n", f.firstframe, f.firstblock, f.lastframe, f.lastblock);
+                    fnum = f.nextfrag;
+                }
+            }
         }
     }
 }
@@ -112,7 +123,7 @@ int main(int argc, char ** argv)
     if(argc == 2 || strcmp(argv[2],"strings") == 0)
         himd_stringdump(&h);
     else if(strcmp(argv[2],"tracks") == 0)
-        himd_trackdump(&h);
+        himd_trackdump(&h, argc > 3);
     else if(strcmp(argv[2],"discid") == 0)
         himd_dumpdiscid(&h);
     else if(strcmp(argv[2],"mp3key") == 0 && argc > 3)

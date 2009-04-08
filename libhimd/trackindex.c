@@ -14,6 +14,11 @@ static unsigned char * get_track(struct himd * himd, unsigned int idx)
     return himd->tifdata +  0x8000 + 0x50 * idx;
 }
 
+static unsigned char * get_frag(struct himd * himd, unsigned int idx)
+{
+    return himd->tifdata + 0x30000 + 0x10 * idx;
+}
+
 static unsigned char * get_strchunk(struct himd * himd, unsigned int idx)
 {
     return himd->tifdata + 0x40000 + 0x10 * idx;
@@ -55,9 +60,29 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     t->codec_id = trackbuffer[32];
     memcpy(t->codecinfo,trackbuffer+33,3);
     memcpy(t->codecinfo+3,trackbuffer+44,2);
-    t->firstpart = firstpart;
+    t->firstfrag = firstpart;
     t->tracknum = beword16(trackbuffer+38);
     t->seconds = beword16(trackbuffer+40);
+    return 0;
+}
+
+int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f)
+{
+    unsigned char * fragbuffer;
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(idx >= HIMD_FIRST_TRACK, -1);
+    g_return_val_if_fail(idx <= HIMD_LAST_TRACK, -1);
+    g_return_val_if_fail(f != NULL, -1);
+
+    fragbuffer = get_frag(himd, idx);
+    memcpy(f->key, fragbuffer, 8);
+    f->firstblock = beword16(fragbuffer + 8);
+    f->lastblock = beword16(fragbuffer + 10);
+    f->firstframe = fragbuffer[12];
+    f->lastframe = fragbuffer[13];
+    f->fragtype = fragbuffer[14] >> 4;
+    f->nextfrag = beword16(fragbuffer+14) & 0xFFF;
     return 0;
 }
 
