@@ -51,9 +51,16 @@ void himd_trackdump(struct himd * himd, int verbose)
                 int fnum = t.firstfrag;
                 while(fnum != 0)
                 {
-                    himd_get_fragment_info(himd, fnum, &f);
-                    printf("     %3d@%05d .. %3d@%05d\n", f.firstframe, f.firstblock, f.lastframe, f.lastblock);
-                    fnum = f.nextfrag;
+                    if(himd_get_fragment_info(himd, fnum, &f) >= 0)
+                    {
+                        printf("     %3d@%05d .. %3d@%05d\n", f.firstframe, f.firstblock, f.lastframe, f.lastblock);
+                        fnum = f.nextfrag;
+                    }
+                    else
+                    {
+                        printf("     ERROR reading fragment %d info: %s\n", fnum, himd->statusmsg);
+                        break;
+                    }
                 }
             }
         }
