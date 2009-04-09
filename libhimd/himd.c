@@ -32,16 +32,22 @@ static int scanfortrkidx(GDir * dir)
     return datanum;
 }
 
-static int himd_read_discid(struct himd * himd)
+FILE * himd_open_file(struct himd * himd, const char * fileid)
 {
-    char mclistname[13];
-    FILE * mclistfile;
+    char filename[13];
+    FILE * file;
     char * filepath;
 
-    sprintf(mclistname,"mclist%02d.hma",himd->datanum);
-    filepath = g_build_filename(himd->rootpath,"hmdhifi",mclistname,NULL);
-    mclistfile = fopen(filepath,"rb");
+    sprintf(filename,"%s%02d.hma",fileid,himd->datanum);
+    filepath = g_build_filename(himd->rootpath,"hmdhifi",filename,NULL);
+    file = fopen(filepath,"rb");
     g_free(filepath);
+    return file;
+}
+
+static int himd_read_discid(struct himd * himd)
+{
+    FILE * mclistfile = himd_open_file(himd, "mclist");
 
     if(!mclistfile)
     {

@@ -1,3 +1,4 @@
+#include <stdio.h>
 
 #define CODEC_LOSSY 0x01
 #define CODEC_LPCM 0x80
@@ -31,6 +32,7 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_NO_TRACK_INDEX,
                   HIMD_ERROR_CANT_OPEN_TRACK_INDEX,
                   HIMD_ERROR_NO_SUCH_TRACK,
+                  HIMD_ERROR_FRAGMENT_CHAIN_BROKEN,
                   HIMD_ERROR_STRING_CHAIN_BROKEN,
                   HIMD_ERROR_STRING_ENCODING_ERROR,
                   HIMD_ERROR_NOT_STRING_HEAD,
@@ -82,6 +84,7 @@ char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* l
 char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type);
 void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd);
+FILE * himd_open_file(struct himd * himd, const char * fileid);
 
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track);
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f);
