@@ -69,7 +69,7 @@ struct himdstring {
 
 struct himd {
     enum himdstatus status;
-    char statusmsg[64];
+    char statusmsg[128];
     /* everything below this line is private, i.e. no API stability. */
     char * rootpath;
     unsigned char * tifdata;

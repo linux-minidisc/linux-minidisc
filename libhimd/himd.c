@@ -81,7 +81,7 @@ int himd_open(struct himd * himd, const char * himdroot)
     g_return_val_if_fail(himdroot != NULL, -1);
 
     filepath = g_build_filename(himdroot,"hmdhifi",NULL);
-    dir = g_dir_open(filepath,0,NULL);
+    dir = g_dir_open(filepath,0,&error);
     g_free(filepath);
     if(dir == NULL)
     {
