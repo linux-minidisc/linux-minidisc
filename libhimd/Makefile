@@ -12,5 +12,6 @@ clean:
 	rm -f himdtest
 
 himd.o: himd.c himd.h
+trackindex.o: trackindex.c himd.h
 himdtest.o: himdtest.c himd.h
 encryption.o: encryption.c himd.h
