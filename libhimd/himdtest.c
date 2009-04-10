@@ -19,6 +19,9 @@ char * codecstr(struct trackinfo * track)
 char * get_locale_str(struct himd * himd, int idx)
 {
     char * str, * outstr;
+    if(idx == 0)
+        return NULL;
+
     str = himd_get_string_utf8(himd, idx, NULL);
     if(!str)
         return NULL;
@@ -36,12 +39,15 @@ void himd_trackdump(struct himd * himd, int verbose)
         struct trackinfo t;
         if(himd_get_track_info(himd, i, &t)  >= 0)
         {
-            char * title = get_locale_str(himd, t.title);
-            char * artist = get_locale_str(himd, t.artist);
-            char * album = get_locale_str(himd, t.album);
+            char *title, *artist, *album;
+            title = get_locale_str(himd, t.title);
+            artist = get_locale_str(himd, t.artist);
+            album = get_locale_str(himd, t.album);
             printf("%4d: %d:%02d %s %s:%s (%s %d)\n",
                     i, t.seconds/60, t.seconds % 60, codecstr(&t),
-                    artist, title, album, t.trackinalbum);
+                    artist ? artist : "Unknown artist", 
+                    title ? title : "Unknown title",
+                    album ? album : "Unknown album", t.trackinalbum);
             g_free(title);
             g_free(artist);
             g_free(album);
