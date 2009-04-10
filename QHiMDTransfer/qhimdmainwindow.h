@@ -5,6 +5,9 @@
 #include <QFileDialog>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
+extern "C" {
+#include "libhimd/himd.h"
+}
 
 namespace Ui
 {
@@ -15,11 +18,14 @@ class QHiMDMainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    struct himd HiMD;
+
 public:
     QHiMDMainWindow(QWidget *parent = 0);
     ~QHiMDMainWindow();
 
 public slots:
+    void on_trigger_Connect();
     void on_trigger_Download();
     void on_trigger_Upload();
     void on_trigger_Delete();

@@ -6,11 +6,15 @@ TEMPLATE = app
 SOURCES += main.cpp \
     qhimdmainwindow.cpp \
     qhimdaboutdialog.cpp \
-    qhimdformatdialog.cpp
+    qhimdformatdialog.cpp \
+    libhimd/encryption.c \
+    libhimd/himd.c \
+    libhimd/trackindex.c
 HEADERS += qhimdmainwindow.h \
     qhimdaboutdialog.h \
     qhimdaboutdialog.h \
-    qhimdformatdialog.h
+    qhimdformatdialog.h \
+    libhimd/himd.h
 FORMS += qhimdmainwindow.ui \
     qhimdaboutdialog.ui \
     qhimdformatdialog.ui

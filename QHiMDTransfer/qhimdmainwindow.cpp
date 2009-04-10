@@ -17,6 +17,18 @@ QHiMDMainWindow::~QHiMDMainWindow()
 
 /* Slots for the buttons */
 
+void QHiMDMainWindow::on_trigger_Connect()
+{
+    QString HiMDDirectory;
+
+    HiMDDirectory = QFileDialog::getExistingDirectory(this,
+                                                 "Select directory of HiMD Medium",
+                                                 "/home",
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
+    himd_open(&this->HiMD, (HiMDDirectory.toAscii()).data());
+}
+
 void QHiMDMainWindow::on_trigger_Download()
 {
     QStringList DownloadFileList;

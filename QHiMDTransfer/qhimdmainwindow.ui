@@ -24,6 +24,13 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
+       <widget class="QPushButton" name="QHiMDConnectButton">
+        <property name="text">
+         <string>&amp;Connect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="QHiMDDownloadButton">
         <property name="text">
          <string>&amp;Download</string>
@@ -105,7 +112,36 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QTreeView" name="TrackList"/>
+       <widget class="QTreeWidget" name="TrackList">
+        <property name="columnCount">
+         <number>5</number>
+        </property>
+        <column>
+         <property name="text">
+          <string>Title</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Artist</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Album</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Length</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Format</string>
+         </property>
+        </column>
+       </widget>
       </item>
      </layout>
     </item>
@@ -210,8 +246,8 @@
    <slot>on_trigger_Download()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>56</x>
-     <y>59</y>
+     <x>155</x>
+     <y>75</y>
     </hint>
     <hint type="destinationlabel">
      <x>5</x>
@@ -226,8 +262,8 @@
    <slot>on_trigger_Format()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>459</x>
-     <y>71</y>
+     <x>538</x>
+     <y>75</y>
     </hint>
     <hint type="destinationlabel">
      <x>421</x>
@@ -258,8 +294,8 @@
    <slot>on_trigger_Upload()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>162</x>
-     <y>60</y>
+     <x>272</x>
+     <y>75</y>
     </hint>
     <hint type="destinationlabel">
      <x>123</x>
@@ -274,8 +310,8 @@
    <slot>on_trigger_Delete()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>255</x>
-     <y>68</y>
+     <x>360</x>
+     <y>75</y>
     </hint>
     <hint type="destinationlabel">
      <x>220</x>
@@ -290,8 +326,8 @@
    <slot>on_trigger_Rename()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>354</x>
-     <y>74</y>
+     <x>449</x>
+     <y>75</y>
     </hint>
     <hint type="destinationlabel">
      <x>317</x>
@@ -315,6 +351,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>QHiMDConnectButton</sender>
+   <signal>clicked()</signal>
+   <receiver>QHiMDMainWindowClass</receiver>
+   <slot>on_trigger_Connect()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>55</x>
+     <y>65</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>95</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_trigger_Format()</slot>
@@ -324,5 +376,6 @@
   <slot>on_trigger_Delete()</slot>
   <slot>on_trigger_Rename()</slot>
   <slot>on_trigger_AddGroup()</slot>
+  <slot>on_trigger_Connect()</slot>
  </slots>
 </ui>
