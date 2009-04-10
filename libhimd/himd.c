@@ -15,7 +15,8 @@ static int scanfortrkidx(GDir * dir)
 {
     const char * hmafile;
     /* I don't use g_pattern_* stuff, because they can't be case insensitive */
-    int datanum = -1;
+    int maxdatanum = -1;
+    int curdatanum;
     while((hmafile = g_dir_read_name(dir)) != NULL)
     {
         /* trkidxNN.hma - should be only one of them */
@@ -23,13 +24,12 @@ static int scanfortrkidx(GDir * dir)
            strlen(hmafile) == 12 &&
            isdigit(hmafile[6]) &&
            isdigit(hmafile[7]) &&
-           g_strncasecmp(hmafile+8,".hma",4) == 0)
-        {
-            sscanf(hmafile+6,"%d",&datanum);
-            break;
-        }
+           g_strncasecmp(hmafile+8,".hma",4) == 0 &&
+           sscanf(hmafile+6,"%d",&curdatanum) == 1 &&
+           curdatanum > maxdatanum)
+            maxdatanum = curdatanum;
     }
-    return datanum;
+    return maxdatanum;
 }
 
 FILE * himd_open_file(struct himd * himd, const char * fileid)
