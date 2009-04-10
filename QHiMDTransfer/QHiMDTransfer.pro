@@ -18,3 +18,6 @@ HEADERS += qhimdmainwindow.h \
 FORMS += qhimdmainwindow.ui \
     qhimdaboutdialog.ui \
     qhimdformatdialog.ui
+
+CONFIG += link_pkgconfig
+PKGCONFIG += glib-2.0
