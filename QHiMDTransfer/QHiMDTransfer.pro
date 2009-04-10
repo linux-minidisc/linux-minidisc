@@ -7,16 +7,13 @@ SOURCES += main.cpp \
     qhimdmainwindow.cpp \
     qhimdaboutdialog.cpp \
     qhimdformatdialog.cpp \
-    libhimd/encryption.c \
-    libhimd/himd.c \
-    libhimd/trackindex.c \
     qtc-gdbmacros/gdbmacros.cpp
 HEADERS += qhimdmainwindow.h \
     qhimdaboutdialog.h \
     qhimdaboutdialog.h \
-    qhimdformatdialog.h \
-    libhimd/himd.h \
-    libhimd/himd.h
+    qhimdformatdialog.h
+LIBS += ../libhimd/libhimd.a
+INCLUDEPATH = ..
 FORMS += qhimdmainwindow.ui \
     qhimdaboutdialog.ui \
     qhimdformatdialog.ui
