@@ -23,6 +23,7 @@
 #define HIMD_LAST_STRING 4095
 
 enum himdstatus { HIMD_OK,
+                  HIMD_STATUS_AUDIO_EOF,
                   HIMD_ERROR_CANT_OPEN_MCLIST,
                   HIMD_ERROR_CANT_READ_MCLIST,
                   HIMD_ERROR_CANT_READ_TIF,
@@ -31,6 +32,9 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_CANT_ACCESS_HMDHIFI,
                   HIMD_ERROR_NO_TRACK_INDEX,
                   HIMD_ERROR_CANT_OPEN_TRACK_INDEX,
+                  HIMD_ERROR_CANT_OPEN_AUDIO,
+                  HIMD_ERROR_CANT_SEEK_AUDIO,
+                  HIMD_ERROR_CANT_READ_AUDIO,
                   HIMD_ERROR_NO_SUCH_TRACK,
                   HIMD_ERROR_FRAGMENT_CHAIN_BROKEN,
                   HIMD_ERROR_STRING_CHAIN_BROKEN,
@@ -91,3 +95,23 @@ int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo
 
 typedef unsigned char mp3key[4];
 int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key);
+
+/* data stream, mdstream.c */
+
+struct himd_blockstream {
+    struct himd * himd;
+    FILE * atdata;
+    struct fraginfo *frags;
+    unsigned int curblockno;
+    unsigned int curfragno;
+    unsigned int fragcount;
+    unsigned int blockcount;
+    int status;
+    char statusmsg[64];
+};
+
+
+int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct himd_blockstream * stream);
+void himd_blockstream_close(struct himd_blockstream * stream);
+int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
+                            int * firstframe, int * lastframe);

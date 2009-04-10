@@ -111,6 +111,43 @@ void himd_dumpdiscid(struct himd * h)
     puts("");        
 }
 
+void himd_dumptrack(struct himd * himd, int trknum)
+{
+    struct trackinfo t;
+    struct himd_blockstream str;
+    FILE * strdumpf;
+    int firstframe, lastframe;
+    char block[16384];
+    int blocknum = 0;
+    strdumpf = fopen("stream.dmp","wb");
+    if(!strdumpf)
+    {
+        perror("Opening stream.dmp");
+        return;
+    }
+    if(himd_get_track_info(himd, trknum, &t) < 0)
+    {
+        fprintf(stderr, "Error obtaining track info: %s\n", himd->statusmsg);
+        return;
+    }
+    if(himd_blockstream_open(himd, t.firstfrag, &str) < 0)
+    {
+        fprintf(stderr, "Error opening stream %d: %s\n", t.firstfrag, himd->statusmsg);
+        return;
+    }
+    while(himd_blockstream_read(&str, block, &firstframe, &lastframe) >= 0)
+    {
+        if(fwrite(block,16384,1,strdumpf) != 1)
+        {
+            perror("writing dumped stream");
+            break;
+        }
+        printf("%d: %d..%d\n",blocknum++,firstframe,lastframe);
+    }
+    fclose(strdumpf);
+    himd_blockstream_close(&str);
+}
+
 int main(int argc, char ** argv)
 {
     int idx;
@@ -140,6 +177,12 @@ int main(int argc, char ** argv)
         sscanf(argv[3], "%d", &idx);
         himd_obtain_mp3key(&h, idx, &k);
         printf("Track key: %02x%02x%02x%02x\n", k[0], k[1], k[2], k[3]);
+    }
+    else if(strcmp(argv[2],"dumptrack") == 0 && argc > 3)
+    {
+        idx = 1;
+        sscanf(argv[3], "%d", &idx);
+        himd_dumptrack(&h, idx);
     }
 
     himd_close(&h);

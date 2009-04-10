@@ -2,12 +2,9 @@
 #include <glib.h>
 #include "himd.h"
 
-#define _(x) (x)
+#include "himd_private.h"
 
-static unsigned int beword16(unsigned char * c)
-{
-    return c[0]*256+c[1];
-}
+#define _(x) (x)
 
 static unsigned char * get_track(struct himd * himd, unsigned int idx)
 {
