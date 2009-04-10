@@ -1,4 +1,11 @@
+#ifndef INCLUDED_LIBHIMD_HIMD_H
+#define INCLUDED_LIBHIMD_HIMD_H
+
 #include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define CODEC_ATRAC3 0x00
 #define CODEC_ATRAC3PLUS_OR_MPEG 0x01
@@ -117,3 +124,9 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct him
 void himd_blockstream_close(struct himd_blockstream * stream);
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
                             int * firstframe, int * lastframe);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
