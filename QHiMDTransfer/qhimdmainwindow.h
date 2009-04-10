@@ -7,6 +7,8 @@
 #include "qhimdformatdialog.h"
 extern "C" {
 #include "libhimd/himd.h"
+#include <glib.h>
+#include <glib/gprintf.h>
 }
 
 namespace Ui
