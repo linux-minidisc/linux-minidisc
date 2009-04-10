@@ -10,7 +10,7 @@ QString get_locale_str(struct himd * himd, int idx)
     if(!str)
         return NULL;
 
-    outstr = QString::fromUtf8(g_locale_from_utf8(str,-1,NULL,NULL,NULL));
+    outstr = QString::fromUtf8(str);
     himd_free(str);
     return outstr;
 }
