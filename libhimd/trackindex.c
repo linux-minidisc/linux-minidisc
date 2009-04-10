@@ -63,6 +63,22 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     return 0;
 }
 
+const char * himd_get_codec_name(struct trackinfo * track)
+{
+    static char buffer[5];
+    if(track->codec_id == CODEC_LPCM)
+        return "LPCM";
+    if(track->codec_id == CODEC_ATRAC3)
+        return "AT3 ";
+    if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG && 
+         (track->codecinfo[0] & 3) == 0)
+        return "AT3+";
+    if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG)
+        return "MPEG";
+    sprintf(buffer,"%4d",track->codec_id);
+    return buffer;
+}
+
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f)
 {
     unsigned char * fragbuffer;

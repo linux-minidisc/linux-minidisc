@@ -5,17 +5,6 @@
 
 #include "himd.h"
 
-char * codecstr(struct trackinfo * track)
-{
-    static char buffer[5];
-    if(track->codec_id == CODEC_LPCM)
-        return "LPCM";
-    if(track->codec_id == CODEC_LOSSY && track->codecinfo[0] == 3)
-        return "MPEG";
-    sprintf(buffer,"%4d",track->codec_id);
-    return buffer;
-}
-
 char * get_locale_str(struct himd * himd, int idx)
 {
     char * str, * outstr;
@@ -44,7 +33,7 @@ void himd_trackdump(struct himd * himd, int verbose)
             artist = get_locale_str(himd, t.artist);
             album = get_locale_str(himd, t.album);
             printf("%4d: %d:%02d %s %s:%s (%s %d)\n",
-                    i, t.seconds/60, t.seconds % 60, codecstr(&t),
+                    i, t.seconds/60, t.seconds % 60, himd_get_codec_name(&t),
                     artist ? artist : "Unknown artist", 
                     title ? title : "Unknown title",
                     album ? album : "Unknown album", t.trackinalbum);
@@ -123,7 +112,7 @@ void himd_dumptrack(struct himd * himd, int trknum)
     struct himd_blockstream str;
     FILE * strdumpf;
     int firstframe, lastframe;
-    char block[16384];
+    unsigned char block[16384];
     int blocknum = 0;
     strdumpf = fopen("stream.dmp","wb");
     if(!strdumpf)

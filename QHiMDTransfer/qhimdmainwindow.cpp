@@ -15,15 +15,6 @@ QString get_locale_str(struct himd * himd, int idx)
     return outstr;
 }
 
-QString codecstr(struct trackinfo * track)
-{
-    if(track->codec_id == CODEC_LPCM)
-        return "LPCM";
-    if(track->codec_id == CODEC_LOSSY && track->codecinfo[0] == 3)
-        return "MPEG";
-    return QString::number(track->codec_id);
-}
-
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
 {
@@ -74,7 +65,7 @@ void QHiMDMainWindow::on_trigger_Connect()
             HiMDTrack->setText(1, get_locale_str(&this->HiMD, t.artist));
             HiMDTrack->setText(2, get_locale_str(&this->HiMD, t.album));
             HiMDTrack->setText(3, QString::number(t.seconds/60) + ":" + QString::number(t.seconds % 60));
-            HiMDTrack->setText(4, codecstr(&t));
+            HiMDTrack->setText(4, himd_get_codec_name(&t));
             HiMDTrack->setFlags(Qt::ItemIsEnabled);
 
             ui->TrackList->addTopLevelItem(HiMDTrack);

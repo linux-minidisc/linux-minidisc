@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#define CODEC_LOSSY 0x01
+#define CODEC_ATRAC3 0x00
+#define CODEC_ATRAC3PLUS_OR_MPEG 0x01
 #define CODEC_LPCM 0x80
 
 #define HIMD_ENCODING_LATIN1 5
@@ -92,6 +93,7 @@ FILE * himd_open_file(struct himd * himd, const char * fileid);
 
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track);
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f);
+const char * himd_get_codec_name(struct trackinfo * t);
 
 typedef unsigned char mp3key[4];
 int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key);
