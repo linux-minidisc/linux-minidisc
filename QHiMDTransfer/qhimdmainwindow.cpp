@@ -4,18 +4,25 @@
 
 QString get_locale_str(struct himd * himd, int idx)
 {
-    char * str;
     QString outstr;
+    char * str;
     str = himd_get_string_utf8(himd, idx, NULL);
     if(!str)
         return NULL;
 
-    outstr = g_locale_from_utf8(str,-1,NULL,NULL,NULL);
+    outstr = QString::fromUtf8(g_locale_from_utf8(str,-1,NULL,NULL,NULL));
     himd_free(str);
     return outstr;
 }
 
-
+QString codecstr(struct trackinfo * track)
+{
+    if(track->codec_id == CODEC_LPCM)
+        return "LPCM";
+    if(track->codec_id == CODEC_LOSSY && track->codecinfo[0] == 3)
+        return "MPEG";
+    return QString::number(track->codec_id);
+}
 
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
@@ -43,6 +50,8 @@ void QHiMDMainWindow::on_trigger_Connect()
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
 
+    ui->TrackList->clear();
+
     himd_open(&this->HiMD, (HiMDDirectory.toAscii()).data());
 
     for(int i = HIMD_FIRST_TRACK;i <= HIMD_LAST_TRACK;i++)
@@ -64,8 +73,8 @@ void QHiMDMainWindow::on_trigger_Connect()
             HiMDTrack->setText(0, get_locale_str(&this->HiMD, t.title));
             HiMDTrack->setText(1, get_locale_str(&this->HiMD, t.artist));
             HiMDTrack->setText(2, get_locale_str(&this->HiMD, t.album));
-            HiMDTrack->setText(3, "(unset)");
-            HiMDTrack->setText(4, "(unset)");
+            HiMDTrack->setText(3, QString::number(t.seconds/60) + ":" + QString::number(t.seconds % 60));
+            HiMDTrack->setText(4, codecstr(&t));
             HiMDTrack->setFlags(Qt::ItemIsEnabled);
 
             ui->TrackList->addTopLevelItem(HiMDTrack);
