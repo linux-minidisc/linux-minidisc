@@ -1,5 +1,5 @@
 #!/bin/sh
-aclocal
+aclocal $ACLOCAL_FLAGS
 autoconf
 automake --add-missing
 ./configure "$@"
