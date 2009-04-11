@@ -22,10 +22,10 @@ static int scanfortrkidx(GDir * dir)
         /* trkidxNN.hma - should be only one of them */
         if(g_strncasecmp(hmafile,"trkidx",6) == 0 &&
            strlen(hmafile) == 12 &&
-           isdigit(hmafile[6]) &&
-           isdigit(hmafile[7]) &&
+           isxdigit(hmafile[6]) &&
+           isxdigit(hmafile[7]) &&
            g_strncasecmp(hmafile+8,".hma",4) == 0 &&
-           sscanf(hmafile+6,"%d",&curdatanum) == 1 &&
+           sscanf(hmafile+6,"%x",&curdatanum) == 1 &&
            curdatanum > maxdatanum)
             maxdatanum = curdatanum;
     }
@@ -38,7 +38,7 @@ FILE * himd_open_file(struct himd * himd, const char * fileid)
     FILE * file;
     char * filepath;
 
-    sprintf(filename,"%s%02d.hma",fileid,himd->datanum);
+    sprintf(filename,"%s%02x.hma",fileid,himd->datanum);
     filepath = g_build_filename(himd->rootpath,"hmdhifi",filename,NULL);
     file = fopen(filepath,"rb");
     g_free(filepath);
@@ -99,7 +99,7 @@ int himd_open(struct himd * himd, const char * himdroot)
         return -1;		/* ERROR: track index not found */
     }
     
-    sprintf(indexfilename,"trkidx%02d.hma",himd->datanum);
+    sprintf(indexfilename,"trkidx%02x.hma",himd->datanum);
     filepath = g_build_filename(himdroot,"hmdhifi",indexfilename,NULL);
     if(!g_file_get_contents(filepath, (char**)&himd->tifdata, &filelen, &error))
     {
