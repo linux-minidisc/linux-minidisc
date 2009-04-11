@@ -64,7 +64,7 @@ void QHiMDMainWindow::on_trigger_Connect()
             HiMDTrack->setText(0, get_locale_str(&this->HiMD, t.title));
             HiMDTrack->setText(1, get_locale_str(&this->HiMD, t.artist));
             HiMDTrack->setText(2, get_locale_str(&this->HiMD, t.album));
-            HiMDTrack->setText(3, QString::number(t.seconds/60) + ":" + QString::number(t.seconds % 60));
+            HiMDTrack->setText(3, QString("%1:%2").arg(t.seconds/60).arg(t.seconds%60,2,10,QLatin1Char('0')));
             HiMDTrack->setText(4, himd_get_codec_name(&t));
             HiMDTrack->setFlags(Qt::ItemIsEnabled);
 
