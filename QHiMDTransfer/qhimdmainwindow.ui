@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>829</width>
-    <height>494</height>
+    <height>492</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,94 +21,6 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QPushButton" name="QHiMDConnectButton">
-        <property name="text">
-         <string>&amp;Connect</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="QHiMDDownloadButton">
-        <property name="text">
-         <string>&amp;Download</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>icons/download_to_md.png</normaloff>icons/download_to_md.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="QHiMDUploadButton">
-        <property name="text">
-         <string>&amp;Upload</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>icons/upload_from_md.png</normaloff>icons/upload_from_md.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="QHiMDDeleteButton">
-        <property name="text">
-         <string>D&amp;elete</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>icons/delete.png</normaloff>icons/delete.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="QHiMDRenameButton">
-        <property name="text">
-         <string>&amp;Rename</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>icons/rename.png</normaloff>icons/rename.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="QHiMDFormatButton">
-        <property name="text">
-         <string>&amp;Format</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>icons/format.png</normaloff>icons/format.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="QHiMDAddGroupButton">
-        <property name="text">
-         <string>Add &amp;Group</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>icons/add_group.png</normaloff>icons/add_group.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="QHiMDQuitButton">
-        <property name="text">
-         <string>&amp;Quit</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>icons/quit.png</normaloff>icons/quit.png</iconset>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
@@ -160,6 +72,8 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <addaction name="action_Connect"/>
+    <addaction name="separator"/>
     <addaction name="action_Download"/>
     <addaction name="action_Upload"/>
     <addaction name="separator"/>
@@ -182,12 +96,25 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="mainToolBar">
+   <property name="acceptDrops">
+    <bool>false</bool>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="action_Connect"/>
+   <addaction name="separator"/>
+   <addaction name="action_Download"/>
+   <addaction name="action_Upload"/>
+   <addaction name="separator"/>
+   <addaction name="action_Rename"/>
+   <addaction name="action_Delete"/>
+   <addaction name="action_Format"/>
+   <addaction name="separator"/>
+   <addaction name="action_Quit"/>
   </widget>
   <action name="action_Download">
    <property name="icon">
@@ -259,139 +186,15 @@
     <string>&amp;Quit</string>
    </property>
   </action>
+  <action name="action_Connect">
+   <property name="text">
+    <string>&amp;Connect</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections>
-  <connection>
-   <sender>QHiMDDownloadButton</sender>
-   <signal>clicked()</signal>
-   <receiver>QHiMDMainWindowClass</receiver>
-   <slot>on_trigger_Download()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>155</x>
-     <y>75</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>5</x>
-     <y>53</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>QHiMDFormatButton</sender>
-   <signal>clicked()</signal>
-   <receiver>QHiMDMainWindowClass</receiver>
-   <slot>on_trigger_Format()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>538</x>
-     <y>75</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>421</x>
-     <y>51</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>QHiMDQuitButton</sender>
-   <signal>clicked()</signal>
-   <receiver>QHiMDMainWindowClass</receiver>
-   <slot>on_trigger_Quit()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>686</x>
-     <y>74</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>639</x>
-     <y>50</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>QHiMDUploadButton</sender>
-   <signal>clicked()</signal>
-   <receiver>QHiMDMainWindowClass</receiver>
-   <slot>on_trigger_Upload()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>272</x>
-     <y>75</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>123</x>
-     <y>50</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>QHiMDDeleteButton</sender>
-   <signal>clicked()</signal>
-   <receiver>QHiMDMainWindowClass</receiver>
-   <slot>on_trigger_Delete()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>360</x>
-     <y>75</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>220</x>
-     <y>48</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>QHiMDRenameButton</sender>
-   <signal>clicked()</signal>
-   <receiver>QHiMDMainWindowClass</receiver>
-   <slot>on_trigger_Rename()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>449</x>
-     <y>75</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>317</x>
-     <y>62</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>QHiMDAddGroupButton</sender>
-   <signal>clicked()</signal>
-   <receiver>QHiMDMainWindowClass</receiver>
-   <slot>on_trigger_AddGroup()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>553</x>
-     <y>63</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>521</x>
-     <y>56</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>QHiMDConnectButton</sender>
-   <signal>clicked()</signal>
-   <receiver>QHiMDMainWindowClass</receiver>
-   <slot>on_trigger_Connect()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>55</x>
-     <y>65</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>5</x>
-     <y>95</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>on_trigger_Format()</slot>
   <slot>on_trigger_Download()</slot>

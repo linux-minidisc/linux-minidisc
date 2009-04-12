@@ -22,22 +22,13 @@ public:
     QHiMDMainWindow(QWidget *parent = 0);
     ~QHiMDMainWindow();
 
-public slots:
-    void on_trigger_Connect();
-    void on_trigger_Download();
-    void on_trigger_Upload();
-    void on_trigger_Delete();
-    void on_trigger_Rename();
-    void on_trigger_Format();
-    void on_trigger_AddGroup();
-    void on_trigger_Quit();
-
 private:
     Ui::QHiMDMainWindowClass *ui;
     QHiMDAboutDialog * aboutDialog;
     QHiMDFormatDialog * formatDialog;
 
 private slots:
+    void on_action_Connect_triggered();
     void on_action_Format_triggered();
     void on_action_Upload_triggered();
     void on_action_Download_triggered();
