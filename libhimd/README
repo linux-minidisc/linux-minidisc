@@ -11,3 +11,4 @@ system on a Sony Hi-MD music medium.
 glib-2.0
 automake
 autoconf
+mad (for MP3 reading)

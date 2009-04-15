@@ -32,6 +32,7 @@ extern "C" {
 
 enum himdstatus { HIMD_OK,
                   HIMD_STATUS_AUDIO_EOF,
+                  HIMD_ERROR_DISABLED_FEATURE,
                   HIMD_ERROR_CANT_OPEN_MCLIST,
                   HIMD_ERROR_CANT_READ_MCLIST,
                   HIMD_ERROR_CANT_READ_TIF,
@@ -49,6 +50,8 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_STRING_ENCODING_ERROR,
                   HIMD_ERROR_NOT_STRING_HEAD,
                   HIMD_ERROR_UNKNOWN_ENCODING,
+                  HIMD_ERROR_BAD_FRAME_NUMBERS,
+                  HIMD_ERROR_BAD_DATA_FORMAT,
                   HIMD_ERROR_OUT_OF_MEMORY };
 
 /* a track on the HiMD */
@@ -124,6 +127,19 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct him
 void himd_blockstream_close(struct himd_blockstream * stream);
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
                             int * firstframe, int * lastframe);
+
+struct himd_mp3stream {
+    struct himd_blockstream stream;
+    unsigned char blockbuf[16384];
+    const unsigned char ** frameptrs;
+    mp3key mp3key;
+    int curframe;
+    int frames;
+};
+
+int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream);
+int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, int * lenout);
+void himd_mp3stream_close(struct himd_mp3stream * stream);
 
 #ifdef __cplusplus
 }

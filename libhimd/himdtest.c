@@ -143,6 +143,40 @@ void himd_dumptrack(struct himd * himd, int trknum)
     himd_blockstream_close(&str);
 }
 
+void himd_dumpmp3(struct himd * himd, int trknum)
+{
+    struct trackinfo t;
+    struct himd_mp3stream str;
+    FILE * strdumpf;
+    unsigned int len;
+    const unsigned char * data;
+    int blocknum = 0;
+    strdumpf = fopen("stream.mp3","wb");
+    if(!strdumpf)
+    {
+        perror("Opening stream.mp3");
+        return;
+    }
+    if(himd_mp3stream_open(himd, trknum, &str) < 0)
+    {
+        fprintf(stderr, "Error opening track %d: %s\n", trknum, himd->statusmsg);
+        return;
+    }
+    while(himd_mp3stream_read_frame(&str, &data, &len) >= 0)
+    {
+        if(fwrite(data,len,1,strdumpf) != 1)
+        {
+            perror("writing dumped stream");
+            goto clean;
+        }
+    }
+    if(str.stream.status != HIMD_STATUS_AUDIO_EOF)
+        fprintf(stderr,"Error reading MP3 data: %s\n", str.stream.statusmsg);
+clean:
+    fclose(strdumpf);
+    himd_mp3stream_close(&str);
+}
+
 int main(int argc, char ** argv)
 {
     int idx;
@@ -178,6 +212,12 @@ int main(int argc, char ** argv)
         idx = 1;
         sscanf(argv[3], "%d", &idx);
         himd_dumptrack(&h, idx);
+    }
+    else if(strcmp(argv[2],"dumpmp3") == 0 && argc > 3)
+    {
+        idx = 1;
+        sscanf(argv[3], "%d", &idx);
+        himd_dumpmp3(&h, idx);
     }
 
     himd_close(&h);
