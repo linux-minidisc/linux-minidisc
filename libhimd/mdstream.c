@@ -179,25 +179,25 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
         if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe) < 0)
             return -1;
 
-        if(firstframe >= lastframe)
+        if(firstframe > lastframe)
         {
             stream->stream.status = HIMD_ERROR_BAD_FRAME_NUMBERS;
             g_snprintf(stream->stream.statusmsg,
                        sizeof stream->stream.statusmsg,
-                       _("Last frame %u not after first frame %u"),
+                       _("Last frame %u before first frame %u"),
                        lastframe, firstframe);
             return -1;
         }
 
         free(stream->frameptrs);
-        stream->frameptrs = malloc((lastframe - firstframe + 1) * sizeof stream->frameptrs[0]);
+        stream->frameptrs = malloc((lastframe - firstframe + 2) * sizeof stream->frameptrs[0]);
         if(!stream->frameptrs)
         {
             stream->stream.status = HIMD_ERROR_OUT_OF_MEMORY;
             g_snprintf(stream->stream.statusmsg,
                        sizeof stream->stream.statusmsg,
                        _("Can't allocate memory for %u frame pointers"),
-                       lastframe-firstframe+1);
+                       lastframe-firstframe+2);
             return -1;
         }
 
@@ -229,7 +229,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
         
 
         /* store needed frames */
-        for(i = 0;i < lastframe;i++)
+        for(i = 0;i <= lastframe;i++)
         {
             if(mad_header_decode(&madheader, &madstream) < 0 &&
                 (madstream.error != MAD_ERROR_LOSTSYNC || i != lastframe-1))
@@ -243,7 +243,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
             stream->frameptrs[i] = madstream.this_frame;
         }
         stream->frameptrs[i] = madstream.next_frame;
-        stream->frames = lastframe;
+        stream->frames = lastframe+1;
         stream->curframe = 0;
 cleanup_decoder:
         mad_header_finish(&madheader);
