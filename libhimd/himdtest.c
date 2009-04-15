@@ -111,7 +111,7 @@ void himd_dumptrack(struct himd * himd, int trknum)
     struct trackinfo t;
     struct himd_blockstream str;
     FILE * strdumpf;
-    int firstframe, lastframe;
+    unsigned int firstframe, lastframe;
     unsigned char block[16384];
     int blocknum = 0;
     strdumpf = fopen("stream.dmp","wb");
@@ -137,7 +137,7 @@ void himd_dumptrack(struct himd * himd, int trknum)
             perror("writing dumped stream");
             break;
         }
-        printf("%d: %d..%d\n",blocknum++,firstframe,lastframe);
+        printf("%d: %u..%u\n",blocknum++,firstframe,lastframe);
     }
     fclose(strdumpf);
     himd_blockstream_close(&str);
@@ -145,12 +145,10 @@ void himd_dumptrack(struct himd * himd, int trknum)
 
 void himd_dumpmp3(struct himd * himd, int trknum)
 {
-    struct trackinfo t;
     struct himd_mp3stream str;
     FILE * strdumpf;
     unsigned int len;
     const unsigned char * data;
-    int blocknum = 0;
     strdumpf = fopen("stream.mp3","wb");
     if(!strdumpf)
     {

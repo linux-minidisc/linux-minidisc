@@ -74,7 +74,7 @@ void himd_blockstream_close(struct himd_blockstream * stream)
 }
 
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
-                            int * firstframe, int * lastframe)
+                            unsigned int * firstframe, unsigned int * lastframe)
 {
     g_return_val_if_fail(stream != NULL, -1);
     g_return_val_if_fail(block != NULL, -1);
@@ -143,7 +143,7 @@ int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp
     if(himd_get_track_info(himd, trackno, &trkinfo) < 0)
         return -1;
     if(trkinfo.codec_id != CODEC_ATRAC3PLUS_OR_MPEG ||
-       trkinfo.codecinfo[0] & 3 != 3)
+       (trkinfo.codecinfo[0] & 3) != 3)
     {
         g_snprintf(himd->statusmsg, sizeof himd->statusmsg,
             "Track %d does not contain MPEG data", trackno);
@@ -163,7 +163,7 @@ int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp
     return 0;
 }
 
-int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, int * lenout)
+int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout)
 {
     int gotdata = 1;
 

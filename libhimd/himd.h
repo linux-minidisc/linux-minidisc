@@ -126,7 +126,7 @@ struct himd_blockstream {
 int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct himd_blockstream * stream);
 void himd_blockstream_close(struct himd_blockstream * stream);
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
-                            int * firstframe, int * lastframe);
+                            unsigned int * firstframe, unsigned int * lastframe);
 
 struct himd_mp3stream {
     struct himd_blockstream stream;
@@ -138,7 +138,7 @@ struct himd_mp3stream {
 };
 
 int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream);
-int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, int * lenout);
+int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout);
 void himd_mp3stream_close(struct himd_mp3stream * stream);
 
 #ifdef __cplusplus
