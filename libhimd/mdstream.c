@@ -219,7 +219,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
             {
                 stream->stream.status = HIMD_ERROR_BAD_DATA_FORMAT;
                 g_snprintf(stream->stream.statusmsg, sizeof stream->stream.statusmsg,
-                    _("Still %u frames to skip: %s"), mad_stream_errorstr(&madstream));
+                    _("Still %u frames to skip: %s"), firstframe, mad_stream_errorstr(&madstream));
                 gotdata = 0;
                 goto cleanup_decoder;
             }
@@ -258,6 +258,7 @@ cleanup_decoder:
         *lenout = stream->frameptrs[stream->curframe + 1] - 
                   stream->frameptrs[stream->curframe];
     stream->curframe++;
+    return 0;
 }
 
 void himd_mp3stream_close(struct himd_mp3stream * stream)
