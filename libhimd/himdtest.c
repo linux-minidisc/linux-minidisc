@@ -11,7 +11,7 @@ char * get_locale_str(struct himd * himd, int idx)
     if(idx == 0)
         return NULL;
 
-    str = himd_get_string_utf8(himd, idx, NULL);
+    str = himd_get_string_utf8(himd, idx, NULL, NULL);
     if(!str)
         return NULL;
 
@@ -23,10 +23,11 @@ char * get_locale_str(struct himd * himd, int idx)
 void himd_trackdump(struct himd * himd, int verbose)
 {
     int i;
+    struct himderrinfo status;
     for(i = HIMD_FIRST_TRACK;i <= HIMD_LAST_TRACK;i++)
     {
         struct trackinfo t;
-        if(himd_get_track_info(himd, i, &t)  >= 0)
+        if(himd_get_track_info(himd, i, &t, NULL)  >= 0)
         {
             char *title, *artist, *album;
             title = get_locale_str(himd, t.title);
@@ -46,14 +47,14 @@ void himd_trackdump(struct himd * himd, int verbose)
                 int fnum = t.firstfrag;
                 while(fnum != 0)
                 {
-                    if(himd_get_fragment_info(himd, fnum, &f) >= 0)
+                    if(himd_get_fragment_info(himd, fnum, &f, &status) >= 0)
                     {
                         printf("     %3d@%05d .. %3d@%05d\n", f.firstframe, f.firstblock, f.lastframe, f.lastblock);
                         fnum = f.nextfrag;
                     }
                     else
                     {
-                        printf("     ERROR reading fragment %d info: %s\n", fnum, himd->statusmsg);
+                        printf("     ERROR reading fragment %d info: %s\n", fnum, status.statusmsg);
                         break;
                     }
                 }
@@ -65,11 +66,12 @@ void himd_trackdump(struct himd * himd, int verbose)
 void himd_stringdump(struct himd * himd)
 {
     int i;
+    struct himderrinfo status;
     for(i = 1;i < 4096;i++)
     {
         char * str;
         int type;
-        if((str = himd_get_string_utf8(himd, i, &type)) != NULL)
+        if((str = himd_get_string_utf8(himd, i, &type, &status)) != NULL)
         {
             char * typestr;
             char * outstr;
@@ -86,18 +88,19 @@ void himd_stringdump(struct himd * himd)
             g_free(outstr);
             himd_free(str);
         }
-        else if(himd->status != HIMD_ERROR_NOT_STRING_HEAD)
-            printf("%04d: ERROR %s\n", i, himd->statusmsg);
+        else if(status.status != HIMD_ERROR_NOT_STRING_HEAD)
+            printf("%04d: ERROR %s\n", i, status.statusmsg);
     }
 }
 
 void himd_dumpdiscid(struct himd * h)
 {
     int i;
-    const unsigned char * discid = himd_get_discid(h);
+    struct himderrinfo status;
+    const unsigned char * discid = himd_get_discid(h, &status);
     if(!discid)
     {
-        fprintf(stderr,"Error obtaining disc ID: %s", h->statusmsg);
+        fprintf(stderr,"Error obtaining disc ID: %s", status.statusmsg);
         return;
     }
     printf("Disc ID: ");
@@ -110,6 +113,7 @@ void himd_dumptrack(struct himd * himd, int trknum)
 {
     struct trackinfo t;
     struct himd_blockstream str;
+    struct himderrinfo status;
     FILE * strdumpf;
     unsigned int firstframe, lastframe;
     unsigned char block[16384];
@@ -120,25 +124,28 @@ void himd_dumptrack(struct himd * himd, int trknum)
         perror("Opening stream.dmp");
         return;
     }
-    if(himd_get_track_info(himd, trknum, &t) < 0)
+    if(himd_get_track_info(himd, trknum, &t, &status) < 0)
     {
-        fprintf(stderr, "Error obtaining track info: %s\n", himd->statusmsg);
+        fprintf(stderr, "Error obtaining track info: %s\n", status.statusmsg);
         return;
     }
-    if(himd_blockstream_open(himd, t.firstfrag, &str) < 0)
+    if(himd_blockstream_open(himd, t.firstfrag, &str, &status) < 0)
     {
-        fprintf(stderr, "Error opening stream %d: %s\n", t.firstfrag, himd->statusmsg);
+        fprintf(stderr, "Error opening stream %d: %s\n", t.firstfrag, status.statusmsg);
         return;
     }
-    while(himd_blockstream_read(&str, block, &firstframe, &lastframe) >= 0)
+    while(himd_blockstream_read(&str, block, &firstframe, &lastframe, &status) >= 0)
     {
         if(fwrite(block,16384,1,strdumpf) != 1)
         {
             perror("writing dumped stream");
-            break;
+            goto clean;
         }
         printf("%d: %u..%u\n",blocknum++,firstframe,lastframe);
     }
+    if(status.status != HIMD_STATUS_AUDIO_EOF)
+        fprintf(stderr,"Error reading MP3 data: %s\n", status.statusmsg);
+clean:
     fclose(strdumpf);
     himd_blockstream_close(&str);
 }
@@ -146,6 +153,7 @@ void himd_dumptrack(struct himd * himd, int trknum)
 void himd_dumpmp3(struct himd * himd, int trknum)
 {
     struct himd_mp3stream str;
+    struct himderrinfo status;
     FILE * strdumpf;
     unsigned int len;
     const unsigned char * data;
@@ -155,12 +163,12 @@ void himd_dumpmp3(struct himd * himd, int trknum)
         perror("Opening stream.mp3");
         return;
     }
-    if(himd_mp3stream_open(himd, trknum, &str) < 0)
+    if(himd_mp3stream_open(himd, trknum, &str, &status) < 0)
     {
-        fprintf(stderr, "Error opening track %d: %s\n", trknum, himd->statusmsg);
+        fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
         return;
     }
-    while(himd_mp3stream_read_frame(&str, &data, &len) >= 0)
+    while(himd_mp3stream_read_frame(&str, &data, &len, &status) >= 0)
     {
         if(fwrite(data,len,1,strdumpf) != 1)
         {
@@ -168,8 +176,8 @@ void himd_dumpmp3(struct himd * himd, int trknum)
             goto clean;
         }
     }
-    if(str.stream.status != HIMD_STATUS_AUDIO_EOF)
-        fprintf(stderr,"Error reading MP3 data: %s\n", str.stream.statusmsg);
+    if(status.status != HIMD_STATUS_AUDIO_EOF)
+        fprintf(stderr,"Error reading MP3 data: %s\n", status.statusmsg);
 clean:
     fclose(strdumpf);
     himd_mp3stream_close(&str);
@@ -179,16 +187,16 @@ int main(int argc, char ** argv)
 {
     int idx;
     struct himd h;
+    struct himderrinfo status;
     setlocale(LC_ALL,"");
     if(argc < 2)
     {
         fputs("Please specify mountpoint of image\n",stderr);
         return 1;
     }
-    himd_open(&h,argv[1]);
-    if(h.status != HIMD_OK)
+    if(himd_open(&h,argv[1], &status) < 0)
     {
-        puts(h.statusmsg);
+        puts(status.statusmsg);
         return 1;
     }
     if(argc == 2 || strcmp(argv[2],"strings") == 0)
@@ -202,7 +210,7 @@ int main(int argc, char ** argv)
         mp3key k;
         idx = 1;
         sscanf(argv[3], "%d", &idx);
-        himd_obtain_mp3key(&h, idx, &k);
+        himd_obtain_mp3key(&h, idx, &k, NULL);
         printf("Track key: %02x%02x%02x%02x\n", k[0], k[1], k[2], k[3]);
     }
     else if(strcmp(argv[2],"dumptrack") == 0 && argc > 3)

@@ -51,6 +51,7 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_NOT_STRING_HEAD,
                   HIMD_ERROR_UNKNOWN_ENCODING,
                   HIMD_ERROR_BAD_FRAME_NUMBERS,
+                  HIMD_ERROR_BAD_AUDIO_CODEC,
                   HIMD_ERROR_BAD_DATA_FORMAT,
                   HIMD_ERROR_OUT_OF_MEMORY };
 
@@ -83,8 +84,6 @@ struct himdstring {
 };
 
 struct himd {
-    enum himdstatus status;
-    char statusmsg[128];
     /* everything below this line is private, i.e. no API stability. */
     char * rootpath;
     unsigned char * tifdata;
@@ -93,20 +92,25 @@ struct himd {
     int datanum;
 };
 
-int himd_open(struct himd * himd, const char * himdroot);
+struct himderrinfo {
+    enum himdstatus status;
+    char statusmsg[128];
+};
+
+int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * status);
 void himd_close(struct himd * himd);
-char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length);
-char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type);
+char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length, struct himderrinfo * status);
+char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struct himderrinfo * status);
 void himd_free(void * p);
-const unsigned char * himd_get_discid(struct himd * himd);
+const unsigned char * himd_get_discid(struct himd * himd, struct himderrinfo * status);
 FILE * himd_open_file(struct himd * himd, const char * fileid);
 
-int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track);
-int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f);
+int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track, struct himderrinfo * status);
+int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status);
 const char * himd_get_codec_name(struct trackinfo * t);
 
 typedef unsigned char mp3key[4];
-int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key);
+int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himderrinfo * status);
 
 /* data stream, mdstream.c */
 
@@ -118,27 +122,25 @@ struct himd_blockstream {
     unsigned int curfragno;
     unsigned int fragcount;
     unsigned int blockcount;
-    int status;
-    char statusmsg[64];
 };
 
 
-int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct himd_blockstream * stream);
+int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct himd_blockstream * stream, struct himderrinfo * status);
 void himd_blockstream_close(struct himd_blockstream * stream);
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
-                            unsigned int * firstframe, unsigned int * lastframe);
+                            unsigned int * firstframe, unsigned int * lastframe, struct himderrinfo * status);
 
 struct himd_mp3stream {
     struct himd_blockstream stream;
     unsigned char blockbuf[16384];
     const unsigned char ** frameptrs;
-    mp3key mp3key;
+    mp3key key;
     int curframe;
     int frames;
 };
 
-int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream);
-int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout);
+int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream, struct himderrinfo * status);
+int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status);
 void himd_mp3stream_close(struct himd_mp3stream * stream);
 
 #ifdef __cplusplus

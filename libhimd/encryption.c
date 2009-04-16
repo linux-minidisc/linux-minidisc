@@ -1,8 +1,8 @@
 #include "himd.h"
 
-int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key)
+int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himderrinfo * status)
 {
-    const unsigned char * d = himd_get_discid(himd);
+    const unsigned char * d = himd_get_discid(himd, status);
     unsigned int foo;
     if(!d)
         return -1;

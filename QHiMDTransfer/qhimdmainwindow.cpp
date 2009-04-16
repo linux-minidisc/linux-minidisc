@@ -6,7 +6,7 @@ QString get_locale_str(struct himd * himd, int idx)
 {
     QString outstr;
     char * str;
-    str = himd_get_string_utf8(himd, idx, NULL);
+    str = himd_get_string_utf8(himd, idx, NULL, NULL);
     if(!str)
         return NULL;
 
@@ -81,13 +81,13 @@ void QHiMDMainWindow::on_action_Connect_triggered()
 
     ui->TrackList->clear();
 
-    himd_open(&this->HiMD, (HiMDDirectory.toAscii()).data());
+    himd_open(&this->HiMD, (HiMDDirectory.toAscii()).data(), NULL);
 
     for(int i = HIMD_FIRST_TRACK;i <= HIMD_LAST_TRACK;i++)
     {
         struct trackinfo t;
         HiMDTrack = new QTreeWidgetItem(0);
-        if(himd_get_track_info(&this->HiMD, i, &t)  >= 0)
+        if(himd_get_track_info(&this->HiMD, i, &t, NULL)  >= 0)
         {
         //    char * title = get_locale_str(himd, t.title);
         //    char * artist = get_locale_str(himd, t.artist);

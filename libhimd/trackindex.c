@@ -31,7 +31,7 @@ static int strlink(unsigned char * stringchunk)
     return beword16(stringchunk+14) & 0xFFF;
 }
 
-int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t)
+int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t, struct himderrinfo * status)
 {
     unsigned char * trackbuffer;
     unsigned int firstpart;
@@ -46,8 +46,8 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
 
     if(firstpart == 0)
     {
-        himd->status = HIMD_ERROR_NO_SUCH_TRACK;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Track %d is not present on disc"), idx);
+        set_status_printf(status, HIMD_ERROR_NO_SUCH_TRACK,
+                          _("Track %d is not present on disc"), idx);
         return -1;
     }
     t->title = beword16(trackbuffer+8);
@@ -79,7 +79,7 @@ const char * himd_get_codec_name(struct trackinfo * track)
     return buffer;
 }
 
-int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f)
+int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status)
 {
     unsigned char * fragbuffer;
 
@@ -96,10 +96,11 @@ int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo
     f->lastframe = fragbuffer[13];
     f->fragtype = fragbuffer[14] >> 4;
     f->nextfrag = beword16(fragbuffer+14) & 0xFFF;
+    (void)status;
     return 0;
 }
 
-char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length)
+char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length, struct himderrinfo * status)
 {
     int curidx;
     int len;
@@ -114,8 +115,7 @@ char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* l
     /* Not the head of a string */
     if(actualtype < 8)
     {
-        himd->status = HIMD_ERROR_NOT_STRING_HEAD;
-        g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
+        set_status_printf(status, HIMD_ERROR_NOT_STRING_HEAD,
                    _("String table entry %d is not a head: Type %d"),
                    idx,actualtype);
         return NULL;
@@ -130,18 +130,16 @@ char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* l
     {
         if(strtype(get_strchunk(himd,curidx)) != STRING_TYPE_CONTINUATION)
         {
-            himd->status = HIMD_ERROR_STRING_CHAIN_BROKEN;
-            g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
-                       "%dth entry in string chain starting at %d has type %d",
+            set_status_printf(status, HIMD_ERROR_STRING_CHAIN_BROKEN,
+                       _("%dth entry in string chain starting at %d has type %d"),
                        len+1,idx,strtype(get_strchunk(himd,curidx)));
             return NULL;
         }
         len++;
         if(len >= 4096)
         {
-            himd->status = HIMD_ERROR_STRING_CHAIN_BROKEN;
-            g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
-                       "string chain starting at %d loops",idx);
+            set_status_printf(status, HIMD_ERROR_STRING_CHAIN_BROKEN,
+                       _("string chain starting at %d loops"),idx);
             return NULL;
         }
     }
@@ -150,9 +148,8 @@ char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* l
     rawstr = g_malloc(len*14);
     if(!rawstr)
     {
-        himd->status = HIMD_ERROR_OUT_OF_MEMORY;
-        g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
-                   "Can't allocate %d bytes for raw string (string idx %d)",
+        set_status_printf(status, HIMD_ERROR_OUT_OF_MEMORY,
+                   _("Can't allocate %d bytes for raw string (string idx %d)"),
                    len, idx);
         return NULL;
     }
@@ -169,7 +166,7 @@ char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* l
     return rawstr;
 }
 
-char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
+char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struct himderrinfo * status)
 {
     int length;
     char * out;
@@ -180,7 +177,7 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
     g_return_val_if_fail(idx >= 1, NULL);
     g_return_val_if_fail(idx < 4096, NULL);
     
-    rawstr = himd_get_string_raw(himd, idx, type, &length);
+    rawstr = himd_get_string_raw(himd, idx, type, &length, status);
     if(!rawstr)
         return NULL;
 
@@ -196,8 +193,7 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
             srcencoding = "SHIFT_JIS";
             break;
         default:
-            himd->status = HIMD_ERROR_UNKNOWN_ENCODING;
-            g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
+            set_status_printf(status, HIMD_ERROR_UNKNOWN_ENCODING,
                        "string %d has unknown encoding with ID %d",
                        idx, rawstr[0]);
             himd_free(rawstr);
@@ -207,8 +203,7 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type)
     himd_free(rawstr);
     if(err)
     {
-        himd->status = HIMD_ERROR_STRING_ENCODING_ERROR;
-        g_snprintf(himd->statusmsg,sizeof(himd->statusmsg),
+        set_status_printf(status, HIMD_ERROR_STRING_ENCODING_ERROR,
                    "convert string %d from %s to UTF-8: %s",
                    idx, srcencoding, err->message);
         return NULL;

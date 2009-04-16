@@ -11,6 +11,27 @@
 
 #define _(x) (x)
 
+void set_status_const(struct himderrinfo * status, enum himdstatus code, const char * msg)
+{
+    if(status)
+    {
+        status->status = code;
+        g_strlcpy(status->statusmsg, msg, sizeof status->statusmsg);
+    }
+}
+
+void set_status_printf(struct himderrinfo * status, enum himdstatus code, const char * format, ...)
+{
+    if(status)
+    {
+        va_list args;
+        va_start(args, format);
+        status->status = code;
+        g_vsnprintf(status->statusmsg, sizeof status->statusmsg, format, args);
+        va_end(args);
+    }
+}
+
 static int scanfortrkidx(GDir * dir)
 {
     const char * hmafile;
@@ -45,22 +66,22 @@ FILE * himd_open_file(struct himd * himd, const char * fileid)
     return file;
 }
 
-static int himd_read_discid(struct himd * himd)
+static int himd_read_discid(struct himd * himd, struct himderrinfo * status)
 {
     FILE * mclistfile = himd_open_file(himd, "mclist");
 
     if(!mclistfile)
     {
-        himd->status = HIMD_ERROR_CANT_OPEN_MCLIST;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't open mclist file: %s\n"), g_strerror(errno));
+        set_status_printf(status, HIMD_ERROR_CANT_OPEN_MCLIST,
+                          _("Can't open mclist file: %s\n"), g_strerror(errno));
         return -1;
     }
 
     fseek(mclistfile,0x40L,SEEK_SET);
     if(fread(himd->discid,16,1,mclistfile) != 1)
     {
-        himd->status = HIMD_ERROR_CANT_READ_MCLIST;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't read mclist file: %s\n"), g_strerror(errno));
+        set_status_printf(status, HIMD_ERROR_CANT_READ_MCLIST,
+                          _("Can't read mclist file: %s\n"), g_strerror(errno));
         fclose(mclistfile);
         return -1;
     }
@@ -69,7 +90,7 @@ static int himd_read_discid(struct himd * himd)
     return 0;
 }
 
-int himd_open(struct himd * himd, const char * himdroot)
+int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * status)
 {
     char * filepath;
     char indexfilename[13];
@@ -85,8 +106,7 @@ int himd_open(struct himd * himd, const char * himdroot)
     g_free(filepath);
     if(dir == NULL)
     {
-        himd->status = HIMD_ERROR_CANT_ACCESS_HMDHIFI;
-        g_strlcpy(himd->statusmsg, error->message, sizeof himd->statusmsg);
+        set_status_const(status, HIMD_ERROR_CANT_ACCESS_HMDHIFI, error->message);
         return -1;
     }
 
@@ -94,8 +114,7 @@ int himd_open(struct himd * himd, const char * himdroot)
     g_dir_close(dir);
     if(himd->datanum == -1)
     {
-        himd->status = HIMD_ERROR_NO_TRACK_INDEX;
-        g_strlcpy(himd->statusmsg, _("No track index file found"), sizeof himd->statusmsg);
+        set_status_const(status, HIMD_ERROR_NO_TRACK_INDEX, _("No track index file found"));
         return -1;		/* ERROR: track index not found */
     }
     
@@ -103,8 +122,9 @@ int himd_open(struct himd * himd, const char * himdroot)
     filepath = g_build_filename(himdroot,"hmdhifi",indexfilename,NULL);
     if(!g_file_get_contents(filepath, (char**)&himd->tifdata, &filelen, &error))
     {
-        himd->status = HIMD_ERROR_CANT_READ_TIF;
-        g_snprintf(himd->statusmsg,sizeof himd->statusmsg,_("Can't load TIF data from %s: %s"),filepath, error->message);
+        set_status_printf(status, HIMD_ERROR_CANT_READ_TIF,
+                          _("Can't load TIF data from %s: %s"),
+                          filepath, error->message);
         g_free(filepath);
         return -1;
     }
@@ -112,31 +132,31 @@ int himd_open(struct himd * himd, const char * himdroot)
     
     if(filelen != 0x50000)
     {
-        himd->status = HIMD_ERROR_WRONG_TIF_SIZE;
-        g_snprintf(himd->statusmsg,sizeof himd->statusmsg,_("TIF file is 0x%x bytes instead of 0x50000"),(int)filelen);
+        set_status_printf(status, HIMD_ERROR_WRONG_TIF_SIZE,
+                          _("TIF file is 0x%x bytes instead of 0x50000"),
+                          (int)filelen);
         g_free(himd->tifdata);
         return -1;
     }
 
     if(memcmp(himd->tifdata,"TIF ",4) != 0)
     {
-        himd->status = HIMD_ERROR_WRONG_TIF_MAGIC;
-        g_snprintf(himd->statusmsg,sizeof himd->statusmsg,_("TIF file starts with wrong magic: %02x %02x %02x %02x"),
-                    himd->tifdata[0],himd->tifdata[1],himd->tifdata[2],himd->tifdata[3]);
+        set_status_printf(status, HIMD_ERROR_WRONG_TIF_MAGIC,
+                         _("TIF file starts with wrong magic: %02x %02x %02x %02x"),
+                         himd->tifdata[0],himd->tifdata[1],himd->tifdata[2],himd->tifdata[3]);
         g_free(himd->tifdata);
         return -1;
     }
 
     himd->rootpath = g_strdup(himdroot);
-    himd->status = HIMD_OK;
     himd->discid_valid = 0;
 
     return 0;
 }
 
-const unsigned char * himd_get_discid(struct himd * himd)
+const unsigned char * himd_get_discid(struct himd * himd, struct himderrinfo * status)
 {
-    if(!himd->discid_valid && himd_read_discid(himd) < 0)
+    if(!himd->discid_valid && himd_read_discid(himd, status) < 0)
         return 0;
     return himd->discid;
 }

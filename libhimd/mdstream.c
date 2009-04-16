@@ -8,7 +8,7 @@
 
 #define _(x) (x)
 
-int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct himd_blockstream * stream)
+int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct himd_blockstream * stream, struct himderrinfo * status)
 {
     struct fraginfo frag;
     unsigned int fragcount, fragnum, blockcount;
@@ -23,13 +23,13 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct him
     for(fragcount = 0, blockcount = 0, fragnum = firstfrag;
         fragnum != 0; fragcount++)
     {
-        if(himd_get_fragment_info(himd, fragnum, &frag) < 0)
+        if(himd_get_fragment_info(himd, fragnum, &frag, status) < 0)
             return -1;
         fragnum = frag.nextfrag;
         if(fragcount > HIMD_LAST_FRAGMENT)
         {
-            himd->status = HIMD_ERROR_FRAGMENT_CHAIN_BROKEN;
-            g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Fragment chain starting at %d loops"), firstfrag);
+            set_status_printf(status, HIMD_ERROR_FRAGMENT_CHAIN_BROKEN,
+                               _("Fragment chain starting at %d loops"), firstfrag);
             return -1;
         }
         blockcount += frag.lastblock - frag.firstblock + 1;
@@ -38,8 +38,8 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct him
     stream->frags = malloc(fragcount * sizeof stream->frags[0]);
     if(!stream->frags)
     {
-        himd->status = HIMD_ERROR_OUT_OF_MEMORY;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't allocate %d fragments for chain starting at %d"), fragcount, firstfrag);
+        set_status_printf(status, HIMD_ERROR_OUT_OF_MEMORY,
+                          _("Can't allocate %d fragments for chain starting at %d"), fragcount, firstfrag);
         return -1;
     }
     stream->fragcount = fragcount;
@@ -48,7 +48,7 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct him
 
     for(fragcount = 0, fragnum = firstfrag; fragnum != 0; fragcount++)
     {
-        if(himd_get_fragment_info(himd, fragnum, &stream->frags[fragcount]) < 0)
+        if(himd_get_fragment_info(himd, fragnum, &stream->frags[fragcount], status) < 0)
             return -1;
         fragnum = stream->frags[fragcount].nextfrag;
     }
@@ -56,8 +56,8 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct him
     stream->atdata = himd_open_file(himd, "atdata");
     if(!stream->atdata)
     {
-        himd->status = HIMD_ERROR_CANT_OPEN_AUDIO;
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg, _("Can't open audio data: %s"), g_strerror(errno));
+        set_status_printf(status, HIMD_ERROR_CANT_OPEN_AUDIO,
+                          _("Can't open audio data: %s"), g_strerror(errno));
         free(stream->frags);
         return -1;
     }
@@ -74,15 +74,14 @@ void himd_blockstream_close(struct himd_blockstream * stream)
 }
 
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
-                            unsigned int * firstframe, unsigned int * lastframe)
+                            unsigned int * firstframe, unsigned int * lastframe, struct himderrinfo * status)
 {
     g_return_val_if_fail(stream != NULL, -1);
     g_return_val_if_fail(block != NULL, -1);
 
     if(stream->curfragno == stream->fragcount)
     {
-        stream->status = HIMD_STATUS_AUDIO_EOF;
-        g_strlcpy(stream->statusmsg, _("EOF of audio stream reached"), sizeof stream->statusmsg);
+        set_status_const(status, HIMD_STATUS_AUDIO_EOF, _("EOF of audio stream reached"));
         return -1;
     }
 
@@ -92,8 +91,8 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
             *firstframe = stream->frags[stream->curfragno].firstframe;
         if(fseek(stream->atdata, stream->curblockno*16384L, SEEK_SET) < 0)
         {
-            stream->status = HIMD_ERROR_CANT_SEEK_AUDIO;
-            g_snprintf(stream->statusmsg, sizeof stream->statusmsg, _("Can't seek in audio data: %s"), g_strerror(errno));
+            set_status_printf(status, HIMD_ERROR_CANT_SEEK_AUDIO,
+                              _("Can't seek in audio data: %s"), g_strerror(errno));
             return -1;
         }
     }
@@ -102,11 +101,10 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
 
     if(fread(block, 16384, 1, stream->atdata) != 1)
     {
-        stream->status = HIMD_ERROR_CANT_READ_AUDIO;
         if(feof(stream->atdata))
-            g_snprintf(stream->statusmsg, sizeof stream->statusmsg, _("Unexpected EOF while reading audio block %d"),stream->curblockno);
+            set_status_printf(status, HIMD_ERROR_CANT_READ_AUDIO, _("Unexpected EOF while reading audio block %d"),stream->curblockno);
         else
-            g_snprintf(stream->statusmsg, sizeof stream->statusmsg, _("Read error on block audio %d: %s"), stream->curblockno, g_strerror(errno));
+            set_status_printf(status, HIMD_ERROR_CANT_READ_AUDIO, _("Read error on block audio %d: %s"), stream->curblockno, g_strerror(errno));
         return -1;
     }
 
@@ -131,7 +129,7 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
 
 #include <mad.h>
 
-int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream)
+int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream, struct himderrinfo * status)
 {
     struct trackinfo trkinfo;
 
@@ -140,20 +138,20 @@ int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp
     g_return_val_if_fail(trackno <= HIMD_LAST_TRACK, -1);
     g_return_val_if_fail(stream != NULL, -1);
 
-    if(himd_get_track_info(himd, trackno, &trkinfo) < 0)
+    if(himd_get_track_info(himd, trackno, &trkinfo, status) < 0)
         return -1;
     if(trkinfo.codec_id != CODEC_ATRAC3PLUS_OR_MPEG ||
        (trkinfo.codecinfo[0] & 3) != 3)
     {
-        g_snprintf(himd->statusmsg, sizeof himd->statusmsg,
-            "Track %d does not contain MPEG data", trackno);
+        set_status_printf(status, HIMD_ERROR_BAD_AUDIO_CODEC,
+                          _("Track %d does not contain MPEG data"), trackno);
         return -1;
     }
 
-    if(himd_obtain_mp3key(himd, trackno, &stream->mp3key) < 0)
+    if(himd_obtain_mp3key(himd, trackno, &stream->key, status) < 0)
         return -1;
 
-    if(himd_blockstream_open(himd, trkinfo.firstfrag, &stream->stream) < 0)
+    if(himd_blockstream_open(himd, trkinfo.firstfrag, &stream->stream, status) < 0)
         return -1;
 
     stream->frames = 0;
@@ -163,7 +161,7 @@ int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp
     return 0;
 }
 
-int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout)
+int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
 {
     int gotdata = 1;
 
@@ -176,14 +174,12 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
         struct mad_header madheader;
 
         /* Read block */
-        if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe) < 0)
+        if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe, status) < 0)
             return -1;
 
         if(firstframe > lastframe)
         {
-            stream->stream.status = HIMD_ERROR_BAD_FRAME_NUMBERS;
-            g_snprintf(stream->stream.statusmsg,
-                       sizeof stream->stream.statusmsg,
+            set_status_printf(status, HIMD_ERROR_BAD_FRAME_NUMBERS,
                        _("Last frame %u before first frame %u"),
                        lastframe, firstframe);
             return -1;
@@ -193,9 +189,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
         stream->frameptrs = malloc((lastframe - firstframe + 2) * sizeof stream->frameptrs[0]);
         if(!stream->frameptrs)
         {
-            stream->stream.status = HIMD_ERROR_OUT_OF_MEMORY;
-            g_snprintf(stream->stream.statusmsg,
-                       sizeof stream->stream.statusmsg,
+            set_status_printf(status, HIMD_ERROR_OUT_OF_MEMORY,
                        _("Can't allocate memory for %u frame pointers"),
                        lastframe-firstframe+2);
             return -1;
@@ -203,7 +197,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
 
         /* Decrypt block */
         for(i = 0x20;i < 0x3fd0;i++)
-            stream->blockbuf[i] ^= stream->mp3key[i & 3];
+            stream->blockbuf[i] ^= stream->key[i & 3];
 
         /* parse block */
         mad_stream_init(&madstream);
@@ -217,8 +211,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
         {
             if(mad_header_decode(&madheader, &madstream) < 0)
             {
-                stream->stream.status = HIMD_ERROR_BAD_DATA_FORMAT;
-                g_snprintf(stream->stream.statusmsg, sizeof stream->stream.statusmsg,
+                set_status_printf(status, HIMD_ERROR_BAD_DATA_FORMAT,
                     _("Still %u frames to skip: %s"), firstframe, mad_stream_errorstr(&madstream));
                 gotdata = 0;
                 goto cleanup_decoder;
@@ -234,8 +227,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
             if(mad_header_decode(&madheader, &madstream) < 0 &&
                 (madstream.error != MAD_ERROR_LOSTSYNC || i != lastframe-1))
             {
-                stream->stream.status = HIMD_ERROR_BAD_DATA_FORMAT;
-                g_snprintf(stream->stream.statusmsg, sizeof stream->stream.statusmsg,
+                set_status_printf(status, HIMD_ERROR_BAD_DATA_FORMAT,
                     _("Frame %u of %u to skip: %s"), i+1, lastframe, mad_stream_errorstr(&madstream));
                 gotdata = 0;
                 goto cleanup_decoder;
