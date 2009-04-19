@@ -5,7 +5,7 @@
 #include <QFileDialog>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
-#include "libhimd/himd.h"
+#include "../libhimd/himd.h"
 
 namespace Ui
 {
@@ -26,6 +26,7 @@ private:
     Ui::QHiMDMainWindowClass *ui;
     QHiMDAboutDialog * aboutDialog;
     QHiMDFormatDialog * formatDialog;
+    void dumpmp3(struct himd * himd, int trknum, QString file);
 
 private slots:
     void on_action_Connect_triggered();

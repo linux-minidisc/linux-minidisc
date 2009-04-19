@@ -6,7 +6,7 @@
  </data>
  <data>
   <variable>RunConfiguration0-ProFile</variable>
-  <value type="QString" >/home/glaubitz/linux-minidisc/QHiMDTransfer/QHiMDTransfer.pro</value>
+  <value type="QString" >/home/pneuser/workspace/himdtransfer/linux-minidisc/QHiMDTransfer/QHiMDTransfer.pro</value>
  </data>
  <data>
   <variable>RunConfiguration0-RunConfiguration.name</variable>
@@ -32,9 +32,13 @@
   <variable>buildConfiguration-Debug</variable>
   <valuemap type="QVariantMap" >
    <value key="ProjectExplorer.BuildConfiguration.DisplayName" type="QString" >Debug</value>
-   <value key="QtVersionId" type="int" >0</value>
+   <value key="QtVersionId" type="int" >3</value>
    <value key="addQDumper" type="" ></value>
-   <value key="buildDirectory" type="QString" >/home/glaubitz/linux-minidisc/QHiMDTransfer</value>
+   <value key="buildDirectory" type="QString" >/home/pneuser/workspace/himdtransfer/linux-minidisc/QHiMDTransfer</value>
+   <value key="useShadowBuild" type="bool" >false</value>
+   <valuelist key="userEnvironmentChanges" type="QVariantList" >
+    <value type="QString" >PATH=/opt/qtsdk-2009.01/qt/bin:/home/pneuser/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
+   </valuelist>
   </valuemap>
  </data>
  <data>
@@ -56,52 +60,46 @@
   <valuemap type="QVariantMap" >
    <value key="ProjectExplorer.BuildConfiguration.DisplayName" type="QString" >Debug</value>
    <valuelist key="abstractProcess.Environment" type="QVariantList" >
-    <value type="QString" >DBUS_SESSION_BUS_ADDRESS=unix:abstract=/tmp/dbus-HiABbT7Asq,guid=93eaeb2dae2c9f364e88b38549da3aaa</value>
-    <value type="QString" >DESKTOP_SESSION=default</value>
+    <value type="QString" >DBUS_SESSION_BUS_ADDRESS=unix:abstract=/tmp/dbus-TnwMs3morm,guid=1a6a5a0c4cca5d8cdd8a77e649eb5f31</value>
+    <value type="QString" >DESKTOP_SESSION=gnome</value>
     <value type="QString" >DESKTOP_STARTUP_ID=</value>
     <value type="QString" >DISPLAY=:0.0</value>
-    <value type="QString" >GDMSESSION=default</value>
-    <value type="QString" >GDM_LANG=en_US.UTF-8</value>
+    <value type="QString" >GDMSESSION=gnome</value>
+    <value type="QString" >GDM_LANG=de_DE.UTF-8</value>
     <value type="QString" >GDM_XSERVER_LOCATION=local</value>
     <value type="QString" >GNOME_DESKTOP_SESSION_ID=this-is-deprecated</value>
-    <value type="QString" >GNOME_KEYRING_PID=4559</value>
-    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-HTRbQ3/socket</value>
-    <value type="QString" >GPG_AGENT_INFO=/tmp/seahorse-ZNHQnZ/S.gpg-agent:4669:1</value>
-    <value type="QString" >GTK_IM_MODULE=scim-bridge</value>
-    <value type="QString" >GTK_MODULES=canberra-gtk-module</value>
-    <value type="QString" >GTK_RC_FILES=/etc/gtk/gtkrc:/home/glaubitz/.gtkrc-1.2-gnome2</value>
-    <value type="QString" >HOME=/home/glaubitz</value>
-    <value type="QString" >LANG=en_US.UTF-8</value>
-    <value type="QString" >LIBGL_DRIVERS_PATH=/usr/lib/dri</value>
-    <value type="QString" >LOGNAME=glaubitz</value>
-    <value type="QString" >ORBIT_SOCKETDIR=/tmp/orbit-glaubitz</value>
-    <value type="QString" >PATH=/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
-    <value type="QString" >PWD=/home/glaubitz</value>
-    <value type="QString" >QTDIR=/usr</value>
-    <value type="QString" >QT_IM_MODULE=xim</value>
-    <value type="QString" >SESSION_MANAGER=local/znote2:/tmp/.ICE-unix/4572</value>
+    <value type="QString" >GNOME_KEYRING_PID=3574</value>
+    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-lg7UUa/socket</value>
+    <value type="QString" >GTK_RC_FILES=/etc/gtk/gtkrc:/home/pneuser/.gtkrc-1.2-gnome2</value>
+    <value type="QString" >HOME=/home/pneuser</value>
+    <value type="QString" >LANG=de_DE.UTF-8</value>
+    <value type="QString" >LOGNAME=pneuser</value>
+    <value type="QString" >ORBIT_SOCKETDIR=/tmp/orbit-pneuser</value>
+    <value type="QString" >PATH=/opt/qtsdk-2009.01/qt/bin:/home/pneuser/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
+    <value type="QString" >PWD=/home/pneuser</value>
+    <value type="QString" >QTDIR=/opt/qtsdk-2009.01/qt</value>
+    <value type="QString" >SESSION_MANAGER=local/pepemobil:/tmp/.ICE-unix/3586</value>
     <value type="QString" >SHELL=/bin/bash</value>
-    <value type="QString" >SSH_AGENT_PID=4638</value>
-    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-HTRbQ3/socket.ssh</value>
-    <value type="QString" >USER=glaubitz</value>
-    <value type="QString" >USERNAME=glaubitz</value>
+    <value type="QString" >SSH_AGENT_PID=3709</value>
+    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-lg7UUa/socket.ssh</value>
+    <value type="QString" >USER=pneuser</value>
+    <value type="QString" >USERNAME=pneuser</value>
     <value type="QString" >WINDOWPATH=7</value>
-    <value type="QString" >XAUTHORITY=/home/glaubitz/.Xauthority</value>
+    <value type="QString" >XAUTHORITY=/home/pneuser/.Xauthority</value>
     <value type="QString" >XDG_DATA_DIRS=/usr/local/share/:/usr/share/:/usr/share/gdm/</value>
-    <value type="QString" >XDG_SESSION_COOKIE=3b081ac4aac66c19e35aad52490c8460-1239038631.38338-244571785</value>
-    <value type="QString" >XMODIFIERS=@im=SCIM</value>
+    <value type="QString" >XDG_SESSION_COOKIE=ad036984872d4d82c2d9ae00480655d5-1240162095.153431-1890508946</value>
    </valuelist>
    <valuelist key="abstractProcess.arguments" type="QVariantList" >
-    <value type="QString" >/home/glaubitz/linux-minidisc/QHiMDTransfer/QHiMDTransfer.pro</value>
+    <value type="QString" >/home/pneuser/workspace/himdtransfer/linux-minidisc/QHiMDTransfer/QHiMDTransfer.pro</value>
     <value type="QString" >-spec</value>
-    <value type="QString" >/usr/share/qt4/mkspecs/linux-g++</value>
+    <value type="QString" >linux-g++</value>
     <value type="QString" >-r</value>
     <value type="QString" >CONFIG+=debug_and_release</value>
     <value type="QString" >CONFIG+=debug</value>
    </valuelist>
-   <value key="abstractProcess.command" type="QString" >/usr/bin/qmake-qt4</value>
+   <value key="abstractProcess.command" type="QString" >/opt/qtsdk-2009.01/qt/bin/qmake</value>
    <value key="abstractProcess.enabled" type="bool" >false</value>
-   <value key="abstractProcess.workingDirectory" type="QString" >/home/glaubitz/linux-minidisc/QHiMDTransfer</value>
+   <value key="abstractProcess.workingDirectory" type="QString" >/home/pneuser/workspace/himdtransfer/linux-minidisc/QHiMDTransfer</value>
    <value key="buildConfiguration" type="int" >10</value>
   </valuemap>
  </data>
@@ -110,40 +108,34 @@
   <valuemap type="QVariantMap" >
    <value key="ProjectExplorer.BuildConfiguration.DisplayName" type="QString" >Debug</value>
    <valuelist key="abstractProcess.Environment" type="QVariantList" >
-    <value type="QString" >DBUS_SESSION_BUS_ADDRESS=unix:abstract=/tmp/dbus-HiABbT7Asq,guid=93eaeb2dae2c9f364e88b38549da3aaa</value>
-    <value type="QString" >DESKTOP_SESSION=default</value>
+    <value type="QString" >DBUS_SESSION_BUS_ADDRESS=unix:abstract=/tmp/dbus-TnwMs3morm,guid=1a6a5a0c4cca5d8cdd8a77e649eb5f31</value>
+    <value type="QString" >DESKTOP_SESSION=gnome</value>
     <value type="QString" >DESKTOP_STARTUP_ID=</value>
     <value type="QString" >DISPLAY=:0.0</value>
-    <value type="QString" >GDMSESSION=default</value>
-    <value type="QString" >GDM_LANG=en_US.UTF-8</value>
+    <value type="QString" >GDMSESSION=gnome</value>
+    <value type="QString" >GDM_LANG=de_DE.UTF-8</value>
     <value type="QString" >GDM_XSERVER_LOCATION=local</value>
     <value type="QString" >GNOME_DESKTOP_SESSION_ID=this-is-deprecated</value>
-    <value type="QString" >GNOME_KEYRING_PID=4559</value>
-    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-HTRbQ3/socket</value>
-    <value type="QString" >GPG_AGENT_INFO=/tmp/seahorse-ZNHQnZ/S.gpg-agent:4669:1</value>
-    <value type="QString" >GTK_IM_MODULE=scim-bridge</value>
-    <value type="QString" >GTK_MODULES=canberra-gtk-module</value>
-    <value type="QString" >GTK_RC_FILES=/etc/gtk/gtkrc:/home/glaubitz/.gtkrc-1.2-gnome2</value>
-    <value type="QString" >HOME=/home/glaubitz</value>
-    <value type="QString" >LANG=en_US.UTF-8</value>
-    <value type="QString" >LIBGL_DRIVERS_PATH=/usr/lib/dri</value>
-    <value type="QString" >LOGNAME=glaubitz</value>
-    <value type="QString" >ORBIT_SOCKETDIR=/tmp/orbit-glaubitz</value>
-    <value type="QString" >PATH=/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
-    <value type="QString" >PWD=/home/glaubitz</value>
-    <value type="QString" >QTDIR=/usr</value>
-    <value type="QString" >QT_IM_MODULE=xim</value>
-    <value type="QString" >SESSION_MANAGER=local/znote2:/tmp/.ICE-unix/4572</value>
+    <value type="QString" >GNOME_KEYRING_PID=3574</value>
+    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-lg7UUa/socket</value>
+    <value type="QString" >GTK_RC_FILES=/etc/gtk/gtkrc:/home/pneuser/.gtkrc-1.2-gnome2</value>
+    <value type="QString" >HOME=/home/pneuser</value>
+    <value type="QString" >LANG=de_DE.UTF-8</value>
+    <value type="QString" >LOGNAME=pneuser</value>
+    <value type="QString" >ORBIT_SOCKETDIR=/tmp/orbit-pneuser</value>
+    <value type="QString" >PATH=/opt/qtsdk-2009.01/qt/bin:/home/pneuser/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
+    <value type="QString" >PWD=/home/pneuser</value>
+    <value type="QString" >QTDIR=/opt/qtsdk-2009.01/qt</value>
+    <value type="QString" >SESSION_MANAGER=local/pepemobil:/tmp/.ICE-unix/3586</value>
     <value type="QString" >SHELL=/bin/bash</value>
-    <value type="QString" >SSH_AGENT_PID=4638</value>
-    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-HTRbQ3/socket.ssh</value>
-    <value type="QString" >USER=glaubitz</value>
-    <value type="QString" >USERNAME=glaubitz</value>
+    <value type="QString" >SSH_AGENT_PID=3709</value>
+    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-lg7UUa/socket.ssh</value>
+    <value type="QString" >USER=pneuser</value>
+    <value type="QString" >USERNAME=pneuser</value>
     <value type="QString" >WINDOWPATH=7</value>
-    <value type="QString" >XAUTHORITY=/home/glaubitz/.Xauthority</value>
+    <value type="QString" >XAUTHORITY=/home/pneuser/.Xauthority</value>
     <value type="QString" >XDG_DATA_DIRS=/usr/local/share/:/usr/share/:/usr/share/gdm/</value>
-    <value type="QString" >XDG_SESSION_COOKIE=3b081ac4aac66c19e35aad52490c8460-1239038631.38338-244571785</value>
-    <value type="QString" >XMODIFIERS=@im=SCIM</value>
+    <value type="QString" >XDG_SESSION_COOKIE=ad036984872d4d82c2d9ae00480655d5-1240162095.153431-1890508946</value>
    </valuelist>
    <valuelist key="abstractProcess.arguments" type="QVariantList" >
     <value type="QString" >debug</value>
@@ -151,7 +143,7 @@
    </valuelist>
    <value key="abstractProcess.command" type="QString" >/usr/bin/make</value>
    <value key="abstractProcess.enabled" type="bool" >true</value>
-   <value key="abstractProcess.workingDirectory" type="QString" >/home/glaubitz/linux-minidisc/QHiMDTransfer</value>
+   <value key="abstractProcess.workingDirectory" type="QString" >/home/pneuser/workspace/himdtransfer/linux-minidisc/QHiMDTransfer</value>
    <valuelist key="makeargs" type="QVariantList" >
     <value type="QString" >debug</value>
    </valuelist>
@@ -167,6 +159,42 @@
   <variable>buildconfiguration-Debug-cleanstep1</variable>
   <valuemap type="QVariantMap" >
    <value key="ProjectExplorer.BuildConfiguration.DisplayName" type="QString" >Debug</value>
+   <valuelist key="abstractProcess.Environment" type="QVariantList" >
+    <value type="QString" >DBUS_SESSION_BUS_ADDRESS=unix:abstract=/tmp/dbus-6Etx3oYDGd,guid=5570475dee3334e9bbc7536349db018d</value>
+    <value type="QString" >DESKTOP_SESSION=gnome</value>
+    <value type="QString" >DESKTOP_STARTUP_ID=</value>
+    <value type="QString" >DISPLAY=:0.0</value>
+    <value type="QString" >GDMSESSION=gnome</value>
+    <value type="QString" >GDM_LANG=de_DE.UTF-8</value>
+    <value type="QString" >GDM_XSERVER_LOCATION=local</value>
+    <value type="QString" >GNOME_DESKTOP_SESSION_ID=this-is-deprecated</value>
+    <value type="QString" >GNOME_KEYRING_PID=7120</value>
+    <value type="QString" >GNOME_KEYRING_SOCKET=/tmp/keyring-xYHIat/socket</value>
+    <value type="QString" >GTK_RC_FILES=/etc/gtk/gtkrc:/home/pneuser/.gtkrc-1.2-gnome2</value>
+    <value type="QString" >HOME=/home/pneuser</value>
+    <value type="QString" >LANG=de_DE.UTF-8</value>
+    <value type="QString" >LOGNAME=pneuser</value>
+    <value type="QString" >ORBIT_SOCKETDIR=/tmp/orbit-pneuser</value>
+    <value type="QString" >PATH=/opt/qtsdk-2009.01/qt/bin:/home/pneuser/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games</value>
+    <value type="QString" >PWD=/home/pneuser</value>
+    <value type="QString" >QTDIR=/opt/qtsdk-2009.01/qt</value>
+    <value type="QString" >SESSION_MANAGER=local/pepemobil:/tmp/.ICE-unix/7130</value>
+    <value type="QString" >SHELL=/bin/bash</value>
+    <value type="QString" >SSH_AUTH_SOCK=/tmp/keyring-xYHIat/ssh</value>
+    <value type="QString" >USER=pneuser</value>
+    <value type="QString" >USERNAME=pneuser</value>
+    <value type="QString" >WINDOWPATH=7</value>
+    <value type="QString" >XAUTHORITY=/home/pneuser/.Xauthority</value>
+    <value type="QString" >XDG_DATA_DIRS=/usr/local/share/:/usr/share/:/usr/share/gdm/</value>
+    <value type="QString" >XDG_SESSION_COOKIE=ad036984872d4d82c2d9ae00480655d5-1239089548.420201-1798070645</value>
+   </valuelist>
+   <valuelist key="abstractProcess.arguments" type="QVariantList" >
+    <value type="QString" >clean</value>
+    <value type="QString" >-w</value>
+   </valuelist>
+   <value key="abstractProcess.command" type="QString" >/usr/bin/make</value>
+   <value key="abstractProcess.enabled" type="bool" >true</value>
+   <value key="abstractProcess.workingDirectory" type="QString" >/home/pneuser/workspace/himdtransfer/linux-minidisc/QHiMDTransfer</value>
   </valuemap>
  </data>
  <data>

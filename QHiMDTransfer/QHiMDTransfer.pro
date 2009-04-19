@@ -18,4 +18,5 @@ FORMS += qhimdmainwindow.ui \
     qhimdaboutdialog.ui \
     qhimdformatdialog.ui
 CONFIG += link_pkgconfig
-PKGCONFIG += glib-2.0
+PKGCONFIG += glib-2.0 \
+    mad

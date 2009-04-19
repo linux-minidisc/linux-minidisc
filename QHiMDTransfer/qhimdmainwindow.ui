@@ -25,9 +25,26 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QTreeWidget" name="TrackList">
-        <property name="columnCount">
-         <number>5</number>
+        <property name="editTriggers">
+         <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
         </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::MultiSelection</enum>
+        </property>
+        <property name="columnCount">
+         <number>6</number>
+        </property>
+        <attribute name="headerHighlightSections">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="headerHighlightSections">
+         <bool>true</bool>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Nr.</string>
+         </property>
+        </column>
         <column>
          <property name="text">
           <string>Title</string>
