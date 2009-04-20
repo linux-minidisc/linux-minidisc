@@ -174,6 +174,10 @@
    </property>
   </action>
   <action name="action_Help">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/help.png</normaloff>icons/help.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Help</string>
    </property>
@@ -205,6 +209,10 @@
    </property>
   </action>
   <action name="action_Connect">
+   <property name="icon">
+    <iconset>
+     <normaloff>icons/connect.png</normaloff>icons/connect.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Connect</string>
    </property>
