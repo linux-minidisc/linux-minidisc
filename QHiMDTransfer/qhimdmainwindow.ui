@@ -132,6 +132,7 @@
    <addaction name="action_Delete"/>
    <addaction name="action_Format"/>
    <addaction name="separator"/>
+   <addaction name="action_Help"/>
    <addaction name="action_Quit"/>
   </widget>
   <action name="action_Download">
