@@ -198,8 +198,8 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
 
         databytes = beword16(stream->blockbuf+8);
         /* Decrypt block */
-        for(i = 0x20;i < (databytes & ~3U);i++)
-            stream->blockbuf[i] ^= stream->key[i & 3];
+        for(i = 0;i < (databytes & ~7U);i++)
+            stream->blockbuf[i+0x20] ^= stream->key[i & 3];
 
         /* parse block */
         mad_stream_init(&madstream);
