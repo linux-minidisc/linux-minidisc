@@ -196,7 +196,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
         }
 
         /* Decrypt block */
-        for(i = 0x20;i < 0x3fd0;i++)
+        for(i = 0x20;i < 0x3fe0;i++)
             stream->blockbuf[i] ^= stream->key[i & 3];
 
         /* parse block */
