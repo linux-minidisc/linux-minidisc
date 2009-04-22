@@ -170,6 +170,7 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
     {
         unsigned int firstframe, lastframe;
         unsigned int i;
+        unsigned int databytes;
         struct mad_stream madstream;
         struct mad_header madheader;
 
@@ -195,8 +196,9 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
             return -1;
         }
 
+        databytes = beword16(stream->blockbuf+8);
         /* Decrypt block */
-        for(i = 0x20;i < 0x3fe0;i++)
+        for(i = 0x20;i < (databytes & ~3U);i++)
             stream->blockbuf[i] ^= stream->key[i & 3];
 
         /* parse block */
