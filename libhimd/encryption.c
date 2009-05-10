@@ -28,6 +28,8 @@ int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himde
 struct descrypt_data {
     MCRYPT masterkeycipher;
     MCRYPT blockcipher;
+    unsigned char lastkey[8];
+    unsigned char blockcipher_inited;
 };
 
 int descrypt_open(void ** dataptr, struct himderrinfo * status)
@@ -62,6 +64,7 @@ int descrypt_open(void ** dataptr, struct himderrinfo * status)
         mcrypt_module_close(data->masterkeycipher);
         return -1;
     }
+    data->blockcipher_inited = 0;
     
     *dataptr = data;
     return 0;
@@ -70,20 +73,31 @@ int descrypt_open(void ** dataptr, struct himderrinfo * status)
 int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen, struct himderrinfo * status)
 {
     unsigned char mainkey[8];
-    const struct descrypt_data * data = dataptr;
+    struct descrypt_data * data = dataptr;
     int err;
 
-    memcpy(mainkey, block+16, 8);
-    if((err = mcrypt_generic(data->masterkeycipher, &mainkey, 8)) < 0)
+    if(!data->blockcipher_inited || memcmp(data->lastkey, block+16, 8) != 0)
     {
-        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't calc block key: %s"), mcrypt_strerror(err));
-        return -1;
-    }
+        memcpy(mainkey, block+16, 8);
+        if((err = mcrypt_generic(data->masterkeycipher, &mainkey, 8)) < 0)
+        {
+            set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't calc block key: %s"), mcrypt_strerror(err));
+            return -1;
+        }
 
-    if((err = mcrypt_generic_init(data->blockcipher, mainkey, 8, block+24)) < 0)
-    {
-        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't init CBC block cipher: %s"), mcrypt_strerror(err));
-        return -1;
+        if(data->blockcipher_inited)
+        {
+            mcrypt_generic_deinit(data->blockcipher);
+            data->blockcipher_inited = 0;
+        }
+        if((err = mcrypt_generic_init(data->blockcipher, mainkey, 8, block+24)) < 0)
+        {
+            set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't init CBC block cipher: %s"), mcrypt_strerror(err));
+            return -1;
+        }
+
+        memcpy(data->lastkey, block+16, 8);
+        data->blockcipher_inited = 1;
     }
 
     if((err = mdecrypt_generic(data->blockcipher, block+32, cryptlen)) < 0)
@@ -93,13 +107,14 @@ int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen, str
         return -1;
     }
 
-    mcrypt_generic_deinit(data->blockcipher);
     return 0;
 }
 
 void descrypt_close(void * dataptr)
 {
     const struct descrypt_data * data = dataptr;
+    if(data->blockcipher_inited)
+        mcrypt_generic_deinit(data->blockcipher);
     mcrypt_module_close(data->blockcipher);
     mcrypt_generic_deinit(data->masterkeycipher);
     mcrypt_module_close(data->masterkeycipher);
