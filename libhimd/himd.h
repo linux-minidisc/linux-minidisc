@@ -53,6 +53,8 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_BAD_FRAME_NUMBERS,
                   HIMD_ERROR_BAD_AUDIO_CODEC,
                   HIMD_ERROR_BAD_DATA_FORMAT,
+                  HIMD_ERROR_UNSUPPORTED_ENCRYPTION,
+                  HIMD_ERROR_ENCRYPTION_FAILURE,
                   HIMD_ERROR_OUT_OF_MEMORY };
 
 /* a track on the HiMD */
@@ -144,6 +146,17 @@ struct himd_mp3stream {
 int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream, struct himderrinfo * status);
 int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status);
 void himd_mp3stream_close(struct himd_mp3stream * stream);
+
+struct himd_pcmstream {
+    struct himd_blockstream stream;
+    void * cryptinfo;
+    unsigned char blockbuf[16384];
+};
+
+int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status);
+int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status);
+void himd_pcmstream_close(struct himd_pcmstream * stream);
+
 
 #ifdef __cplusplus
 }

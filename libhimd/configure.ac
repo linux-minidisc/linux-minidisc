@@ -16,4 +16,7 @@ PKG_CHECK_MODULES([MAD], [mad],[CFLAGS="$CFLAGS $MAD_CFLAGS"
                                 AC_DEFINE(HAVE_MAD,[1],[Whether the MAD package is installed])],
                                [AC_MSG_WARN([MAD not found, MP3 reading will be unsupported])])
 AC_CONFIG_FILES([Makefile])
+AM_PATH_LIBMCRYPT([2.4.0], [CFLAGS="$CFLAGS $LIBMCRYPT_CFLAGS"
+                            LDFLAGS="$LDFLAGS $LIBMCRYPT_LIBS"],
+                           [AC_MSG_WARN([libmcrypt not found, WAV reading will be unsupported])])
 AC_OUTPUT

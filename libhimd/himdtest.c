@@ -186,6 +186,42 @@ clean:
     himd_mp3stream_close(&str);
 }
 
+/* creates headerless PCM.
+   play with: play -t s2 -r 44100 -B -c2 stream.pcm
+ */
+void himd_dumppcm(struct himd * himd, int trknum)
+{
+    struct himd_pcmstream str;
+    struct himderrinfo status;
+    FILE * strdumpf;
+    unsigned int len;
+    const unsigned char * data;
+    strdumpf = fopen("stream.pcm","wb");
+    if(!strdumpf)
+    {
+        perror("Opening stream.pcm");
+        return;
+    }
+    if(himd_pcmstream_open(himd, trknum, &str, &status) < 0)
+    {
+        fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
+        return;
+    }
+    while(himd_pcmstream_read_frame(&str, &data, &len, &status) >= 0)
+    {
+        if(fwrite(data,len,1,strdumpf) != 1)
+        {
+            perror("writing dumped stream");
+            goto clean;
+        }
+    }
+    if(status.status != HIMD_STATUS_AUDIO_EOF)
+        fprintf(stderr,"Error reading PCM data: %s\n", status.statusmsg);
+clean:
+    fclose(strdumpf);
+    himd_pcmstream_close(&str);
+}
+
 int main(int argc, char ** argv)
 {
     int idx;
@@ -227,6 +263,12 @@ int main(int argc, char ** argv)
         idx = 1;
         sscanf(argv[3], "%d", &idx);
         himd_dumpmp3(&h, idx);
+    }
+    else if(strcmp(argv[2],"dumplpcm") == 0 && argc > 3)
+    {
+        idx = 1;
+        sscanf(argv[3], "%d", &idx);
+        himd_dumppcm(&h, idx);
     }
 
     himd_close(&h);

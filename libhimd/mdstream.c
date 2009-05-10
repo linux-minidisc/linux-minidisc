@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <glib.h>
@@ -280,4 +281,83 @@ int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned cha
 void himd_mp3stream_close(struct himd_mp3stream * stream)
 {
 }
+#endif
+
+#ifdef LIBMCRYPT24
+#include <string.h>
+
+int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status)
+{
+    struct trackinfo trkinfo;
+    static const unsigned char zerokey[] = {0,0,0,0,0,0,0,0};
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(trackno >= HIMD_FIRST_TRACK, -1);
+    g_return_val_if_fail(trackno <= HIMD_LAST_TRACK, -1);
+    g_return_val_if_fail(stream != NULL, -1);
+
+    if(himd_get_track_info(himd, trackno, &trkinfo, status) < 0)
+        return -1;
+    if(trkinfo.codec_id != CODEC_LPCM)
+    {
+        set_status_printf(status, HIMD_ERROR_BAD_AUDIO_CODEC,
+                          _("Track %d does not contain PCM data"), trackno);
+        return -1;
+    }
+    if(memcmp(trkinfo.key, zerokey, 8) != 0)
+    {
+        set_status_printf(status, HIMD_ERROR_UNSUPPORTED_ENCRYPTION,
+                          _("Track %d uses strong encryption"), trackno);
+        return -1;
+    }
+    if(himd_blockstream_open(himd, trkinfo.firstfrag, &stream->stream, status) < 0)
+        return -1;
+
+    if(descrypt_open(&stream->cryptinfo, status) < 0)
+    {
+        himd_blockstream_close(&stream->stream);
+        return -1;
+    }
+    return 0;
+}
+
+int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
+{
+    if(himd_blockstream_read(&stream->stream, stream->blockbuf, NULL, NULL, status) < 0)
+        return -1;
+    if(descrypt_decrypt(stream->cryptinfo, stream->blockbuf, 0x3fc0, status) < 0)
+        return -1;
+    if(frameout)
+        *frameout = stream->blockbuf+32;
+    if(lenout)
+        *lenout = 0x3fc0;
+    return 0;
+}
+
+void himd_pcmstream_close(struct himd_pcmstream * stream)
+{
+    himd_blockstream_close(&stream->stream);
+    descrypt_close(stream->cryptinfo);
+}
+
+#else
+
+int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status)
+{
+    himd->status = HIMD_ERROR_DISABLED_FEATURE;
+    g_strlcpy(himd->statusmsg, _("Can't open pcm track: Compiled without mcrypt library"), sizeof himd->statusmsg)
+    return -1;
+}
+
+int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status);
+{
+    stream->stream.status = HIMD_ERROR_DISABLED_FEATURE;
+    g_strlcpy(stream->stream.statusmsg, _("Can't do pcm read: Compiled without mcrypt library"), sizeof stream->stream.statusmsg);
+    return -1;
+}
+
+void himd_pcmstream_close(struct himd_pcmstream * stream)
+{
+}
+
 #endif
