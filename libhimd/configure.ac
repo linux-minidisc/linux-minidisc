@@ -4,7 +4,12 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_RANLIB
 AC_PROG_CC
+if [[ "$GCC" == "yes" ]]
+then
+  CFLAGS="$CFLAGS -Wall -W"
+fi
 AC_PROG_CC_C_O
+
 PKG_CHECK_MODULES([GLIB], [glib-2.0],[CFLAGS="$CFLAGS $GLIB_CFLAGS";LDFLAGS="$LDFLAGS $GLIB_LIBS"])
 PKG_CHECK_MODULES([MAD], [mad],[CFLAGS="$CFLAGS $MAD_CFLAGS"
                                 LDFLAGS="$LDFLAGS $MAD_LIBS"
