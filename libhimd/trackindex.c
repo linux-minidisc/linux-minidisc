@@ -54,6 +54,8 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     t->artist = beword16(trackbuffer+10);
     t->album = beword16(trackbuffer+12);
     t->trackinalbum = trackbuffer[14];
+    memcpy(t->key, trackbuffer+16,8);
+    memcpy(t->mac, trackbuffer+24,8);
     t->codec_id = trackbuffer[32];
     memcpy(t->codecinfo,trackbuffer+33,3);
     memcpy(t->codecinfo+3,trackbuffer+44,2);

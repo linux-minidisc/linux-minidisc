@@ -64,6 +64,8 @@ struct trackinfo {
     int firstfrag;	/* index into parts table */
     int tracknum;	/* always equal to own index in used tracks? */
     int seconds;
+    unsigned char key[8];
+    unsigned char mac[8];
 };
 
 /* a fragment in the audio file */

@@ -58,6 +58,9 @@ void himd_trackdump(struct himd * himd, int verbose)
                         break;
                     }
                 }
+                printf("     Key: %02x%02x%02x%02x%02x%02x%02x%02x; MAC: %02x%02x%02x%02x%02x%02x%02x%02x\n",
+                        t.key[0],t.key[1],t.key[2],t.key[3],t.key[4],t.key[5],t.key[6],t.key[7],
+                        t.mac[0],t.mac[1],t.mac[2],t.mac[3],t.mac[4],t.mac[5],t.mac[6],t.mac[7]);
             }
         }
     }
