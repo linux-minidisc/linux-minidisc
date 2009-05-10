@@ -1,9 +1,9 @@
 bin_PROGRAMS = himdtest
 himdtest_SOURCES = himdtest.c
-himdtest_LDADD = libhimd.a
+himdtest_LDADD = libhimd.la
 
-lib_LIBRARIES = libhimd.a
-libhimd_a_SOURCES = encryption.c \
+lib_LTLIBRARIES = libhimd.la
+libhimd_la_SOURCES = encryption.c \
                   himd.c \
                   mdstream.c \
                   trackindex.c

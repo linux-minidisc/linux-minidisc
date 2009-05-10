@@ -12,11 +12,8 @@ HEADERS += qhimdmainwindow.h \
     qhimdaboutdialog.h \
     qhimdaboutdialog.h \
     qhimdformatdialog.h
-LIBS += ../libhimd/libhimd.a
+LIBS += -L ../libhimd/.libs -Wl,-rpath,../libhimd/.libs -lhimd
 INCLUDEPATH = ..
 FORMS += qhimdmainwindow.ui \
     qhimdaboutdialog.ui \
     qhimdformatdialog.ui
-CONFIG += link_pkgconfig
-PKGCONFIG += glib-2.0 \
-    mad
