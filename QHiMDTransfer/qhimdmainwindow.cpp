@@ -7,15 +7,13 @@ void QHiMDMainWindow::dumpmp3(struct himd * himd, int trknum, QString file)
 {
     struct himd_mp3stream str;
     struct himderrinfo status;
-    //FILE * strdumpf;
     unsigned int len;
     const unsigned char * data;
     QFile f(file);
 
-    //strdumpf = fopen("stream.mp3","wb");
     if(!f.open(QIODevice::ReadWrite))
     {
-        perror("Opening stream.mp3");
+        perror("Error opening file for MP3-output");
         return;
     }
     if(himd_mp3stream_open(himd, trknum, &str, &status) < 0)
@@ -25,8 +23,7 @@ void QHiMDMainWindow::dumpmp3(struct himd * himd, int trknum, QString file)
     }
     while(himd_mp3stream_read_frame(&str, &data, &len, &status) >= 0)
     {
-        if( f.write((const char*)data,len) == -1 )
-        //if(fwrite(data,len,1,strdumpf) != 1)
+        if(f.write((const char*)data,len) == -1)
         {
             perror("writing dumped stream");
             goto clean;
@@ -35,10 +32,43 @@ void QHiMDMainWindow::dumpmp3(struct himd * himd, int trknum, QString file)
     if(status.status != HIMD_STATUS_AUDIO_EOF)
         fprintf(stderr,"Error reading MP3 data: %s\n", status.statusmsg);
 clean:
-    //fclose(strdumpf);
     f.close();
     himd_mp3stream_close(&str);
 }
+
+void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
+{
+    struct himd_pcmstream str;
+    struct himderrinfo status;
+    unsigned int len;
+    const unsigned char * data;
+    QFile f(file);
+
+    if(!f.open(QIODevice::ReadWrite))
+    {
+        perror("Error opening file for LPCM-output");
+        return;
+    }
+    if(himd_pcmstream_open(himd, trknum, &str, &status) < 0)
+    {
+        fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
+        return;
+    }
+    while(himd_pcmstream_read_frame(&str, &data, &len, &status) >= 0)
+    {
+         if(f.write((const char*)data,len) == -1)
+        {
+            perror("writing dumped stream");
+            goto clean;
+        }
+    }
+    if(status.status != HIMD_STATUS_AUDIO_EOF)
+        fprintf(stderr,"Error reading PCM data: %s\n", status.statusmsg);
+clean:
+    f.close();
+    himd_pcmstream_close(&str);
+}
+
 
 
 QString get_locale_str(struct himd * himd, int idx)
@@ -85,7 +115,7 @@ void QHiMDMainWindow::on_action_Download_triggered()
 void QHiMDMainWindow::on_action_Upload_triggered()
 {
     QString UploadDirectory;
-    QList<QTreeWidgetItem *> mp3s;
+    QList<QTreeWidgetItem *> tracks;
     int i;
 
     UploadDirectory = QFileDialog::getExistingDirectory(this,
@@ -93,14 +123,14 @@ void QHiMDMainWindow::on_action_Upload_triggered()
                                                  "/home",
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
-    mp3s = ui->TrackList->selectedItems();
-    for(i=0;i<mp3s.size();i++){
-        dumpmp3(&this->HiMD,mp3s[i]->text(0).toInt(),UploadDirectory+QString("/")+mp3s[i]->text(2)+QString(" - ")+mp3s[i]->text(1)+QString(".mp3"));
-        //QMessageBox::about(this,QString("test"),UploadDirectory+QString("/")+mp3s[i]->text(2)+QString(" - ")+mp3s[i]->text(1)+QString(".mp3"));
-        //        dumpmp3(&this->HiMD,mp3s[i]->text(0).toInt(),QString("test.mp3"));
-    }
+    tracks = ui->TrackList->selectedItems();
 
-    //delete mp3s;
+    for(i = 0; i < tracks.size(); i++) {
+        if (tracks[i]->text(5) == "MPEG")
+            dumpmp3 (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".mp3"));
+        else if (tracks[i]->text(5) == "LPCM")
+            dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".pcm"));
+    }
 }
 
 

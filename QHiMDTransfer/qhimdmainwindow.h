@@ -27,6 +27,7 @@ private:
     QHiMDAboutDialog * aboutDialog;
     QHiMDFormatDialog * formatDialog;
     void dumpmp3(struct himd * himd, int trknum, QString file);
+    void dumppcm(struct himd * himd, int trknum, QString file);
 
 private slots:
     void on_action_Connect_triggered();
