@@ -126,7 +126,7 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
     return 0;
 }
 
-#ifdef HAVE_MAD
+#ifdef HAVE_MAD_H
 
 #include <mad.h>
 
