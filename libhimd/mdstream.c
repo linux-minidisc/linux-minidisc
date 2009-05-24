@@ -264,17 +264,15 @@ void himd_mp3stream_close(struct himd_mp3stream * stream)
 
 #else
 
-int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream)
+int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream, struct himderrinfo * status)
 {
-    himd->status = HIMD_ERROR_DISABLED_FEATURE;
-    g_strlcpy(himd->statusmsg, _("Can't open mp3 track: Compiled without mad library"), sizeof himd->statusmsg);
+    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't open mp3 track: Compiled without mad library"));
     return -1;
 }
 
-int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, int * lenout)
+int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
 {
-    stream->stream.status = HIMD_ERROR_DISABLED_FEATURE;
-    g_strlcpy(stream->stream.statusmsg, _("Can't do mp3 read: Compiled without mad library"), sizeof stream->stream.statusmsg);
+    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't do mp3 read: Compiled without mad library"));
     return -1;
 }
 
@@ -344,15 +342,13 @@ void himd_pcmstream_close(struct himd_pcmstream * stream)
 
 int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status)
 {
-    himd->status = HIMD_ERROR_DISABLED_FEATURE;
-    g_strlcpy(himd->statusmsg, _("Can't open pcm track: Compiled without mcrypt library"), sizeof himd->statusmsg)
+    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't open pcm track: Compiled without mcrypt library"));
     return -1;
 }
 
-int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status);
+int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
 {
-    stream->stream.status = HIMD_ERROR_DISABLED_FEATURE;
-    g_strlcpy(stream->stream.statusmsg, _("Can't do pcm read: Compiled without mcrypt library"), sizeof stream->stream.statusmsg);
+    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't do pcm read: Compiled without mcrypt library"));
     return -1;
 }
 
