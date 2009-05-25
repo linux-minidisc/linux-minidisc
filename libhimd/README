@@ -9,6 +9,6 @@ system on a Sony Hi-MD music medium.
 2) Requirements:
 
 glib-2.0
-automake
-autoconf
+cmake
 mad (for MP3 reading)
+libmcrypt (for Wave reading)

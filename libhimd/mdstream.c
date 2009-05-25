@@ -126,7 +126,7 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
     return 0;
 }
 
-#ifdef HAVE_MAD_H
+#ifdef Mad_FOUND
 
 #include <mad.h>
 
@@ -281,7 +281,7 @@ void himd_mp3stream_close(struct himd_mp3stream * stream)
 }
 #endif
 
-#ifdef LIBMCRYPT24
+#ifdef Mcrypt_FOUND
 #include <string.h>
 
 int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status)

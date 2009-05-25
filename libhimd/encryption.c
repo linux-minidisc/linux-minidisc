@@ -20,7 +20,7 @@ int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himde
     return 0;
 }
 
-#ifdef LIBMCRYPT24
+#ifdef Mcrypt_FOUND
 #include "mcrypt.h"
 #include "himd_private.h"
 #include <string.h>
