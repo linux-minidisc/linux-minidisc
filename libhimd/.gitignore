@@ -13,5 +13,4 @@ install-sh
 depcomp
 missing
 config.h
-config.h.in
 stamp-h1

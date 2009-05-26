@@ -1,0 +1,2 @@
+#cmakedefine Mad_FOUND
+#cmakedefine Mcrypt_FOUND
