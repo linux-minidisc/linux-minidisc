@@ -40,11 +40,22 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
 {
     struct himd_pcmstream str;
     struct himderrinfo status;
-    unsigned int len;
+    unsigned int len, i;
+    int left, right;
+    int clipcount;
     const unsigned char * data;
-    QFile f(file);
+    //    QFile f(file);
+    sox_format_t * out;
+    sox_sample_t soxbuf [HIMD_MAX_PCMFRAME_SAMPLES * 2];
+    sox_signalinfo_t signal_out;
 
-    if(!f.open(QIODevice::ReadWrite))
+    signal_out.channels = 2;
+    signal_out.length = 0;
+    signal_out.precision = 16;
+    signal_out.rate = 44100;
+
+    //    if(!f.open(QIODevice::ReadWrite))
+    if(!(out = sox_open_write(file.toUtf8(), &signal_out, NULL, NULL, NULL, NULL)))
     {
         perror("Error opening file for LPCM-output");
         return;
@@ -56,7 +67,20 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
     }
     while(himd_pcmstream_read_frame(&str, &data, &len, &status) >= 0)
     {
-         if(f.write((const char*)data,len) == -1)
+      
+      for(i = 0; i < len/4; i++) {
+
+        left = data[i*4]*256+data[i*4+1];
+        right = data[i*4+2]*256+data[i*4+3];
+        if (left > 0x8000) left -= 0x10000;
+        if (right > 0x8000) right -= 0x10000;
+
+        soxbuf[i*2] = SOX_SIGNED_16BIT_TO_SAMPLE(left, clipcount);
+        soxbuf[i*2+1] = SOX_SIGNED_16BIT_TO_SAMPLE(right, clipcount);
+      }
+
+      //         if(f.write((const char*)data,len) == -1)
+      if (sox_write(out, soxbuf, len/2) == -1)
         {
             perror("writing dumped stream");
             goto clean;
@@ -65,11 +89,32 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
     if(status.status != HIMD_STATUS_AUDIO_EOF)
         fprintf(stderr,"Error reading PCM data: %s\n", status.statusmsg);
 clean:
-    f.close();
+    //    f.close();
+    sox_close(out);
     himd_pcmstream_close(&str);
 }
 
+// void QHiMDMainWindow::pcmaddheader(QString file) {
 
+//     struct sox_format_t inFormat, outFormat;
+//     struct sox_encodinginfo_t inEncoding, outEncoding;
+//     struct sox_signalinfo_t inInfo;
+
+//     inInfo.channels = 2;
+//     inInfo.length = 0;
+//     inInfo.precision = 16;
+//     inInfo.rate = 44100;
+
+//     inEncoding.opposite_endian = sox_true;
+
+//     sox_format_init();
+
+//     inFormat = sox_open_read(file.latin1(), inInfo, inEncoding, "RAW");
+
+//     outFormat = sox_open_write(file.latin1(), &inFormat->signal, NULL, NULL, NULL, NULL);
+
+//     sox_format_quit();
+// }
 
 QString get_locale_str(struct himd * himd, int idx)
 {
@@ -129,7 +174,7 @@ void QHiMDMainWindow::on_action_Upload_triggered()
         if (tracks[i]->text(5) == "MPEG")
             dumpmp3 (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".mp3"));
         else if (tracks[i]->text(5) == "LPCM")
-            dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".pcm"));
+            dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".wav"));
     }
 }
 

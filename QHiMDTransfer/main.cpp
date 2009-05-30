@@ -3,6 +3,7 @@
 
 int main(int argc, char *argv[])
 {
+    sox_format_init();
     QApplication a(argc, argv);
     QHiMDMainWindow w;
     w.show();

@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 2.6)
 find_package( Qt4 REQUIRED )
 include(${QT_USE_FILE})
 
+find_package(Sox REQUIRED)
+include_directories(${Sox_INCLUDE_DIRS})
+
 set(qhimdtransfer_SRCS 
     main.cpp qhimdaboutdialog.cpp qhimdformatdialog.cpp qhimdmainwindow.cpp)
 set(qhimdtransfer_MOC_HDRS
@@ -14,4 +17,4 @@ qt4_wrap_ui(QHiMDTransferUI ${qhimdtransfer_UIS})
 qt4_wrap_cpp(QHiMDTransferMOC ${qhimdtransfer_MOC_HDRS})
 
 add_executable(QHiMDTransfer ${qhimdtransfer_SRCS} ${QHiMDTransferUI} ${QHiMDTransferMOC})
-target_link_libraries(QHiMDTransfer ${QT_LIBRARIES} himd)
+target_link_libraries(QHiMDTransfer ${QT_LIBRARIES} himd ${Sox_LIBRARIES})

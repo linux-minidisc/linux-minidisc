@@ -6,6 +6,9 @@
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
 #include "../libhimd/himd.h"
+extern "C" {
+#include <sox.h>
+}
 
 namespace Ui
 {
@@ -28,6 +31,7 @@ private:
     QHiMDFormatDialog * formatDialog;
     void dumpmp3(struct himd * himd, int trknum, QString file);
     void dumppcm(struct himd * himd, int trknum, QString file);
+    void pcmaddheader(QString file);
 
 private slots:
     void on_action_Connect_triggered();
