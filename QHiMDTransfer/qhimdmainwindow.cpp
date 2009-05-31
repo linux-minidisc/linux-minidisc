@@ -94,28 +94,6 @@ clean:
     himd_pcmstream_close(&str);
 }
 
-// void QHiMDMainWindow::pcmaddheader(QString file) {
-
-//     struct sox_format_t inFormat, outFormat;
-//     struct sox_encodinginfo_t inEncoding, outEncoding;
-//     struct sox_signalinfo_t inInfo;
-
-//     inInfo.channels = 2;
-//     inInfo.length = 0;
-//     inInfo.precision = 16;
-//     inInfo.rate = 44100;
-
-//     inEncoding.opposite_endian = sox_true;
-
-//     sox_format_init();
-
-//     inFormat = sox_open_read(file.latin1(), inInfo, inEncoding, "RAW");
-
-//     outFormat = sox_open_write(file.latin1(), &inFormat->signal, NULL, NULL, NULL, NULL);
-
-//     sox_format_quit();
-// }
-
 QString get_locale_str(struct himd * himd, int idx)
 {
     QString outstr;
@@ -197,8 +175,9 @@ void QHiMDMainWindow::on_action_Format_triggered()
 void QHiMDMainWindow::on_action_Connect_triggered()
 {
     QString HiMDDirectory;
-    QTreeWidgetItem * HiMDTrack;// = new QTreeWidgetItem(0);;
+    QTreeWidgetItem * HiMDTrack;
     QString TrackNr;
+    QMessageBox himdStatus;
 
     HiMDDirectory = QFileDialog::getExistingDirectory(this,
                                                  "Select directory of HiMD Medium",
@@ -208,7 +187,11 @@ void QHiMDMainWindow::on_action_Connect_triggered()
 
     ui->TrackList->clear();
 
-    himd_open(&this->HiMD, (HiMDDirectory.toAscii()).data(), NULL);
+    if (himd_open(&this->HiMD, (HiMDDirectory.toAscii()).data(), NULL)) {
+        himdStatus.setText("Error opening HiMD-data. Make you sure, you chose the proper root-directory of your HiMD-Walkman.");
+        himdStatus.exec();
+        return;
+    }
 
     for(int i = HIMD_FIRST_TRACK;i <= HIMD_LAST_TRACK;i++)
     {
@@ -216,16 +199,6 @@ void QHiMDMainWindow::on_action_Connect_triggered()
         HiMDTrack = new QTreeWidgetItem(0);
         if(himd_get_track_info(&this->HiMD, i, &t, NULL)  >= 0)
         {
-        //    char * title = get_locale_str(himd, t.title);
-        //    char * artist = get_locale_str(himd, t.artist);
-        //    char * album = get_locale_str(himd, t.album);
-        //    printf("%4d: %d:%02d %s %s:%s (%s %d)\n",
-        //          i, t.seconds/60, t.seconds % 60, codecstr(&t),
-        //            artist, title, album, t.trackinalbum);
-     //       g_free(title);
-       //     g_free(artist);
-         //   g_free(album);
-
             HiMDTrack->setText(0, TrackNr.setNum(i));
             HiMDTrack->setText(1, get_locale_str(&this->HiMD, t.title));
             HiMDTrack->setText(2, get_locale_str(&this->HiMD, t.artist));
@@ -235,27 +208,6 @@ void QHiMDMainWindow::on_action_Connect_triggered()
             HiMDTrack->setFlags(HiMDTrack->flags() |Qt::ItemIsEnabled);
 
             ui->TrackList->addTopLevelItem(HiMDTrack);
-/*
-            if(verbose)
-            {
-                struct fraginfo f;
-                int fnum = t.firstfrag;
-                while(fnum != 0)
-                {
-                    if(himd_get_fragment_info(himd, fnum, &f) >= 0)
-                    {
-                        printf("     %3d@%05d .. %3d@%05d\n", f.firstframe, f.firstblock, f.lastframe, f.lastblock);
-                        fnum = f.nextfrag;
-                    }
-                    else
-                    {
-                        printf("     ERROR reading fragment %d info: %s\n", fnum, himd->statusmsg);
-                        break;
-                    }
-                }
-
-            }
-*/
         }
     }
 
