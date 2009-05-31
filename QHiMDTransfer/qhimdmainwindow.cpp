@@ -44,7 +44,6 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
     int left, right;
     int clipcount;
     const unsigned char * data;
-    //    QFile f(file);
     sox_format_t * out;
     sox_sample_t soxbuf [HIMD_MAX_PCMFRAME_SAMPLES * 2];
     sox_signalinfo_t signal_out;
@@ -54,7 +53,6 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
     signal_out.precision = 16;
     signal_out.rate = 44100;
 
-    //    if(!f.open(QIODevice::ReadWrite))
     if(!(out = sox_open_write(file.toUtf8(), &signal_out, NULL, NULL, NULL, NULL)))
     {
         perror("Error opening file for LPCM-output");
@@ -79,7 +77,6 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
         soxbuf[i*2+1] = SOX_SIGNED_16BIT_TO_SAMPLE(right, clipcount);
       }
 
-      //         if(f.write((const char*)data,len) == -1)
       if (sox_write(out, soxbuf, len/2) == -1)
         {
             perror("writing dumped stream");
@@ -89,7 +86,6 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
     if(status.status != HIMD_STATUS_AUDIO_EOF)
         fprintf(stderr,"Error reading PCM data: %s\n", status.statusmsg);
 clean:
-    //    f.close();
     sox_close(out);
     himd_pcmstream_close(&str);
 }
@@ -155,7 +151,6 @@ void QHiMDMainWindow::on_action_Upload_triggered()
             dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".wav"));
     }
 }
-
 
 void QHiMDMainWindow::on_action_Quit_triggered()
 {
