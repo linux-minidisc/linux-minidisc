@@ -3,7 +3,6 @@ project(libhimd)
 
 #add_library(himd SHARED encryption.c himd.c mdstream.c trackindex.c)
 add_library(himd encryption.c himd.c mdstream.c trackindex.c)
-add_executable(himdtest himdtest.c)
 
 find_package(Glib REQUIRED)
 find_package(Mad)
@@ -20,5 +19,3 @@ if(Mcrypt_FOUND)
 endif(Mcrypt_FOUND)
 
 target_link_libraries(himd ${LIBS})
-
-target_link_libraries(himdtest himd)
