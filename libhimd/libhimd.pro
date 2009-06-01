@@ -11,7 +11,7 @@ else: !build_pass: message(You disabled mcrypt: No PCM transfer will be supporte
 
 !without_mad: {
   LIBS += -lmad
-  DEFINED += CONFIG_WITH_MAD
+  DEFINES += CONFIG_WITH_MAD
 }
 else: !build_pass: message(You disabled with_mad: No MP3 transfer will be supported)
 
