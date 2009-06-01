@@ -2,3 +2,5 @@ Makefile
 Makefile.Release
 Makefile.Debug
 himdtest
+debug
+release
