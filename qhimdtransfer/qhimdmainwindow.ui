@@ -21,7 +21,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../../QHiMDTransfer/icons/download_to_md.png</normaloff>../../../QHiMDTransfer/icons/download_to_md.png</iconset>
+    <normaloff>:/icons/download_to_md.png</normaloff>:/icons/download_to_md.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -138,7 +138,7 @@
   <action name="action_Download">
    <property name="icon">
     <iconset>
-     <normaloff>icons/download_to_md.png</normaloff>icons/download_to_md.png</iconset>
+     <normaloff>:/icons/download_to_md.png</normaloff>:/icons/download_to_md.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Download tracks onto MD</string>
@@ -147,7 +147,7 @@
   <action name="action_Upload">
    <property name="icon">
     <iconset>
-     <normaloff>icons/upload_from_md.png</normaloff>icons/upload_from_md.png</iconset>
+     <normaloff>:/icons/upload_from_md.png</normaloff>:/icons/upload_from_md.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Upload tracks from MD</string>
@@ -156,7 +156,7 @@
   <action name="action_Rename">
    <property name="icon">
     <iconset>
-     <normaloff>icons/rename.png</normaloff>icons/rename.png</iconset>
+     <normaloff>:/icons/rename.png</normaloff>:/icons/rename.png</iconset>
    </property>
    <property name="text">
     <string>Re&amp;name</string>
@@ -168,7 +168,7 @@
   <action name="action_Delete">
    <property name="icon">
     <iconset>
-     <normaloff>icons/delete.png</normaloff>icons/delete.png</iconset>
+     <normaloff>:/icons/delete.png</normaloff>:/icons/delete.png</iconset>
    </property>
    <property name="text">
     <string>D&amp;elete selected</string>
@@ -177,7 +177,7 @@
   <action name="action_Help">
    <property name="icon">
     <iconset>
-     <normaloff>icons/help.png</normaloff>icons/help.png</iconset>
+     <normaloff>:/icons/help.png</normaloff>:/icons/help.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Help</string>
@@ -191,7 +191,7 @@
   <action name="action_Format">
    <property name="icon">
     <iconset>
-     <normaloff>icons/format.png</normaloff>icons/format.png</iconset>
+     <normaloff>:/icons/format.png</normaloff>:/icons/format.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Format MD</string>
@@ -203,7 +203,7 @@
   <action name="action_Quit">
    <property name="icon">
     <iconset>
-     <normaloff>icons/quit.png</normaloff>icons/quit.png</iconset>
+     <normaloff>:/icons/quit.png</normaloff>:/icons/quit.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Quit</string>
@@ -212,7 +212,7 @@
   <action name="action_Connect">
    <property name="icon">
     <iconset>
-     <normaloff>icons/connect.png</normaloff>icons/connect.png</iconset>
+     <normaloff>:/icons/connect.png</normaloff>:/icons/connect.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Connect</string>

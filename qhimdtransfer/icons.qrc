@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>icons/upload_from_md.png</file>
+        <file>icons/add_group.png</file>
+        <file>icons/connect.png</file>
+        <file>icons/delete.png</file>
+        <file>icons/download_to_md.png</file>
+        <file>icons/format.png</file>
+        <file>icons/help.png</file>
+        <file>icons/qhimdtransfer.png</file>
+        <file>icons/quit.png</file>
+        <file>icons/rename.png</file>
+    </qresource>
+</RCC>

@@ -11,10 +11,12 @@ set(qhimdtransfer_SRCS
 set(qhimdtransfer_MOC_HDRS
     qhimdmainwindow.h qhimdformatdialog.h qhimdaboutdialog.h)
 set(qhimdtransfer_UIS qhimdaboutdialog.ui qhimdformatdialog.ui qhimdmainwindow.ui)
+set(qhimdtransfer_QRCs icons.qrc)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 qt4_wrap_ui(QHiMDTransferUI ${qhimdtransfer_UIS})
 qt4_wrap_cpp(QHiMDTransferMOC ${qhimdtransfer_MOC_HDRS})
+qt4_add_resources(QHiMDTransferQRC ${qhimdtransfer_QRCs})
 
-add_executable(QHiMDTransfer ${qhimdtransfer_SRCS} ${QHiMDTransferUI} ${QHiMDTransferMOC})
+add_executable(QHiMDTransfer ${qhimdtransfer_SRCS} ${QHiMDTransferUI} ${QHiMDTransferMOC} ${QHiMDTransferQRC})
 target_link_libraries(QHiMDTransfer ${QT_LIBRARIES} himd ${Sox_LIBRARIES})
