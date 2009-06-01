@@ -2,7 +2,7 @@
 #define QHIMDMAINWINDOW_H
 
 #include <QtGui/QMainWindow>
-#include <QFileDialog>
+#include <QtGui/QFileDialog>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
 #include "../libhimd/himd.h"
