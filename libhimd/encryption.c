@@ -1,5 +1,4 @@
 #include "himd.h"
-#include "config.h"
 #include <stdlib.h>
 
 #define _(x) (x)
@@ -20,7 +19,7 @@ int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himde
     return 0;
 }
 
-#ifdef Mcrypt_FOUND
+#ifdef CONFIG_WITH_MCRYPT
 #include "mcrypt.h"
 #include "himd_private.h"
 #include <string.h>

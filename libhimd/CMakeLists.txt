@@ -11,8 +11,13 @@ find_package(Mcrypt)
 include_directories(${Glib_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${Glib_LIBRARIES} ${Mad_LIBRARIES} ${Mcrypt_LIBRARIES})
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
-               ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
+if(Mad_FOUND)
+  set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS CONFIG_WITH_MAD)
+endif(Mad_FOUND)
+
+if(Mcrypt_FOUND)
+  set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS CONFIG_WITH_MCRYPT)
+endif(Mcrypt_FOUND)
 
 target_link_libraries(himd ${LIBS})
 

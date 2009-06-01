@@ -5,7 +5,6 @@
 
 #include "himd.h"
 #include "himd_private.h"
-#include "config.h"
 
 #define _(x) (x)
 
@@ -126,7 +125,7 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
     return 0;
 }
 
-#ifdef Mad_FOUND
+#ifdef CONFIG_WITH_MAD
 
 #include <mad.h>
 
@@ -281,7 +280,7 @@ void himd_mp3stream_close(struct himd_mp3stream * stream)
 }
 #endif
 
-#ifdef Mcrypt_FOUND
+#ifdef CONFIG_WITH_MCRYPT
 #include <string.h>
 
 int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status)
