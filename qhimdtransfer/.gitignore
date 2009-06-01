@@ -2,5 +2,6 @@ debug
 release
 Makefile*
 ui_*.h
-moc_*.cxx
-QHiMDTransfer
+moc_*.cpp
+qrc_*.cpp
+qhimdtransfer
