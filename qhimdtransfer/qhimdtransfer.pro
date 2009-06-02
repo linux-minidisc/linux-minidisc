@@ -15,6 +15,7 @@ SOURCES += main.cpp \
            qhimdmainwindow.cpp
 RESOURCES += icons.qrc
 PKGCONFIG += sox
+win32: RC_FILE = qhimdtransfer.rc
 
 # Mixed case version of the target name for operating systems on which
 # this is convention.
