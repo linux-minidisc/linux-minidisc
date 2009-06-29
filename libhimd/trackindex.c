@@ -62,6 +62,7 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     t->firstfrag = firstpart;
     t->tracknum = beword16(trackbuffer+38);
     t->seconds = beword16(trackbuffer+40);
+    memcpy(t->contentid,trackbuffer+48,20);
     return 0;
 }
 

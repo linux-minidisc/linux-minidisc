@@ -5,6 +5,21 @@
 
 #include "himd.h"
 
+static const char * hexdump(unsigned char * input, int len)
+{
+    static char dumpspace[5][41];
+    static int dumpindex = 0;
+    int i;
+
+    if(len > 20) return "TOO LONG";
+
+    dumpindex %= 5;
+    for(i = 0;i < len;++i)
+        sprintf(dumpspace[dumpindex]+i*2,"%02x",input[i]);
+
+    return dumpspace[dumpindex++];
+}
+
 char * get_locale_str(struct himd * himd, int idx)
 {
     char * str, * outstr;
@@ -45,11 +60,12 @@ void himd_trackdump(struct himd * himd, int verbose)
             {
                 struct fraginfo f;
                 int fnum = t.firstfrag;
+
                 while(fnum != 0)
                 {
                     if(himd_get_fragment_info(himd, fnum, &f, &status) >= 0)
                     {
-                        printf("     %3d@%05d .. %3d@%05d\n", f.firstframe, f.firstblock, f.lastframe, f.lastblock);
+                        printf("     %3d@%05d .. %3d@%05d (%s)\n", f.firstframe, f.firstblock, f.lastframe, f.lastblock, hexdump(f.key, 8));
                         fnum = f.nextfrag;
                     }
                     else
@@ -58,9 +74,8 @@ void himd_trackdump(struct himd * himd, int verbose)
                         break;
                     }
                 }
-                printf("     Key: %02x%02x%02x%02x%02x%02x%02x%02x; MAC: %02x%02x%02x%02x%02x%02x%02x%02x\n",
-                        t.key[0],t.key[1],t.key[2],t.key[3],t.key[4],t.key[5],t.key[6],t.key[7],
-                        t.mac[0],t.mac[1],t.mac[2],t.mac[3],t.mac[4],t.mac[5],t.mac[6],t.mac[7]);
+                printf("     Contend ID: %s\n", hexdump(t.contentid, 20));
+                printf("     Key: %s; MAC: %s\n", hexdump(t.key, 8), hexdump(t.mac, 8));
             }
         }
     }

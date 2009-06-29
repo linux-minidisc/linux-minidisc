@@ -68,6 +68,7 @@ struct trackinfo {
     int seconds;
     unsigned char key[8];
     unsigned char mac[8];
+    unsigned char contentid[20];
 };
 
 /* a fragment in the audio file */
