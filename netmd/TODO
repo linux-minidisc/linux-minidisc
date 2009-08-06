@@ -1,0 +1,4 @@
+Write documentation (docstrings for python libraries, '-h' for utilities).
+Make libraries a valid, installable python package.
+Integration with udev (to remove the need to be root to access usb device).
+

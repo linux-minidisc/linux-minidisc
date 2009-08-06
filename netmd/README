@@ -1,0 +1,40 @@
+libnetmd.py - A python implementation of NetMD protocol.
+
+DISCLAIMER
+  In short: If it break, you get to keep the pieces.
+
+  This library implements a proprietary, non-documented protocol.
+  Some methods are not tested [enough], so they might just not work, or cause
+  data loss, or brick your NetMD. Use at your own risk.
+
+REQUIREMENTS
+  libusb1
+  python2.4 or later
+  A NetMD minidisc player.
+  An USB cable.
+
+  For dump_md.py:
+    sox (and plugins to access your audio system)
+    A sound card with analog input.
+    An audio cable.
+
+FILES
+  Libraries:
+    libnetmd.py  Python implementation of NetMD protocol.
+    libusb1.py   Ctypes-based python wrapper around libusb1.
+    usb1.py      Object definitions for libusb1.py functions.
+
+  Utils:
+    lsusb.py     Sample implementation of lsusb command using usb1.py.
+    mdctl.py     Stupid pdb-based command line to test libnetmd.py methods.
+    lsmd.py      Display disc title, tracks, ... of connected NetMD.
+    dump_md.py   Play tracks on a connected NetMD and record them to files.
+
+NOTES
+  You need to be root to access a device on the USB bus (or at least, to have
+  read/write permission on the /proc/bus/usb/*/* corresponding to your NetMD).
+
+  dump_md.py contains some Works-For-Me values, it might require some tweaks
+  for tracks to be properly recorded (depends on noise level, minidisk player
+  reactivity...).
+
