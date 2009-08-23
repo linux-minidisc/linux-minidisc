@@ -24,6 +24,19 @@ KNOWN_USB_ID_SET = frozenset([
 ])
 
 def iterdevices(usb_context, bus=None, device_address=None):
+    """
+      Iterator for plugged-in NetMD devices.
+
+      Parameters:
+        usb_context (usb1.LibUSBContext)
+          Some usb1.LibUSBContext instance.
+        bus (None, int)
+          Only scan this bus.
+        device_address (None, int)
+          Only scan devices at this address on each scanned bus.
+
+      Returns (yields) NetMD instances.
+    """
     for device in usb_context.getDeviceList():
         if bus is not None and bus != device.getBusNumber():
             continue
@@ -53,16 +66,34 @@ STATUS_CHANGED = 0x0d
 STATUS_INTERIM = 0x0f
 
 class NetMDException(Exception):
+    """
+      Base exception for all NetMD exceptions.
+    """
     pass
 
 class NetMDNotImplemented(NetMDException):
+    """
+      NetMD protocol "operation not implemented" exception.
+    """
     pass
 
 class NetMDRejected(NetMDException):
+    """
+      NetMD protocol "operation rejected" exception.
+    """
     pass
 
 class NetMD(object):
+    """
+      Low-level interface for a NetMD device.
+    """
     def __init__(self, usb_handle, interface=0):
+        """
+          usb_handle (usb1.USBDeviceHandle)
+            USB device corresponding to a NetMD player.
+          interface (int)
+            USB interface implementing NetMD protocol on the USB device.
+        """
         self.usb_handle = usb_handle
         self.interface = interface
         usb_handle.setConfiguration(1)
@@ -81,12 +112,21 @@ class NetMD(object):
         return ord(reply[2])
 
     def sendCommand(self, command):
+        """
+          Send a raw binary command to device.
+          command (str)
+            Binary command to send.
+        """
         #print '%04i> %s' % (len(command), dump(command))
         self.usb_handle.controlWrite(libusb1.LIBUSB_TYPE_VENDOR | \
                                      libusb1.LIBUSB_RECIPIENT_INTERFACE,
                                      0x80, 0, 0, command)
 
     def readReply(self):
+        """
+          Get a raw binary reply from device.
+          Returns the reply.
+        """
         reply_length = self._getReplyLength()
         reply = self.usb_handle.controlRead(libusb1.LIBUSB_TYPE_VENDOR | \
                                             libusb1.LIBUSB_RECIPIENT_INTERFACE,
@@ -94,12 +134,27 @@ class NetMD(object):
         #print '%04i< %s' % (len(reply), dump(reply))
         return reply
 
-    def readBulk(self, length, chunk_size=0x10000):
+    def readBulk(self, length):
+        """
+          Read bulk data from device.
+          length (int)
+            Length of data to read.
+          Returns data read.
+        """
         result = StringIO()
-        self.readBulkToFile(length, result, chunk_size=chunk_size)
+        self.readBulkToFile(length, result)
         return result.getvalue()
 
     def readBulkToFile(self, length, outfile, chunk_size=0x10000):
+        """
+          Read bulk data from device, and write it to a file.
+          length (int)
+            Length of data to read.
+          outfile (str)
+            Path to output file.
+          chunk_size (int)
+            Keep this much data in memory before flushing it to file.
+        """
         done = 0
         while done < length:
             received = self.usb_handle.bulkRead(BULK_READ_ENDPOINT,
@@ -110,6 +165,11 @@ class NetMD(object):
                                              done/float(length) * 100)
 
     def writeBulk(self, data):
+        """
+          Write data to device.
+          data (str)
+            Data to write.
+        """
         self.usb_handle.bulkWrite(BULK_WRITE_ENDPOINT, data)
 
 ACTION_PLAY = 0x75
@@ -127,6 +187,11 @@ ENCODING_LP4 = 0x93
 
 CHANNELS_MONO = 0x01
 CHANNELS_STEREO = 0x00
+
+CHANNEL_COUNT_DICT = {
+  CHANNELS_MONO: 1,
+  CHANNELS_STEREO: 2
+}
 
 OPERATING_STATUS_USB_RECORDING = 0x56ff
 OPERATING_STATUS_RECORDING = 0xc275
@@ -149,27 +214,57 @@ _FORMAT_TYPE_LEN_DICT = {
     'q': 8, # quadword
 }
 
-def BCD2int(bcd, length=1):
+def BCD2int(bcd):
+    """
+      Convert BCD number of an arbitrary length to an int.
+      bcd (int)
+        bcd number
+      Returns the same number as an int.
+    """
     value = 0
-    for nibble in xrange(length * 2):
+    nibble = 0
+    while bcd:
         nibble_value = bcd & 0xf
         bcd >>= 4
         value += nibble_value * (10 ** nibble)
+        nibble += 1
     return value
 
 def int2BCD(value, length=1):
+    """
+      Convert an int into a BCD number.
+      value (int)
+        Integer value.
+      length (int)
+        Length limit for output number, in bytes.
+      Returns the same value in BCD.
+    """
     if value > 10 ** (length * 2 - 1):
         raise ValueError, 'Value %r cannot fit in %i bytes in BCD' % \
              (value, length)
     bcd = 0
-    for nibble in xrange(length * 2):
+    nibble = 0
+    while value:
         nibble_value = value % 10
         value /= 10
         bcd |= nibble_value << (4 * nibble)
+        nibble += 1
     return bcd
 
 class NetMDInterface(object):
+    """
+      High-level interface for a NetMD device.
+      Notes:
+        Track numbering starts at 0.
+        First song position is 0:0:0'1 (0 hours, 0 minutes, 0 second, 1 sample)
+        wchar titles are probably shift-jis encoded (hint only, nothing relies
+          on this in this file)
+    """
     def __init__(self, net_md):
+        """
+          net_md (NetMD)
+            Interface to the NetMD device to use.
+        """
         self.net_md = net_md
 
     def send_query(self, query, test=False):
@@ -298,16 +393,28 @@ class NetMDInterface(object):
         return result
 
     def acquire(self):
+        """
+          Exclusive access to device.
+          XXX: what does it mean ?
+        """
         query = self.formatQuery('ff 010c ffff ffff ffff ffff ffff ffff')
         reply = self.send_query(query)
         self.scanQuery(reply, 'ff 010c ffff ffff ffff ffff ffff ffff')
 
     def release(self):
+        """
+          Release device previously acquired for exclusive access.
+          XXX: what does it mean ?
+        """
         query = self.formatQuery('ff 0100 ffff ffff ffff ffff ffff ffff')
         reply = self.send_query(query)
         self.scanQuery(reply, 'ff 0100 ffff ffff ffff ffff ffff ffff')
 
     def getStatus(self):
+        """
+          Get device status.
+          Returns device response (content meaning is largely unknown).
+        """
         query = self.formatQuery('1809 8001 0230 8800 0030 8804 00 ff00 ' \
                                  '00000000')
         reply = self.send_query(query)
@@ -315,6 +422,12 @@ class NetMDInterface(object):
                               '1000 000900000 %x')[0]
 
     def isDiskPresent(self):
+        """
+          Is a disk present in device ?
+          Returns a boolean:
+            True: disk present
+            False: no disk
+        """
         status = self.getStatus()
         return status[4] == 0x40
 
@@ -363,28 +476,49 @@ class NetMDInterface(object):
         self.scanQuery(reply, '18c3 00 %b 000000')
 
     def play(self):
+        """
+          Start playback on device.
+        """
         self._play(ACTION_PLAY)
 
     def fast_forward(self):
+        """
+          Fast-forward device.
+        """
         self._play(ACTION_FASTFORWARD)
 
     def rewind(self):
+        """
+          Rewind device.
+        """
         self._play(ACTION_REWIND)
 
     def pause(self):
+        """
+          Pause device.
+        """
         self._play(ACTION_PAUSE)
 
     def stop(self):
+        """
+          Stop playback on device.
+        """
         query = self.formatQuery('18c5 ff 00000000')
         reply = self.send_query(query)
         self.scanQuery(reply, '18c5 00 00000000')
 
     def gotoTrack(self, track):
+        """
+          Seek to begining of given track number on device.
+        """
         query = self.formatQuery('1850 ff010000 0000 %w', track)
         reply = self.send_query(query)
         return self.scanQuery(reply, '1850 00010000 0000 %w')[0]
 
     def gotoTime(self, track, hour=0, minute=0, second=0, frame=0):
+        """
+          Seek to given time of given track.
+        """
         query = self.formatQuery('1850 ff000000 0000 %w %b%b%b%b', track,
                                  int2BCD(hour), int2BCD(minute),
                                  int2BCD(second), int2BCD(frame))
@@ -397,15 +531,30 @@ class NetMDInterface(object):
         return self.scanQuery(reply, '1850 0010 00000000 %?%?')
 
     def nextTrack(self):
+        """
+          Go to begining of next track.
+        """
         self._trackChange(TRACK_NEXT)
 
     def previousTrack(self):
+        """
+          Go to begining of previous track.
+        """
         self._trackChange(TRACK_PREVIOUS)
 
     def restartTrack(self):
+        """
+          Go to begining of current track.
+        """
         self._trackChange(TRACK_RESTART)
 
     def eraseDisc(self):
+        """
+          Erase disc.
+          This is reported not to check for any track protection, and
+          unconditionaly earses everything.
+        """
+        # XXX: test to see if it honors read-only disc mode.
         query = self.formatQuery('1840 ff 0000')
         reply = self.send_query(query)
         self.scanQuery(reply, '1840 00 0000')
@@ -421,11 +570,18 @@ class NetMDInterface(object):
 #        return self.scanQuery(reply, '1808 10180203 00')
 
     def getDiscFlags(self):
+        """
+          Get disc flags.
+          Returns a bitfield (see DISC_FLAG_* constants).
+        """
         query = self.formatQuery('1806 01101000 ff00 0001000b')
         reply = self.send_query(query)
         return self.scanQuery(reply, '1806 01101000 1000 0001000b %b')[0]
 
     def getTrackCount(self):
+        """
+          Get the number of disc tracks.
+        """
         query = self.formatQuery('1806 02101001 3000 1000 ff00 00000000')
         reply = self.send_query(query)
         data = self.scanQuery(reply, '1806 02101001 %?%? %?%? 1000 00%?0000 ' \
@@ -435,6 +591,7 @@ class NetMDInterface(object):
         return ord(data[5])
 
     def _getDiscTitle(self, wchar=False):
+        # XXX: long title support untested.
         if wchar:
             wchar_value = 1
         else:
@@ -464,6 +621,12 @@ class NetMDInterface(object):
         return ''.join(result)
 
     def getDiscTitle(self, wchar=False):
+        """
+          Return disc title.
+          wchar (bool)
+            If True, return the content of wchar title.
+            If False, return the ASCII title.
+        """
         raw_title = self._getDiscTitle(wchar=wchar)
         title = raw_title.split('//')[0]
         if ';' in title and title[0] == '0':
@@ -471,9 +634,18 @@ class NetMDInterface(object):
         return title
 
     def getTrackGroupDict(self):
+        """
+          Return a list representing track groups.
+          This list is composed of 2-tuples:
+            group title
+            track number list
+        """
+        # XXX: not tested
         raw_title = self._getDiscTitle()
         group_list = raw_title.split('//')
-        result = {}
+        track_dict = {}
+        result = []
+        append = result.append
         for group_index, group in enumerate(group_list):
             if group == '': # (only ?) last group might be delimited but empty.
                 continue
@@ -485,15 +657,27 @@ class NetMDInterface(object):
                 assert track_min < track_max, '%r, %r' % (track_min, track_max)
             else:
                 track_min = track_max = track_range
+            track_list = []
+            track_append = track_list.append
             for track in xrange(int(track_min) - 1, int(track_max)):
-                if track in result:
+                if track in track_dict:
                     raise ValueError, 'Track %i is in 2 groups: %r[%i] & ' \
-                         '%r[%i]' % (track, result[track][0], result[track][1],
-                         group_name, group_index)
-                result[track] = group_name, group_index
+                         '%r[%i]' % (track, track_dict[track][0],
+                         track_dict[track][1], group_name, group_index)
+                track_dict[track] = group_name, group_index
+                track_append(track)
+            append((group, track_list))
         return result
 
     def getTrackTitle(self, track, wchar=False):
+        """
+          Return track title.
+          track (int)
+            Track number.
+          wchar (bool)
+            If True, return the content of wchar title.
+            If False, return the ASCII title.
+        """
         if wchar:
             wchar_value = 3
         else:
@@ -509,6 +693,14 @@ class NetMDInterface(object):
         return result
 
     def setDiscTitle(self, title, wchar=False):
+        """
+          Set disc title.
+          title (str)
+            The new title.
+          wchar (bool)
+            If True, return the content of wchar title.
+            If False, return the ASCII title.
+        """
         if wchar:
             wchar = 1
         else:
@@ -521,6 +713,16 @@ class NetMDInterface(object):
                               '%?%?')
 
     def setTrackTitle(self, track, title, wchar=False):
+        """
+          Set track title.
+          track (int)
+            Track to retitle.
+          title (str)
+            The new title.
+          wchar (bool)
+            If True, return the content of wchar title.
+            If False, return the ASCII title.
+        """
         if wchar:
             wchar = 3
         else:
@@ -534,11 +736,23 @@ class NetMDInterface(object):
                               '%?%?')
 
     def eraseTrack(self, track):
+        """
+          Remove a track.
+          track (int)
+            Track to remove.
+        """
         query = self.formatQuery('1840 ff01 00 201001 %w', track)
         reply = self.send_query(query)
         self.scanQuery(reply, '1840 1001 00 201001 %?%?')
 
     def moveTrack(self, source, dest):
+        """
+          Move a track.
+          source (int)
+            Track position before moving.
+          dest (int)
+            Track position after moving.
+        """
         query = self.formatQuery('1843 ff00 00 201001 00 %w 201001 %w', source,
                                  dest)
         reply = self.send_query(query)
@@ -552,6 +766,16 @@ class NetMDInterface(object):
                               '00%?0000 %x')[0]
 
     def getTrackLength(self, track):
+        """
+          Get track duration.
+          track (int)
+            Track to fetch information from.
+          Returns a list of 4 elements:
+          - hours
+          - minutes
+          - seconds
+          - samples (512 per second)
+        """
         raw_value = self._getTrackInfo(track, 0x3000, 0x0100)
         result = self.scanQuery(raw_value, '0001 0006 0000 %b %b %b %b')
         result[0] = BCD2int(result[0])
@@ -561,16 +785,38 @@ class NetMDInterface(object):
         return result
 
     def getTrackEncoding(self, track):
+        """
+          Get track encoding parameters.
+          track (int)
+            Track to fetch information from.
+          Returns a list of 2 elements:
+          - codec (see ENCODING_* constants)
+          - channel number (see CHANNELS_* constants)
+        """
         return self.scanQuery(self._getTrackInfo(track, 0x3080, 0x0700),
                               '8007 0004 0110 %b %b')
 
     def getTrackFlags(self, track):
+        """
+          Get track flags.
+          track (int)
+            Track to fetch information from.
+          Returns a bitfield (See TRACK_FLAG_* constants).
+        """
         query = self.formatQuery('1806 01201001 %w ff00 00010008', track)
         reply = self.send_query(query)
         return self.scanQuery(reply, '1806 01201001 %?%? 10 00 00010008 %b') \
                [0]
 
     def getDiscCapacity(self):
+        """
+          Get disc capacity.
+          Returns a list of 3 lists of 4 elements each (see getTrackLength).
+          The first list is the recorded duration.
+          The second list is the total disc duration (*).
+          The third list is the available disc duration (*).
+          (*): This result depends on current recording parameters.
+        """
         query = self.formatQuery('1806 02101000 3080 0300 ff00 00000000')
         reply = self.send_query(query)
         raw_result = self.scanQuery(reply, '1806 02101000 3080 0300 1000 ' \
@@ -588,6 +834,10 @@ class NetMDInterface(object):
         return result
 
     def getRecordingParameters(self):
+        """
+          Get the current recording parameters.
+          See getTrackEncoding.
+        """
         query = self.formatQuery('1809 8001 0330 8801 0030 8805 0030 8807 ' \
                                  '00 ff00 00000000')
         reply = self.send_query(query)
@@ -596,6 +846,14 @@ class NetMDInterface(object):
                               '0110 %b %b 4000')
 
     def saveTrackToFile(self, track, outfile_name):
+        """
+          Digitaly dump a track to file.
+          This is only available on MZ-RH1.
+          track (int)
+            Track to extract.
+          outfile_name (str)
+            Path of file to save extracted data in.
+        """
         track += 1
         query = self.formatQuery('1800 080046 f003010330 ff00 1001 %w', track)
         reply = self.send_query(query)
@@ -604,5 +862,4 @@ class NetMDInterface(object):
         self.net_md.readBulkToFile(length, open(outfile_name, 'w'))
         reply = self.readReply()
         self.scanQuery(reply, '1800 080046 f003010330 0000 1001 %?%? 0000')
-        return buffer
 

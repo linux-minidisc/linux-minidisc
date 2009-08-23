@@ -10,7 +10,7 @@ def main(bus=None, device_address=None, ext='ogg', track_range=None):
                                    device_address=device_address):
         md_iface = libnetmd.NetMDInterface(md)
         try:
-            MDDump(md, ext, track_range)
+            MDDump(md_iface, ext, track_range)
         finally:
             md_iface.stop()
 
@@ -24,7 +24,6 @@ def getTrackList(md_iface, track_range):
             max_track = track_count - 1
         assert max_track < track_count
         assert min_track < track_count
-        assert min_track < max_track
         track_list = xrange(min_track, max_track + 1)
     elif isinstance(track_range, int):
         assert track_range < track_count
@@ -34,8 +33,7 @@ def getTrackList(md_iface, track_range):
     for track in track_list:
         hour, minute, second, sample = md_iface.getTrackLength(track)
         codec, channel_count = md_iface.getTrackEncoding(track)
-        if channel_count == 0:
-            channel_count = 2
+        channel_count = libnetmd.CHANNEL_COUNT_DICT[channel_count]
         ascii_title = md_iface.getTrackTitle(track)
         wchar_title = md_iface.getTrackTitle(track, True).decode('shift_jis')
         title = wchar_title or ascii_title
@@ -45,29 +43,32 @@ def getTrackList(md_iface, track_range):
                 title))
     return result
 
-def MDDump(md, ext, track_range):
-    md_iface = libnetmd.NetMDInterface(md)
+def MDDump(md_iface, ext, track_range):
     ascii_title = md_iface.getDiscTitle()
     wchar_title = md_iface.getDiscTitle(True).decode('shift_jis')
     disc_title = wchar_title or ascii_title
     print 'Storing in', disc_title
     if not os.path.exists(disc_title):
         os.mkdir(disc_title)
-    md_iface.play()
-    md_iface.pause()
     for track, (hour, minute, second, sample), channels, title in \
         getTrackList(md_iface, track_range):
-        md_iface.gotoTrack(track)
-        print 'Waiting for MD...'
-        while md_iface.getPosition() != [track, 0, 0, 0, 1]:
-            sleep(1)
-        md_iface.play()
-        while md_iface.getPosition()[3] < 2:
-            sleep(0.5)
-        md_iface.gotoTrack(track)
+
         duration = '%02i:%02i:%02i.%03i' % (hour, minute, second, sample/.512)
         filename = '%02i - %s.%s' % (track + 1, title, ext)
         print 'Recording', filename, '(', duration, ')'
+        md_iface.gotoTrack(track)
+        # Attemp to reduce the MD play delay by...
+        print 'Waiting for MD...'
+        # Waiting for the seek to complete...
+        while md_iface.getPosition() != [track, 0, 0, 0, 1]:
+            sleep(1)
+        # And waiting for the play to actualy begin.
+        md_iface.play()
+        while md_iface.getPosition() < [track, 0, 0, 1, 1]:
+            sleep(0.5)
+        # Pause and go back to track beginning.
+        md_iface.pause()
+        md_iface.gotoTrack(track)
         pid = os.fork()
         if pid == 0:
             os.execlp('sox', 'sox',
@@ -80,7 +81,7 @@ def MDDump(md, ext, track_range):
             )
         else:
             md_iface.play()
-            sleep(((hour * 60) + minute * 60) + second)
+            sleep(((hour * 60 + minute) * 60) + second)
             while md_iface.getPosition()[0] == track:
                 sleep(1)
             md_iface.pause()
@@ -113,6 +114,7 @@ if __name__ == '__main__':
                 end = None
             else:
                 end = int(end) - 1
+                assert begin < end
             track_range = (begin, end)
         else:
             track_range = int(track_range) - 1
