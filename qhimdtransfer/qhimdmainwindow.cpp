@@ -31,9 +31,30 @@ void QHiMDMainWindow::dumpmp3(struct himd * himd, int trknum, QString file)
     }
     if(status.status != HIMD_STATUS_AUDIO_EOF)
         fprintf(stderr,"Error reading MP3 data: %s\n", status.statusmsg);
+
 clean:
     f.close();
     himd_mp3stream_close(&str);
+}
+
+static inline TagLib::String QStringToTagString(const QString & s)
+{
+    return TagLib::String(s.toUtf8().data(), TagLib::String::UTF8);
+}
+
+void QHiMDMainWindow::addid3tag(QString title, QString artist, QString album, QString file)
+{
+#ifdef Q_OS_WIN
+    TagLib::FileRef f(file.toStdWString().c_str());
+#else
+    TagLib::FileRef f(file.toUtf8().data());
+#endif
+    TagLib::Tag *t = f.tag();
+    t->setTitle(QStringToTagString(title));
+    t->setArtist(QStringToTagString(artist));
+    t->setAlbum(QStringToTagString(album));
+    t->setComment("*** imported from HiMD via QHiMDTransfer ***");
+    f.file()->save();
 }
 
 void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
@@ -146,8 +167,11 @@ void QHiMDMainWindow::on_action_Upload_triggered()
 
     for(i = 0; i < tracks.size(); i++) {
         if (tracks[i]->text(5) == "MPEG")
+        {
             dumpmp3 (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".mp3"));
-        else if (tracks[i]->text(5) == "LPCM")
+            addid3tag (tracks[i]->text(1),tracks[i]->text(2),tracks[i]->text(3), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".mp3"));
+        }
+            else if (tracks[i]->text(5) == "LPCM")
             dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".wav"));
     }
 }

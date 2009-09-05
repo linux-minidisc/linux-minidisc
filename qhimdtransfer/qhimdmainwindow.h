@@ -6,6 +6,11 @@
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
 #include "../libhimd/himd.h"
+#include <tlist.h>
+#include <fileref.h>
+#include <tfile.h>
+#include <tag.h>
+
 extern "C" {
 #include <sox.h>
 }
@@ -30,6 +35,7 @@ private:
     QHiMDAboutDialog * aboutDialog;
     QHiMDFormatDialog * formatDialog;
     void dumpmp3(struct himd * himd, int trknum, QString file);
+    void addid3tag(QString title, QString artist, QString album, QString file);
     void dumppcm(struct himd * himd, int trknum, QString file);
     void pcmaddheader(QString file);
 
