@@ -50,6 +50,7 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
                           _("Track %d is not present on disc"), idx);
         return -1;
     }
+    t->ekbnum = beword32(trackbuffer+4);
     t->title = beword16(trackbuffer+8);
     t->artist = beword16(trackbuffer+10);
     t->album = beword16(trackbuffer+12);

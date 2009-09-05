@@ -75,7 +75,7 @@ void himd_trackdump(struct himd * himd, int verbose)
                     }
                 }
                 printf("     Contend ID: %s\n", hexdump(t.contentid, 20));
-                printf("     Key: %s; MAC: %s\n", hexdump(t.key, 8), hexdump(t.mac, 8));
+                printf("     Key: %s (EKB %08x); MAC: %s\n", hexdump(t.key, 8), t.ekbnum, hexdump(t.mac, 8));
             }
         }
     }
