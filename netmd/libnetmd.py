@@ -827,7 +827,7 @@ class NetMDInterface(object):
         for offset in xrange(3):
             offset *= 4
             result.append([
-                BCD2int(raw_result[offset + 0], 2),
+                BCD2int(raw_result[offset + 0]),
                 BCD2int(raw_result[offset + 1]),
                 BCD2int(raw_result[offset + 2]),
                 BCD2int(raw_result[offset + 3])])
