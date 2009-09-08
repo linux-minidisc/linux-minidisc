@@ -8,6 +8,10 @@ def dump(data):
         result = repr(data)
     return result
 
+def defaultprogress(current, total):
+    print 'Done: %x/%x (%.02f%%)' % (current, total,
+                                     current/float(total) * 100)
+
 KNOWN_USB_ID_SET = frozenset([
     (0x054c, 0x0075), # Sony MZ-N1 
     (0x054c, 0x0080), # Sony LAM-1 
@@ -145,7 +149,7 @@ class NetMD(object):
         self.readBulkToFile(length, result)
         return result.getvalue()
 
-    def readBulkToFile(self, length, outfile, chunk_size=0x10000):
+    def readBulkToFile(self, length, outfile, chunk_size=0x10000, callback=defaultprogress):
         """
           Read bulk data from device, and write it to a file.
           length (int)
@@ -161,8 +165,7 @@ class NetMD(object):
                 min((length - done), chunk_size))
             done += len(received)
             outfile.write(received)
-            print 'Done: %x/%x (%.02f%%)' % (done, length,
-                                             done/float(length) * 100)
+            callback(done, length)
 
     def writeBulk(self, data):
         """
@@ -851,7 +854,7 @@ class NetMDInterface(object):
                               '8807 00 1000 000e0000 000c 8805 0008 80e0 ' \
                               '0110 %b %b 4000')
 
-    def saveTrackToFile(self, track, outfile_name):
+    def saveTrackToStream(self, track, outstream, callback = defaultprogress):
         """
           Digitaly dump a track to file.
           This is only available on MZ-RH1.
@@ -865,7 +868,7 @@ class NetMDInterface(object):
         reply = self.send_query(query)
         length = self.scanQuery(reply, '1800 080046 f003010330 0000 1001 ' \
                                 '%?%? 86 %d')[0]
-        self.net_md.readBulkToFile(length, open(outfile_name, 'w'))
+        self.net_md.readBulkToFile(length, outstream, callback=callback)
         reply = self.readReply()
         self.scanQuery(reply, '1800 080046 f003010330 0000 1001 %?%? 0000')
 
