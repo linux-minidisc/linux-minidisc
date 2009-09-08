@@ -627,10 +627,16 @@ class NetMDInterface(object):
             If True, return the content of wchar title.
             If False, return the ASCII title.
         """
-        raw_title = self._getDiscTitle(wchar=wchar)
-        title = raw_title.split('//')[0]
-        if ';' in title and title[0] == '0':
-            title = title.split(';')[-1]
+        title = self._getDiscTitle(wchar=wchar)
+        if title.endswith('//'):
+            # this is a grouped minidisc which may have a disc title
+            # The disc title is always stored in the first entry and
+            # applied to the imaginary track 0
+            firstentry = title.split('//')[0]
+            if firstentry.startswith('0;'):
+                title = firstentry[2:len(firstentry)];
+            else:
+                title = '';
         return title
 
     def getTrackGroupDict(self):
