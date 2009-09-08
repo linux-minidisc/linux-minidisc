@@ -8,9 +8,13 @@ def dump(data):
         result = repr(data)
     return result
 
-def defaultprogress(current, total):
-    print 'Done: %x/%x (%.02f%%)' % (current, total,
-                                     current/float(total) * 100)
+class defaultUploadEvents:
+    def progress(self, current):
+        print 'Done: %x/%x (%.02f%%)' % (current, self.total,
+                                         current/float(self.total) * 100)
+    def trackinfo(self, frames, bytes, format):
+        self.total = bytes;
+
 
 KNOWN_USB_ID_SET = frozenset([
     (0x054c, 0x0075), # Sony MZ-N1 
@@ -149,7 +153,7 @@ class NetMD(object):
         self.readBulkToFile(length, result)
         return result.getvalue()
 
-    def readBulkToFile(self, length, outfile, chunk_size=0x10000, callback=defaultprogress):
+    def readBulkToFile(self, length, outfile, chunk_size=0x10000, callback=lambda(a):None):
         """
           Read bulk data from device, and write it to a file.
           length (int)
@@ -165,7 +169,7 @@ class NetMD(object):
                 min((length - done), chunk_size))
             done += len(received)
             outfile.write(received)
-            callback(done, length)
+            callback(done)
 
     def writeBulk(self, data):
         """
@@ -854,7 +858,7 @@ class NetMDInterface(object):
                               '8807 00 1000 000e0000 000c 8805 0008 80e0 ' \
                               '0110 %b %b 4000')
 
-    def saveTrackToStream(self, track, outstream, callback = defaultprogress):
+    def saveTrackToStream(self, track, outstream, events=defaultUploadEvents()):
         """
           Digitaly dump a track to file.
           This is only available on MZ-RH1.
@@ -866,9 +870,10 @@ class NetMDInterface(object):
         track += 1
         query = self.formatQuery('1800 080046 f003010330 ff00 1001 %w', track)
         reply = self.send_query(query)
-        length = self.scanQuery(reply, '1800 080046 f003010330 0000 1001 ' \
-                                '%?%? 86 %d')[0]
-        self.net_md.readBulkToFile(length, outstream, callback=callback)
+        (frames,codec,length) = self.scanQuery(reply, '1800 080046 f003010330 0000 1001 ' \
+                                '%w %b %d')
+        events.trackinfo(frames, length, codec);
+        self.net_md.readBulkToFile(length, outstream, callback=events.progress)
         reply = self.readReply()
         self.scanQuery(reply, '1800 080046 f003010330 0000 1001 %?%? 0000')
 
