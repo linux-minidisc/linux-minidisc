@@ -47,9 +47,13 @@ def MDDump(md_iface, ext, track_range):
     ascii_title = md_iface.getDiscTitle()
     wchar_title = md_iface.getDiscTitle(True).decode('shift_jis')
     disc_title = wchar_title or ascii_title
-    print 'Storing in', disc_title
-    if not os.path.exists(disc_title):
-        os.mkdir(disc_title)
+    if disc_title == '':
+        directory = '.'
+    else:
+        directory = disc_title;
+    print 'Storing in ', directory
+    if not os.path.exists(directory):
+        os.mkdir(directory)
     for track, (hour, minute, second, sample), channels, title in \
         getTrackList(md_iface, track_range):
 
@@ -75,7 +79,7 @@ def MDDump(md_iface, ext, track_range):
                       '-d',
                       '-S',
                       '-c', channels,
-                      '%s/%s' % (disc_title, filename),
+                      '%s/%s' % (directory, filename),
                       'silence', '1', '0.1', '0.1%',
                       'trim', '0', duration,
             )
