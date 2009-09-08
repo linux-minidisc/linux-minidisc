@@ -13,6 +13,10 @@ def main(bus=None, device_address=None, track_range=None):
         MDDump(md_iface, track_range)
 
 def getTrackList(md_iface, track_range):
+    channel_count_dict = {
+        libnetmd.CHANNELS_MONO: 1,
+        libnetmd.CHANNELS_STEREO: 2,
+    }
     result = []
     append = result.append
     track_count = md_iface.getTrackCount()
@@ -37,22 +41,22 @@ def getTrackList(md_iface, track_range):
             wchar_title = md_iface.getTrackTitle(track, True).decode('shift_jis')
             title = wchar_title or ascii_title
             append((track,
-                    str(channel_count),
+                    channel_count,
                     title))
     return result
 
 def formatAeaHeader(name = '', channels = 2, soundgroups = 1, groupstart = 0, encrypted = 0, flags='\0\0\0\0\0\0\0\0'):
     return pack("2048s", # pad to header size
-                pack("<I256si" #"Bx8sIbI"
+                pack("<I256siBx8sIbI"
                                       ,2048,   # header size
                                       name,
                                       soundgroups,
-                                      #channels,
-                                      #flags,
-                                      #0,      # Should be time of recordin in
+                                      channels,
+                                      flags,
+                                      0,      # Should be time of recordin in
                                               # 32 bit DOS format.
-                                      #encrypted,
-                                      #groupstart
+                                      encrypted,
+                                      groupstart
                                       ))
 
 def MDDump(md_iface, track_range):
