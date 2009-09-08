@@ -64,7 +64,8 @@ def MDDump(md_iface, ext, track_range):
         # Attemp to reduce the MD play delay by...
         print 'Waiting for MD...'
         # Waiting for the seek to complete...
-        while md_iface.getPosition() != [track, 0, 0, 0, 1]:
+        while md_iface.getPosition() != [track, 0, 0, 0, 1] and 
+              md_iface.getPosition() != [track, 0, 0, 0, 2]:
             sleep(1)
         # And waiting for the play to actualy begin.
         md_iface.play()
