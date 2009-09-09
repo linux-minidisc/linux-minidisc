@@ -79,14 +79,15 @@ def getTrackList(md_iface, track_range):
                     title))
     return result
 
-def formatAeaHeader(name = '', channels = 2, soundgroups = 1, groupstart = 0, encrypted = 0, flags='\0\0\0\0\0\0\0\0'):
+def formatAeaHeader(name = '', channels = 2, soundgroups = 1, groupstart = 0, encrypted = 0, flags=[0,0,0,0,0,0,0,0]):
     return pack("2048s", # pad to header size
-                pack("<I256siBx8sIbI"
+                pack("<I256siBx8IIII"
                                       ,2048,   # header size
                                       name,
                                       soundgroups,
                                       channels,
-                                      flags,
+                                      flags[0],flags[1],flags[2],flags[3],
+                                      flags[4],flags[5],flags[6],flags[7],
                                       0,      # Should be time of recordin in
                                               # 32 bit DOS format.
                                       encrypted,
