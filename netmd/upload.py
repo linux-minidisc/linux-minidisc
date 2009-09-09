@@ -9,8 +9,34 @@ RIFF_FORMAT_TAG_ATRAC3 = 0x270
 
 UPLOAD_FORMAT_LP4 = 0x80
 UPLOAD_FORMAT_LP2 = 0x82
-UPLOAD_FORMAT_SP = 0x86
+UPLOAD_FORMAT_SP_MONO = 0x84
+UPLOAD_FORMAT_SP_STEREO = 0x86
 
+# LP2/LP4 is always stereo on minidisc.
+def formatWavHeader(formatbyte, length):
+    if format == UPLOAD_FORMAT_LP4:
+        bytesperframe = 96
+        jointstereo = 1
+    elif format == UPLOAD_FORMAT_LP2:
+        bytesperframe = 192
+        jointstereo = 0
+    else:
+        raise ValueError, 'unexpected format byte %02x' % format
+    bytespersecond = bytesperframe * 512 / 44100
+    return pack("<4sI4s"     # "RIFF" header
+                "<4sIHHIIHH" # "fmt " chunk - standard part
+                "<HHIHHHH"   # "fmt " chunk - ATRAC extension
+                "<4sI",      # "data" chunk header
+                
+                'RIFF', bytes+60, 'WAVE',
+                
+                'fmt ',32, RIFF_FORMAT_TAG_ATRAC3, 2, 44100, 
+                bytespersecond, 2 * bytesperframe, 0,
+                
+                14, 1, bytesperframe, jointstereo, jointstereo, 1, 0,
+                
+                'data', bytes)
+                
 # This creates an ffmpeg compatible WAV header.
 class wavUploadEvents(libnetmd.defaultUploadEvents):
     def __init__(self, stream, channels):
@@ -18,25 +44,8 @@ class wavUploadEvents(libnetmd.defaultUploadEvents):
         self.channels = channels
     
     def trackinfo(self, frames, bytes, format):
-        print 'Format byte', format
-        if format == UPLOAD_FORMAT_LP4:
-            bytesperframe = 96
-            jointstereo = 1
-        else:
-            bytesperframe = 192
-            jointstereo = 0
-        bytespersecond = bytesperframe * 512 / 44100
         # RIFF header
-        self.stream.write(pack("<4sI4s", 'RIFF', bytes+60, 'WAVE'))
-        # standard fmt chunk
-        self.stream.write(pack("<4sIHHIIHH", 'fmt ',32, RIFF_FORMAT_TAG_ATRAC3,
-                          self.channels, 44100, bytespersecond, 
-                          self.channels * bytesperframe, 0))
-        # ATRAC specific extra data
-        self.stream.write(pack("<HHIHHHH", 14, 1, bytesperframe,
-                                           jointstereo, jointstereo, 1, 0))
-        # data chunk header
-        self.stream.write(pack("<4sI", 'data', bytes))
+        self.stream.write(formatWavHeader(format, bytes))
         libnetmd.defaultUploadEvents.trackinfo(self, frames, bytes, format)
 
 def main(bus=None, device_address=None, track_range=None):
@@ -94,6 +103,56 @@ def formatAeaHeader(name = '', channels = 2, soundgroups = 1, groupstart = 0, en
                                       groupstart
                                       ))
 
+class aeaUploadEvents(libnetmd.defaultUploadEvents):
+    def __init__(self, stream, channels, name):
+        self.stream = stream
+        self.channels = channels
+        self.name = name
+    
+    def trackinfo(self, frames, bytes, format):
+        if not ((format == UPLOAD_FORMAT_SP_STEREO and self.channels == 2) or \
+                (format == UPLOAD_FORMAT_SP_MONO   and self.channels == 1)):
+            raise ValueError, 'Unexpected format byte %02x for %d channels' % \
+                                 self.format, self.channels
+        self.stream.write(formatAeaHeader(name = self.name, soundgroups=frames, channels=self.channels))
+        libnetmd.defaultUploadEvents.trackinfo(self, frames, bytes, format)
+
+# LP2/LP4 is always stereo on minidisc.
+def formatWavHeader(format, bytes):
+    if format == UPLOAD_FORMAT_LP4:
+        bytesperframe = 96
+        jointstereo = 1
+    elif format == UPLOAD_FORMAT_LP2:
+        bytesperframe = 192
+        jointstereo = 0
+    else:
+        raise ValueError, 'unexpected format byte %02x' % format
+    bytespersecond = bytesperframe * 44100 / 512
+    return pack("<4sI4s"     # "RIFF" header
+                "4sIHHIIHH"  # "fmt " chunk - standard part
+                "HHIHHHH"    # "fmt " chunk - ATRAC extension
+                "4sI",       # "data" chunk header
+                
+                'RIFF', bytes+60, 'WAVE',
+                
+                'fmt ',32, RIFF_FORMAT_TAG_ATRAC3, 2, 44100, 
+                bytespersecond, 2 * bytesperframe, 0,
+                
+                14, 1, bytesperframe, jointstereo, jointstereo, 1, 0,
+                
+                'data', bytes)
+                
+# This creates an ffmpeg compatible WAV header.
+class wavUploadEvents(libnetmd.defaultUploadEvents):
+    def __init__(self, stream):
+        self.stream = stream
+    
+    def trackinfo(self, frames, bytes, format):
+        print 'Format byte', format
+        # RIFF header
+        self.stream.write(formatWavHeader(format, bytes))
+        libnetmd.defaultUploadEvents.trackinfo(self, frames, bytes, format)
+
 def MDDump(md_iface, track_range):
     ascii_title = md_iface.getDiscTitle()
     wchar_title = md_iface.getDiscTitle(True).decode('shift_jis')
@@ -116,10 +175,9 @@ def MDDump(md_iface, track_range):
         print 'Uploading', filename
         aeafile = open(filename,"w")
         if codec == libnetmd.ENCODING_SP:
-            aeafile.write(formatAeaHeader(channels=channels))
-            md_iface.saveTrackToStream(track, aeafile)
+            md_iface.saveTrackToStream(track, aeafile,events=aeaUploadEvents(aeafile, channels, title))
         else:
-            md_iface.saveTrackToStream(track, aeafile,events=wavUploadEvents(aeafile, channels))
+            md_iface.saveTrackToStream(track, aeafile,events=wavUploadEvents(aeafile))
 
     # TODO: generate playlists based on groups defined on the MD
     print 'Finished.'
