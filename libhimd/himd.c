@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <errno.h>
 
+#define G_LOG_DOMAIN "HiMD"
 #include <glib.h>
 #include <glib/gprintf.h>
 
@@ -32,7 +33,7 @@ void set_status_printf(struct himderrinfo * status, enum himdstatus code, const 
     }
 }
 
-static int scanfortrkidx(GDir * dir)
+static int scanforatdata(GDir * dir)
 {
     const char * hmafile;
     /* I don't use g_pattern_* stuff, because they can't be case insensitive */
@@ -40,15 +41,17 @@ static int scanfortrkidx(GDir * dir)
     int curdatanum;
     while((hmafile = g_dir_read_name(dir)) != NULL)
     {
-        /* trkidxNN.hma - should be only one of them */
-        if(g_strncasecmp(hmafile,"trkidx",6) == 0 &&
+        /* atdataNN.hma - should be only one of them */
+        if(g_strncasecmp(hmafile,"atdata0",7) == 0 &&
            strlen(hmafile) == 12 &&
-           isxdigit(hmafile[6]) &&
            isxdigit(hmafile[7]) &&
            g_strncasecmp(hmafile+8,".hma",4) == 0 &&
            sscanf(hmafile+6,"%x",&curdatanum) == 1 &&
            curdatanum > maxdatanum)
+        {
+            g_warning("Found two atdata files: %02x and %02x\n",curdatanum,maxdatanum);
             maxdatanum = curdatanum;
+        }
     }
     return maxdatanum;
 }
@@ -110,7 +113,7 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
         return -1;
     }
 
-    himd->datanum = scanfortrkidx(dir);
+    himd->datanum = scanforatdata(dir);
     g_dir_close(dir);
     if(himd->datanum == -1)
     {
