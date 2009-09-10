@@ -49,7 +49,8 @@ static int scanforatdata(GDir * dir)
            sscanf(hmafile+6,"%x",&curdatanum) == 1 &&
            curdatanum > maxdatanum)
         {
-            g_warning("Found two atdata files: %02x and %02x\n",curdatanum,maxdatanum);
+            if(maxdatanum != -1)
+                g_warning("Found two atdata files: %02x and %02x\n",curdatanum,maxdatanum);
             maxdatanum = curdatanum;
         }
     }
