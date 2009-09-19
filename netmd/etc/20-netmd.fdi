@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?> <!-- -*- SGML -*- -->
+<deviceinfo version="0.2">
+  <device>
+    <match key="info.subsystem" string="usb">
+      <match key="@info.parent:info.product" string="Net MD">
+        <match key="info.capabilities" contains_not="portable_audio_player">
+          <append key="info.capabilities" type="strlist">portable_audio_player</append>
+        </match>
+        <append key="portable_audio_player.access_method.protocols" type="strlist">netmd</append>
+        <append key="portable_audio_player.output_formats" type="strlist">audio/vnd.sony.atrac3</append>
+        <append key="portable_audio_player.inputformats" type="strlist">audio/vnd.sony.atrac3</append>
+      </match>
+    </match>
+  </device>
+</deviceinfo>

@@ -1,0 +1,8 @@
+This directory contains files that might help interoperation between your
+system and the netmd stuff.
+
+20-netmd.fdi:
+  Place to /usr/share/hal/fdi/information/20thirdparty/ to make the NetMD
+  devices known as portable audio player. On recent distributions this will
+  grant the user of the currently active session access to the device
+  without being root.
