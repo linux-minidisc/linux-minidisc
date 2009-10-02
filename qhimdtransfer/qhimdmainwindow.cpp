@@ -157,6 +157,7 @@ void QHiMDMainWindow::on_action_Upload_triggered()
     QString UploadDirectory;
     QList<QTreeWidgetItem *> tracks;
     int i;
+    QString filename;
 
     UploadDirectory = QFileDialog::getExistingDirectory(this,
                                                  "Select directory for Upload",
@@ -166,14 +167,19 @@ void QHiMDMainWindow::on_action_Upload_triggered()
     tracks = ui->TrackList->selectedItems();
 
     for(i = 0; i < tracks.size(); i++) {
+        if(tracks[i]->text(1) == 0)
+            filename = QString("Track ")+tracks[i]->text(0);
+        else
+            filename = tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1);
+
         if (tracks[i]->text(5) == "MPEG")
         {
-            dumpmp3 (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".mp3"));
-            addid3tag (tracks[i]->text(1),tracks[i]->text(2),tracks[i]->text(3), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".mp3"));
+            dumpmp3 (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".mp3"));
+            addid3tag (tracks[i]->text(1),tracks[i]->text(2),tracks[i]->text(3), UploadDirectory+QString("/")+filename+QString(".mp3"));
         }
-            else if (tracks[i]->text(5) == "LPCM")
-            dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1)+QString(".wav"));
-    }
+        else if (tracks[i]->text(5) == "LPCM")
+            dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".wav"));
+	}
 }
 
 void QHiMDMainWindow::on_action_Quit_triggered()
