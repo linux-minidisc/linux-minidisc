@@ -67,7 +67,7 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     return 0;
 }
 
-const char * himd_get_codec_name(struct trackinfo * track)
+const char * himd_get_codec_name(const struct trackinfo * track)
 {
     static char buffer[5];
     if(track->codec_id == CODEC_LPCM)
@@ -81,6 +81,34 @@ const char * himd_get_codec_name(struct trackinfo * track)
         return "MPEG";
     sprintf(buffer,"%4d",track->codec_id);
     return buffer;
+}
+
+unsigned int himd_trackinfo_framesize(const struct trackinfo * track)
+{
+    if(track->codec_id == CODEC_LPCM)
+        return HIMD_LPCM_FRAMESIZE;
+    if(track->codec_id == CODEC_ATRAC3)
+        return 8 * track->codecinfo[2];
+    if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG &&
+         (track->codecinfo[0] & 3) == 0)
+        return 8 * (track->codecinfo[2] + 1);
+    /* MP3 tracks don't have a fixed frame size, other track types unknown */
+    return 0;
+}
+
+unsigned int himd_trackinfo_framesperblock(const struct trackinfo * track)
+{
+    int framesize = himd_trackinfo_framesize(track);
+    if(!framesize)
+        return TRACK_IS_MPEG;
+
+    if(track->codec_id == CODEC_LPCM)
+        return 0x3FC0 / HIMD_LPCM_FRAMESIZE;
+    else
+        return 0x3FBF / framesize;
+
+    /* other track types unknown */
+    return 0;
 }
 
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status)

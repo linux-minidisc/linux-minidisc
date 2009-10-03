@@ -8,7 +8,7 @@
 
 #define _(x) (x)
 
-int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct himd_blockstream * stream, struct himderrinfo * status)
+int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, unsigned int frags_per_block, struct himd_blockstream * stream, struct himderrinfo * status)
 {
     struct fraginfo frag;
     unsigned int fragcount, fragnum, blockcount;
@@ -63,6 +63,7 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct him
     }
 
     stream->curblockno = stream->frags[0].firstblock;
+    stream->frames_per_block = frags_per_block;
     
     return 0;
 }
@@ -71,6 +72,11 @@ void himd_blockstream_close(struct himd_blockstream * stream)
 {
     fclose(stream->atdata);
     free(stream->frags);
+}
+
+static inline int is_mpeg(struct himd_blockstream * stream)
+{
+    return stream->frames_per_block == TRACK_IS_MPEG;
 }
 
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
@@ -111,7 +117,12 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
     if(stream->curblockno == stream->frags[stream->curfragno].lastblock)
     {
         if(lastframe)
-            *lastframe = stream->frags[stream->curfragno].lastframe - 1;
+        {
+            if(is_mpeg(stream))
+                *lastframe = stream->frags[stream->curfragno].lastframe - 1;
+            else
+                *lastframe = stream->frags[stream->curfragno].lastframe;
+        }
         stream->curfragno++;
         if(stream->curfragno < stream->fragcount)
             stream->curblockno = stream->frags[stream->curfragno].firstblock;
@@ -119,7 +130,12 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
     else
     {
         if(lastframe)
-            *lastframe = beword16(block+4) - 1;
+        {
+            if(is_mpeg(stream))
+                *lastframe = beword16(block+4) - 1;
+            else
+                *lastframe = stream->frames_per_block - 1;
+        }
         stream->curblockno++;
     }
     return 0;
@@ -151,7 +167,7 @@ int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp
     if(himd_obtain_mp3key(himd, trackno, &stream->key, status) < 0)
         return -1;
 
-    if(himd_blockstream_open(himd, trkinfo.firstfrag, &stream->stream, status) < 0)
+    if(himd_blockstream_open(himd, trkinfo.firstfrag, TRACK_IS_MPEG, &stream->stream, status) < 0)
         return -1;
 
     stream->frames = 0;
@@ -307,7 +323,7 @@ int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pc
                           _("Track %d uses strong encryption"), trackno);
         return -1;
     }
-    if(himd_blockstream_open(himd, trkinfo.firstfrag, &stream->stream, status) < 0)
+    if(himd_blockstream_open(himd, trkinfo.firstfrag, 0xFF, &stream->stream, status) < 0)
         return -1;
 
     if(descrypt_open(&stream->cryptinfo, status) < 0)
@@ -315,19 +331,21 @@ int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pc
         himd_blockstream_close(&stream->stream);
         return -1;
     }
+    stream->framesize = HIMD_LPCM_FRAMESIZE;
     return 0;
 }
 
 int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
 {
-    if(himd_blockstream_read(&stream->stream, stream->blockbuf, NULL, NULL, status) < 0)
+    unsigned int firstframe, lastframe;
+    if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe, status) < 0)
         return -1;
     if(descrypt_decrypt(stream->cryptinfo, stream->blockbuf, 0x3fc0, status) < 0)
         return -1;
     if(frameout)
-        *frameout = stream->blockbuf+32;
+        *frameout = stream->blockbuf+32 + firstframe * stream->framesize;
     if(lenout)
-        *lenout = 0x3fc0;
+        *lenout = stream->framesize * ((lastframe-firstframe)+1);
     return 0;
 }
 

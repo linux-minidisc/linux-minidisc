@@ -30,6 +30,10 @@ extern "C" {
 #define HIMD_FIRST_STRING 1
 #define HIMD_LAST_STRING 4095
 
+#define HIMD_LPCM_FRAMESIZE 64
+#define HIMD_ATRAC3_SAMPLES_PER_FRAME 1024
+#define HIMD_ATRAC3P_SAMPLES_PER_FRAME 2048
+
 enum himdstatus { HIMD_OK,
                   HIMD_STATUS_AUDIO_EOF,
                   HIMD_ERROR_DISABLED_FEATURE,
@@ -113,7 +117,9 @@ FILE * himd_open_file(struct himd * himd, const char * fileid);
 
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track, struct himderrinfo * status);
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status);
-const char * himd_get_codec_name(struct trackinfo * t);
+const char * himd_get_codec_name(const struct trackinfo * t);
+unsigned int himd_trackinfo_framesize(const struct trackinfo * track);
+unsigned int himd_trackinfo_framesperblock(const struct trackinfo * track);
 
 typedef unsigned char mp3key[4];
 int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himderrinfo * status);
@@ -128,10 +134,12 @@ struct himd_blockstream {
     unsigned int curfragno;
     unsigned int fragcount;
     unsigned int blockcount;
+    unsigned int frames_per_block;
 };
 
+#define TRACK_IS_MPEG 0
 
-int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, struct himd_blockstream * stream, struct himderrinfo * status);
+int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, unsigned int frames_per_block, struct himd_blockstream * stream, struct himderrinfo * status);
 void himd_blockstream_close(struct himd_blockstream * stream);
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
                             unsigned int * firstframe, unsigned int * lastframe, struct himderrinfo * status);
@@ -155,6 +163,7 @@ struct himd_pcmstream {
     struct himd_blockstream stream;
     void * cryptinfo;
     unsigned char blockbuf[16384];
+    int framesize;
 };
 
 int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status);

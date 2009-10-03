@@ -147,7 +147,7 @@ void himd_dumptrack(struct himd * himd, int trknum)
         fprintf(stderr, "Error obtaining track info: %s\n", status.statusmsg);
         return;
     }
-    if(himd_blockstream_open(himd, t.firstfrag, &str, &status) < 0)
+    if(himd_blockstream_open(himd, t.firstfrag, himd_trackinfo_framesperblock(&t), &str, &status) < 0)
     {
         fprintf(stderr, "Error opening stream %d: %s\n", t.firstfrag, status.statusmsg);
         return;
