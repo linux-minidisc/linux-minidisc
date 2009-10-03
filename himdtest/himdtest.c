@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "himd.h"
+#include "sony_oma.h"
 
 static const char * hexdump(unsigned char * input, int len)
 {
@@ -201,28 +202,61 @@ clean:
     himd_mp3stream_close(&str);
 }
 
-/* creates headerless PCM.
-   play with: play -t s2 -r 44100 -B -c2 stream.pcm
- */
-void himd_dumppcm(struct himd * himd, int trknum)
+
+int write_oma_header(FILE * f, const struct trackinfo * trkinfo)
 {
-    struct himd_pcmstream str;
+    char header[EA3_FORMAT_HEADER_SIZE];
+    make_ea3_format_header(header, trkinfo);
+
+    if(fwrite(header, sizeof header, 1, f) != 1)
+    {
+        perror("Writing OMA header");
+        return -1;
+    }
+    return 0;
+}
+
+/* For LPCM: creates headerless PCM
+             play with: play -t s2 -r 44100 -B -c2 stream.pcm
+   For ATRAC3/ATRAC3+: creates a .oma file (with ea3 tag header)
+             play with Sonic Stage (ffmpeg needs support of tagless files,
+                                    ffmpeg does not support ATRAC3+)
+ */
+void himd_dumpnonmp3(struct himd * himd, int trknum)
+{
+    struct himd_nonmp3stream str;
     struct himderrinfo status;
+    struct trackinfo trkinfo;
     FILE * strdumpf;
+    const char * filename = "stream.pcm";
     unsigned int len;
     const unsigned char * data;
-    strdumpf = fopen("stream.pcm","wb");
+    if(himd_get_track_info(himd, trknum, &trkinfo, &status) < 0)
+    {
+        fprintf(stderr, "Error obtaining track info: %s\n", status.statusmsg);
+        return;
+    }
+
+    if(trkinfo.codec_id != CODEC_LPCM)
+        filename = "stream.oma";
+
+    strdumpf = fopen(filename,"wb");
     if(!strdumpf)
     {
-        perror("Opening stream.pcm");
+        fprintf(stderr, "opening ");
+        perror(filename);
         return;
     }
-    if(himd_pcmstream_open(himd, trknum, &str, &status) < 0)
+    if(himd_nonmp3stream_open(himd, trknum, &str, &status) < 0)
     {
         fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
+        fclose(strdumpf);
         return;
     }
-    while(himd_pcmstream_read_frame(&str, &data, &len, &status) >= 0)
+    if(trkinfo.codec_id != CODEC_LPCM &&
+       write_oma_header(strdumpf, &trkinfo) < 0)
+        return;
+    while(himd_nonmp3stream_read_frame(&str, &data, &len, &status) >= 0)
     {
         if(fwrite(data,len,1,strdumpf) != 1)
         {
@@ -234,7 +268,7 @@ void himd_dumppcm(struct himd * himd, int trknum)
         fprintf(stderr,"Error reading PCM data: %s\n", status.statusmsg);
 clean:
     fclose(strdumpf);
-    himd_pcmstream_close(&str);
+    himd_nonmp3stream_close(&str);
 }
 
 int main(int argc, char ** argv)
@@ -279,11 +313,11 @@ int main(int argc, char ** argv)
         sscanf(argv[3], "%d", &idx);
         himd_dumpmp3(&h, idx);
     }
-    else if(strcmp(argv[2],"dumplpcm") == 0 && argc > 3)
+    else if(strcmp(argv[2],"dumpnonmp3") == 0 && argc > 3)
     {
         idx = 1;
         sscanf(argv[3], "%d", &idx);
-        himd_dumppcm(&h, idx);
+        himd_dumpnonmp3(&h, idx);
     }
 
     himd_close(&h);

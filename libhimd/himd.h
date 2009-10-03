@@ -159,16 +159,16 @@ void himd_mp3stream_close(struct himd_mp3stream * stream);
 
 #define HIMD_MAX_PCMFRAME_SAMPLES (0x3FC0/4)
 
-struct himd_pcmstream {
+struct himd_nonmp3stream {
     struct himd_blockstream stream;
     void * cryptinfo;
     unsigned char blockbuf[16384];
     int framesize;
 };
 
-int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status);
-int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status);
-void himd_pcmstream_close(struct himd_pcmstream * stream);
+int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd_nonmp3stream * stream, struct himderrinfo * status);
+int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status);
+void himd_nonmp3stream_close(struct himd_nonmp3stream * stream);
 
 
 #ifdef __cplusplus

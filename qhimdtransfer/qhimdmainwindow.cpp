@@ -3,6 +3,8 @@
 #include "qhimdaboutdialog.h"
 #include "qmessagebox.h"
 
+#include "sony_oma.h"
+
 void QHiMDMainWindow::dumpmp3(struct himd * himd, int trknum, QString file)
 {
     struct himd_mp3stream str;
@@ -57,9 +59,57 @@ void QHiMDMainWindow::addid3tag(QString title, QString artist, QString album, QS
     f.file()->save();
 }
 
+void QHiMDMainWindow::dumpoma(struct himd * himd, int trknum, QString file)
+{
+    struct himd_nonmp3stream str;
+    struct himderrinfo status;
+    struct trackinfo trkinf;
+    unsigned int len;
+    const unsigned char * data;
+    char header[EA3_FORMAT_HEADER_SIZE];
+    QFile f(file);
+
+    if(!f.open(QIODevice::ReadWrite))
+    {
+        perror("Error opening file for MP3-output");
+        return;
+    }
+    if(himd_get_track_info(himd, trknum, &trkinf, &status) < 0)
+    {
+        fprintf(stderr, "Can't get track info for track %d: %s\n", trknum, status.statusmsg);
+        return;
+    }
+    if(himd_nonmp3stream_open(himd, trknum, &str, &status) < 0)
+    {
+        fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
+        return;
+    }
+
+    make_ea3_format_header(header, &trkinf);
+    if(f.write(header, sizeof header) == -1)
+    {
+        perror("writing header");
+        goto clean;
+    }
+    while(himd_nonmp3stream_read_frame(&str, &data, &len, &status) >= 0)
+    {
+        if(f.write((const char*)data,len) == -1)
+        {
+            perror("writing dumped stream");
+            goto clean;
+        }
+    }
+    if(status.status != HIMD_STATUS_AUDIO_EOF)
+        fprintf(stderr,"Error reading MP3 data: %s\n", status.statusmsg);
+
+clean:
+    f.close();
+    himd_nonmp3stream_close(&str);
+}
+
 void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
 {
-    struct himd_pcmstream str;
+    struct himd_nonmp3stream str;
     struct himderrinfo status;
     unsigned int len, i;
     int left, right;
@@ -79,12 +129,12 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
         perror("Error opening file for LPCM-output");
         return;
     }
-    if(himd_pcmstream_open(himd, trknum, &str, &status) < 0)
+    if(himd_nonmp3stream_open(himd, trknum, &str, &status) < 0)
     {
         fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
         return;
     }
-    while(himd_pcmstream_read_frame(&str, &data, &len, &status) >= 0)
+    while(himd_nonmp3stream_read_frame(&str, &data, &len, &status) >= 0)
     {
       
       for(i = 0; i < len/4; i++) {
@@ -108,7 +158,7 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
         fprintf(stderr,"Error reading PCM data: %s\n", status.statusmsg);
 clean:
     sox_close(out);
-    himd_pcmstream_close(&str);
+    himd_nonmp3stream_close(&str);
 }
 
 QString get_locale_str(struct himd * himd, int idx)
@@ -179,7 +229,9 @@ void QHiMDMainWindow::on_action_Upload_triggered()
         }
         else if (tracks[i]->text(5) == "LPCM")
             dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".wav"));
-	}
+        else if (tracks[i]->text(5) == "AT3+" || tracks[i]->text(5) == "AT3 ")
+            dumpoma (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".oma"));
+    }
 }
 
 void QHiMDMainWindow::on_action_Quit_triggered()

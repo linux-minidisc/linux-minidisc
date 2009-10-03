@@ -299,7 +299,7 @@ void himd_mp3stream_close(struct himd_mp3stream * stream)
 #ifdef CONFIG_WITH_MCRYPT
 #include <string.h>
 
-int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status)
+int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd_nonmp3stream * stream, struct himderrinfo * status)
 {
     struct trackinfo trkinfo;
     static const unsigned char zerokey[] = {0,0,0,0,0,0,0,0};
@@ -311,10 +311,13 @@ int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pc
 
     if(himd_get_track_info(himd, trackno, &trkinfo, status) < 0)
         return -1;
-    if(trkinfo.codec_id != CODEC_LPCM)
+    if((trkinfo.codec_id != CODEC_LPCM) &&
+       (trkinfo.codec_id != CODEC_ATRAC3) &&
+       (trkinfo.codec_id != CODEC_ATRAC3PLUS_OR_MPEG ||
+                           (trkinfo.codecinfo[0] & 3) != 0))
     {
         set_status_printf(status, HIMD_ERROR_BAD_AUDIO_CODEC,
-                          _("Track %d does not contain PCM data"), trackno);
+                          _("Track %d does not contain PCM, ATRAC3 or ATRAC3+ data"), trackno);
         return -1;
     }
     if(memcmp(trkinfo.key, zerokey, 8) != 0)
@@ -323,7 +326,7 @@ int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pc
                           _("Track %d uses strong encryption"), trackno);
         return -1;
     }
-    if(himd_blockstream_open(himd, trkinfo.firstfrag, 0xFF, &stream->stream, status) < 0)
+    if(himd_blockstream_open(himd, trkinfo.firstfrag, himd_trackinfo_framesperblock(&trkinfo), &stream->stream, status) < 0)
         return -1;
 
     if(descrypt_open(&stream->cryptinfo, status) < 0)
@@ -331,16 +334,16 @@ int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pc
         himd_blockstream_close(&stream->stream);
         return -1;
     }
-    stream->framesize = HIMD_LPCM_FRAMESIZE;
+    stream->framesize = himd_trackinfo_framesize(&trkinfo);
     return 0;
 }
 
-int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
+int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
 {
     unsigned int firstframe, lastframe;
     if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe, status) < 0)
         return -1;
-    if(descrypt_decrypt(stream->cryptinfo, stream->blockbuf, 0x3fc0, status) < 0)
+    if(descrypt_decrypt(stream->cryptinfo, stream->blockbuf, stream->framesize * stream->stream.frames_per_block, status) < 0)
         return -1;
     if(frameout)
         *frameout = stream->blockbuf+32 + firstframe * stream->framesize;
@@ -349,7 +352,7 @@ int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned cha
     return 0;
 }
 
-void himd_pcmstream_close(struct himd_pcmstream * stream)
+void himd_nonmp3stream_close(struct himd_nonmp3stream * stream)
 {
     himd_blockstream_close(&stream->stream);
     descrypt_close(stream->cryptinfo);
@@ -357,19 +360,19 @@ void himd_pcmstream_close(struct himd_pcmstream * stream)
 
 #else
 
-int himd_pcmstream_open(struct himd * himd, unsigned int trackno, struct himd_pcmstream * stream, struct himderrinfo * status)
+int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd_nonmp3stream * stream, struct himderrinfo * status)
 {
-    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't open pcm track: Compiled without mcrypt library"));
+    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't open non-mp3 track: Compiled without mcrypt library"));
     return -1;
 }
 
-int himd_pcmstream_read_frame(struct himd_pcmstream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
+int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
 {
-    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't do pcm read: Compiled without mcrypt library"));
+    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't do non-mp3 read: Compiled without mcrypt library"));
     return -1;
 }
 
-void himd_pcmstream_close(struct himd_pcmstream * stream)
+void himd_nonmp3stream_close(struct himd_nonmp3stream * stream)
 {
 }
 
