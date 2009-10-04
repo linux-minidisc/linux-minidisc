@@ -111,6 +111,31 @@ unsigned int himd_trackinfo_framesperblock(const struct trackinfo * track)
     return 0;
 }
 
+int himd_track_uploadable(struct himd * himd, const struct trackinfo * track)
+{
+    struct fraginfo frag;
+    int fragnum;
+
+    /* MPEG has no serious encryption */
+    if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG &&
+       (track->codecinfo[0] & 3) == 3)
+        return 1;
+
+    /* Not the well-known RH1 key */
+    if(memcmp(track->key,"\0\0\0\0\0\0\0",8) != 0 ||
+       track->ekbnum != 0x10012)
+        return 0;
+
+    for(fragnum = track->firstfrag; fragnum != 0; fragnum = frag.nextfrag)
+    {
+        if(himd_get_fragment_info(himd, fragnum, &frag, NULL) < 0)
+            return 0;
+        if(memcmp(frag.key,"\0\0\0\0\0\0\0",8) != 0)
+            return 0;
+    }
+    return 1;
+}
+
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status)
 {
     unsigned char * fragbuffer;

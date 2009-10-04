@@ -49,11 +49,12 @@ void himd_trackdump(struct himd * himd, int verbose)
             title = get_locale_str(himd, t.title);
             artist = get_locale_str(himd, t.artist);
             album = get_locale_str(himd, t.album);
-            printf("%4d: %d:%02d %s %s:%s (%s %d)\n",
+            printf("%4d: %d:%02d %s %s:%s (%s %d)%s\n",
                     i, t.seconds/60, t.seconds % 60, himd_get_codec_name(&t),
                     artist ? artist : "Unknown artist", 
                     title ? title : "Unknown title",
-                    album ? album : "Unknown album", t.trackinalbum);
+                    album ? album : "Unknown album", t.trackinalbum,
+                    himd_track_uploadable(himd, &t) ? " [uploadable]":"");
             g_free(title);
             g_free(artist);
             g_free(album);
