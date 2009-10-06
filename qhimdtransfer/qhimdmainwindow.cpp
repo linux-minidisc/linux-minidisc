@@ -235,32 +235,32 @@ void QHiMDMainWindow::on_action_Upload_triggered()
 
     for(i = 0; i < tracks.size(); i++) {
         if(tracks[i]->text(1) == 0)
-            filename = QString("Track ")+tracks[i]->text(0);
+            filename = "Track " + tracks[i]->text(0);
         else
-            filename = tracks[i]->text(2)+QString(" - ")+tracks[i]->text(1);
+            filename = tracks[i]->text(2)+ " - " + tracks[i]->text(1);
 
         if (tracks[i]->text(5) == "MPEG")
         {
             checkfile(UploadDirectory, filename, ".mp3");
-            dumpmp3 (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".mp3"));
-            addid3tag (tracks[i]->text(1),tracks[i]->text(2),tracks[i]->text(3), UploadDirectory+QString("/")+filename+QString(".mp3"));
+            dumpmp3 (&HiMD, tracks[i]->text(0).toInt(), UploadDirectory + "/" + filename + ".mp3");
+            addid3tag (tracks[i]->text(1),tracks[i]->text(2),tracks[i]->text(3), UploadDirectory+ "/" +filename + ".mp3");
         }
         else if (tracks[i]->text(5) == "LPCM")
         {
             checkfile(UploadDirectory, filename, ".wav");
-            dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".wav"));
+            dumppcm (&HiMD, tracks[i]->text(0).toInt(), UploadDirectory + "/" + filename + ".wav");
         }
         else if (tracks[i]->text(5) == "AT3+" || tracks[i]->text(5) == "AT3 ")
         {
             checkfile(UploadDirectory, filename, ".oma");
-            dumpoma (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".oma"));
+            dumpoma (&HiMD, tracks[i]->text(0).toInt(), UploadDirectory + "/" + filename + ".oma");
         }
     }
 }
 
 void QHiMDMainWindow::on_action_Quit_triggered()
 {
-    this->close();
+    close();
 }
 
 void QHiMDMainWindow::on_action_About_triggered()
@@ -288,7 +288,7 @@ void QHiMDMainWindow::on_action_Connect_triggered()
 
     ui->TrackList->clear();
 
-    if (himd_open(&this->HiMD, (HiMDDirectory.toAscii()).data(), NULL)) {
+    if (himd_open(&HiMD, (HiMDDirectory.toAscii()).data(), NULL)) {
         himdStatus.setText("Error opening HiMD-data. Make you sure, you chose the proper root-directory of your HiMD-Walkman.");
         himdStatus.exec();
         return;
@@ -298,15 +298,15 @@ void QHiMDMainWindow::on_action_Connect_triggered()
     {
         struct trackinfo t;
         HiMDTrack = new QTreeWidgetItem(0);
-        if(himd_get_track_info(&this->HiMD, i, &t, NULL)  >= 0)
+        if(himd_get_track_info(&HiMD, i, &t, NULL)  >= 0)
         {
             HiMDTrack->setText(0, TrackNr.setNum(i));
-            HiMDTrack->setText(1, get_locale_str(&this->HiMD, t.title));
-            HiMDTrack->setText(2, get_locale_str(&this->HiMD, t.artist));
-            HiMDTrack->setText(3, get_locale_str(&this->HiMD, t.album));
+            HiMDTrack->setText(1, get_locale_str(&HiMD, t.title));
+            HiMDTrack->setText(2, get_locale_str(&HiMD, t.artist));
+            HiMDTrack->setText(3, get_locale_str(&HiMD, t.album));
             HiMDTrack->setText(4, QString("%1:%2").arg(t.seconds/60).arg(t.seconds%60,2,10,QLatin1Char('0')));
             HiMDTrack->setText(5, himd_get_codec_name(&t));
-            HiMDTrack->setText(6, himd_track_uploadable(&this->HiMD, &t) ? "Yes" : "No");
+            HiMDTrack->setText(6, himd_track_uploadable(&HiMD, &t) ? "Yes" : "No");
             HiMDTrack->setFlags(HiMDTrack->flags() |Qt::ItemIsEnabled);
 
             ui->TrackList->addTopLevelItem(HiMDTrack);
