@@ -39,6 +39,7 @@ private:
     void dumpoma(struct himd * himd, int trknum, QString file);
     void dumppcm(struct himd * himd, int trknum, QString file);
     void pcmaddheader(QString file);
+    void checkfile(QString UploadDirectory, QString &filename, QString extension);
 
 private slots:
     void on_action_Connect_triggered();

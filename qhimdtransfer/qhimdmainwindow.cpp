@@ -174,6 +174,23 @@ QString get_locale_str(struct himd * himd, int idx)
     return outstr;
 }
 
+void QHiMDMainWindow::checkfile(QString UploadDirectory, QString &filename, QString extension)
+{
+    QFile f;
+    QString newname;
+    int i = 2;
+
+    f.setFileName(UploadDirectory + "/" + filename + extension);
+    while(f.exists())
+    {
+        newname = filename + " (" + QString::number(i) + ")";
+        f.setFileName(UploadDirectory + "/" + newname + extension);
+        i++;
+    }
+    if(!newname.isEmpty())
+        filename = newname;
+}
+
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
 {
@@ -224,13 +241,20 @@ void QHiMDMainWindow::on_action_Upload_triggered()
 
         if (tracks[i]->text(5) == "MPEG")
         {
+            checkfile(UploadDirectory, filename, ".mp3");
             dumpmp3 (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".mp3"));
             addid3tag (tracks[i]->text(1),tracks[i]->text(2),tracks[i]->text(3), UploadDirectory+QString("/")+filename+QString(".mp3"));
         }
         else if (tracks[i]->text(5) == "LPCM")
+        {
+            checkfile(UploadDirectory, filename, ".wav");
             dumppcm (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".wav"));
+        }
         else if (tracks[i]->text(5) == "AT3+" || tracks[i]->text(5) == "AT3 ")
+        {
+            checkfile(UploadDirectory, filename, ".oma");
             dumpoma (&this->HiMD, tracks[i]->text(0).toInt(), UploadDirectory+QString("/")+filename+QString(".oma"));
+        }
     }
 }
 
