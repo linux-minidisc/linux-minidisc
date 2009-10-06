@@ -306,6 +306,7 @@ void QHiMDMainWindow::on_action_Connect_triggered()
             HiMDTrack->setText(3, get_locale_str(&this->HiMD, t.album));
             HiMDTrack->setText(4, QString("%1:%2").arg(t.seconds/60).arg(t.seconds%60,2,10,QLatin1Char('0')));
             HiMDTrack->setText(5, himd_get_codec_name(&t));
+            HiMDTrack->setText(6, himd_track_uploadable(&this->HiMD, &t) ? "Yes" : "No");
             HiMDTrack->setFlags(HiMDTrack->flags() |Qt::ItemIsEnabled);
 
             ui->TrackList->addTopLevelItem(HiMDTrack);

@@ -36,7 +36,7 @@
          <enum>QAbstractItemView::MultiSelection</enum>
         </property>
         <property name="columnCount">
-         <number>6</number>
+         <number>7</number>
         </property>
         <attribute name="headerHighlightSections">
          <bool>true</bool>
@@ -69,6 +69,11 @@
         <column>
          <property name="text">
           <string>Format</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Uploadable</string>
          </property>
         </column>
        </widget>
