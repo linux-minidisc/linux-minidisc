@@ -91,7 +91,7 @@ void QHiMDMainWindow::dumpoma(struct himd * himd, int trknum, QString file)
         perror("writing header");
         goto clean;
     }
-    while(himd_nonmp3stream_read_frame(&str, &data, &len, &status) >= 0)
+    while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
         if(f.write((const char*)data,len) == -1)
         {
@@ -134,7 +134,7 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
         fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
         return;
     }
-    while(himd_nonmp3stream_read_frame(&str, &data, &len, &status) >= 0)
+    while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
       
       for(i = 0; i < len/4; i++) {

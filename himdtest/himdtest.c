@@ -263,7 +263,7 @@ void himd_dumpnonmp3(struct himd * himd, int trknum)
     if(trkinfo.codec_id != CODEC_LPCM &&
        write_oma_header(strdumpf, &trkinfo) < 0)
         return;
-    while(himd_nonmp3stream_read_frame(&str, &data, &len, &status) >= 0)
+    while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
         if(fwrite(data,len,1,strdumpf) != 1)
         {
