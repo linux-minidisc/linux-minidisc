@@ -136,6 +136,20 @@ int himd_track_uploadable(struct himd * himd, const struct trackinfo * track)
     return 1;
 }
 
+int himd_track_blocks(struct himd * himd, const struct trackinfo * track, struct himderrinfo * status)
+{
+    struct fraginfo frag;
+    int fragnum, blocks = 0;
+
+    for(fragnum = track->firstfrag; fragnum != 0; fragnum = frag.nextfrag)
+    {
+        if(himd_get_fragment_info(himd, fragnum, &frag, status) < 0)
+            return -1;
+        blocks += frag.lastblock - frag.firstblock + 1;
+    }
+    return blocks;
+}
+
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status)
 {
     unsigned char * fragbuffer;

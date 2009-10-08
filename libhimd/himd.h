@@ -118,6 +118,7 @@ FILE * himd_open_file(struct himd * himd, const char * fileid);
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track, struct himderrinfo * status);
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status);
 int himd_track_uploadable(struct himd * himd, const struct trackinfo * track);
+int himd_track_blocks(struct himd * himd, const struct trackinfo * track, struct himderrinfo * status);
 
 const char * himd_get_codec_name(const struct trackinfo * t);
 unsigned int himd_trackinfo_framesize(const struct trackinfo * track);

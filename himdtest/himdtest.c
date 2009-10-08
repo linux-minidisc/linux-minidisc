@@ -62,6 +62,12 @@ void himd_trackdump(struct himd * himd, int verbose)
             {
                 struct fraginfo f;
                 int fnum = t.firstfrag;
+                int blocks;
+
+                if((blocks = himd_track_blocks(himd, &t, &status)) < 0)
+                    fprintf(stderr, "Can't get block count for Track %d: %s\n", i, status.statusmsg);
+                else
+                    printf("     %5d Blocks per 16 KB\n", blocks);
 
                 while(fnum != 0)
                 {
