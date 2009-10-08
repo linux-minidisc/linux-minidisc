@@ -141,10 +141,6 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
     return 0;
 }
 
-#ifdef CONFIG_WITH_MAD
-
-#include <mad.h>
-
 int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream, struct himderrinfo * status)
 {
     struct trackinfo trkinfo;
@@ -177,90 +173,185 @@ int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp
     return 0;
 }
 
-int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
+#ifdef CONFIG_WITH_MAD
+#include <mad.h>
+
+static int himd_mp3stream_split_frames(struct himd_mp3stream * stream, unsigned int databytes, unsigned int firstframe, unsigned int lastframe, struct himderrinfo * status)
 {
     int gotdata = 1;
+    unsigned int i;
+    struct mad_stream madstream;
+    struct mad_header madheader;
 
+    /* stream->frameptrs is NULL if the current frame has not been splitted yet */
+    g_warn_if_fail(stream->frameptrs == NULL);
+
+    stream->frameptrs = malloc((lastframe - firstframe + 2) * sizeof stream->frameptrs[0]);
+    if(!stream->frameptrs)
+    {
+        set_status_printf(status, HIMD_ERROR_OUT_OF_MEMORY,
+                   _("Can't allocate memory for %u frame pointers"),
+                   lastframe-firstframe+2);
+        return -1;
+    }
+    /* parse block */
+    mad_stream_init(&madstream);
+    mad_header_init(&madheader);
+
+    mad_stream_buffer(&madstream, &stream->blockbuf[0x20],
+                                  databytes+MAD_BUFFER_GUARD);
+
+    /* drop unneeded frames in front */
+    while(firstframe > 0)
+    {
+        if(mad_header_decode(&madheader, &madstream) < 0)
+        {
+            set_status_printf(status, HIMD_ERROR_BAD_DATA_FORMAT,
+                _("Still %u frames to skip: %s"), firstframe, mad_stream_errorstr(&madstream));
+            gotdata = 0;
+            goto cleanup_decoder;
+        }
+        firstframe--;
+        lastframe--;
+    }
+    
+
+    /* store needed frames */
+    for(i = 0;i <= lastframe;i++)
+    {
+        if(mad_header_decode(&madheader, &madstream) < 0 &&
+            (madstream.error != MAD_ERROR_LOSTSYNC || i != lastframe))
+        {
+            set_status_printf(status, HIMD_ERROR_BAD_DATA_FORMAT,
+                _("Frame %u of %u to store: %s"), i+1, lastframe, mad_stream_errorstr(&madstream));
+            gotdata = 0;
+            goto cleanup_decoder;
+        }
+        stream->frameptrs[i] = madstream.this_frame;
+    }
+    stream->frameptrs[i] = madstream.next_frame;
+    stream->frames = lastframe+1;
+    stream->curframe = 0;
+
+cleanup_decoder:
+    mad_header_finish(&madheader);
+    mad_stream_finish(&madstream);
+
+    if(!gotdata)
+        return -1;
+
+    return 0;
+}
+
+#endif
+
+int himd_mp3stream_read_block(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, unsigned int * framecount, struct himderrinfo * status)
+{
+    unsigned int i;
+    unsigned int firstframe, lastframe;
+    unsigned int dataframes, databytes;
+
+    /* partial block remaining, return all remaining frames */
+    if(stream->curframe < stream->frames)
+    {
+        if(frameout)
+            *frameout = stream->frameptrs[stream->curframe];
+        if(lenout)
+            *lenout = stream->frameptrs[stream->frames] - 
+                      stream->frameptrs[stream->curframe];
+        if(framecount)
+            *framecount = stream->frames - stream->curframe;
+
+        stream->curframe = stream->frames;
+        return 0;
+    }
+    
+    /* need to read next block */
+    if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe, status) < 0)
+        return -1;
+
+    free(stream->frameptrs);
+    stream->frameptrs = NULL;
+
+    if(firstframe > lastframe)
+    {
+        set_status_printf(status, HIMD_ERROR_BAD_FRAME_NUMBERS,
+                   _("Last frame %u before first frame %u"),
+                   lastframe, firstframe);
+        return -1;
+    }
+
+    dataframes = beword16(stream->blockbuf+4);
+    databytes = beword16(stream->blockbuf+8);
+
+    if(databytes > 0x3FC0)
+    {
+        set_status_printf(status, HIMD_ERROR_BAD_DATA_FORMAT,
+                   _("Block contains %u MPEG data bytes, which is too much"),
+                   databytes);
+        return -1;
+    }
+
+    if(lastframe >= dataframes)
+    {
+        set_status_printf(status, HIMD_ERROR_BAD_FRAME_NUMBERS,
+                   _("Last requested frame %u past number of frames %u"),
+                   lastframe, dataframes);
+        return -1;
+    }
+
+    /* Decrypt block */
+    for(i = 0;i < (databytes & ~7U);i++)
+        stream->blockbuf[i+0x20] ^= stream->key[i & 3];
+
+    /* Indicate completely consumed block 
+       be sure to set this *before* writing to *framecont,
+       it might alias stream->frames! */
+    stream->frames = 0;
+    stream->curframe = 0;
+
+    /* The common case - all frames belong to the stream to read.
+       If compiled without MAD, always put all frames into the block */
+#ifndef CONFIG_WITH_MAD
+    if(firstframe == 0 && lastframe == dataframes - 1)
+#endif
+    {
+        if(frameout)
+            *frameout = stream->blockbuf + 0x20;
+
+        if(lenout)
+            *lenout = databytes;
+
+        if(framecount)
+            *framecount = dataframes;
+
+        return 0;
+    }
+
+#ifdef CONFIG_WITH_MAD
+    if(himd_mp3stream_split_frames(stream, databytes, firstframe, lastframe, status) < 0)
+        return -1;
+
+    if(*framecount)
+        *framecount = lastframe - firstframe + 1;
+#endif
+    return 0;
+}
+
+#ifdef CONFIG_WITH_MAD
+int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
+{
     g_return_val_if_fail(stream != NULL, -1);
     if(stream->curframe >= stream->frames)
     {
-        unsigned int firstframe, lastframe;
-        unsigned int i;
-        unsigned int databytes;
-        struct mad_stream madstream;
-        struct mad_header madheader;
-
-        /* Read block */
-        if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe, status) < 0)
+        unsigned int databytes, framecount;
+        if(himd_mp3stream_read_block(stream, NULL, &databytes, &framecount, status) < 0)
             return -1;
-
-        if(firstframe > lastframe)
-        {
-            set_status_printf(status, HIMD_ERROR_BAD_FRAME_NUMBERS,
-                       _("Last frame %u before first frame %u"),
-                       lastframe, firstframe);
+        /* if whole block should be used, it is not yet splitted */
+        if(!stream->frameptrs &&
+            himd_mp3stream_split_frames(stream, databytes, 0, framecount, status) < 0)
             return -1;
-        }
-
-        free(stream->frameptrs);
-        stream->frameptrs = malloc((lastframe - firstframe + 2) * sizeof stream->frameptrs[0]);
-        if(!stream->frameptrs)
-        {
-            set_status_printf(status, HIMD_ERROR_OUT_OF_MEMORY,
-                       _("Can't allocate memory for %u frame pointers"),
-                       lastframe-firstframe+2);
-            return -1;
-        }
-
-        databytes = beword16(stream->blockbuf+8);
-        /* Decrypt block */
-        for(i = 0;i < (databytes & ~7U);i++)
-            stream->blockbuf[i+0x20] ^= stream->key[i & 3];
-
-        /* parse block */
-        mad_stream_init(&madstream);
-        mad_header_init(&madheader);
-
-        mad_stream_buffer(&madstream, &stream->blockbuf[0x20],
-                                      0x3fd0+MAD_BUFFER_GUARD);
-
-        /* drop unneeded frames in front */
-        while(firstframe > 0)
-        {
-            if(mad_header_decode(&madheader, &madstream) < 0)
-            {
-                set_status_printf(status, HIMD_ERROR_BAD_DATA_FORMAT,
-                    _("Still %u frames to skip: %s"), firstframe, mad_stream_errorstr(&madstream));
-                gotdata = 0;
-                goto cleanup_decoder;
-            }
-            firstframe--;
-            lastframe--;
-        }
-        
-
-        /* store needed frames */
-        for(i = 0;i <= lastframe;i++)
-        {
-            if(mad_header_decode(&madheader, &madstream) < 0 &&
-                (madstream.error != MAD_ERROR_LOSTSYNC || i != lastframe-1))
-            {
-                set_status_printf(status, HIMD_ERROR_BAD_DATA_FORMAT,
-                    _("Frame %u of %u to skip: %s"), i+1, lastframe, mad_stream_errorstr(&madstream));
-                gotdata = 0;
-                goto cleanup_decoder;
-            }
-            stream->frameptrs[i] = madstream.this_frame;
-        }
-        stream->frameptrs[i] = madstream.next_frame;
-        stream->frames = lastframe+1;
-        stream->curframe = 0;
-cleanup_decoder:
-        mad_header_finish(&madheader);
-        mad_stream_finish(&madstream);
     }
-    if(!gotdata)
-        return -1;
     
     if(frameout)
         *frameout = stream->frameptrs[stream->curframe];
@@ -271,31 +362,26 @@ cleanup_decoder:
     return 0;
 }
 
+#else
+
+int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
+{
+    (void)stream;
+    (void)frameout;
+    (void)lenout;
+    (void)status;
+    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't do mp3 framewise read: Compiled without mad library"));
+    return -1;
+}
+
+#endif
+
 void himd_mp3stream_close(struct himd_mp3stream * stream)
 {
     g_return_if_fail(stream != NULL);
     free(stream->frameptrs);
     himd_blockstream_close(&stream->stream);
 }
-
-#else
-
-int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream, struct himderrinfo * status)
-{
-    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't open mp3 track: Compiled without mad library"));
-    return -1;
-}
-
-int himd_mp3stream_read_frame(struct himd_mp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
-{
-    set_status_const(status, HIMD_ERROR_DISABLED_FEATURE, _("Can't do mp3 read: Compiled without mad library"));
-    return -1;
-}
-
-void himd_mp3stream_close(struct himd_mp3stream * stream)
-{
-}
-#endif
 
 #ifdef CONFIG_WITH_MCRYPT
 #include <string.h>

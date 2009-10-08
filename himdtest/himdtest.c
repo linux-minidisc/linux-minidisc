@@ -194,7 +194,7 @@ void himd_dumpmp3(struct himd * himd, int trknum)
         fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
         return;
     }
-    while(himd_mp3stream_read_frame(&str, &data, &len, &status) >= 0)
+    while(himd_mp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
         if(fwrite(data,len,1,strdumpf) != 1)
         {

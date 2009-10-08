@@ -13,7 +13,7 @@ else: !build_pass: message(You disabled mcrypt: No PCM and ATRAC transfer will b
   LIBS += -lmad
   DEFINES += CONFIG_WITH_MAD
 }
-else: !build_pass: message(You disabled with_mad: No MP3 transfer will be supported)
+else: !build_pass: message(You disabled mad: MP3 transfer will be limited)
 
 PKGCONFIG += glib-2.0
 HEADERS += himd.h himd_private.h sony_oma.h
