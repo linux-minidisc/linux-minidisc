@@ -335,12 +335,44 @@ int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd
         return -1;
     }
     stream->framesize = himd_trackinfo_framesize(&trkinfo);
+    stream->framesleft = 0;
     return 0;
 }
 
 int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
 {
+    if(!stream->framesleft)
+        if(himd_nonmp3stream_read_block(stream, &stream->frameptr, NULL, &stream->framesleft, status) < 0)
+            return -1;
+
+    if(frameout)
+        *frameout = (unsigned char *)stream->frameptr;
+    if(lenout)
+        *lenout = stream->framesize;
+
+    stream->framesleft--;
+    stream->frameptr += stream->framesize;
+    return 0;
+}
+
+int himd_nonmp3stream_read_block(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, unsigned int * framecount, struct himderrinfo * status)
+{
     unsigned int firstframe, lastframe;
+
+    /* if partial block left */
+    if(stream->framesleft)
+    {
+        if(frameout)
+            *frameout = stream->frameptr;
+        if(lenout)
+            *lenout = stream->framesleft * stream->framesize;
+        if(framecount)
+            *framecount = stream->framesleft;
+
+        stream->framesleft = 0;
+        return 0;
+    }
+    
     if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe, status) < 0)
         return -1;
     if(descrypt_decrypt(stream->cryptinfo, stream->blockbuf, stream->framesize * stream->stream.frames_per_block, status) < 0)
@@ -349,6 +381,9 @@ int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsign
         *frameout = stream->blockbuf+32 + firstframe * stream->framesize;
     if(lenout)
         *lenout = stream->framesize * ((lastframe-firstframe)+1);
+    if(framecount)
+        *framecount = lastframe - firstframe + 1;
+    stream->framesleft = 0;
     return 0;
 }
 

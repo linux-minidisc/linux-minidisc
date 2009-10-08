@@ -167,10 +167,13 @@ struct himd_nonmp3stream {
     void * cryptinfo;
     unsigned char blockbuf[16384];
     int framesize;
+    const unsigned char * frameptr;
+    unsigned int framesleft;
 };
 
 int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd_nonmp3stream * stream, struct himderrinfo * status);
 int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status);
+int himd_nonmp3stream_read_block(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, unsigned int * framecount, struct himderrinfo * status);
 void himd_nonmp3stream_close(struct himd_nonmp3stream * stream);
 
 
