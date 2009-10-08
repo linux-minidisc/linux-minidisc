@@ -273,6 +273,7 @@ cleanup_decoder:
 
 void himd_mp3stream_close(struct himd_mp3stream * stream)
 {
+    g_return_if_fail(stream != NULL);
     free(stream->frameptrs);
     himd_blockstream_close(&stream->stream);
 }
@@ -341,6 +342,8 @@ int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd
 
 int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, struct himderrinfo * status)
 {
+    g_return_val_if_fail(stream != NULL, -1);
+
     if(!stream->framesleft)
         if(himd_nonmp3stream_read_block(stream, &stream->frameptr, NULL, &stream->framesleft, status) < 0)
             return -1;
@@ -359,6 +362,7 @@ int himd_nonmp3stream_read_block(struct himd_nonmp3stream * stream, const unsign
 {
     unsigned int firstframe, lastframe;
 
+    g_return_val_if_fail(stream != NULL, -1);
     /* if partial block left */
     if(stream->framesleft)
     {
@@ -389,6 +393,8 @@ int himd_nonmp3stream_read_block(struct himd_nonmp3stream * stream, const unsign
 
 void himd_nonmp3stream_close(struct himd_nonmp3stream * stream)
 {
+    g_return_if_fail(stream != NULL);
+
     himd_blockstream_close(&stream->stream);
     descrypt_close(stream->cryptinfo);
 }

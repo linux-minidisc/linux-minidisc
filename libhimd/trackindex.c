@@ -70,6 +70,9 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
 const char * himd_get_codec_name(const struct trackinfo * track)
 {
     static char buffer[5];
+
+    g_return_val_if_fail(track != NULL, "(nullptr)");
+
     if(track->codec_id == CODEC_LPCM)
         return "LPCM";
     if(track->codec_id == CODEC_ATRAC3)
@@ -85,6 +88,8 @@ const char * himd_get_codec_name(const struct trackinfo * track)
 
 unsigned int himd_trackinfo_framesize(const struct trackinfo * track)
 {
+    g_return_val_if_fail(track != NULL, 0);
+
     if(track->codec_id == CODEC_LPCM)
         return HIMD_LPCM_FRAMESIZE;
     if(track->codec_id == CODEC_ATRAC3)
@@ -98,7 +103,11 @@ unsigned int himd_trackinfo_framesize(const struct trackinfo * track)
 
 unsigned int himd_trackinfo_framesperblock(const struct trackinfo * track)
 {
-    int framesize = himd_trackinfo_framesize(track);
+    int framesize;
+
+    g_return_val_if_fail(track != NULL, 0);
+
+    framesize = himd_trackinfo_framesize(track);
     if(!framesize)
         return TRACK_IS_MPEG;
 
@@ -115,6 +124,9 @@ int himd_track_uploadable(struct himd * himd, const struct trackinfo * track)
 {
     struct fraginfo frag;
     int fragnum;
+
+    g_return_val_if_fail(himd != NULL, 0);
+    g_return_val_if_fail(track != NULL, 0);
 
     /* MPEG has no serious encryption */
     if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG &&
@@ -140,6 +152,9 @@ int himd_track_blocks(struct himd * himd, const struct trackinfo * track, struct
 {
     struct fraginfo frag;
     int fragnum, blocks = 0;
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(track != NULL, -1);
 
     for(fragnum = track->firstfrag; fragnum != 0; fragnum = frag.nextfrag)
     {
