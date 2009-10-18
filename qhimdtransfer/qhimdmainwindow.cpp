@@ -223,18 +223,6 @@ void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool uploa
     ui->action_Quit->setEnabled(quit);
 }
 
-static void writeSettings(QString key, QString & value)
-{
-     QSettings settings;
-     settings.setValue(key, value);
-}
-
-static QString readSettings(QString key)
-{
-     QSettings settings;
-     return settings.value(key, "/home").toString();
-}
-
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
 {   
@@ -276,14 +264,14 @@ void QHiMDMainWindow::on_action_Download_triggered()
 
 void QHiMDMainWindow::on_action_Upload_triggered()
 {
-    QString UploadDirectory = readSettings("UpDir");
+    QString UploadDirectory = settings.value("UpDir", QDir::homePath()).toString();
     UploadDirectory = QFileDialog::getExistingDirectory(this,
                                                  tr("Select directory for Upload"),
                                                  UploadDirectory,
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks|QFileDialog::DontConfirmOverwrite);
 
-    writeSettings(QString("UpDir"), UploadDirectory);
+    settings.setValue("UpDir", UploadDirectory);
 
     QHiMDTrackList tracks = trackmodel.tracks(ui->TrackList->selectionModel()->selectedRows(0));
 
@@ -360,7 +348,7 @@ void QHiMDMainWindow::on_action_Connect_triggered()
     QMessageBox himdStatus;
     QString error;
 
-    HiMDDirectory = readSettings(QString("HiMDDir"));
+    HiMDDirectory = settings.value(QString("HiMDDir"), QDir::rootPath()).toString();
     HiMDDirectory = QFileDialog::getExistingDirectory(this,
                                                  tr("Select directory of HiMD Medium"),
                                                  HiMDDirectory,
@@ -376,7 +364,7 @@ void QHiMDMainWindow::on_action_Connect_triggered()
         return;
     }
 
-    writeSettings(QString("HiMDDir"), HiMDDirectory);
+    settings.setValue("HiMDDir", HiMDDirectory);
 
     set_buttons_enable(1,1,1,1,1,1,1);
 }
