@@ -239,7 +239,7 @@
     </message>
     <message>
         <source>overall progress</source>
-        <translation>totalt fremskitt</translation>
+        <translation>totalt fremskritt</translation>
     </message>
     <message>
         <source>current track: trknum - filename</source>
