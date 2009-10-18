@@ -114,6 +114,8 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struc
 void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd, struct himderrinfo * status);
 FILE * himd_open_file(struct himd * himd, const char * fileid);
+unsigned int himd_track_count(struct himd * himd);
+unsigned int himd_get_trackslot(struct himd * himd, int unsigned idx, struct himderrinfo * status);
 
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track, struct himderrinfo * status);
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status);

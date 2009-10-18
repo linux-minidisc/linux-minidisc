@@ -31,6 +31,22 @@ static int strlink(unsigned char * stringchunk)
     return beword16(stringchunk+14) & 0xFFF;
 }
 
+unsigned int himd_track_count(struct himd * himd)
+{
+    return beword16(himd->tifdata + 0x100);
+}
+
+unsigned int himd_get_trackslot(struct himd * himd, unsigned int idx, struct himderrinfo * status)
+{
+    if(idx >= himd_track_count(himd))
+    {
+        set_status_printf(status, HIMD_ERROR_NO_SUCH_TRACK, _("Track %d of %d requested"));
+        return 0;
+    }
+    return beword16(himd->tifdata + 0x102 + 2*idx);
+}
+
+
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t, struct himderrinfo * status)
 {
     unsigned char * trackbuffer;
