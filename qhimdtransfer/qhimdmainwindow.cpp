@@ -223,13 +223,8 @@ void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool uploa
     ui->action_Quit->setEnabled(quit);
 }
 
-QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
-{   
-    aboutDialog = new QHiMDAboutDialog;
-    formatDialog = new QHiMDFormatDialog;
-    uploadDialog = new QHiMDUploadDialog;
-    ui->setupUi(this);
+void QHiMDMainWindow::init_himd_browser()
+{
     ui->TrackList->setModel(&trackmodel);
     ui->TrackList->resizeColumnToContents(0);
     ui->TrackList->resizeColumnToContents(1);
@@ -238,41 +233,47 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     ui->TrackList->resizeColumnToContents(4);
     ui->TrackList->resizeColumnToContents(5);
     ui->TrackList->resizeColumnToContents(6);
-    
-    set_buttons_enable(1,0,0,0,0,0,1);
 }
 
-QHiMDMainWindow::~QHiMDMainWindow()
-{
-    delete ui;
-}
-
-/* Slots for the actions */
-
-void QHiMDMainWindow::on_action_Download_triggered()
+void QHiMDMainWindow::init_local_browser()
 {
     QStringList DownloadFileList;
-
-
-    DownloadFileList = QFileDialog::getOpenFileNames(
-                         this,
-                         tr("Select MP3s for download"),
-                         "/",
-                         "MP3-files (*.mp3)");
-
+    localmodel.setFilter(QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot);
+    localmodel.setNameFilters(QStringList() << "*.mp3" << "*.wav" << "*.oma");
+    localmodel.setSorting(QDir::DirsFirst | QDir::Name);
+    ui->localScan->setModel(&localmodel);
+    ui->localScan->setRootIndex(localmodel.index(QDir::rootPath()));
+    QModelIndex curdir = localmodel.index(ui->updir->text());
+    ui->localScan->expand(curdir);
+    ui->localScan->setCurrentIndex(curdir);
+    ui->localScan->scrollTo(curdir,QAbstractItemView::PositionAtTop);
+    ui->localScan->hideColumn(2);
+    ui->localScan->hideColumn(3);
+    ui->localScan->setColumnWidth(0, 350);
 }
 
-void QHiMDMainWindow::on_action_Upload_triggered()
+void QHiMDMainWindow::open_himd_at(const QString & path)
 {
-    QString UploadDirectory = settings.value("UpDir", QDir::homePath()).toString();
-    UploadDirectory = QFileDialog::getExistingDirectory(this,
-                                                 tr("Select directory for Upload"),
-                                                 UploadDirectory,
-                                                 QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks|QFileDialog::DontConfirmOverwrite);
+    QMessageBox himdStatus;
+    QString error;
 
-    settings.setValue("UpDir", UploadDirectory);
+    error = trackmodel.open(path.toAscii());
 
+    if (!error.isNull()) {
+        himdStatus.setText(tr("Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.\n") + error);
+        himdStatus.exec();
+        set_buttons_enable(1,0,0,0,0,0,1);
+        return;
+    }
+
+    ui->himdpath->setText(path);
+    settings.setValue("lastHiMDDirectory", path);
+
+    set_buttons_enable(1,1,1,1,1,1,1);
+}
+
+void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
+{
     QHiMDTrackList tracks = trackmodel.tracks(ui->TrackList->selectionModel()->selectedRows(0));
 
     int allblocks = 0;
@@ -325,6 +326,54 @@ void QHiMDMainWindow::on_action_Upload_triggered()
             break;
     }
     uploadDialog->finished();
+    localmodel.refresh();
+}
+
+QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
+{   
+    aboutDialog = new QHiMDAboutDialog;
+    formatDialog = new QHiMDFormatDialog;
+    uploadDialog = new QHiMDUploadDialog;
+    ui->setupUi(this);
+    ui->updir->setText(settings.value("lastUploadDirectory",
+                                         QDir::homePath()).toString());
+    set_buttons_enable(1,0,0,0,0,0,1);
+    init_himd_browser();
+    init_local_browser();
+}
+
+QHiMDMainWindow::~QHiMDMainWindow()
+{
+    delete ui;
+}
+
+/* Slots for the actions */
+
+void QHiMDMainWindow::on_action_Download_triggered()
+{
+    QStringList DownloadFileList;
+
+
+    DownloadFileList = QFileDialog::getOpenFileNames(
+                         this,
+                         tr("Select MP3s for download"),
+                         "/",
+                         "MP3-files (*.mp3)");
+
+}
+
+void QHiMDMainWindow::on_action_Upload_triggered()
+{
+    QString UploadDirectory = settings.value("lastManualUploadDirectory", QDir::homePath()).toString();
+    UploadDirectory = QFileDialog::getExistingDirectory(this,
+                                                 tr("Select directory for Upload"),
+                                                 UploadDirectory,
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
+
+    settings.setValue("lastManualUploadDirectory", UploadDirectory);
+    upload_to(UploadDirectory);
 }
 
 void QHiMDMainWindow::on_action_Quit_triggered()
@@ -345,26 +394,26 @@ void QHiMDMainWindow::on_action_Format_triggered()
 void QHiMDMainWindow::on_action_Connect_triggered()
 {
     QString HiMDDirectory;
-    QMessageBox himdStatus;
-    QString error;
-
-    HiMDDirectory = settings.value(QString("HiMDDir"), QDir::rootPath()).toString();
+    HiMDDirectory = settings.value("lastHiMDDirectory", QDir::rootPath()).toString();
     HiMDDirectory = QFileDialog::getExistingDirectory(this,
                                                  tr("Select directory of HiMD Medium"),
                                                  HiMDDirectory,
                                                  QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks);
+                                                 | QFileDialog::DontResolveSymlinks
+                                                 | QFileDialog::DontUseNativeDialog);
+    open_himd_at(HiMDDirectory);
+}
 
-    error = trackmodel.open(HiMDDirectory.toAscii());
-
-    if (!error.isNull()) {
-        himdStatus.setText(tr("Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.\n") + error);
-        himdStatus.exec();
-        set_buttons_enable(1,0,0,0,0,0,1);
-        return;
+void QHiMDMainWindow::on_localScan_clicked(QModelIndex index)
+{
+    if(localmodel.fileInfo(index).isDir())
+    {
+        ui->updir->setText(localmodel.filePath(index));
+        settings.setValue("lastUploadDirectory", localmodel.filePath(index));
     }
+}
 
-    settings.setValue("HiMDDir", HiMDDirectory);
-
-    set_buttons_enable(1,1,1,1,1,1,1);
+void QHiMDMainWindow::on_upload_button_clicked()
+{
+    upload_to(ui->updir->text());
 }

@@ -3,7 +3,8 @@
 
 #include <QtGui/QMainWindow>
 #include <QtGui/QFileDialog>
-#include <QSettings>
+#include <QtCore/QSettings>
+#include <QtGui/QDirModel>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
 #include "qhimduploaddialog.h"
@@ -37,11 +38,17 @@ private:
     QHiMDFormatDialog * formatDialog;
     QHiMDUploadDialog * uploadDialog;
     QHiMDTracksModel trackmodel;
+    QDirModel localmodel;
+    QSettings settings;
     QString dumpmp3(const QHiMDTrack & trk, QString file);
     QString dumpoma(const QHiMDTrack & trk, QString file);
     QString dumppcm(const QHiMDTrack & trk, QString file);
     void checkfile(QString UploadDirectory, QString &filename, QString extension);
     void set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit);
+    void init_himd_browser();
+    void init_local_browser();
+    void open_himd_at(const QString & path);
+    void upload_to(const QString & path);
 
 private slots:
     void on_action_Connect_triggered();
@@ -50,6 +57,8 @@ private slots:
     void on_action_Download_triggered();
     void on_action_Quit_triggered();
     void on_action_About_triggered();
+    void on_localScan_clicked(QModelIndex index);
+    void on_upload_button_clicked();
 };
 
 #endif // QHIMDMAINWINDOW_H

@@ -6,15 +6,9 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>829</width>
-    <height>492</height>
+    <width>784</width>
+    <height>539</height>
    </rect>
-  </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>QHiMDTransfer</string>
@@ -24,9 +18,36 @@
     <normaloff>:/icons/download_to_md.png</normaloff>:/icons/download_to_md.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,0,1">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
+        <item>
+         <widget class="QLabel" name="himd_mountpoint">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>HiMD path</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="himdpath">
+          <property name="text">
+           <string>(unconnected)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
       <item>
        <widget class="QTreeView" name="TrackList">
         <property name="editTriggers">
@@ -35,6 +56,65 @@
         <property name="selectionMode">
          <enum>QAbstractItemView::MultiSelection</enum>
         </property>
+        <attribute name="headerHighlightSections">
+         <bool>true</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QPushButton" name="upload_button">
+        <property name="text">
+         <string>&gt;&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="download_button">
+        <property name="text">
+         <string>&lt;&lt;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
+        <item>
+         <widget class="QLabel" name="updir_text">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>local directory</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="updir">
+          <property name="text">
+           <string>/tmp</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTreeView" name="localScan">
+        <attribute name="headerVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="headerCascadingSectionResizes">
+         <bool>true</bool>
+        </attribute>
        </widget>
       </item>
      </layout>
