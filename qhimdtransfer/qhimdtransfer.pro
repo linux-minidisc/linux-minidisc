@@ -1,18 +1,24 @@
 TEMPLATE = app
-CONFIG += link_prl link_pkgconfig 
+CONFIG += link_prl link_pkgconfig
 TARGET = qhimdtransfer
 DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
+TRANSLATIONS += qhimdtransfer_de.ts qhimdtransfer_no.ts
+
 HEADERS += qhimdaboutdialog.h \
            qhimdformatdialog.h \
-           qhimdmainwindow.h 
-FORMS += qhimdaboutdialog.ui qhimdformatdialog.ui qhimdmainwindow.ui
+           qhimduploaddialog.h \
+           qhimdmainwindow.h \
+           qhimdmodel.h
+FORMS += qhimdaboutdialog.ui qhimdformatdialog.ui qhimduploaddialog.ui qhimdmainwindow.ui
 SOURCES += main.cpp \
            qhimdaboutdialog.cpp \
            qhimdformatdialog.cpp \
-           qhimdmainwindow.cpp
+           qhimduploaddialog.cpp \
+           qhimdmainwindow.cpp \
+           qhimdmodel.cpp
 RESOURCES += icons.qrc
 PKGCONFIG += sox taglib
 win32: RC_FILE = qhimdtransfer.rc

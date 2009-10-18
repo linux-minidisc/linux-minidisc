@@ -1,3 +1,4 @@
+*.qm
 debug
 release
 Makefile*

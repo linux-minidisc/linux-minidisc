@@ -3,8 +3,11 @@
 
 #include <QtGui/QMainWindow>
 #include <QtGui/QFileDialog>
+#include <QSettings>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
+#include "qhimduploaddialog.h"
+#include "qhimdmodel.h"
 #include "../libhimd/himd.h"
 #include <tlist.h>
 #include <fileref.h>
@@ -24,8 +27,6 @@ class QHiMDMainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    struct himd HiMD;
-
 public:
     QHiMDMainWindow(QWidget *parent = 0);
     ~QHiMDMainWindow();
@@ -34,12 +35,13 @@ private:
     Ui::QHiMDMainWindowClass *ui;
     QHiMDAboutDialog * aboutDialog;
     QHiMDFormatDialog * formatDialog;
-    void dumpmp3(struct himd * himd, int trknum, QString file);
-    void addid3tag(QString title, QString artist, QString album, QString file);
-    void dumpoma(struct himd * himd, int trknum, QString file);
-    void dumppcm(struct himd * himd, int trknum, QString file);
-    void pcmaddheader(QString file);
+    QHiMDUploadDialog * uploadDialog;
+    QHiMDTracksModel trackmodel;
+    QString dumpmp3(const QHiMDTrack & trk, QString file);
+    QString dumpoma(const QHiMDTrack & trk, QString file);
+    QString dumppcm(const QHiMDTrack & trk, QString file);
     void checkfile(QString UploadDirectory, QString &filename, QString extension);
+    void set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit);
 
 private slots:
     void on_action_Connect_triggered();

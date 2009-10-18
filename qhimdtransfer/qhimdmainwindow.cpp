@@ -1,12 +1,16 @@
 #include "qhimdmainwindow.h"
 #include "ui_qhimdmainwindow.h"
 #include "qhimdaboutdialog.h"
+#include "qhimduploaddialog.h"
 #include "qmessagebox.h"
+#include "qapplication.h"
 
 #include "sony_oma.h"
 
-void QHiMDMainWindow::dumpmp3(struct himd * himd, int trknum, QString file)
+
+QString QHiMDMainWindow::dumpmp3(const QHiMDTrack & trk, QString file)
 {
+    QString errmsg;
     struct himd_mp3stream str;
     struct himderrinfo status;
     unsigned int len;
@@ -15,28 +19,38 @@ void QHiMDMainWindow::dumpmp3(struct himd * himd, int trknum, QString file)
 
     if(!f.open(QIODevice::ReadWrite))
     {
-        perror("Error opening file for MP3-output");
-        return;
+        return tr("Error opening file for MP3 output");
     }
-    if(himd_mp3stream_open(himd, trknum, &str, &status) < 0)
+    if(!(errmsg = trk.openMpegStream(&str)).isNull())
     {
-        fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
-        return;
+        f.remove();
+        return tr("Error opening track: ") + errmsg;
     }
     while(himd_mp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
         if(f.write((const char*)data,len) == -1)
         {
-            perror("writing dumped stream");
+            errmsg = tr("Error writing audio data");
             goto clean;
         }
+        uploadDialog->blockTransferred();
+        QApplication::processEvents();
+        if(uploadDialog->upload_canceled())
+        {
+            errmsg = tr("upload aborted by the user");
+            goto clean;
+        }
+
     }
     if(status.status != HIMD_STATUS_AUDIO_EOF)
-        fprintf(stderr,"Error reading MP3 data: %s\n", status.statusmsg);
+        errmsg = tr("Error reading audio data: ") + status.statusmsg;
 
 clean:
     f.close();
     himd_mp3stream_close(&str);
+    if(!errmsg.isNull())
+        f.remove();
+    return errmsg;
 }
 
 static inline TagLib::String QStringToTagString(const QString & s)
@@ -44,7 +58,7 @@ static inline TagLib::String QStringToTagString(const QString & s)
     return TagLib::String(s.toUtf8().data(), TagLib::String::UTF8);
 }
 
-void QHiMDMainWindow::addid3tag(QString title, QString artist, QString album, QString file)
+static void addid3tag(QString title, QString artist, QString album, QString file)
 {
 #ifdef Q_OS_WIN
     TagLib::FileRef f(file.toStdWString().c_str());
@@ -59,8 +73,9 @@ void QHiMDMainWindow::addid3tag(QString title, QString artist, QString album, QS
     f.file()->save();
 }
 
-void QHiMDMainWindow::dumpoma(struct himd * himd, int trknum, QString file)
+QString QHiMDMainWindow::dumpoma(const QHiMDTrack & track, QString file)
 {
+    QString errmsg;
     struct himd_nonmp3stream str;
     struct himderrinfo status;
     struct trackinfo trkinf;
@@ -70,50 +85,57 @@ void QHiMDMainWindow::dumpoma(struct himd * himd, int trknum, QString file)
     QFile f(file);
 
     if(!f.open(QIODevice::ReadWrite))
+        return tr("Error opening file for ATRAC output");
+
+    if(!(errmsg = track.openNonMpegStream(&str)).isNull())
     {
-        perror("Error opening file for MP3-output");
-        return;
-    }
-    if(himd_get_track_info(himd, trknum, &trkinf, &status) < 0)
-    {
-        fprintf(stderr, "Can't get track info for track %d: %s\n", trknum, status.statusmsg);
-        return;
-    }
-    if(himd_nonmp3stream_open(himd, trknum, &str, &status) < 0)
-    {
-        fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
-        return;
+        f.remove();
+        return tr("Error opening track: ") + status.statusmsg;
     }
 
     make_ea3_format_header(header, &trkinf);
     if(f.write(header, sizeof header) == -1)
     {
-        perror("writing header");
+        errmsg = tr("Error writing header");
         goto clean;
     }
     while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
         if(f.write((const char*)data,len) == -1)
         {
-            perror("writing dumped stream");
+            errmsg = tr("Error writing audio data");
+            goto clean;
+        }
+        uploadDialog->blockTransferred();
+        QApplication::processEvents();
+        if(uploadDialog->upload_canceled())
+        {
+            errmsg = QString("upload aborted by the user");
             goto clean;
         }
     }
     if(status.status != HIMD_STATUS_AUDIO_EOF)
-        fprintf(stderr,"Error reading MP3 data: %s\n", status.statusmsg);
+        errmsg = QString("Error reading audio data: ") + status.statusmsg;
 
 clean:
     f.close();
     himd_nonmp3stream_close(&str);
+
+    if(!errmsg.isNull())
+        f.remove();
+    return errmsg;
 }
 
-void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
+
+QString QHiMDMainWindow::dumppcm(const QHiMDTrack & track, QString file)
 {
     struct himd_nonmp3stream str;
     struct himderrinfo status;
     unsigned int len, i;
     int left, right;
     int clipcount;
+    QString errmsg;
+    QFile f(file);
     const unsigned char * data;
     sox_format_t * out;
     sox_sample_t soxbuf [HIMD_MAX_PCMFRAME_SAMPLES * 2];
@@ -125,15 +147,14 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
     signal_out.rate = 44100;
 
     if(!(out = sox_open_write(file.toUtf8(), &signal_out, NULL, NULL, NULL, NULL)))
+        return tr("Error opening file for WAV output");
+
+    if(!(errmsg = track.openNonMpegStream(&str)).isNull())
     {
-        perror("Error opening file for LPCM-output");
-        return;
+        f.remove();
+        return tr("Error opening track: ") + status.statusmsg;
     }
-    if(himd_nonmp3stream_open(himd, trknum, &str, &status) < 0)
-    {
-        fprintf(stderr, "Error opening track %d: %s\n", trknum, status.statusmsg);
-        return;
-    }
+
     while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
       
@@ -146,32 +167,32 @@ void QHiMDMainWindow::dumppcm(struct himd * himd, int trknum, QString file)
 
         soxbuf[i*2] = SOX_SIGNED_16BIT_TO_SAMPLE(left, clipcount);
         soxbuf[i*2+1] = SOX_SIGNED_16BIT_TO_SAMPLE(right, clipcount);
+        (void)clipcount; /* suppess "is unused" warning */
       }
 
-      if (sox_write(out, soxbuf, len/2) == -1)
-        {
-            perror("writing dumped stream");
+      if (sox_write(out, soxbuf, len/2) != len/2)
+      {
+            errmsg = tr("Error writing audio data");
             goto clean;
-        }
+      }
+      uploadDialog->blockTransferred();
+      QApplication::processEvents();
+      if(uploadDialog->upload_canceled())
+      {
+            errmsg = QString("upload aborted by the user");
+            goto clean;
+      }
     }
     if(status.status != HIMD_STATUS_AUDIO_EOF)
-        fprintf(stderr,"Error reading PCM data: %s\n", status.statusmsg);
+        errmsg = QString("Error reading audio data: ") + status.statusmsg;
+
 clean:
     sox_close(out);
     himd_nonmp3stream_close(&str);
-}
 
-QString get_locale_str(struct himd * himd, int idx)
-{
-    QString outstr;
-    char * str;
-    str = himd_get_string_utf8(himd, idx, NULL, NULL);
-    if(!str)
-        return NULL;
-
-    outstr = QString::fromUtf8(str);
-    himd_free(str);
-    return outstr;
+    if(!errmsg.isNull())
+        f.remove();
+    return errmsg;
 }
 
 void QHiMDMainWindow::checkfile(QString UploadDirectory, QString &filename, QString extension)
@@ -191,12 +212,46 @@ void QHiMDMainWindow::checkfile(QString UploadDirectory, QString &filename, QStr
         filename = newname;
 }
 
+void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit)
+{
+    ui->action_Connect->setEnabled(connect);
+    ui->action_Download->setEnabled(download);
+    ui->action_Upload->setEnabled(upload);
+    ui->action_Rename->setEnabled(rename);
+    ui->action_Delete->setEnabled(del);
+    ui->action_Format->setEnabled(format);
+    ui->action_Quit->setEnabled(quit);
+}
+
+static void writeSettings(QString key, QString & value)
+{
+     QSettings settings;
+     settings.setValue(key, value);
+}
+
+static QString readSettings(QString key)
+{
+     QSettings settings;
+     return settings.value(key, "/home").toString();
+}
+
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
-{
+{   
     aboutDialog = new QHiMDAboutDialog;
     formatDialog = new QHiMDFormatDialog;
+    uploadDialog = new QHiMDUploadDialog;
     ui->setupUi(this);
+    ui->TrackList->setModel(&trackmodel);
+    ui->TrackList->resizeColumnToContents(0);
+    ui->TrackList->resizeColumnToContents(1);
+    ui->TrackList->resizeColumnToContents(2);
+    ui->TrackList->resizeColumnToContents(3);
+    ui->TrackList->resizeColumnToContents(4);
+    ui->TrackList->resizeColumnToContents(5);
+    ui->TrackList->resizeColumnToContents(6);
+    
+    set_buttons_enable(1,0,0,0,0,0,1);
 }
 
 QHiMDMainWindow::~QHiMDMainWindow()
@@ -208,12 +263,12 @@ QHiMDMainWindow::~QHiMDMainWindow()
 
 void QHiMDMainWindow::on_action_Download_triggered()
 {
-     QStringList DownloadFileList;
+    QStringList DownloadFileList;
 
 
     DownloadFileList = QFileDialog::getOpenFileNames(
                          this,
-                         "Select MP3s for download",
+                         tr("Select MP3s for download"),
                          "/",
                          "MP3-files (*.mp3)");
 
@@ -221,41 +276,67 @@ void QHiMDMainWindow::on_action_Download_triggered()
 
 void QHiMDMainWindow::on_action_Upload_triggered()
 {
-    QString UploadDirectory;
-    QList<QTreeWidgetItem *> tracks;
-    int i;
-    QString filename;
-
+    QString UploadDirectory = readSettings("UpDir");
     UploadDirectory = QFileDialog::getExistingDirectory(this,
-                                                 "Select directory for Upload",
-                                                 "/home",
+                                                 tr("Select directory for Upload"),
+                                                 UploadDirectory,
                                                  QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks);
-    tracks = ui->TrackList->selectedItems();
+                                                 | QFileDialog::DontResolveSymlinks|QFileDialog::DontConfirmOverwrite);
 
-    for(i = 0; i < tracks.size(); i++) {
-        if(tracks[i]->text(1) == 0)
-            filename = "Track " + tracks[i]->text(0);
+    writeSettings(QString("UpDir"), UploadDirectory);
+
+    QHiMDTrackList tracks = trackmodel.tracks(ui->TrackList->selectionModel()->selectedRows(0));
+
+    int allblocks = 0;
+    for(int i = 0;i < tracks.length(); i++)
+        allblocks += tracks[i].blockcount();
+
+    uploadDialog->init(tracks.length(), allblocks);
+    
+    for(int i = 0;i < tracks.length(); i++)
+    {
+        QString filename, errmsg;
+        QString title = tracks[i].title();
+        if(title.isNull())
+            filename = tr("Track %1").arg(tracks[i].tracknum());
         else
-            filename = tracks[i]->text(2)+ " - " + tracks[i]->text(1);
+            filename = tracks[i].artist() + " - " + title;
 
-        if (tracks[i]->text(5) == "MPEG")
+        uploadDialog->starttrack(tracks[i], filename);
+        if (!tracks[i].copyprotected())
         {
-            checkfile(UploadDirectory, filename, ".mp3");
-            dumpmp3 (&HiMD, tracks[i]->text(0).toInt(), UploadDirectory + "/" + filename + ".mp3");
-            addid3tag (tracks[i]->text(1),tracks[i]->text(2),tracks[i]->text(3), UploadDirectory+ "/" +filename + ".mp3");
+            QString codec = tracks[i].codecname();
+            if (codec == "MPEG")
+            {
+                checkfile(UploadDirectory, filename, ".mp3");
+                errmsg = dumpmp3 (tracks[i], UploadDirectory + "/" + filename + ".mp3");
+                if(errmsg.isNull())
+                    addid3tag (tracks[i].title(),tracks[i].artist(),tracks[i].album(), UploadDirectory+ "/" +filename + ".mp3");
+            }
+            else if (codec == "LPCM")
+            {
+                checkfile(UploadDirectory, filename, ".wav");
+                errmsg = dumppcm (tracks[i], UploadDirectory + "/" + filename + ".wav");
+            }
+            else if (codec == "AT3+" || codec == "AT3 ")
+            {
+                checkfile(UploadDirectory, filename, ".oma");
+                errmsg = dumpoma (tracks[i], UploadDirectory + "/" + filename + ".oma");
+            }
         }
-        else if (tracks[i]->text(5) == "LPCM")
-        {
-            checkfile(UploadDirectory, filename, ".wav");
-            dumppcm (&HiMD, tracks[i]->text(0).toInt(), UploadDirectory + "/" + filename + ".wav");
-        }
-        else if (tracks[i]->text(5) == "AT3+" || tracks[i]->text(5) == "AT3 ")
-        {
-            checkfile(UploadDirectory, filename, ".oma");
-            dumpoma (&HiMD, tracks[i]->text(0).toInt(), UploadDirectory + "/" + filename + ".oma");
-        }
+        else
+            errmsg = tr("upload disabled because of DRM encryption");
+
+        if(errmsg.isNull())
+            uploadDialog->trackSucceeded();
+        else
+            uploadDialog->trackFailed(errmsg);
+
+        QApplication::processEvents();
+        if(uploadDialog->upload_canceled())
+            break;
     }
+    uploadDialog->finished();
 }
 
 void QHiMDMainWindow::on_action_Quit_triggered()
@@ -276,42 +357,26 @@ void QHiMDMainWindow::on_action_Format_triggered()
 void QHiMDMainWindow::on_action_Connect_triggered()
 {
     QString HiMDDirectory;
-    QTreeWidgetItem * HiMDTrack;
-    QString TrackNr;
     QMessageBox himdStatus;
+    QString error;
 
+    HiMDDirectory = readSettings(QString("HiMDDir"));
     HiMDDirectory = QFileDialog::getExistingDirectory(this,
-                                                 "Select directory of HiMD Medium",
-                                                 "/home",
+                                                 tr("Select directory of HiMD Medium"),
+                                                 HiMDDirectory,
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
 
-    ui->TrackList->clear();
+    error = trackmodel.open(HiMDDirectory.toAscii());
 
-    if (himd_open(&HiMD, (HiMDDirectory.toAscii()).data(), NULL)) {
-        himdStatus.setText("Error opening HiMD-data. Make you sure, you chose the proper root-directory of your HiMD-Walkman.");
+    if (!error.isNull()) {
+        himdStatus.setText(tr("Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.\n") + error);
         himdStatus.exec();
+        set_buttons_enable(1,0,0,0,0,0,1);
         return;
     }
 
-    for(int i = HIMD_FIRST_TRACK;i <= HIMD_LAST_TRACK;i++)
-    {
-        struct trackinfo t;
-        HiMDTrack = new QTreeWidgetItem(0);
-        if(himd_get_track_info(&HiMD, i, &t, NULL)  >= 0)
-        {
-            HiMDTrack->setText(0, TrackNr.setNum(i));
-            HiMDTrack->setText(1, get_locale_str(&HiMD, t.title));
-            HiMDTrack->setText(2, get_locale_str(&HiMD, t.artist));
-            HiMDTrack->setText(3, get_locale_str(&HiMD, t.album));
-            HiMDTrack->setText(4, QString("%1:%2").arg(t.seconds/60).arg(t.seconds%60,2,10,QLatin1Char('0')));
-            HiMDTrack->setText(5, himd_get_codec_name(&t));
-            HiMDTrack->setText(6, himd_track_uploadable(&HiMD, &t) ? "Yes" : "No");
-            HiMDTrack->setFlags(HiMDTrack->flags() |Qt::ItemIsEnabled);
+    writeSettings(QString("HiMDDir"), HiMDDirectory);
 
-            ui->TrackList->addTopLevelItem(HiMDTrack);
-        }
-    }
-
-    ui->TrackList->update();
+    set_buttons_enable(1,1,1,1,1,1,1);
 }

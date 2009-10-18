@@ -28,54 +28,13 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QTreeWidget" name="TrackList">
+       <widget class="QTreeView" name="TrackList">
         <property name="editTriggers">
          <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
         </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::MultiSelection</enum>
         </property>
-        <property name="columnCount">
-         <number>7</number>
-        </property>
-        <attribute name="headerHighlightSections">
-         <bool>true</bool>
-        </attribute>
-        <column>
-         <property name="text">
-          <string>Nr.</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Title</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Artist</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Album</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Length</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Format</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Uploadable</string>
-         </property>
-        </column>
        </widget>
       </item>
      </layout>
