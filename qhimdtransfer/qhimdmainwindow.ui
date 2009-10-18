@@ -42,7 +42,7 @@
         <item>
          <widget class="QLabel" name="himdpath">
           <property name="text">
-           <string>(unconnected)</string>
+           <string>(disconnected)</string>
           </property>
          </widget>
         </item>
