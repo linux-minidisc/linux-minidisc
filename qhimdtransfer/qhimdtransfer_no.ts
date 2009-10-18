@@ -53,60 +53,60 @@
     <name>QHiMDMainWindow</name>
     <message>
         <source>Track %1</source>
-        <translation type="unfinished">Spor %1</translation>
+        <translation>Spor %1</translation>
     </message>
     <message>
         <source>upload disabled because of DRM encryption</source>
-        <translation type="unfinished"></translation>
+        <translation>overføring deaktivert, sporen er DRM sikkert</translation>
     </message>
     <message>
         <source>Error opening file for MP3 output</source>
-        <translation type="unfinished"></translation>
+        <translation>feil: filen kan ikke åpnes for MP3 lagring</translation>
     </message>
     <message>
         <source>Error opening track: </source>
-        <translation type="unfinished"></translation>
+        <translation>feil: sporen kan ikke åpnes:</translation>
     </message>
     <message>
         <source>Error writing audio data</source>
-        <translation type="unfinished"></translation>
+        <translation>feil: audio data kan ikke lagres</translation>
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation type="unfinished"></translation>
+        <translation>overføring avbryttet fra brukeren</translation>
     </message>
     <message>
         <source>Error reading audio data: </source>
-        <translation type="unfinished"></translation>
+        <translation>feil: audio data kan ikke leses:</translation>
     </message>
     <message>
         <source>Error opening file for ATRAC output</source>
-        <translation type="unfinished"></translation>
+        <translation>feil: filen kan ikke åpnes for ATRAC lagring</translation>
     </message>
     <message>
         <source>Error writing header</source>
-        <translation type="unfinished"></translation>
+        <translation>feil: header data kan ikke lagres</translation>
     </message>
     <message>
         <source>Error opening file for WAV output</source>
-        <translation type="unfinished"></translation>
+        <translation>feil: filen kan ikke åpnes for WAV lagring</translation>
     </message>
     <message>
         <source>Select MP3s for download</source>
-        <translation type="unfinished"></translation>
+        <translation>velg MP3ene for nedlastning</translation>
     </message>
     <message>
         <source>Select directory for Upload</source>
-        <translation type="unfinished"></translation>
+        <translation>velg katalogen for overføring</translation>
     </message>
     <message>
         <source>Select directory of HiMD Medium</source>
-        <translation type="unfinished"></translation>
+        <translation>velg katalogen til HiMD medium</translation>
     </message>
     <message>
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
 </source>
-        <translation type="unfinished"></translation>
+        <translation>feil: HiMD data kan ikke åpnes. Har du velgt rett katalogen?</translation>
     </message>
 </context>
 <context>
@@ -172,31 +172,31 @@
     <name>QHiMDTracksModel</name>
     <message>
         <source>Title</source>
-        <translation type="unfinished">Tittel</translation>
+        <translation>Tittel</translation>
     </message>
     <message>
         <source>Artist</source>
-        <translation type="unfinished">Sanger</translation>
+        <translation>Sanger</translation>
     </message>
     <message>
         <source>Album</source>
-        <translation type="unfinished">Album</translation>
+        <translation>Album</translation>
     </message>
     <message>
         <source>Length</source>
-        <translation type="unfinished">Lengde</translation>
+        <translation>Lengde</translation>
     </message>
     <message>
         <source>Uploadable</source>
-        <translation type="unfinished">Kan overføres til PC</translation>
+        <translation>Kan overføres til PC</translation>
     </message>
     <message>
         <source>Format</source>
-        <translation type="unfinished">Formater</translation>
+        <translation>Formater</translation>
     </message>
     <message>
         <source>Nr.</source>
-        <translation type="unfinished">Nr.</translation>
+        <translation>Nr.</translation>
     </message>
 </context>
 <context>
@@ -275,7 +275,7 @@
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation type="unfinished"></translation>
+        <translation>overføring avbryttet fra brukeren</translation>
     </message>
 </context>
 </TS>
