@@ -399,8 +399,7 @@ void QHiMDMainWindow::on_action_Connect_triggered()
                                                  tr("Select directory of HiMD Medium"),
                                                  HiMDDirectory,
                                                  QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks
-                                                 | QFileDialog::DontUseNativeDialog);
+                                                 | QFileDialog::DontResolveSymlinks);
     open_himd_at(HiMDDirectory);
 }
 
