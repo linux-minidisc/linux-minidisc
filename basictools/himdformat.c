@@ -18,7 +18,7 @@ int main(int argc, char ** argv)
     
     if(argc < 2)
     {
-        fputs("Please specify the path to the sg device\n",stderr);
+        fputs("Please specify the path to the scsi device (sgN or sdX)\n",stderr);
         return 1;
     }
     
@@ -28,9 +28,9 @@ int main(int argc, char ** argv)
         perror("Cannot open device");
         return 1;
     }
-    if(ioctl(fd,SG_GET_NUM_WAITING,&i) < 0)
+    if(ioctl(fd,SG_GET_VERSION_NUM,&i) < 0)
     {
-        perror("ioctl SG_GET_ACCESS_COUNT failed. Is it really sg? Error");
+        perror("ioctl SG_GET_VERSTION_NUM failed. Missing sg support?");
         return 1;
     }
     
@@ -52,20 +52,13 @@ int main(int argc, char ** argv)
     sg.pack_id = 0;
     sg.usr_ptr = NULL;
     
-    res = write(fd,&sg,sizeof sg);
+    res = ioctl(fd,SG_IO,&sg);
     if(res < 0)
     {
-        perror("sending SCSI command");
+        perror("performing SCSI command");
         return 1;
     }
     
-    res = read(fd,&sg,sizeof sg);
-    if(res < 0)
-    {
-        perror("receiving SCSI answer");
-        return 1;
-    }
-
     if(sg.sb_len_wr)
     {
         printf("Formatting failed! Sense data: ");
