@@ -5,7 +5,8 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-TRANSLATIONS += qhimdtransfer_de.ts qhimdtransfer_no.ts qhimdtransfer_se.ts
+TRANSLATIONS += qhimdtransfer_de.ts qhimdtransfer_nb.ts qhimdtransfer_se.ts \
+                qhimdtransfer_fr.ts
 
 HEADERS += qhimdaboutdialog.h \
            qhimdformatdialog.h \
