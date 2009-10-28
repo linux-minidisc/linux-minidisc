@@ -221,6 +221,8 @@ void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool uploa
     ui->action_Delete->setEnabled(del);
     ui->action_Format->setEnabled(format);
     ui->action_Quit->setEnabled(quit);
+    ui->upload_button->setEnabled(upload);
+    ui->download_button->setEnabled(download);
 }
 
 void QHiMDMainWindow::init_himd_browser()
@@ -233,6 +235,8 @@ void QHiMDMainWindow::init_himd_browser()
     ui->TrackList->resizeColumnToContents(4);
     ui->TrackList->resizeColumnToContents(5);
     ui->TrackList->resizeColumnToContents(6);
+    QObject::connect(ui->TrackList->selectionModel(), SIGNAL(selectionChanged (const QItemSelection &, const QItemSelection &)),
+                     this, SLOT(handle_selection_change(const QItemSelection&, const QItemSelection&)));
 }
 
 void QHiMDMainWindow::init_local_browser()
@@ -242,7 +246,6 @@ void QHiMDMainWindow::init_local_browser()
     localmodel.setNameFilters(QStringList() << "*.mp3" << "*.wav" << "*.oma");
     localmodel.setSorting(QDir::DirsFirst | QDir::Name);
     ui->localScan->setModel(&localmodel);
-    ui->localScan->setRootIndex(localmodel.index(QDir::rootPath()));
     QModelIndex curdir = localmodel.index(ui->updir->text());
     ui->localScan->expand(curdir);
     ui->localScan->setCurrentIndex(curdir);
@@ -269,7 +272,7 @@ void QHiMDMainWindow::open_himd_at(const QString & path)
     ui->himdpath->setText(path);
     settings.setValue("lastHiMDDirectory", path);
 
-    set_buttons_enable(1,1,1,1,1,1,1);
+    set_buttons_enable(1,0,0,1,1,1,1);
 }
 
 void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
@@ -371,6 +374,8 @@ void QHiMDMainWindow::on_action_Upload_triggered()
                                                  UploadDirectory,
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
+    if(UploadDirectory.isEmpty())
+        return;
 
     settings.setValue("lastManualUploadDirectory", UploadDirectory);
     upload_to(UploadDirectory);
@@ -400,6 +405,9 @@ void QHiMDMainWindow::on_action_Connect_triggered()
                                                  HiMDDirectory,
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
+    if(HiMDDirectory.isEmpty())
+        return;
+
     open_himd_at(HiMDDirectory);
 }
 
@@ -415,4 +423,11 @@ void QHiMDMainWindow::on_localScan_clicked(QModelIndex index)
 void QHiMDMainWindow::on_upload_button_clicked()
 {
     upload_to(ui->updir->text());
+}
+
+void QHiMDMainWindow::handle_selection_change(const QItemSelection&, const QItemSelection&)
+{
+    bool nonempty = ui->TrackList->selectionModel()->selectedRows(0).length() != 0;
+    ui->action_Upload->setEnabled(nonempty);
+    ui->upload_button->setEnabled(nonempty);
 }

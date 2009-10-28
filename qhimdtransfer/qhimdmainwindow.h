@@ -59,6 +59,7 @@ private slots:
     void on_action_About_triggered();
     void on_localScan_clicked(QModelIndex index);
     void on_upload_button_clicked();
+    void handle_selection_change(const QItemSelection&, const QItemSelection&);
 };
 
 #endif // QHIMDMAINWINDOW_H
