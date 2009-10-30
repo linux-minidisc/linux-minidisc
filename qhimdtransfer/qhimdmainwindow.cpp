@@ -290,7 +290,7 @@ void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
         QString filename, errmsg;
         QString title = tracks[i].title();
         if(title.isNull())
-            filename = tr("Track %1").arg(tracks[i].tracknum());
+            filename = tr("Track %1").arg(tracks[i].tracknum()+1);
         else
             filename = tracks[i].artist() + " - " + title;
 
