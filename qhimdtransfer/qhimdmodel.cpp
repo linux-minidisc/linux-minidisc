@@ -102,6 +102,13 @@ QString QHiMDTrack::openNonMpegStream(struct himd_nonmp3stream * str) const
     return QString();    
 }
 
+QByteArray QHiMDTrack::makeEA3Header() const
+{
+    char header[EA3_FORMAT_HEADER_SIZE];
+    make_ea3_format_header(header, &ti);
+    return QByteArray(header,EA3_FORMAT_HEADER_SIZE);
+}
+
 enum columnum {
   ColId, ColTitle, ColArtist, ColAlbum, ColLength, ColCodec, ColUploadable,
   LAST_columnnum = ColUploadable

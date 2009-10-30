@@ -5,8 +5,6 @@
 #include "qmessagebox.h"
 #include "qapplication.h"
 
-#include "sony_oma.h"
-
 
 QString QHiMDMainWindow::dumpmp3(const QHiMDTrack & trk, QString file)
 {
@@ -78,10 +76,8 @@ QString QHiMDMainWindow::dumpoma(const QHiMDTrack & track, QString file)
     QString errmsg;
     struct himd_nonmp3stream str;
     struct himderrinfo status;
-    struct trackinfo trkinf;
     unsigned int len;
     const unsigned char * data;
-    char header[EA3_FORMAT_HEADER_SIZE];
     QFile f(file);
 
     if(!f.open(QIODevice::ReadWrite))
@@ -93,8 +89,7 @@ QString QHiMDMainWindow::dumpoma(const QHiMDTrack & track, QString file)
         return tr("Error opening track: ") + status.statusmsg;
     }
 
-    make_ea3_format_header(header, &trkinf);
-    if(f.write(header, sizeof header) == -1)
+    if(f.write(track.makeEA3Header()) == -1)
     {
         errmsg = tr("Error writing header");
         goto clean;

@@ -6,6 +6,8 @@
 #include <QtCore/QList>
 #include "himd.h"
 
+#include "sony_oma.h"
+
 class QHiMDTracksModel;
 
 class QHiMDTrack {
@@ -26,6 +28,7 @@ public:
 
     QString openMpegStream(struct himd_mp3stream * str) const;
     QString openNonMpegStream(struct himd_nonmp3stream * str) const;
+    QByteArray makeEA3Header() const;
 };
 
 typedef QList<QHiMDTrack> QHiMDTrackList;
