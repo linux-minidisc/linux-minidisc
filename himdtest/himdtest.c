@@ -60,6 +60,7 @@ void himd_trackdump(struct himd * himd, int verbose)
             g_free(album);
             if(verbose)
             {
+                char rtime[30],stime[30],etime[30];
                 struct fraginfo f;
                 int fnum = t.firstfrag;
                 int blocks;
@@ -84,6 +85,19 @@ void himd_trackdump(struct himd * himd, int verbose)
                 }
                 printf("     Contend ID: %s\n", hexdump(t.contentid, 20));
                 printf("     Key: %s (EKB %08x); MAC: %s\n", hexdump(t.key, 8), t.ekbnum, hexdump(t.mac, 8));
+                if(t.recordingtime.tm_mon != -1)
+                    strftime(rtime,sizeof rtime, "%x %X", &t.recordingtime);
+                else
+                    strcpy(rtime, "?");
+                if(t.starttime.tm_mon != -1)
+                    strftime(stime,sizeof stime, "%x:%X", &t.starttime);
+                else
+                    strcpy(stime, "?");
+                if(t.endtime.tm_mon != -1)
+                    strftime(etime,sizeof etime, "%x:%X", &t.endtime);
+                else
+                    strcpy(etime, "?");
+                printf("     Recorded: %s, start: %s, end: %s\n", rtime, stime, etime);
             }
         }
     }
