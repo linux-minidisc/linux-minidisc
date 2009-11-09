@@ -1,6 +1,7 @@
 #ifndef INCLUDED_LIBHIMD_HIMD_H
 #define INCLUDED_LIBHIMD_HIMD_H
 
+#include <time.h>
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -74,6 +75,7 @@ struct trackinfo {
     unsigned char mac[8];
     unsigned char contentid[20];
     int ekbnum;
+    struct tm recordingtime, starttime, endtime;
 };
 
 /* a fragment in the audio file */

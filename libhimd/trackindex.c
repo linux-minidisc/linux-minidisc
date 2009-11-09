@@ -46,6 +46,17 @@ unsigned int himd_get_trackslot(struct himd * himd, unsigned int idx, struct him
     return beword16(himd->tifdata + 0x102 + 2*idx);
 }
 
+static void get_dostime(struct tm * tm, unsigned const char * bytes)
+{
+    unsigned int thetime = beword16(bytes+2);
+    unsigned int thedate = beword16(bytes);
+    tm->tm_sec = (thetime & 0x1F)*2;
+    tm->tm_min = (thetime & 0x7E0) >> 5;
+    tm->tm_hour = (thetime & 0xF100) >> 11;
+    tm->tm_mday = (thedate & 0x1F);
+    tm->tm_mon = ((thedate & 0x1E0) >> 5) - 1;
+    tm->tm_year = ((thedate & 0xFE00) >> 9) + 80;
+}
 
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t, struct himderrinfo * status)
 {
@@ -66,6 +77,7 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
                           _("Track %d is not present on disc"), idx);
         return -1;
     }
+    get_dostime(&t->recordingtime,trackbuffer+0);
     t->ekbnum = beword32(trackbuffer+4);
     t->title = beword16(trackbuffer+8);
     t->artist = beword16(trackbuffer+10);
@@ -80,6 +92,8 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     t->tracknum = beword16(trackbuffer+38);
     t->seconds = beword16(trackbuffer+40);
     memcpy(t->contentid,trackbuffer+48,20);
+    get_dostime(&t->starttime,trackbuffer+68);
+    get_dostime(&t->endtime,trackbuffer+72);
     return 0;
 }
 
