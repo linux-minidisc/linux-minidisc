@@ -169,11 +169,11 @@
     </message>
     <message>
         <source>HiMD path</source>
-        <translation>HiMD kobling</translation>
+        <translation>HiMD sti</translation>
     </message>
     <message>
         <source>(disconnected)</source>
-        <translation>(ikke tilkoblet)</translation>
+        <translation>(frakoblet)</translation>
     </message>
     <message>
         <source>&gt;&gt;</source>
