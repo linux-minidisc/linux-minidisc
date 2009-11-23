@@ -167,6 +167,30 @@
         <source>&amp;Connect</source>
         <translation>&amp;Verbinden</translation>
     </message>
+    <message>
+        <source>HiMD path</source>
+        <translation>HiMD-Pfad</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(nicht verbunden)</translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation>&gt;&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation>&lt;&lt;</translation>
+    </message>
+    <message>
+        <source>local directory</source>
+        <translation>Lokales Verzeichnis</translation>
+    </message>
+    <message>
+        <source>/tmp</source>
+        <translation>/tmp</translation>
+    </message>
 </context>
 <context>
     <name>QHiMDTracksModel</name>
