@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="sv_SE">
+<!DOCTYPE TS><TS>
 <context>
     <name>QHiMDAboutDialog</name>
     <message>
@@ -134,15 +132,15 @@
     </message>
     <message>
         <source>Re&amp;name</source>
-        <translation>&amp;Bytnamn</translation>
+        <translation>&amp;Byt namn</translation>
     </message>
     <message>
         <source>Rename selected</source>
-        <translation>Bytnamn vald</translation>
+        <translation>Byt namn vald</translation>
     </message>
     <message>
         <source>D&amp;elete selected</source>
-        <translation>&amp;Radera vald</translation>
+        <translation>&amp;Ta bort vald</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -167,6 +165,30 @@
     <message>
         <source>&amp;Connect</source>
         <translation>&amp;Anslut</translation>
+    </message>
+    <message>
+        <source>HiMD path</source>
+        <translation>HiMD sökväg</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(nedkopplad)</translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <source>local directory</source>
+        <translation>lokal katalog</translation>
+    </message>
+    <message>
+        <source>/tmp</source>
+        <translation></translation>
     </message>
 </context>
 <context>
