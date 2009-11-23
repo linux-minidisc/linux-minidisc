@@ -167,6 +167,30 @@
         <source>&amp;Connect</source>
         <translation>&amp;Koble til</translation>
     </message>
+    <message>
+        <source>HiMD path</source>
+        <translation>HiMD kobling</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(ikke tilkoblet)</translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation>&gt;&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation>&lt;&lt;</translation>
+    </message>
+    <message>
+        <source>local directory</source>
+        <translation>lokal katalog</translation>
+    </message>
+    <message>
+        <source>/tmp</source>
+        <translation>/tmp</translation>
+    </message>
 </context>
 <context>
     <name>QHiMDTracksModel</name>
