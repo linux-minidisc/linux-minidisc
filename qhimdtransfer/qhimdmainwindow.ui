@@ -101,7 +101,7 @@
         <item>
          <widget class="QLabel" name="updir">
           <property name="text">
-           <string>/tmp</string>
+           <string notr="true">/tmp</string>
           </property>
          </widget>
         </item>
