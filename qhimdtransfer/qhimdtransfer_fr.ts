@@ -5,11 +5,11 @@
     <name>QHiMDAboutDialog</name>
     <message>
         <source>About QHiMDTransfer</source>
-        <translation>À propos de QHiMDTransfer</translation>
+        <translation>?? propos de QHiMDTransfer</translation>
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;À propos de QHiMDTransfer&lt;/h1&gt;</translation>
+        <translation>&lt;h1&gt;?? propos de QHiMDTransfer&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -24,9 +24,9 @@
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
         <translation>&lt;h3&gt; QHiMDTransfer, Version 0.0.1 &lt;/h3&gt;
          &lt;p&gt;&lt;p&gt;
-         &lt;p&gt;Un logiciel libre pour transférer la musique d&apos;un Walkman MiniDisc.&lt;/p&gt;
+         &lt;p&gt;Un logiciel libre pour transf??rer la musique d&apos;un Walkman MiniDisc.&lt;/p&gt;
          &lt;p&gt;&lt;p&gt;
-         &lt;p&gt;Conçu pour vous par le projet Linux-minidisc:&lt;/p&gt;
+         &lt;p&gt;Con??u pour vous par le projet Linux-minidisc:&lt;/p&gt;
          &lt;p&gt;&lt;p&gt;
          &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
          &lt;p&gt;&lt;p&gt;
@@ -45,7 +45,7 @@
     </message>
     <message>
         <source>Really format MiniDisc (all audio-tracks and data will be lost) ?</source>
-        <translation>Voulez-vous vraiment formater le MiniDisc (toutes les pistes audio et les données seront perdues) ?</translation>
+        <translation>Voulez-vous vraiment formater le MiniDisc (toutes les pistes audio et les donn??es seront perdues) ?</translation>
     </message>
 </context>
 <context>
@@ -56,7 +56,7 @@
     </message>
     <message>
         <source>upload disabled because of DRM encryption</source>
-        <translation>Importation désactivée en raison des protections DRM</translation>
+        <translation>Importation d??sactiv??e en raison des protections DRM</translation>
     </message>
     <message>
         <source>Error opening file for MP3 output</source>
@@ -68,15 +68,15 @@
     </message>
     <message>
         <source>Error writing audio data</source>
-        <translation>Erreur lors de l&apos;écriture des données audio</translation>
+        <translation>Erreur lors de l&apos;??criture des donn??es audio</translation>
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation>Importation annulée par l&apos;utilisateur</translation>
+        <translation>Importation annul??e par l&apos;utilisateur</translation>
     </message>
     <message>
         <source>Error reading audio data: </source>
-        <translation>Erreur lors de la lecture des données audio : </translation>
+        <translation>Erreur lors de la lecture des donn??es audio : </translation>
     </message>
     <message>
         <source>Error opening file for ATRAC output</source>
@@ -84,7 +84,7 @@
     </message>
     <message>
         <source>Error writing header</source>
-        <translation>Erreur lors de l&apos;écriture des données d&apos;entête</translation>
+        <translation>Erreur lors de l&apos;??criture des donn??es d&apos;ent??te</translation>
     </message>
     <message>
         <source>Error opening file for WAV output</source>
@@ -92,7 +92,7 @@
     </message>
     <message>
         <source>Select MP3s for download</source>
-        <translation>Sélectionnez les MP3 à exporter</translation>
+        <translation>S??lectionnez les MP3 ?? exporter</translation>
     </message>
     <message>
         <source>Select directory for Upload</source>
@@ -105,7 +105,7 @@
     <message>
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
 </source>
-        <translation>Erreur lors de l&apos;ouverture des données HiMD. Assurez-vous d&apos;avoir choisi le dossier racine approprié sur votre Walkman HiMD.</translation>
+        <translation>Erreur lors de l&apos;ouverture des donn??es HiMD. Assurez-vous d&apos;avoir choisi le dossier racine appropri?? sur votre Walkman HiMD.</translation>
     </message>
 </context>
 <context>
@@ -136,11 +136,11 @@
     </message>
     <message>
         <source>Rename selected</source>
-        <translation>Renommer la sélection</translation>
+        <translation>Renommer la s??lection</translation>
     </message>
     <message>
         <source>D&amp;elete selected</source>
-        <translation>&amp;Supprimer la sélection</translation>
+        <translation>&amp;Supprimer la s??lection</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -148,7 +148,7 @@
     </message>
     <message>
         <source>&amp;About</source>
-        <translation>À &amp;propos</translation>
+        <translation>?? &amp;propos</translation>
     </message>
     <message>
         <source>&amp;Format MD</source>
@@ -165,6 +165,30 @@
     <message>
         <source>&amp;Connect</source>
         <translation>&amp;Connecter</translation>
+    </message>
+    <message>
+        <source>HiMD path</source>
+        <translation>Chemin HiMD</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(d??connect??)</translation>
+    </message>
+    <message>
+        <source>&gt;&gt;</source>
+        <translation>&gt;&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;&lt;</source>
+        <translation>&lt;&lt;</translation>
+    </message>
+    <message>
+        <source>local directory</source>
+        <translation>dossier local</translation>
+    </message>
+    <message>
+        <source>/tmp</source>
+        <translation>/tmp</translation>
     </message>
 </context>
 <context>
@@ -183,7 +207,7 @@
     </message>
     <message>
         <source>Length</source>
-        <translation>Durée</translation>
+        <translation>Dur??e</translation>
     </message>
     <message>
         <source>Uploadable</source>
@@ -195,22 +219,22 @@
     </message>
     <message>
         <source>Nr.</source>
-        <translation>N°</translation>
+        <translation>N??</translation>
     </message>
 </context>
 <context>
     <name>QHiMDUploadDialog</name>
     <message>
         <source>upload finished</source>
-        <translation>Importation terminée</translation>
+        <translation>Importation termin??e</translation>
     </message>
     <message>
         <source>%1 track(s) successfully uploaded</source>
-        <translation>%1 piste(s) importée(s) avec succès</translation>
+        <translation>%1 piste(s) import??e(s) avec succ??s</translation>
     </message>
     <message>
         <source>%1 track(s) could not be uploaded</source>
-        <translation>%1 piste(s) ne peuvent pas être importées</translation>
+        <translation>%1 piste(s) ne peuvent pas ??tre import??es</translation>
     </message>
     <message>
         <source>Track %1</source>
@@ -222,7 +246,7 @@
     </message>
     <message>
         <source>no tracks selected</source>
-        <translation>Aucune piste sélectionnée</translation>
+        <translation>Aucune piste s??lectionn??e</translation>
     </message>
     <message>
         <source>please wait while uploading %1 track(s)</source>
@@ -238,7 +262,7 @@
     </message>
     <message>
         <source>overall progress</source>
-        <translation>Progression des opérations</translation>
+        <translation>Progression des op??rations</translation>
     </message>
     <message>
         <source>current track: trknum - filename</source>
@@ -246,15 +270,15 @@
     </message>
     <message>
         <source>xx track(s) successfully uploaded</source>
-        <translation>xx piste(s) importée(s) avec succès</translation>
+        <translation>xx piste(s) import??e(s) avec succ??s</translation>
     </message>
     <message>
         <source>xx track(s) could not be uploaded</source>
-        <translation>xx piste(s) ne peuvent pas être importées</translation>
+        <translation>xx piste(s) ne peuvent pas ??tre import??es</translation>
     </message>
     <message>
         <source>Show Details</source>
-        <translation>Afficher les détails</translation>
+        <translation>Afficher les d??tails</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -266,7 +290,7 @@
     </message>
     <message>
         <source>Tracknr.</source>
-        <translation>N° piste</translation>
+        <translation>N?? piste</translation>
     </message>
     <message>
         <source>Error message</source>
@@ -274,7 +298,7 @@
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation>Importation abandonnée par l&apos;utilisateur</translation>
+        <translation>Importation abandonn??e par l&apos;utilisateur</translation>
     </message>
 </context>
 </TS>
