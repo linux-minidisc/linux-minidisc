@@ -57,6 +57,24 @@ static int scanforatdata(GDir * dir)
     return maxdatanum;
 }
 
+static void nong_inplace_ascii_down(gchar * string)
+{
+    while(*string)
+    {
+        *string = g_ascii_tolower(*string);
+        string++;
+    }
+}
+
+static void nong_inplace_ascii_up(gchar * string)
+{
+    while(*string)
+    {
+        *string = g_ascii_toupper(*string);
+        string++;
+    }
+}
+
 FILE * himd_open_file(struct himd * himd, const char * fileid)
 {
     char filename[13];
@@ -64,7 +82,11 @@ FILE * himd_open_file(struct himd * himd, const char * fileid)
     char * filepath;
 
     sprintf(filename,"%s%02X.HMA",fileid,himd->datanum);
-    filepath = g_build_filename(himd->rootpath,"HMDHIFI",filename,NULL);
+    if(himd->need_lowercase)
+        nong_inplace_ascii_down(filename);
+    else
+        nong_inplace_ascii_up(filename);
+    filepath = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",filename,NULL);
     file = fopen(filepath,"rb");
     g_free(filepath);
     return file;
@@ -105,8 +127,17 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
     g_return_val_if_fail(himd != NULL, -1);
     g_return_val_if_fail(himdroot != NULL, -1);
 
+    himd->need_lowercase = 0;
     filepath = g_build_filename(himdroot,"HMDHIFI",NULL);
     dir = g_dir_open(filepath,0,&error);
+    if(g_error_matches(error,G_FILE_ERROR,G_FILE_ERROR_NOENT))
+    {
+        g_error_free(error);
+        error = NULL;
+        filepath = g_build_filename(himdroot,"hmdhifi",NULL);
+        dir = g_dir_open(filepath,0,&error);
+        himd->need_lowercase = 1;
+    }
     g_free(filepath);
     if(dir == NULL)
     {
@@ -122,8 +153,11 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
         return -1;		/* ERROR: track index not found */
     }
     
-    sprintf(indexfilename,"TRKIDX%02X.HMA",himd->datanum);
-    filepath = g_build_filename(himdroot,"HMDHIFI",indexfilename,NULL);
+    sprintf(indexfilename,
+            himd->need_lowercase ? "trkidx%02x.hma" : "TRKIDX%02X.HMA",
+            himd->datanum);
+    filepath = g_build_filename(himdroot,himd->need_lowercase ? "hmdhifi" : 
+                                "HMDHIFI",indexfilename,NULL);
     if(!g_file_get_contents(filepath, (char**)&himd->tifdata, &filelen, &error))
     {
         set_status_printf(status, HIMD_ERROR_CANT_READ_TIF,

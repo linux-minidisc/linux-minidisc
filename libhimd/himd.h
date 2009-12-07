@@ -102,6 +102,7 @@ struct himd {
     int discid_valid;
     unsigned char discid[16];
     int datanum;
+    int need_lowercase;
 };
 
 struct himderrinfo {
