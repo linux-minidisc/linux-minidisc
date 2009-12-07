@@ -2,6 +2,7 @@ TEMPLATE=lib
 TARGET  =himd
 CONFIG -= qt
 CONFIG += staticlib link_pkgconfig create_prl console debug_and_release_target
+DEFINES += G_DISABLE_DEPRECATED=1
 
 !without_mcrypt: {
   LIBS += -lmcrypt

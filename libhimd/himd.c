@@ -42,10 +42,10 @@ static int scanforatdata(GDir * dir)
     while((hmafile = g_dir_read_name(dir)) != NULL)
     {
         /* atdataNN.hma - should be only one of them */
-        if(g_strncasecmp(hmafile,"atdata0",7) == 0 &&
+        if(g_ascii_strncasecmp(hmafile,"atdata0",7) == 0 &&
            strlen(hmafile) == 12 &&
            isxdigit(hmafile[7]) &&
-           g_strncasecmp(hmafile+8,".hma",4) == 0 &&
+           g_ascii_strncasecmp(hmafile+8,".hma",4) == 0 &&
            sscanf(hmafile+6,"%x",&curdatanum) == 1 &&
            curdatanum > maxdatanum)
         {
