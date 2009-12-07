@@ -296,7 +296,7 @@ Vedi il file LICENSE nella directory del programma  per ulteriori informazioni.&
     </message>
     <message>
         <source>please wait while uploading %1 track(s)</source>
-        <translation type="unfinished">Attendi per favore mentre l&apos;upload di %1 traccie e completo</translation>
+        <translation>Attendi per favore mentre l&apos;upload di %1 traccie e completo</translation>
     </message>
     <message>
         <source>upload aborted by the user</source>

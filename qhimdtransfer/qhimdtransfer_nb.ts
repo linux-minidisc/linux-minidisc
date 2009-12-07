@@ -30,7 +30,7 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;Denne programvaren er lisensert under GNU GPL v2.. Se på
+        &lt;p&gt;Denne programvaren er lisensert under GNU GPL v2. Se på
          filen LICENSE som kom med denne programvaren.&lt;/p&gt;</translation>
     </message>
     <message>
@@ -189,7 +189,7 @@
     </message>
     <message>
         <source>/tmp</source>
-        <translation>/tmp</translation>
+        <translation type="obsolete">/tmp</translation>
     </message>
 </context>
 <context>
