@@ -50,7 +50,7 @@ static int scanforatdata(GDir * dir)
            curdatanum > maxdatanum)
         {
             if(maxdatanum != -1)
-                g_warning("Found two atdata files: %02x and %02x\n",curdatanum,maxdatanum);
+                g_warning("Found two atdata files: %02X and %02X\n",curdatanum,maxdatanum);
             maxdatanum = curdatanum;
         }
     }
@@ -63,8 +63,8 @@ FILE * himd_open_file(struct himd * himd, const char * fileid)
     FILE * file;
     char * filepath;
 
-    sprintf(filename,"%s%02x.hma",fileid,himd->datanum);
-    filepath = g_build_filename(himd->rootpath,"hmdhifi",filename,NULL);
+    sprintf(filename,"%s%02X.HMA",fileid,himd->datanum);
+    filepath = g_build_filename(himd->rootpath,"HMDHIFI",filename,NULL);
     file = fopen(filepath,"rb");
     g_free(filepath);
     return file;
@@ -72,7 +72,7 @@ FILE * himd_open_file(struct himd * himd, const char * fileid)
 
 static int himd_read_discid(struct himd * himd, struct himderrinfo * status)
 {
-    FILE * mclistfile = himd_open_file(himd, "mclist");
+    FILE * mclistfile = himd_open_file(himd, "MCLIST");
 
     if(!mclistfile)
     {
@@ -105,7 +105,7 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
     g_return_val_if_fail(himd != NULL, -1);
     g_return_val_if_fail(himdroot != NULL, -1);
 
-    filepath = g_build_filename(himdroot,"hmdhifi",NULL);
+    filepath = g_build_filename(himdroot,"HMDHIFI",NULL);
     dir = g_dir_open(filepath,0,&error);
     g_free(filepath);
     if(dir == NULL)
@@ -122,8 +122,8 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
         return -1;		/* ERROR: track index not found */
     }
     
-    sprintf(indexfilename,"trkidx%02x.hma",himd->datanum);
-    filepath = g_build_filename(himdroot,"hmdhifi",indexfilename,NULL);
+    sprintf(indexfilename,"TRKIDX%02X.HMA",himd->datanum);
+    filepath = g_build_filename(himdroot,"HMDHIFI",indexfilename,NULL);
     if(!g_file_get_contents(filepath, (char**)&himd->tifdata, &filelen, &error))
     {
         set_status_printf(status, HIMD_ERROR_CANT_READ_TIF,

@@ -53,7 +53,7 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, unsigned i
         fragnum = stream->frags[fragcount].nextfrag;
     }
 
-    stream->atdata = himd_open_file(himd, "atdata");
+    stream->atdata = himd_open_file(himd, "ATDATA");
     if(!stream->atdata)
     {
         set_status_printf(status, HIMD_ERROR_CANT_OPEN_AUDIO,
