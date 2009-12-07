@@ -1,9 +1,9 @@
-static unsigned int beword16(const unsigned char * c)
+static inline unsigned int beword16(const unsigned char * c)
 {
     return c[0]*256+c[1];
 }
 
-static unsigned int beword32(const unsigned char * c)
+static inline unsigned int beword32(const unsigned char * c)
 {
     return c[0]*16777216+c[1]*65536+c[2]*256+c[3];
 }
