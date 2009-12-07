@@ -3,6 +3,13 @@
 #include <QtCore/QLocale>
 #include "qhimdmainwindow.h"
 
+/* stolen from Qt Creator */
+#ifdef Q_OS_MAC
+#define SHARE_FROM_BIN "/../Resources"
+#else
+#define SHARE_FROM_BIN "/../share/qhimdtransfer"
+#endif
+
 int main(int argc, char *argv[])
 {
     int status;
@@ -10,7 +17,11 @@ int main(int argc, char *argv[])
     
     QApplication a(argc, argv);
     QTranslator trans;
-    trans.load(QString("qhimdtransfer_") + QLocale::system().name());
+    QString transfile = QString("qhimdtransfer_") + QLocale::system().name();
+    QString transdir = QCoreApplication::applicationDirPath() +
+                         QString(SHARE_FROM_BIN "/translations");
+    // try cwd, then standard translation directory
+    trans.load(transfile) || trans.load(transfile, transdir);
     a.installTranslator(&trans);
     a.setOrganizationName("linux-minidisc");
     a.setApplicationName("QHiMDTransfer");
