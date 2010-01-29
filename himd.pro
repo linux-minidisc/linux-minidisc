@@ -1,6 +1,6 @@
 TEMPLATE =subdirs
 CONFIG   +=order
-SUBDIRS  = libhimd himdtest
+SUBDIRS  = libhimd himddump
 !without_gui: {
   SUBDIRS += qhimdtransfer
 }
