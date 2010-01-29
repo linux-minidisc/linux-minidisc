@@ -8,7 +8,7 @@ INCLUDEPATH += .
 TRANSLATIONS += qhimdtransfer_de.ts qhimdtransfer_nb.ts qhimdtransfer_sv.ts \
                 qhimdtransfer_fr.ts qhimdtransfer_pt.ts qhimdtransfer_pl.ts \
                 qhimdtransfer_ru.ts qhimdtransfer_it.ts qhimdtransfer_ja.ts \
-                qhimdtransfer_fi.ts qhimdtransfer_ar.ts
+                qhimdtransfer_fi.ts qhimdtransfer_ar.ts qhimdtransfer_gr.ts
 
 HEADERS += qhimdaboutdialog.h \
            qhimdformatdialog.h \
