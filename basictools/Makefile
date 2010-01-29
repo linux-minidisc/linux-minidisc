@@ -1,5 +1,5 @@
 
 CFLAGS=-Wall
 
-all: minikey mp3key himdformat
+all: himddiskid mp3key himdformat
 
