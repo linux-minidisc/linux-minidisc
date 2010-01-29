@@ -4,7 +4,7 @@ from ctypes import Structure, \
                    cdll, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, \
-                   c_void_p, c_char_p
+                   c_void_p, c_char_p, py_object
 import struct
 
 class Enum(object):
@@ -448,6 +448,7 @@ class libusb_iso_packet_descriptor(Structure):
     _fields_ = [('length', c_uint),
                 ('actual_length', c_uint),
                 ('status', c_int)] # enum libusb_transfer_status
+libusb_iso_packet_descriptor_p = POINTER(libusb_iso_packet_descriptor)
 
 class libusb_transfer(Structure):
     pass
@@ -464,11 +465,10 @@ libusb_transfer._fields_ = [('dev_handle', libusb_device_handle_p),
                             ('length', c_int),
                             ('actual_length', c_int),
                             ('callback', libusb_transfer_cb_fn_p),
-                            ('user_data', c_void_p),
-                            ('buffer', c_char_p),
+                            ('user_data', py_object),
+                            ('buffer', c_void_p),
                             ('num_iso_packets', c_int),
-                            ('iso_packet_desc',
-                             libusb_iso_packet_descriptor * 0) # XXX: WTF ?
+                            ('iso_packet_desc', libusb_iso_packet_descriptor_p)
 ]
 
 #int libusb_init(libusb_context **ctx);
@@ -609,9 +609,9 @@ def libusb_control_transfer_get_data(transfer):
 def libusb_control_transfer_get_setup(transfer):
     return cast(transfer, libusb_control_setup_p)
 
-def libusb_fill_control_setup(buffer, bmRequestType, bRequest, wValue, wIndex,
+def libusb_fill_control_setup(setup_p, bmRequestType, bRequest, wValue, wIndex,
                               wLength):
-    setup = cast(buffer, libusb_control_setup_p).contents
+    setup = cast(setup_p, libusb_control_setup_p).contents
     setup.bmRequestType = bmRequestType
     setup.bRequest = bRequest
     setup.wValue = libusb_cpu_to_le16(wValue)
@@ -633,8 +633,9 @@ libusb_free_transfer = libusb.libusb_free_transfer
 libusb_free_transfer.argtypes = [libusb_transfer_p]
 libusb_free_transfer.restype = None
 
-def libusb_fill_control_transfer(transfer, dev_handle, buffer, callback,
+def libusb_fill_control_transfer(transfer_p, dev_handle, buffer, callback,
                                  user_data, timeout):
+    transfer = transfer_p.contents
     transfer.dev_handle = dev_handle
     transfer.endpoint = 0
     transfer.type = LIBUSB_TRANSFER_TYPE_CONTROL
@@ -643,33 +644,37 @@ def libusb_fill_control_transfer(transfer, dev_handle, buffer, callback,
         setup = cast(buffer, libusb_control_setup_p).contents
         transfer.length = LIBUSB_CONTROL_SETUP_SIZE + \
                           libusb_le16_to_cpu(setup.wLength)
+        transfer.buffer = cast(buffer, c_void_p)
     transfer.user_data = user_data
     transfer.callback = callback
 
-def libusb_fill_bulk_transfer(transfer, dev_handle, endpoint, buffer, length,
+def libusb_fill_bulk_transfer(transfer_p, dev_handle, endpoint, buffer, length,
                               callback, user_data, timeout):
+    transfer = transfer_p.contents
     transfer.dev_handle = dev_handle
     transfer.endpoint = endpoint
     transfer.type = LIBUSB_TRANSFER_TYPE_BULK
     transfer.timeout = timeout
-    transfer.buffer = buffer
+    transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.user_data = user_data
     transfer.callback = callback
 
-def libusb_fill_interrupt_transfer(transfer, dev_handle, endpoint, buffer,
+def libusb_fill_interrupt_transfer(transfer_p, dev_handle, endpoint, buffer,
                                    length, callback, user_data, timeout):
+    transfer = transfer_p.contents
     transfer.dev_handle = dev_handle
     transfer.endpoint = endpoint
     transfer.type = LIBUSB_TRANSFER_TYPE_INTERRUPT
     transfer.timeout = timeout
-    transfer.buffer = buffer
+    transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.user_data = user_data
     transfer.callback = callback
 
-def libusb_fill_iso_transfer(transfer, dev_handle, endpoint, buffer, length,
+def libusb_fill_iso_transfer(transfer_p, dev_handle, endpoint, buffer, length,
                              num_iso_packets, callback, user_data, timeout):
+    transfer = transfer_p.contents
     transfer.dev_handle = dev_handle
     transfer.endpoint = endpoint
     transfer.type = LIBUSB_TRANSFER_TYPE_ISOCHRONOUS
@@ -680,11 +685,13 @@ def libusb_fill_iso_transfer(transfer, dev_handle, endpoint, buffer, length,
     transfer.user_data = user_data
     transfer.callback = callback
 
-def libusb_set_iso_packet_lengths(transfer, length):
+def libusb_set_iso_packet_lengths(transfer_p, length):
+    transfer = transfer_p.contents
     for i in xrange(transfer.num_iso_packets):
         transfer.iso_packet_desc[i].length = length
 
-def libusb_get_iso_packet_buffer(transfer, packet):
+def libusb_get_iso_packet_buffer(transfer_p, packet):
+    transfer = transfer_p.contents
     offset = 0
     if packet >= transfer.num_iso_packets:
         return None
@@ -692,7 +699,8 @@ def libusb_get_iso_packet_buffer(transfer, packet):
         offset += transfer.iso_packet_desc[i].length
     return transfer.buffer[offset:]
 
-def libusb_get_iso_packet_buffer_simple(transfer, packet):
+def libusb_get_iso_packet_buffer_simple(transfer_p, packet):
+    transfer = transfer_p.contents
     if packet >= transfer.num_iso_packets:
         return None
     return transfer.buffer[transfer.iso_packet_desc[0].length * packet:]
@@ -789,8 +797,8 @@ class libusb_pollfd(Structure):
 libusb_pollfd_p = POINTER(libusb_pollfd)
 libusb_pollfd_p_p = POINTER(libusb_pollfd_p)
 
-libusb_pollfd_added_cb_p = CFUNCTYPE(None, c_int, c_short, c_void_p)
-libusb_pollfd_removed_cb_p = CFUNCTYPE(None, c_int, c_void_p)
+libusb_pollfd_added_cb_p = CFUNCTYPE(None, c_int, c_short, py_object)
+libusb_pollfd_removed_cb_p = CFUNCTYPE(None, c_int, py_object)
 
 #const struct libusb_pollfd **libusb_get_pollfds(libusb_context *ctx);
 libusb_get_pollfds = libusb.libusb_get_pollfds
@@ -802,7 +810,7 @@ libusb_get_pollfds.restype = libusb_pollfd_p_p
 libusb_set_pollfd_notifiers = libusb.libusb_set_pollfd_notifiers
 libusb_set_pollfd_notifiers.argtypes = [libusb_context_p,
                                         libusb_pollfd_added_cb_p,
-                                        libusb_pollfd_removed_cb_p, c_void_p]
+                                        libusb_pollfd_removed_cb_p, py_object]
 libusb_set_pollfd_notifiers.restype = None
 
 # /libusb.h

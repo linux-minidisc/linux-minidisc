@@ -49,15 +49,22 @@ def listMD(md):
         (disc_total - disc_left) / float(disc_total) * 100)
     track_count = md_iface.getTrackCount()
     print '%i tracks' % (track_count, )
-    for track in xrange(track_count):
-        hour, minute, second, sample = md_iface.getTrackLength(track)
-        codec, channel_count = md_iface.getTrackEncoding(track)
-        flags = md_iface.getTrackFlags(track)
-        print '%03i: %02i:%02i:%02i+%03i %s %s %s %r %s' % (track, hour,
-            minute, second, sample, codec_name_dict[codec],
-            channel_count_dict[channel_count], flag_dict[flags],
-            md_iface.getTrackTitle(track),
-            md_iface.getTrackTitle(track, True).decode('shift_jis'))
+    for group, (group_name, track_list) in enumerate(
+        md_iface.getTrackGroupList()):
+        if group_name is None:
+            prefix = ''
+        else:
+            prefix = '  '
+            print 'Group %r' % (group_name or group + 1, )
+        for track, real_track in enumerate(track_list):
+            hour, minute, second, sample = md_iface.getTrackLength(real_track)
+            codec, channel_count = md_iface.getTrackEncoding(real_track)
+            flags = md_iface.getTrackFlags(real_track)
+            print '%s%03i: %02i:%02i:%02i+%03i %s %s %s %r %s' % (prefix,
+                track, hour, minute, second, sample, codec_name_dict[codec],
+                channel_count_dict[channel_count], flag_dict[flags],
+                md_iface.getTrackTitle(real_track),
+                md_iface.getTrackTitle(real_track, True).decode('shift_jis'))
 
 if __name__ == '__main__':
     from optparse import OptionParser

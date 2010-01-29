@@ -66,7 +66,7 @@ def iterdevices(usb_context, bus=None, device_address=None):
         if bus is not None and bus != device.getBusNumber():
             continue
         if device_address is not None and \
-           device != device_address.getDeviceAddress():
+           device_address != device.getDeviceAddress():
             continue
         if (device.getVendorID(), device.getProductID()) in KNOWN_USB_ID_SET:
             yield NetMD(device.open())
@@ -663,17 +663,17 @@ class NetMDInterface(object):
                 title = '';
         return title
 
-    def getTrackGroupDict(self):
+    def getTrackGroupList(self):
         """
           Return a list representing track groups.
           This list is composed of 2-tuples:
             group title
             track number list
         """
-        # XXX: not tested
         raw_title = self._getDiscTitle()
         group_list = raw_title.split('//')
         track_dict = {}
+        track_count = self.getTrackCount()
         result = []
         append = result.append
         for group_index, group in enumerate(group_list):
@@ -684,19 +684,24 @@ class NetMDInterface(object):
             track_range, group_name = group.split(';', 1)
             if '-' in track_range:
                 track_min, track_max = track_range.split('-')
-                assert track_min < track_max, '%r, %r' % (track_min, track_max)
             else:
                 track_min = track_max = track_range
+            track_min, track_max = int(track_min), int(track_max)
+            assert 0 <= track_min <= track_max <= track_count, (
+                track_min, track_max, track_count)
             track_list = []
             track_append = track_list.append
-            for track in xrange(int(track_min) - 1, int(track_max)):
+            for track in xrange(track_min - 1, track_max):
                 if track in track_dict:
                     raise ValueError, 'Track %i is in 2 groups: %r[%i] & ' \
                          '%r[%i]' % (track, track_dict[track][0],
                          track_dict[track][1], group_name, group_index)
                 track_dict[track] = group_name, group_index
                 track_append(track)
-            append((group, track_list))
+            append((group_name, track_list))
+        track_list = [x for x in xrange(track_count) if x not in track_dict]
+        if len(track_list):
+            append((None, track_list))
         return result
 
     def getTrackTitle(self, track, wchar=False):

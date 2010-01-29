@@ -1,6 +1,6 @@
 # pyusb compatibility layer for libus-1.0
 import libusb1
-from ctypes import byref, create_string_buffer, c_int
+from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER
 from cStringIO import StringIO
 
 __all__ = ['LibUSBContext']
@@ -8,12 +8,146 @@ __all__ = ['LibUSBContext']
 # Default string length
 STRING_LENGTH = 256
 
+EVENT_CALLBACK_SET = frozenset((
+  libusb1.LIBUSB_TRANSFER_COMPLETED,
+  libusb1.LIBUSB_TRANSFER_ERROR,
+  libusb1.LIBUSB_TRANSFER_TIMED_OUT,
+  libusb1.LIBUSB_TRANSFER_CANCELLED,
+  libusb1.LIBUSB_TRANSFER_STALL,
+  libusb1.LIBUSB_TRANSFER_NO_DEVICE,
+  libusb1.LIBUSB_TRANSFER_OVERFLOW,
+))
+
+DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x, y: False
+
+class USBAsyncReaderBase(object):
+    _handle = None
+    _submited = False
+
+    def __init__(self, handle, endpoint, size, user_data=None, timeout=0):
+        data = create_string_buffer(size)
+        self._data = data
+        self._transfer = self._getTransfer(
+          handle,
+          endpoint,
+          data,
+          self._callbackDispatcher,
+          user_data,
+          timeout,
+        )
+        # XXX: set _handle *after* _transfer, so __del__ doesn't get an
+        # exception if called during constructor execution.
+        self._handle = handle
+        self._event_callback_dict = {}
+        self._errorCallback = DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK
+
+    def submit(self):
+        self._submited = True
+        self._handle.submitTransfer(self._transfer)
+
+    def cancel(self):
+        self._handle.cancelTransfer(self._transfer)
+        self._submited = False
+
+    def setEventCallback(self, event, callback):
+        if event not in EVENT_CALLBACK_SET:
+            raise ValueError, 'Unknown event %r.' % (event, )
+        self._event_callback_dict[event] = callback
+
+    def setDefaultCallback(self, callback):
+        self._errorCallback = callback
+
+    def getEventCallback(self, event, default=None):
+        return self._event_callback_dict.get(event, default)
+
+    def _callbackDispatcher(self, transfer_p):
+        transfer = self._transfer.contents #transfer_p.contents
+        if self.getEventCallback(transfer.status, self._errorCallback)(
+            transfer, self._data):
+            self.submit()
+        else:
+            self._submited = False
+
+    def isSubmited(self):
+        return self._submited
+
+    def __del__(self):
+        if self._handle is not None:
+            try:
+                self.cancel()
+            except libusb1.USBError, exception:
+                if exception.value != libusb1.LIBUSB_ERROR_NOT_FOUND:
+                    raise
+
+class USBAsyncBulkReader(USBAsyncReaderBase):
+    def _getTransfer(self, handle, *args, **kw):
+        return handle.getBulkTransfer(*args, **kw)
+
+class USBAsyncInterruptReader(USBAsyncReaderBase):
+    def _getTransfer(self, handle, *args, **kw):
+        return handle.getInterruptTransfer(*args, **kw)
+
+class USBPoller(object):
+    def __init__(self, context, poller):
+        self.context = context
+        self.poller = poller
+        fd_set = set()
+        self.fd_set = fd_set
+        context.setPollFDNotifiers(self._registerFD, self._unregisterFD)
+        for fd, events in context.getPollFDList():
+            self._registerFD(fd, events)
+
+    def poll(self, timeout=None):
+        fd_set = self.fd_set
+        next_usb_timeout = self.context.getNextTimeout()
+        if next_usb_timeout == 0:
+            next_usb_timeout = None
+        if timeout is None:
+            usb_timeout = next_usb_timeout
+        else:
+            usb_timeout = min(next_usb_timeout or timeout, timeout)
+        event_list = self.poller.poll(usb_timeout)
+        event_list_len = len(event_list)
+        if event_list_len:
+            result = [(x, y) for x, y in event_list if x not in fd_set]
+            if len(result) != event_list_len:
+                self.context.handleEventsTimeout()
+        else:
+            result = event_list
+            self.context.handleEventsTimeout()
+        return result
+
+    def register(self, fd, events):
+        self.poller.register(fd, events)
+
+    def unregister(self, fd):
+        self.poller.unregister(fd)
+
+    def _registerFD(self, fd, events, user_data=None):
+        self.fd_set.add(fd)
+        self.register(fd, events)
+
+    def _unregisterFD(self, fd, user_data=None):
+        self.unregister(fd)
+        self.sd_set.discard(fd)
+
 class USBDeviceHandle(object):
-    def __init__(self, handle):
+    handle = None
+
+    def __init__(self, context, handle):
+        # XXX Context parameter is just here as a hint for garbage collector:
+        # It must collect USBDeviceHandle instance before their LibUSBContext.
+        self.context = context
         self.handle = handle
 
     def __del__(self):
-        libusb1.libusb_close(self.handle)
+        self.close()
+
+    def close(self):
+        handle = self.handle
+        if handle is not None:
+            libusb1.libusb_close(handle)
+            self.handle = None
 
     def getConfiguration(self):
         configuration = c_int()
@@ -154,11 +288,78 @@ class USBDeviceHandle(object):
         transferred = self._interruptTransfer(endpoint, data, length, timeout)
         return data.raw[:transferred]
 
+    def _getTransfer(self, iso_packets=0):
+        result = libusb1.libusb_alloc_transfer(iso_packets)
+        if not result:
+            raise libusb1.USBError, 'Unable to get a transfer object'
+        return result
+
+    def fillBulkTransfer(self, transfer, endpoint, string_buffer,
+                         callback, user_data, timeout):
+        libusb1.libusb_fill_bulk_transfer(transfer, self.handle,
+            endpoint, string_buffer, sizeof(string_buffer),
+            libusb1.libusb_transfer_cb_fn_p(callback), user_data,
+            timeout)
+
+    def getBulkTransfer(self, endpoint, string_buffer, callback,
+                        user_data=None, timeout=0):
+        result = self._getTransfer()
+        self.fillBulkTransfer(result, endpoint, string_buffer, callback,
+            user_data, timeout)
+        return result
+
+    def fillInterruptTransfer(self, transfer, endpoint, string_buffer,
+                              callback, user_data, timeout):
+        libusb1.libusb_fill_interrupt_transfer(transfer, self.handle,
+            endpoint, string_buffer,  sizeof(string_buffer),
+            libusb1.libusb_transfer_cb_fn_p(callback), user_data,
+            timeout)
+
+    def getInterruptTransfer(self, endpoint, string_buffer, callback,
+                             user_data=None, timeout=0):
+        result = self._getTransfer()
+        self.fillInterruptTransfer(result, endpoint, string_buffer,
+            callback, user_data, timeout)
+        return result
+
+    def fillControlSetup(self, string_buffer, request_type, request, value,
+                         index, length):
+        libusb1.libusb_fill_control_setup(string_buffer, request_type,
+            request, value, index, length)
+
+    def fillControlTransfer(self, transfer, setup, callback,
+                            user_data, timeout):
+        libusb1.libusb_fill_control_transfer(transfer, self.handle,
+            setup, libusb1.libusb_transfer_cb_fn_p(callback), user_data,
+            timeout)
+
+    def getControlTransfer(self, setup, callback, user_data=None, timeout=0):
+        result = self._getTransfer()
+        self.fillControlTransfer(result, setup, callback, user_data, timeout)
+        return result
+
+    def fillISOTransfer(self, *args, **kw):
+        raise NotImplementedError
+
+    def getISOTransfer(self, *args, **kw):
+        raise NotImplementedError
+
+    def submitTransfer(self, transfer):
+        result = libusb1.libusb_submit_transfer(transfer)
+        if result:
+            raise libusb1.USBError, result
+
+    def cancelTransfer(self, transfer):
+        result = libusb1.libusb_cancel_transfer(transfer)
+        if result:
+            raise libusb1.USBError, result
+
 class USBDevice(object):
 
     configuration_descriptor_list = None
 
-    def __init__(self, device_p):
+    def __init__(self, context, device_p):
+        self.context = context
         libusb1.libusb_ref_device(device_p)
         self.device_p = device_p
         # Fetch device descriptor
@@ -299,7 +500,7 @@ class USBDevice(object):
         result = libusb1.libusb_open(self.device_p, byref(handle))
         if result:
             raise libusb1.USBError, result
-        return USBDeviceHandle(handle)
+        return USBDeviceHandle(self.context, handle)
 
 class LibUSBContext(object):
 
@@ -313,14 +514,19 @@ class LibUSBContext(object):
         self.context_p = context_p
 
     def __del__(self):
-        if self.context_p is not None:
-            libusb1.libusb_exit(self.context_p)
+        self.exit()
+
+    def exit(self):
+        context_p = self.context_p
+        if context_p is not None:
+            libusb1.libusb_exit(context_p)
+            self.context_p = None
 
     def getDeviceList(self):
         device_p_p = libusb1.libusb_device_p_p()
         device_list_len = libusb1.libusb_get_device_list(self.context_p,
                                                          byref(device_p_p))
-        result = [USBDevice(x) for x in device_p_p[:device_list_len]]
+        result = [USBDevice(self, x) for x in device_p_p[:device_list_len]]
         # XXX: causes problems, why ?
         #libusb1.libusb_free_device_list(device_p_p, 1)
         return result
@@ -329,8 +535,46 @@ class LibUSBContext(object):
         handle_p = libusb1.libusb_open_device_with_vid_pid(self.context_p,
             vendor_id, product_id)
         if handle_p:
-            result = USBDeviceHandle(handle_p)
+            result = USBDeviceHandle(self, handle_p)
         else:
             result = None
         return result
+
+    def getPollFDList(self):
+        pollfd_p_p = libusb1.libusb_get_pollfds(self.context_p)
+        result = []
+        append = result.append
+        fd_index = 0
+        while pollfd_p_p[fd_index]:
+            append((pollfd_p_p[fd_index].contents.fd,
+                    pollfd_p_p[fd_index].contents.events))
+            fd_index += 1
+        return result
+
+    def handleEvents(self):
+        result = libusb1.libusb_handle_events(self.context_p)
+        if result:
+            raise libusb1.USBError, result
+
+    def handleEventsTimeout(self, tv=None):
+        assert tv is None, 'tv parameter is not supported yet'
+        tv = libusb1.timeval(0, 0)
+        result = libusb1.libusb_handle_events_timeout(self.context_p, byref(tv))
+        if result:
+            raise libusb1.USBError, result
+
+    def setPollFDNotifiers(self, added_cb=None, removed_cb=None, user_data=None):
+        if added_cb is None:
+          added_cb = POINTER(None)
+        else:
+          added_cb = libusb1.libusb_pollfd_added_cb_p(added_cb)
+        if removed_cb is None:
+          removed_cb = POINTER(None)
+        else:
+          removed_cb = libusb1.libusb_pollfd_removed_cb_p(removed_cb)
+        libusb1.libusb_set_pollfd_notifiers(self.context_p, added_cb,
+                                            removed_cb, user_data)
+
+    def getNextTimeout(self):
+        return libusb1.libusb_get_next_timeout(self.context_p, None)
 

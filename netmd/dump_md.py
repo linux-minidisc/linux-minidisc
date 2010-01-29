@@ -4,13 +4,13 @@ import usb1
 import libnetmd
 from time import sleep
 
-def main(bus=None, device_address=None, ext='ogg', track_range=None):
+def main(bus=None, device_address=None, ext='ogg', track_range=None, title=None):
     context = usb1.LibUSBContext()
     for md in libnetmd.iterdevices(context, bus=bus,
                                    device_address=device_address):
         md_iface = libnetmd.NetMDInterface(md)
         try:
-            MDDump(md_iface, ext, track_range)
+            MDDump(md_iface, ext, track_range, title)
         finally:
             md_iface.stop()
 
@@ -43,10 +43,13 @@ def getTrackList(md_iface, track_range):
                 title))
     return result
 
-def MDDump(md_iface, ext, track_range):
-    ascii_title = md_iface.getDiscTitle()
-    wchar_title = md_iface.getDiscTitle(True).decode('shift_jis')
-    disc_title = wchar_title or ascii_title
+def MDDump(md_iface, ext, track_range, disk_title_override=None):
+    if disk_title_override is None:
+        ascii_title = md_iface.getDiscTitle()
+        wchar_title = md_iface.getDiscTitle(True).decode('shift_jis')
+        disc_title = wchar_title or ascii_title
+    else:
+        disc_title = disk_title_override
     if disc_title == '':
         directory = '.'
     else:
@@ -64,7 +67,7 @@ def MDDump(md_iface, ext, track_range):
         # Attemp to reduce the MD play delay by...
         print 'Waiting for MD...'
         # Waiting for the seek to complete...
-        while md_iface.getPosition() != [track, 0, 0, 0, 1] and 
+        while md_iface.getPosition() != [track, 0, 0, 0, 1] and \
               md_iface.getPosition() != [track, 0, 0, 0, 2]:
             sleep(1)
         # And waiting for the play to actualy begin.
@@ -101,6 +104,7 @@ if __name__ == '__main__':
     parser.add_option('-b', '--bus')
     parser.add_option('-d', '--device')
     parser.add_option('-t', '--track-range')
+    parser.add_option('-T', '--title')
     (options, args) = parser.parse_args()
     assert len(args) < 2
     if len(args) == 1:
@@ -124,5 +128,5 @@ if __name__ == '__main__':
         else:
             track_range = int(track_range) - 1
     main(bus=options.bus, device_address=options.device, ext=ext,
-         track_range=track_range)
+         track_range=track_range, title=options.title)
 
