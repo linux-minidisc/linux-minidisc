@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/" >
+    <qresource prefix="/">
         <file>icons/upload_from_md.png</file>
         <file>icons/add_group.png</file>
         <file>icons/connect.png</file>
@@ -11,5 +11,7 @@
         <file>icons/quit.png</file>
         <file>icons/rename.png</file>
         <file>icons/info.png</file>
+        <file>icons/arrow_download.png</file>
+        <file>icons/arrow_upload.png</file>
     </qresource>
 </RCC>
