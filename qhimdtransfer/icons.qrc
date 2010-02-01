@@ -10,5 +10,6 @@
         <file>icons/qhimdtransfer.png</file>
         <file>icons/quit.png</file>
         <file>icons/rename.png</file>
+        <file>icons/info.png</file>
     </qresource>
 </RCC>

@@ -220,6 +220,10 @@
    </property>
   </action>
   <action name="action_About">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/info.png</normaloff>:/icons/info.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;About</string>
    </property>
