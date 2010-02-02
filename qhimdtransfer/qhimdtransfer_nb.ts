@@ -22,7 +22,7 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
-        <translation type="unfinished">&lt;h3&gt;QHiMDTransfer, Versjon 0.0.1&lt;/h3&gt;
+        <translation>&lt;h3&gt;QHiMDTransfer, Versjon 0.0.1&lt;/h3&gt;
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;Fri musikkoverførings programvare for MiniDisc walkman.&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>&amp;Close</source>
-        <translation type="unfinished">&amp;Lukk</translation>
+        <translation>&amp;Lukk</translation>
     </message>
 </context>
 <context>
@@ -46,7 +46,7 @@
     </message>
     <message>
         <source>Really format MiniDisc (all audio-tracks and data will be lost) ?</source>
-        <translation type="unfinished">Er du sikker (alle audiospor og data vil gå tapt) ?</translation>
+        <translation>Er du sikker (alle audiospor og data vil gå tapt) ?</translation>
     </message>
 </context>
 <context>
@@ -57,63 +57,63 @@
     </message>
     <message>
         <source>upload disabled because of DRM encryption</source>
-        <translation type="unfinished">overføring deaktivert fordi sporet er DRM sikkret</translation>
+        <translation>overføring deaktivert fordi sporet er DRM sikkret</translation>
     </message>
     <message>
         <source>Error opening file for MP3 output</source>
-        <translation type="unfinished">feil i åpningen av MP3filen som utdata</translation>
+        <translation>feil i åpningen av MP3filen som utdata</translation>
     </message>
     <message>
         <source>Error opening track: </source>
-        <translation type="unfinished">feil i åpningen av sporet: </translation>
+        <translation>feil i åpningen av sporet: </translation>
     </message>
     <message>
         <source>Error writing audio data</source>
-        <translation type="unfinished">feil i skrivingen av audio dataen</translation>
+        <translation>feil i skrivingen av audio dataen</translation>
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation type="unfinished">overføring avbryttet av brukeren</translation>
+        <translation>overføring avbryttet av brukeren</translation>
     </message>
     <message>
         <source>Error reading audio data: </source>
-        <translation type="unfinished">feil i lesingen av audiodataen: </translation>
+        <translation>feil i lesingen av audiodataen: </translation>
     </message>
     <message>
         <source>Error opening file for ATRAC output</source>
-        <translation type="unfinished">feil i åpningen av filen for ATRAC lagring</translation>
+        <translation>feil i åpningen av filen for ATRAC lagring</translation>
     </message>
     <message>
         <source>Error writing header</source>
-        <translation type="unfinished">feil i skrivingen av toptekst</translation>
+        <translation>feil i skrivingen av toptekst</translation>
     </message>
     <message>
         <source>Error opening file for WAV output</source>
-        <translation type="unfinished">feil i åpningen av filen for WAV lagring</translation>
+        <translation>feil i åpningen av filen for WAV lagring</translation>
     </message>
     <message>
         <source>Select MP3s for download</source>
-        <translation type="unfinished">velg MP3er for nedlastning</translation>
+        <translation>velg MP3er for nedlastning</translation>
     </message>
     <message>
         <source>Select directory for Upload</source>
-        <translation type="unfinished">velg katalog for overføring</translation>
+        <translation>velg katalog for overføring</translation>
     </message>
     <message>
         <source>Select directory of HiMD Medium</source>
-        <translation type="unfinished">velg katalogen til HiMD mediumet</translation>
+        <translation>velg katalogen til HiMD mediumet</translation>
     </message>
     <message>
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
 </source>
-        <translation type="unfinished">feil i åpningen av HiMD data. Sjekk at du har valgt riktig rotmappe.</translation>
+        <translation>feil i åpningen av HiMD data. Sjekk at du har valgt riktig rotmappe.</translation>
     </message>
 </context>
 <context>
     <name>QHiMDMainWindowClass</name>
     <message>
         <source>QHiMDTransfer</source>
-        <translation type="unfinished">QHiMDOverføring</translation>
+        <translation>QHiMDOverføring</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -125,23 +125,23 @@
     </message>
     <message>
         <source>&amp;Download tracks onto MD</source>
-        <translation type="unfinished">Overfør spor &amp;til MD</translation>
+        <translation>Overfør spor &amp;til MD</translation>
     </message>
     <message>
         <source>&amp;Upload tracks from MD</source>
-        <translation type="unfinished">Overfør sport &amp;fra MD</translation>
+        <translation>Overfør sport &amp;fra MD</translation>
     </message>
     <message>
         <source>Re&amp;name</source>
-        <translation type="unfinished">&amp;Endre navn</translation>
+        <translation>&amp;Endre navn</translation>
     </message>
     <message>
         <source>Rename selected</source>
-        <translation type="unfinished">Endre navn på valgte</translation>
+        <translation>Endre navn på valgte</translation>
     </message>
     <message>
         <source>D&amp;elete selected</source>
-        <translation type="unfinished">&amp;Slett valgte</translation>
+        <translation>&amp;Slett valgte</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -177,15 +177,15 @@
     </message>
     <message>
         <source>&gt;&gt;</source>
-        <translation>&gt;&gt;</translation>
+        <translation type="obsolete">&gt;&gt;</translation>
     </message>
     <message>
         <source>&lt;&lt;</source>
-        <translation>&lt;&lt;</translation>
+        <translation type="obsolete">&lt;&lt;</translation>
     </message>
     <message>
         <source>local directory</source>
-        <translation type="unfinished">lokalmappe</translation>
+        <translation>lokalmappe</translation>
     </message>
     <message>
         <source>/tmp</source>
@@ -200,7 +200,7 @@
     </message>
     <message>
         <source>Artist</source>
-        <translation type="unfinished">Artist</translation>
+        <translation>Artist</translation>
     </message>
     <message>
         <source>Album</source>
@@ -212,11 +212,11 @@
     </message>
     <message>
         <source>Uploadable</source>
-        <translation type="unfinished">Overførbar</translation>
+        <translation>Overførbar</translation>
     </message>
     <message>
         <source>Format</source>
-        <translation type="unfinished">Format</translation>
+        <translation>Format</translation>
     </message>
     <message>
         <source>Nr.</source>
@@ -227,15 +227,15 @@
     <name>QHiMDUploadDialog</name>
     <message>
         <source>upload finished</source>
-        <translation type="unfinished">overføring fullført</translation>
+        <translation>overføring fullført</translation>
     </message>
     <message>
         <source>%1 track(s) successfully uploaded</source>
-        <translation type="unfinished">overføringen av %1 spor lyktes</translation>
+        <translation>overføringen av %1 spor lyktes</translation>
     </message>
     <message>
         <source>%1 track(s) could not be uploaded</source>
-        <translation type="unfinished">overføringen av %1 spor mislyktes</translation>
+        <translation>overføringen av %1 spor mislyktes</translation>
     </message>
     <message>
         <source>Track %1</source>
@@ -243,39 +243,39 @@
     </message>
     <message>
         <source>current track: %1 - %2</source>
-        <translation type="unfinished">nåværende spor: %1 - %2</translation>
+        <translation>nåværende spor: %1 - %2</translation>
     </message>
     <message>
         <source>no tracks selected</source>
-        <translation type="unfinished">ingen sporer valgt</translation>
+        <translation>ingen sporer valgt</translation>
     </message>
     <message>
         <source>please wait while uploading %1 track(s)</source>
-        <translation type="unfinished">vennligst vent mens overføringen av %1 spor foregår</translation>
+        <translation>vennligst vent mens overføringen av %1 spor foregår</translation>
     </message>
     <message>
         <source>Track upload - QHiMDTransfer</source>
-        <translation type="unfinished">Spor overført - QHiMDTransfer</translation>
+        <translation>Spor overført - QHiMDTransfer</translation>
     </message>
     <message>
         <source>please wait while uploading XX track(s)</source>
-        <translation type="unfinished">vennligst vent mens overføringen av XX spor foregår</translation>
+        <translation>vennligst vent mens overføringen av XX spor foregår</translation>
     </message>
     <message>
         <source>overall progress</source>
-        <translation type="unfinished">total framdrift</translation>
+        <translation>total framdrift</translation>
     </message>
     <message>
         <source>current track: trknum - filename</source>
-        <translation type="unfinished">nåværende spor: trknum - filename</translation>
+        <translation>nåværende spor: trknum - filename</translation>
     </message>
     <message>
         <source>xx track(s) successfully uploaded</source>
-        <translation type="unfinished">overføringen av xx spor lyktes</translation>
+        <translation>overføringen av xx spor lyktes</translation>
     </message>
     <message>
         <source>xx track(s) could not be uploaded</source>
-        <translation type="unfinished">overføringen av xx spor mislyktes</translation>
+        <translation>overføringen av xx spor mislyktes</translation>
     </message>
     <message>
         <source>Show Details</source>
@@ -287,7 +287,7 @@
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Lukk</translation>
+        <translation>Lukk</translation>
     </message>
     <message>
         <source>Tracknr.</source>
@@ -299,7 +299,7 @@
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation type="unfinished">overføring avbrutt av brukeren</translation>
+        <translation>overføring avbrutt av brukeren</translation>
     </message>
 </context>
 </TS>

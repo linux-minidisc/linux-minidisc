@@ -115,20 +115,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&gt;&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>&lt;&lt;</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>local directory</source>
         <translation>ローカルディレクトリー</translation>
     </message>
     <message>
         <source>/tmp</source>
-        <translation>/tmp</translation>
+        <translation type="obsolete">/tmp</translation>
     </message>
     <message>
         <source>&amp;File</source>

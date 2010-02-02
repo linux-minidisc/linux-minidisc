@@ -177,14 +177,6 @@
         <translation>(nedkopplad)</translation>
     </message>
     <message>
-        <source>&gt;&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>&lt;&lt;</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>local directory</source>
         <translation>lokal katalog</translation>
     </message>

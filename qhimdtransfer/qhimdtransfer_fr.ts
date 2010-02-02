@@ -176,11 +176,11 @@
     </message>
     <message>
         <source>&gt;&gt;</source>
-        <translation>&gt;&gt;</translation>
+        <translation type="obsolete">&gt;&gt;</translation>
     </message>
     <message>
         <source>&lt;&lt;</source>
-        <translation>&lt;&lt;</translation>
+        <translation type="obsolete">&lt;&lt;</translation>
     </message>
     <message>
         <source>local directory</source>
@@ -188,7 +188,7 @@
     </message>
     <message>
         <source>/tmp</source>
-        <translation>/tmp</translation>
+        <translation type="obsolete">/tmp</translation>
     </message>
 </context>
 <context>
