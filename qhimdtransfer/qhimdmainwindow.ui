@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="icons.qrc">
-    <normaloff>:/icons/download_to_md.png</normaloff>:/icons/download_to_md.png</iconset>
+    <normaloff>:/icons/qhimdtransfer_24.png</normaloff>:/icons/qhimdtransfer_24.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="autoFillBackground">
