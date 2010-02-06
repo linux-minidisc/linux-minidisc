@@ -200,8 +200,8 @@ int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo
     unsigned char * fragbuffer;
 
     g_return_val_if_fail(himd != NULL, -1);
-    g_return_val_if_fail(idx >= HIMD_FIRST_TRACK, -1);
-    g_return_val_if_fail(idx <= HIMD_LAST_TRACK, -1);
+    g_return_val_if_fail(idx >= HIMD_FIRST_FRAGMENT, -1);
+    g_return_val_if_fail(idx <= HIMD_LAST_FRAGMENT, -1);
     g_return_val_if_fail(f != NULL, -1);
 
     fragbuffer = get_frag(himd, idx);
