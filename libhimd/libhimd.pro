@@ -18,5 +18,5 @@ else: !build_pass: message(You disabled mad: MP3 transfer will be limited)
 
 PKGCONFIG += glib-2.0
 HEADERS += himd.h himd_private.h sony_oma.h
-SOURCES += encryption.c himd.c mdstream.c trackindex.c sony_oma.c
+SOURCES += encryption.c himd.c mdstream.c trackindex.c sony_oma.c frag.c
 LIBS    += -lmad -lmcrypt

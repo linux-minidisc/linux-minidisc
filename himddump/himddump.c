@@ -292,6 +292,20 @@ clean:
     himd_nonmp3stream_close(&str);
 }
 
+void himd_dumpholes(struct himd * h)
+{
+    int i;
+    struct himd_holelist holes;
+    struct himderrinfo status;
+    if(himd_find_holes(h, &holes, &status) < 0)
+    {
+        fprintf(stderr, "Collecting holes: %s\n", status.statusmsg);
+        return;
+    }
+    for(i = 0; i < holes.holecnt;i++)
+        printf("%d: %05u-%05u\n", i, holes.holes[i].firstblock, holes.holes[i].lastblock);
+}
+
 int main(int argc, char ** argv)
 {
     int idx;
@@ -314,6 +328,8 @@ int main(int argc, char ** argv)
         himd_trackdump(&h, argc > 3);
     else if(strcmp(argv[2],"discid") == 0)
         himd_dumpdiscid(&h);
+    else if(strcmp(argv[2],"holes") == 0)
+        himd_dumpholes(&h);
     else if(strcmp(argv[2],"mp3key") == 0 && argc > 3)
     {
         mp3key k;

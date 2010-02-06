@@ -182,6 +182,19 @@ int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsign
 int himd_nonmp3stream_read_block(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, unsigned int * framecount, struct himderrinfo * status);
 void himd_nonmp3stream_close(struct himd_nonmp3stream * stream);
 
+/* frag.c */
+struct himd_hole {
+    unsigned short firstblock;
+    unsigned short lastblock;
+};
+
+struct himd_holelist {
+    int holecnt;
+    struct himd_hole holes[HIMD_LAST_FRAGMENT - HIMD_FIRST_FRAGMENT + 1];
+};
+
+int himd_find_holes(struct himd * himd, struct himd_holelist * holes, struct himderrinfo * status);
+
 
 #ifdef __cplusplus
 }
