@@ -12,42 +12,6 @@ UPLOAD_FORMAT_LP2 = 0x82
 UPLOAD_FORMAT_SP_MONO = 0x84
 UPLOAD_FORMAT_SP_STEREO = 0x86
 
-# LP2/LP4 is always stereo on minidisc.
-def formatWavHeader(formatbyte, length):
-    if format == UPLOAD_FORMAT_LP4:
-        bytesperframe = 96
-        jointstereo = 1
-    elif format == UPLOAD_FORMAT_LP2:
-        bytesperframe = 192
-        jointstereo = 0
-    else:
-        raise ValueError, 'unexpected format byte %02x' % format
-    bytespersecond = bytesperframe * 512 / 44100
-    return pack("<4sI4s"     # "RIFF" header
-                "<4sIHHIIHH" # "fmt " chunk - standard part
-                "<HHIHHHH"   # "fmt " chunk - ATRAC extension
-                "<4sI",      # "data" chunk header
-                
-                'RIFF', bytes+60, 'WAVE',
-                
-                'fmt ',32, RIFF_FORMAT_TAG_ATRAC3, 2, 44100, 
-                bytespersecond, 2 * bytesperframe, 0,
-                
-                14, 1, bytesperframe, jointstereo, jointstereo, 1, 0,
-                
-                'data', bytes)
-                
-# This creates an ffmpeg compatible WAV header.
-class wavUploadEvents(libnetmd.defaultUploadEvents):
-    def __init__(self, stream, channels):
-        self.stream = stream
-        self.channels = channels
-    
-    def trackinfo(self, frames, bytes, format):
-        # RIFF header
-        self.stream.write(formatWavHeader(format, bytes))
-        libnetmd.defaultUploadEvents.trackinfo(self, frames, bytes, format)
-
 def main(bus=None, device_address=None, track_range=None):
     context = usb1.LibUSBContext()
     for md in libnetmd.iterdevices(context, bus=bus,
@@ -113,7 +77,7 @@ class aeaUploadEvents(libnetmd.defaultUploadEvents):
         if not ((format == UPLOAD_FORMAT_SP_STEREO and self.channels == 2) or \
                 (format == UPLOAD_FORMAT_SP_MONO   and self.channels == 1)):
             raise ValueError, 'Unexpected format byte %02x for %d channels' % \
-                                 self.format, self.channels
+                                 (format, self.channels)
         self.stream.write(formatAeaHeader(name = self.name, soundgroups=frames, channels=self.channels))
         libnetmd.defaultUploadEvents.trackinfo(self, frames, bytes, format)
 

@@ -38,9 +38,9 @@ def listMD(md):
             * 512 + time_tuple[3]
 
     flags = reprDiscFlags(md_iface.getDiscFlags())
-    print 'Disk (%s) %r %s' % (
+    print 'Disk (%s) %s %s' % (
         ', '.join(flags), md_iface.getDiscTitle(),
-        md_iface.getDiscTitle(True).decode('shift_jis'))
+        md_iface.getDiscTitle(True).decode('shift_jis_2004'))
     disc_used, disc_total, disc_left = md_iface.getDiscCapacity()
     disc_total = timeToFrames(disc_total)
     disc_left = timeToFrames(disc_left)
@@ -60,11 +60,11 @@ def listMD(md):
             hour, minute, second, sample = md_iface.getTrackLength(real_track)
             codec, channel_count = md_iface.getTrackEncoding(real_track)
             flags = md_iface.getTrackFlags(real_track)
-            print '%s%03i: %02i:%02i:%02i+%03i %s %s %s %r %s' % (prefix,
+            print '%s%03i: %02i:%02i:%02i+%03i %s %s %s %s %s' % (prefix,
                 track, hour, minute, second, sample, codec_name_dict[codec],
                 channel_count_dict[channel_count], flag_dict[flags],
                 md_iface.getTrackTitle(real_track),
-                md_iface.getTrackTitle(real_track, True).decode('shift_jis'))
+                md_iface.getTrackTitle(real_track, True).decode('shift_jis_2004'))
 
 if __name__ == '__main__':
     from optparse import OptionParser
