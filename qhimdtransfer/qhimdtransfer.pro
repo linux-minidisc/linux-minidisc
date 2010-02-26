@@ -4,11 +4,13 @@ TARGET = qhimdtransfer
 DEPENDPATH += .
 INCLUDEPATH += .
 
+# language logic heavily inspired by Qt Creator's
+# share/qtcreator/translations/translations.pro
+include(translate.pri)
+LANGUAGES = de nb sv fr pt pl ru it ja fi ar el
+TRANSLATIONS = $$bracketAll(LANGUAGES, $$PWD/qhimdtransfer_,.ts)
+
 # Input
-TRANSLATIONS += qhimdtransfer_de.ts qhimdtransfer_nb.ts qhimdtransfer_sv.ts \
-                qhimdtransfer_fr.ts qhimdtransfer_pt.ts qhimdtransfer_pl.ts \
-                qhimdtransfer_ru.ts qhimdtransfer_it.ts qhimdtransfer_ja.ts \
-                qhimdtransfer_fi.ts qhimdtransfer_ar.ts qhimdtransfer_el.ts
 
 HEADERS += qhimdaboutdialog.h \
            qhimdformatdialog.h \
@@ -33,3 +35,12 @@ win32: TARGET=QHiMDTransfer
 mac: TARGET=QHiMDTransfer
 
 include(../libhimd/use_libhimd.pri)
+
+# Installing stuff
+
+unix: !macx {
+	target.path = /usr/bin
+	translations.path = /usr/share/qhimdtransfer/translations
+	translations.files = $$bracketAll(LANGUAGES, $$OUT_PWD/qhimdtransfer_,.qm)
+	INSTALLS += target translations
+}
