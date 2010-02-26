@@ -1,5 +1,8 @@
 *~
 *.o
+*.app
+*.xcodeproj
+Info.plist
 Makefile*
 *.user
 qtc-gdbmacros

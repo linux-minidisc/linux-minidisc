@@ -38,9 +38,15 @@ include(../libhimd/use_libhimd.pri)
 
 # Installing stuff
 
+translations.files = $$bracketAll(LANGUAGES, $$OUT_PWD/qhimdtransfer_,.qm)
+
 unix: !macx {
 	target.path = /usr/bin
 	translations.path = /usr/share/qhimdtransfer/translations
-	translations.files = $$bracketAll(LANGUAGES, $$OUT_PWD/qhimdtransfer_,.qm)
 	INSTALLS += target translations
+}
+
+macx {
+	translations.path = myapp.app/Contents/Resources/translations
+	INSTALLS += translations
 }
