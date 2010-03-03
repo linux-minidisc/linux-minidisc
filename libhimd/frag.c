@@ -2,8 +2,9 @@
 #include <string.h>
 
 #define MIN_HOLE 4
+#define NO_SUCH_HOLE 0xffff
 
-int search_hole(struct himd_holelist * holes, int block)
+static int search_hole(struct himd_holelist * holes, int block)
 {
     int startidx = 0;
     int endidx = holes->holecnt-1;
@@ -15,6 +16,9 @@ int search_hole(struct himd_holelist * holes, int block)
         else
             endidx = mididx;
     }
+    /* block is not in a hole */
+    if(holes->holes[startidx].firstblock > block)
+        return NO_SUCH_HOLE;
     return startidx;
 }
 
@@ -33,8 +37,19 @@ int himd_find_holes(struct himd * himd, struct himd_holelist * holes, struct him
         if(frag.firstblock == 0 && frag.lastblock == 0)
             continue;	/* unused fragment */
         splitidx = search_hole(holes, frag.firstblock);
+        /* If splitidx == NO_SUCH_HOLE, the fragment probably is so small that
+           the hole had been erased due to minhole */
+        if(splitidx == NO_SUCH_HOLE)
+            continue;
+
+        /* a fragment splits a hole into two holes (the one before and
+           the one after the fragment). Either of these two holes might
+           be too small to be considered, in which case these holes are
+           discarded, or, spoken another way, the used areas are collapsed
+           into one used area. */
         if(frag.firstblock - holes->holes[splitidx].firstblock < MIN_HOLE)
         {
+            /* collapse at the beginning */
             holes->holes[splitidx].firstblock = frag.lastblock + 1;
             if(holes->holes[splitidx].lastblock < holes->holes[splitidx].firstblock ||
                holes->holes[splitidx].lastblock - holes->holes[splitidx].firstblock < MIN_HOLE)
