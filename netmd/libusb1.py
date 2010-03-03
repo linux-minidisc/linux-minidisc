@@ -51,7 +51,7 @@ class timeval(Structure):
                 ('tv_usec', c_long)]
 timeval_p = POINTER(timeval)
 
-libusb = cdll.LoadLibrary('libusb-1.0.so.0')
+libusb = cdll.LoadLibrary('/opt/local/lib/libusb-1.0.dylib')
 
 # libusb.h
 def bswap16(x):

@@ -7,15 +7,14 @@ int search_hole(struct himd_holelist * holes, int block)
 {
     int startidx = 0;
     int endidx = holes->holecnt-1;
-    while(startidx < endidx)
+    while(startidx != endidx)
     {
         int mididx = (startidx + endidx)/2;
-        if(holes->holes[mididx].firstblock < block)
-            endidx = mididx;
-        else
+        if(holes->holes[mididx].lastblock < block)
             startidx = mididx+1;
+        else
+            endidx = mididx;
     }
-    /* startidx == endidx here */
     return startidx;
 }
 
