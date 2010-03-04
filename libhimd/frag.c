@@ -22,6 +22,18 @@ static int search_hole(struct himd_holelist * holes, int block)
     return startidx;
 }
 
+/** 
+ * Find all holes in current HiMD data and return them in himd_holelist.
+ * This call is required prior to any write operation to HiMD data to
+ * be able to collect necessary space to store the fragments of a track to be
+ * written.
+ * 
+ * @param himd Pointer to a descriptor of previously opened HiMD data
+ * @param holes Pointer to a list of holes, is filled out by himd_find_holes
+ * @param status Pointer to himderrinfo, returns error code after operation
+ * 
+ * @return Returns 0 if successful, -1 otherwise
+ */
 int himd_find_holes(struct himd * himd, struct himd_holelist * holes, struct himderrinfo * status)
 {
     int i;

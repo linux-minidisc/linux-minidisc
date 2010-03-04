@@ -3,6 +3,19 @@
 
 #define _(x) (x)
 
+/** 
+ * Calculate the key for a given MP3 track and discid of HiMD data.
+ * The key is required to encrypt or decrypt MP3 data and is calculated
+ * with a fairly simple algorithm which XORs parts of the discid with
+ * two constant hashes and the track number.
+ * 
+ * @param himd Pointer to a descriptor of previously opened HiMD data
+ * @param track Number of track to calculate MP3 key for
+ * @param key Pointer to struct containing the key after successful operation
+ * @param status Pointer to himderrinfo, returns error code after operation
+ * 
+ * @return Returns 0 if successful, otherwise zero.
+ */
 int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himderrinfo * status)
 {
     const unsigned char * d = himd_get_discid(himd, status);
