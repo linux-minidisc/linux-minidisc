@@ -22,7 +22,16 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;h3&gt;QHiMDTransfer, ヴァージョン 0.0.1&lt;/h3&gt;
+        &lt;p&gt;&lt;p&gt;
+        &lt;p&gt;無料MDウォークマン音楽移動ソフト。&lt;/p&gt;
+        &lt;p&gt;&lt;p&gt;
+        &lt;p&gt;linux-minidiscプロジェクト作成：&lt;/p&gt;
+        &lt;p&gt;&lt;p&gt;
+        &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
+        &lt;p&gt;&lt;p&gt;
+        &lt;p&gt;このソフトの著作権はGNU GPL v2にあります。 詳細はプログラム
+         フォルダのライセンスファイルをご覧ください。&lt;/p&gt;</translation>
     </message>
     <message>
         <source>&amp;Close</source>
@@ -33,51 +42,51 @@
     <name>QHiMDFormatDialog</name>
     <message>
         <source>Format Medium</source>
-        <translation>ミディアムを初期化する</translation>
+        <translation>MDを初期化する</translation>
     </message>
     <message>
         <source>Really format MiniDisc (all audio-tracks and data will be lost) ?</source>
-        <translation type="unfinished"></translation>
+        <translation>本当に初期化しますか(すべての音楽データは削除されます)？</translation>
     </message>
 </context>
 <context>
     <name>QHiMDMainWindow</name>
     <message>
         <source>Error opening file for MP3 output</source>
-        <translation>MP3 アウトプットファイルを開く際にエラー</translation>
+        <translation>エラー：MP3アウトプットファイルを開けませんでした。</translation>
     </message>
     <message>
         <source>Error opening track: </source>
-        <translation>トラックを開く際にエラー: </translation>
+        <translation>エラー：トラックが開けませんでした。 </translation>
     </message>
     <message>
         <source>Error writing audio data</source>
-        <translation>オーディオデータを書き込む際にエラー</translation>
+        <translation>エラー：オーディオデータを書き込めませんせした。</translation>
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation type="unfinished"></translation>
+        <translation>ユーザーによってアップロードが取り消されました。</translation>
     </message>
     <message>
         <source>Error reading audio data: </source>
-        <translation>オーディオデータを読み込む際にエラー: </translation>
+        <translation>エラー：オーディオデータを読み込めませんでした。 </translation>
     </message>
     <message>
         <source>Error opening file for ATRAC output</source>
-        <translation>ATRAC アウトプットファイルを開く際にエラー</translation>
+        <translation>エラー：ATRAC アウトプットファイルを開けませんでした。</translation>
     </message>
     <message>
         <source>Error writing header</source>
-        <translation>ヘッダーを書き込む際にエラー</translation>
+        <translation>エラー：ヘッダーを書き込めませんでした。</translation>
     </message>
     <message>
         <source>Error opening file for WAV output</source>
-        <translation>WAV アウトプットファイルを開く際にエラー</translation>
+        <translation>エラー：WAV アウトプットファイルを開けませんでした。</translation>
     </message>
     <message>
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
 </source>
-        <translation type="unfinished"></translation>
+        <translation>エラー：HiMDデータが開けませんでした。MDウォークマンのルートディレクトリを確認してください。</translation>
     </message>
     <message>
         <source>Track %1</source>
@@ -85,19 +94,19 @@
     </message>
     <message>
         <source>upload disabled because of DRM encryption</source>
-        <translation type="unfinished"></translation>
+        <translation>コピープロテクトのためアップロードができませんでした。</translation>
     </message>
     <message>
         <source>Select MP3s for download</source>
-        <translation type="unfinished"></translation>
+        <translation>ダウンロードするMP３ファイルを選択してください。</translation>
     </message>
     <message>
         <source>Select directory for Upload</source>
-        <translation type="unfinished"></translation>
+        <translation>アップロードをするディレクトリーを選択してください。</translation>
     </message>
     <message>
         <source>Select directory of HiMD Medium</source>
-        <translation type="unfinished"></translation>
+        <translation>HiMDのディレクトリーを選択してください。</translation>
     </message>
 </context>
 <context>
@@ -112,7 +121,7 @@
     </message>
     <message>
         <source>(disconnected)</source>
-        <translation type="unfinished"></translation>
+        <translation>（未接続）</translation>
     </message>
     <message>
         <source>local directory</source>
@@ -132,11 +141,11 @@
     </message>
     <message>
         <source>&amp;Download tracks onto MD</source>
-        <translation type="unfinished"></translation>
+        <translation>MDにトラックをダウンロード(&amp;D)</translation>
     </message>
     <message>
         <source>&amp;Upload tracks from MD</source>
-        <translation type="unfinished"></translation>
+        <translation>MDからトラックをアップロード(&amp;U)</translation>
     </message>
     <message>
         <source>Re&amp;name</source>
@@ -144,11 +153,11 @@
     </message>
     <message>
         <source>Rename selected</source>
-        <translation type="unfinished"></translation>
+        <translation>選択項目の変更</translation>
     </message>
     <message>
         <source>D&amp;elete selected</source>
-        <translation type="unfinished"></translation>
+        <translation>選択項目の削除(&amp;)</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -160,11 +169,11 @@
     </message>
     <message>
         <source>&amp;Format MD</source>
-        <translation type="unfinished"></translation>
+        <translation>MDを初期化(&amp;F)</translation>
     </message>
     <message>
         <source>Format MD</source>
-        <translation type="unfinished"></translation>
+        <translation>MDを初期化</translation>
     </message>
     <message>
         <source>&amp;Quit</source>
@@ -172,7 +181,7 @@
     </message>
     <message>
         <source>&amp;Connect</source>
-        <translation>接続する(&amp;C)</translation>
+        <translation>接続(&amp;C)</translation>
     </message>
 </context>
 <context>
@@ -195,8 +204,7 @@
     </message>
     <message>
         <source>Length</source>
-        <translatorcomment>??</translatorcomment>
-        <translation type="unfinished">長さ</translation>
+        <translation>長さ</translation>
     </message>
     <message>
         <source>Format</source>
@@ -204,15 +212,14 @@
     </message>
     <message>
         <source>Uploadable</source>
-        <translatorcomment>??</translatorcomment>
-        <translation type="unfinished">アップロード可能</translation>
+        <translation>アップロード可</translation>
     </message>
 </context>
 <context>
     <name>QHiMDUploadDialog</name>
     <message>
         <source>%1 track(s) could not be uploaded</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 トラックアップロードできませんでした。</translation>
     </message>
     <message>
         <source>Track %1</source>
@@ -220,7 +227,7 @@
     </message>
     <message>
         <source>%1 track(s) successfully uploaded</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 トラックのアップロードに成功しました。</translation>
     </message>
     <message>
         <source>upload finished</source>
@@ -232,7 +239,7 @@
     </message>
     <message>
         <source>no tracks selected</source>
-        <translation type="unfinished"></translation>
+        <translation>トラックが選択されていません。</translation>
     </message>
     <message>
         <source>please wait while uploading %1 track(s)</source>
@@ -240,7 +247,7 @@
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation type="unfinished"></translation>
+        <translation>ユーザーによってアップロードが取り消されました。</translation>
     </message>
     <message>
         <source>Track upload - QHiMDTransfer</source>
@@ -256,15 +263,15 @@
     </message>
     <message>
         <source>current track: trknum - filename</source>
-        <translation type="unfinished"></translation>
+        <translation>現在のトラック：trknum - filename</translation>
     </message>
     <message>
         <source>xx track(s) successfully uploaded</source>
-        <translation type="unfinished"></translation>
+        <translation>xx トラックのアップロードに成功しました。</translation>
     </message>
     <message>
         <source>xx track(s) could not be uploaded</source>
-        <translation type="unfinished"></translation>
+        <translation>xx トラックアップロードできませんでした。</translation>
     </message>
     <message>
         <source>Show Details</source>
