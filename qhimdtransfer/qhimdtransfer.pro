@@ -47,6 +47,6 @@ unix: !macx {
 }
 
 macx {
-	translations.path = myapp.app/Contents/Resources/translations
+	translations.path = QHiMDTransfer.app/Contents/Resources/translations
 	INSTALLS += translations
 }
