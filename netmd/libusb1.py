@@ -5,6 +5,9 @@ from ctypes import Structure, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, \
                    c_void_p, c_char_p, py_object
+
+from ctypes.util import find_library
+
 import struct
 
 class Enum(object):
@@ -51,7 +54,7 @@ class timeval(Structure):
                 ('tv_usec', c_long)]
 timeval_p = POINTER(timeval)
 
-libusb = cdll.LoadLibrary('/opt/local/lib/libusb-1.0.dylib')
+libusb = cdll.LoadLibrary(find_library("usb-1.0"))
 
 # libusb.h
 def bswap16(x):
