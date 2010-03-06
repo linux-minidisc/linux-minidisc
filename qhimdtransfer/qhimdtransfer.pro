@@ -8,7 +8,7 @@ INCLUDEPATH += .
 # share/qtcreator/translations/translations.pro
 include(translate.pri)
 LANGUAGES = de nb sv fr pt pl ru it ja fi ar el da
-TRANSLATIONS = $$bracketAll(LANGUAGES, $$PWD/qhimdtransfer_,.ts)
+TRANSLATIONS = $$bracketAll(LANGUAGES, qhimdtransfer_,.ts)
 
 # Input
 
@@ -38,15 +38,17 @@ include(../libhimd/use_libhimd.pri)
 
 # Installing stuff
 
-translations.files = $$bracketAll(LANGUAGES, $$OUT_PWD/qhimdtransfer_,.qm)
+translations.files = $$bracketAll(LANGUAGES, qhimdtransfer_,.qm)
+
+unix: {
+	INSTALLS += translations
+	HACK = $$system(lrelease $$TRANSLATIONS)
+	macx: translations.path = QHiMDTransfer.app/Contents/Resources/translations
+	!macx: translations.path = /usr/share/qhimdtransfer/translations
+}
 
 unix: !macx {
 	target.path = /usr/bin
-	translations.path = /usr/share/qhimdtransfer/translations
-	INSTALLS += target translations
+	INSTALLS += target
 }
 
-macx {
-	translations.path = QHiMDTransfer.app/Contents/Resources/translations
-	INSTALLS += translations
-}
