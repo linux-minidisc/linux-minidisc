@@ -7,7 +7,7 @@ INCLUDEPATH += .
 # language logic heavily inspired by Qt Creator's
 # share/qtcreator/translations/translations.pro
 include(translate.pri)
-LANGUAGES = de nb sv fr pt pl ru it ja fi ar el
+LANGUAGES = de nb sv fr pt pl ru it ja fi ar el da
 TRANSLATIONS = $$bracketAll(LANGUAGES, $$PWD/qhimdtransfer_,.ts)
 
 # Input
