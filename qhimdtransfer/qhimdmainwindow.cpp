@@ -239,7 +239,9 @@ void QHiMDMainWindow::init_local_browser()
     QStringList DownloadFileList;
     localmodel.setFilter(QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot);
     localmodel.setNameFilters(QStringList() << "*.mp3" << "*.wav" << "*.oma");
-    localmodel.setSorting(QDir::DirsFirst | QDir::Name);
+    localmodel.setNameFilterDisables(false);
+    localmodel.setReadOnly(false);
+    localmodel.setRootPath("/home");
     ui->localScan->setModel(&localmodel);
     QModelIndex curdir = localmodel.index(ui->updir->text());
     ui->localScan->expand(curdir);
@@ -249,6 +251,24 @@ void QHiMDMainWindow::init_local_browser()
     ui->localScan->hideColumn(3);
     ui->localScan->setColumnWidth(0, 350);
 }
+
+bool QHiMDMainWindow::autodetect_init()
+{
+    int k;
+
+    k = QObject::connect(detect, SIGNAL(himd_found(QString)), this, SLOT(on_himd_found(QString)));
+    k += QObject::connect(detect, SIGNAL(himd_removed(QString)), this, SLOT(on_himd_removed(QString)));
+
+    if(!k)
+        return false;
+
+    QObject::connect(this, SIGNAL(himd_busy(QString)), detect, SLOT(on_himd_busy(QString)));
+    QObject::connect(this, SIGNAL(himd_idle(QString)), detect, SLOT(on_himd_idle(QString)));
+
+    detect->scan_for_himd_devices();
+    return true;
+}
+
 
 void QHiMDMainWindow::open_himd_at(const QString & path)
 {
@@ -267,11 +287,18 @@ void QHiMDMainWindow::open_himd_at(const QString & path)
     ui->himdpath->setText(path);
     settings.setValue("lastHiMDDirectory", path);
 
+    if(settings.contains(path))
+        ui->statusBar->showMessage(settings.value(path, QString()).toString());
+    else
+        ui->statusBar->clearMessage();
+
     set_buttons_enable(1,0,0,1,1,1,1);
 }
 
 void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
 {
+    emit himd_busy(ui->himdpath->text());
+
     QHiMDTrackList tracks = trackmodel.tracks(ui->TrackList->selectionModel()->selectedRows(0));
 
     int allblocks = 0;
@@ -324,7 +351,8 @@ void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
             break;
     }
     uploadDialog->finished();
-    localmodel.refresh();
+
+    emit himd_idle(ui->himdpath->text());
 }
 
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
@@ -333,12 +361,16 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     aboutDialog = new QHiMDAboutDialog;
     formatDialog = new QHiMDFormatDialog;
     uploadDialog = new QHiMDUploadDialog;
+    detect = createDetection();
     ui->setupUi(this);
     ui->updir->setText(settings.value("lastUploadDirectory",
                                          QDir::homePath()).toString());
     set_buttons_enable(1,0,0,0,0,0,1);
     init_himd_browser();
     init_local_browser();
+    ui->himd_devices->hide();
+    if(!autodetect_init())
+        ui->statusBar->showMessage(" autodetection disabled", 10000);
 }
 
 QHiMDMainWindow::~QHiMDMainWindow()
@@ -393,6 +425,7 @@ void QHiMDMainWindow::on_action_Format_triggered()
 
 void QHiMDMainWindow::on_action_Connect_triggered()
 {
+    int index;
     QString HiMDDirectory;
     HiMDDirectory = settings.value("lastHiMDDirectory", QDir::rootPath()).toString();
     HiMDDirectory = QFileDialog::getExistingDirectory(this,
@@ -402,6 +435,20 @@ void QHiMDMainWindow::on_action_Connect_triggered()
                                                  | QFileDialog::DontResolveSymlinks);
     if(HiMDDirectory.isEmpty())
         return;
+
+    index = ui->himd_devices->findText(HiMDDirectory);
+    if(index == -1)
+    {
+        ui->himd_devices->addItem(HiMDDirectory);
+        index = ui->himd_devices->findText(HiMDDirectory);
+    }
+    ui->himd_devices->setCurrentIndex(index);
+
+    if(ui->himd_devices->isHidden())
+    {
+        ui->himd_devices->show();
+        ui->himdpath->hide();
+    }
 
     open_himd_at(HiMDDirectory);
 }
@@ -425,4 +472,66 @@ void QHiMDMainWindow::handle_selection_change(const QItemSelection&, const QItem
     bool nonempty = ui->TrackList->selectionModel()->selectedRows(0).length() != 0;
     ui->action_Upload->setEnabled(nonempty);
     ui->upload_button->setEnabled(nonempty);
+}
+
+void QHiMDMainWindow::on_himd_found(QString HiMDPath)
+{
+    int index;
+
+    if(HiMDPath.isEmpty())
+        return;
+
+    index = ui->himd_devices->findText(HiMDPath);
+    if(index == -1)
+        ui->himd_devices->addItem(HiMDPath);
+
+    if(ui->himd_devices->isHidden())
+    {
+        ui->himd_devices->show();
+        ui->himdpath->hide();
+    }
+
+    if(ui->himdpath->text() == "(disconnected)")
+    {
+        index = ui->himd_devices->findText(HiMDPath);
+        ui->himd_devices->setCurrentIndex(index);
+        open_himd_at(HiMDPath);
+    }
+
+}
+
+void QHiMDMainWindow::on_himd_removed(QString HiMDPath)
+{
+    int index;
+
+    if(HiMDPath.isEmpty())
+        return;
+    if (ui->himdpath->text() == HiMDPath)
+    {
+        ui->himdpath->setText("(disconnected)");
+        ui->statusBar->clearMessage();
+        trackmodel.close();
+    }
+
+    index = ui->himd_devices->findText(HiMDPath);
+    if(index != -1)
+    {
+        ui->himd_devices->removeItem(index);
+    }
+
+    if(ui->himd_devices->count() == 0)
+    {
+        ui->himd_devices->hide();
+        ui->himdpath->show();
+    }
+}
+
+void QHiMDMainWindow::on_himd_devices_activated(QString device)
+{
+    open_himd_at(device);
+}
+
+void QHiMDMainWindow::closeEvent(QCloseEvent *event)
+{
+    detect->close();
 }

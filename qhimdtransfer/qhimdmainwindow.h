@@ -4,10 +4,11 @@
 #include <QtGui/QMainWindow>
 #include <QtGui/QFileDialog>
 #include <QtCore/QSettings>
-#include <QtGui/QDirModel>
+#include <QtGui/QFileSystemModel>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
 #include "qhimduploaddialog.h"
+#include "qhimddetection.h"
 #include "qhimdmodel.h"
 #include "../libhimd/himd.h"
 #include <tlist.h>
@@ -37,8 +38,9 @@ private:
     QHiMDAboutDialog * aboutDialog;
     QHiMDFormatDialog * formatDialog;
     QHiMDUploadDialog * uploadDialog;
+    QHiMDDetection * detect;
     QHiMDTracksModel trackmodel;
-    QDirModel localmodel;
+    QFileSystemModel localmodel;
     QSettings settings;
     QString dumpmp3(const QHiMDTrack & trk, QString file);
     QString dumpoma(const QHiMDTrack & trk, QString file);
@@ -47,8 +49,12 @@ private:
     void set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit);
     void init_himd_browser();
     void init_local_browser();
+    bool autodetect_init();
     void open_himd_at(const QString & path);
     void upload_to(const QString & path);
+
+protected:
+    void closeEvent(QCloseEvent *event);
 
 private slots:
     void on_action_Connect_triggered();
@@ -60,6 +66,13 @@ private slots:
     void on_localScan_clicked(QModelIndex index);
     void on_upload_button_clicked();
     void handle_selection_change(const QItemSelection&, const QItemSelection&);
+    void on_himd_found(QString path);
+    void on_himd_removed(QString path);
+    void on_himd_devices_activated(QString device);
+
+signals:
+    void himd_busy(QString path);
+    void himd_idle(QString path);
 };
 
 #endif // QHIMDMAINWINDOW_H
