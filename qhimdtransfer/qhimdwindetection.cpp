@@ -4,6 +4,7 @@
 #include <qhimddetection.h>
 
 #define WINVER 0x0500
+
 #include <windows.h>
 #include <dbt.h>
 #include <setupapi.h>
@@ -11,13 +12,9 @@
 #include <ddk/ntddstor.h>   // needed for handling storage devices
 #include <ddk/cfgmgr32.h>   // needed for CM_Get_Child function
 
-struct win_himd_device {                           //information for each found himd device
-                    bool is_busy;
+struct win_himd_device : himd_device {
                     HANDLE devhandle;
                     HDEVNOTIFY himdChange;
-                    QString path;
-                    bool md_inserted;
-                    QString recorder_name;
                     };
 
 static const GUID GUID_IO_MEDIA_ARRIVAL =
@@ -35,6 +32,7 @@ class QHiMDWinDetection : public QHiMDDetection {
 public:
     void scan_for_himd_devices();
     QHiMDWinDetection();
+    win_himd_device *find_by_path(QString path);
 
 protected:
     virtual void closeEvent(QCloseEvent *event);
@@ -42,15 +40,14 @@ protected:
 private:
     QSettings settings;
     HDEVNOTIFY hDevNotify;
-    QList<win_himd_device *> device_list;
     void autodetect_close();
-    int find_device(HANDLE devhandle, QString path);
+    win_himd_device *find_by_handle(HANDLE devhandle);
+    win_himd_device *win_dev_at(int idx);
     QString get_deviceID_from_driveletter(char i);
     bool is_himddevice(QString devID, QString & name);
     bool identified(QString devpath, QString & name);
     void add_himddevice(QString path, QString name);
     void remove_himddevice(QString path);
-    bool check_removal(HANDLE devhandle, QString & path);
     void add_himd(HANDLE devhandle);
     void remove_himd(HANDLE devhandle);
     HDEVNOTIFY register_mediaChange(HANDLE devhandle);
@@ -109,40 +106,23 @@ void QHiMDWinDetection::scan_for_himd_devices()
     return;
 }
 
-int QHiMDWinDetection::find_device(HANDLE devhandle, QString path)
+win_himd_device *QHiMDWinDetection::win_dev_at(int idx)
 {
-    int i = 0;
-    bool found = false;
+    return static_cast<win_himd_device*>(device_list.at(idx));
+}
 
-    if (device_list.isEmpty())
-        return -1;
-    if(!path.isEmpty())
-    {
-        for (; i < device_list.size(); i++)
-            {
-                if(device_list.at(i)->path == path)
-                {
-                    found = true;
-                    break;
-                }
-            }
-    }
-    else if(devhandle != NULL)
-    {
-        for (; i < device_list.size(); i++)
-            {
-                if(device_list.at(i)->devhandle == devhandle)
-                {
-                    found = true;
-                    break;
-                }
-            }
-    }
+win_himd_device *QHiMDWinDetection::find_by_path(QString path)
+{
+    return static_cast<win_himd_device*>(QHiMDDetection::find_by_path(path));
+}
 
-    if (found)
-        return i;
+win_himd_device *QHiMDWinDetection::find_by_handle(HANDLE devhandle)
+{
+    for (int i = 0; i < device_list.size(); i++)
+        if(win_dev_at(i)->devhandle == devhandle)
+            return win_dev_at(i);
 
-    return -1;
+    return NULL;
 }
 
 QString QHiMDWinDetection::get_deviceID_from_driveletter(char i)
@@ -256,7 +236,7 @@ bool QHiMDWinDetection::identified(QString devpath, QString & name)
 
 void QHiMDWinDetection::add_himddevice(QString path, QString name)
 {
-    if (find_device(NULL, path) >= 0)
+    if (find_by_path(path))
         return;
 
     win_himd_device * new_device = new win_himd_device;
@@ -314,61 +294,51 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name)
 
 void QHiMDWinDetection::remove_himddevice(QString path)
 {
-    int i = find_device(NULL, path);
-    if (i < 0)
+    win_himd_device * dev = find_by_path(path);
+    if (!dev)
         return;
 
-    unregister_mediaChange(device_list.at(i)->himdChange);
+    unregister_mediaChange(dev->himdChange);
 
-    if (device_list.at(i)->devhandle != NULL)
-        CloseHandle(device_list.at(i)->devhandle);
+    if (dev->devhandle != NULL)
+        CloseHandle(dev->devhandle);
 
-    if(settings.contains(device_list.at(i)->path))
-        settings.remove(device_list.at(i)->path);
-    emit himd_removed(device_list.at(i)->path);
+    if(settings.contains(dev->path))
+        settings.remove(dev->path);
+    emit himd_removed(dev->path);
 
-    qDebug() << "himd device at " + device_list.at(i)->path + " removed (" + device_list.at(i)->recorder_name + ")";
+    qDebug() << "himd device at " + dev->path + " removed (" + dev->recorder_name + ")";
 
-    delete device_list.at(i);
-    device_list.removeAt(i);
-}
-
-bool QHiMDWinDetection::check_removal(HANDLE devhandle, QString & path)
-{
-    int i = find_device(devhandle, NULL);
-    if (i < 0)
-        return false;
-
-    path = device_list.at(i)->path;
-    return device_list.at(i)->is_busy;
+    device_list.removeAll(dev);
+    delete dev;
 }
 
 void QHiMDWinDetection::add_himd(HANDLE devhandle)
 {
-    int i = find_device(devhandle, NULL);
-    if (i < 0)
+    win_himd_device * dev = find_by_handle(devhandle);
+    if (!dev)
         return;
 
-    if(device_list.at(i)->md_inserted != true)
+    if(!dev->md_inserted)
     {
-        device_list.at(i)->md_inserted = true;
-        emit himd_found(device_list.at(i)->path);
-        qDebug() << "himd device at " + device_list.at(i)->path + " : md inserted";
+        dev->md_inserted = true;
+        emit himd_found(dev->path);
+        qDebug() << "himd device at " + dev->path + " : md inserted";
     }
     return;
 }
 
 void QHiMDWinDetection::remove_himd(HANDLE devhandle)
 {
-    int i = find_device(devhandle, NULL);
-    if (i < 0)
+    win_himd_device * dev = find_by_handle(devhandle);
+    if (!dev)
         return;
 
-    if(device_list.at(i)->md_inserted != false)
+    if(dev->md_inserted)
     {
-        device_list.at(i)->md_inserted = false;
-        emit himd_removed(device_list.at(i)->path);
-        qDebug() << "himd device at " + device_list.at(i)->path + " :  md removed";
+        dev->md_inserted = false;
+        emit himd_removed(dev->path);
+        qDebug() << "himd device at " + dev->path + " :  md removed";
     }
     return;
 }
@@ -437,7 +407,13 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                     if(pHdr->dbch_devicetype & DBT_DEVTYP_HANDLE)
                     {
                         PDEV_BROADCAST_HANDLE pHdrh = (PDEV_BROADCAST_HANDLE)pHdr;
-                        if(check_removal(pHdrh->dbch_handle, path))
+                        win_himd_device *dev = find_by_handle(pHdrh->dbch_handle);
+                        if(!dev)
+                        {
+                            qDebug() << "Message:DBT_DEVICEQUERYREMOVE for unknown device " << pHdrh->dbch_handle;
+                            break;
+                        }
+                        if(dev->is_busy)
                         {
                             *result = BROADCAST_QUERY_DENY;
                             qDebug() << "Message:DBT_DEVICEQUERYREMOVE for drive " + path + " denied: transfer in progress";
@@ -446,7 +422,7 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                         else
                         {
                             qDebug() << "Message:DBT_DEVICEQUERYREMOVE requested";
-                            remove_himddevice(path);
+                            remove_himddevice(dev->path);
                         }
                     }
                     break;
@@ -502,23 +478,22 @@ void QHiMDWinDetection::closeEvent(QCloseEvent *event)
 
 void QHiMDWinDetection::himd_busy(QString path)
 {
-    int i = find_device(NULL, path);
-    if (i < 0)
+    himd_device * dev = find_by_path(path);
+    if (!dev)
         return;
 
-    device_list.at(i)->is_busy = true;
-    qDebug() << "himd device at " + device_list.at(i)->path + " : device busy, starting transfer";
+    dev->is_busy = true;
+    qDebug() << "himd device at " + dev->path + " : device busy, starting transfer";
 }
 
 void QHiMDWinDetection::himd_idle(QString path)
 {
-    int i = find_device(NULL, path);
-    if (i < 0)
+    himd_device * dev = find_by_path(path);
+    if (!dev)
         return;
 
-    device_list.at(i)->is_busy = false;
-    qDebug() << "himd device at " + device_list.at(i)->path + " : device idle, transfer complete";
+    dev->is_busy = false;
+    qDebug() << "himd device at " + dev->path + " : device idle, transfer complete";
 }
-
 
 
