@@ -17,26 +17,17 @@
 #define DS_HMD1 0x023d
 #define MZ_RH1 0x0287
 
-namespace Ui {
-    class QHiMDDetection;
-}
-
 class QHiMDDetection : public QDialog {
     Q_OBJECT
     Q_DISABLE_COPY(QHiMDDetection)
 public:
     explicit QHiMDDetection(QWidget *parent = 0);
-    virtual ~QHiMDDetection();
-    virtual void scan_for_himd_devices(){};
-
-protected:
-    Ui::QHiMDDetection *m_ui;
-    virtual void changeEvent(QEvent *e);
-    virtual void closeEvent(QCloseEvent *event);
+    virtual ~QHiMDDetection() {}
+    virtual void scan_for_himd_devices(){}
 
 protected slots:
-    virtual void himd_busy(QString path){};
-    virtual void himd_idle(QString path){};
+    virtual void himd_busy(QString path){}
+    virtual void himd_idle(QString path){}
 
 signals:
     void himd_found(QString path);

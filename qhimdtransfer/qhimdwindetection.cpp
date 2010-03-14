@@ -34,6 +34,7 @@ class QHiMDWinDetection : public QHiMDDetection {
 
 public:
     void scan_for_himd_devices();
+    QHiMDWinDetection();
 
 protected:
     virtual void closeEvent(QCloseEvent *event);
@@ -67,6 +68,12 @@ protected slots:
 QHiMDDetection * createDetection()
 {
     return new QHiMDWinDetection;
+}
+
+QHiMDWinDetection()
+{
+    // ask for Window ID to have Qt create the window.
+    (void)winId();
 }
 
 void QHiMDWinDetection::autodetect_close()

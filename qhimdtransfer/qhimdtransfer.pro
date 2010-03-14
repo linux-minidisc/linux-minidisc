@@ -33,8 +33,7 @@ HEADERS += qhimdaboutdialog.h \
 FORMS += qhimdaboutdialog.ui \
     qhimdformatdialog.ui \
     qhimduploaddialog.ui \
-    qhimdmainwindow.ui \
-    qhimddetection.ui
+    qhimdmainwindow.ui
 SOURCES += main.cpp \
     qhimdaboutdialog.cpp \
     qhimdformatdialog.cpp \
