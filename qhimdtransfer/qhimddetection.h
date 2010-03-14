@@ -38,8 +38,8 @@ public:
     himd_device *find_by_path(QString path);
 
 protected slots:
-    virtual void himd_busy(QString path){}
-    virtual void himd_idle(QString path){}
+    virtual void himd_busy(QString path);
+    virtual void himd_idle(QString path);
 
 signals:
     void himd_found(QString path);

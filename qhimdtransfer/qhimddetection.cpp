@@ -1,3 +1,4 @@
+#include <QDebug>
 #include "qhimddetection.h"
 #include "ui_qhimddetection.h"
 
@@ -13,4 +14,26 @@ himd_device *QHiMDDetection::find_by_path(QString path)
             return device_list.at(i);
 
     return NULL;
+}
+
+// slots
+
+void QHiMDDetection::himd_busy(QString path)
+{
+    himd_device * dev = find_by_path(path);
+    if (!dev)
+        return;
+
+    dev->is_busy = true;
+    qDebug() << "himd device at " + dev->path + " : device busy, starting transfer";
+}
+
+void QHiMDDetection::himd_idle(QString path)
+{
+    himd_device * dev = find_by_path(path);
+    if (!dev)
+        return;
+
+    dev->is_busy = false;
+    qDebug() << "himd device at " + dev->path + " : device idle, transfer complete";
 }

@@ -54,11 +54,6 @@ private:
     void unregister_mediaChange(HDEVNOTIFY himd_change);
     bool winEvent(MSG * msg, long * result);
     QString FindPath(unsigned long unitmask);
-
-protected slots:
-    void himd_busy(QString path);
-    void himd_idle(QString path);
-
 };
 
 
@@ -474,26 +469,5 @@ void QHiMDWinDetection::closeEvent(QCloseEvent *event)
     autodetect_close();
 }
 
-// slots
-
-void QHiMDWinDetection::himd_busy(QString path)
-{
-    himd_device * dev = find_by_path(path);
-    if (!dev)
-        return;
-
-    dev->is_busy = true;
-    qDebug() << "himd device at " + dev->path + " : device busy, starting transfer";
-}
-
-void QHiMDWinDetection::himd_idle(QString path)
-{
-    himd_device * dev = find_by_path(path);
-    if (!dev)
-        return;
-
-    dev->is_busy = false;
-    qDebug() << "himd device at " + dev->path + " : device idle, transfer complete";
-}
 
 
