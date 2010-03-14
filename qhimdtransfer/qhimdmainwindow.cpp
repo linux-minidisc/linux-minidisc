@@ -287,8 +287,9 @@ void QHiMDMainWindow::open_himd_at(const QString & path)
     ui->himdpath->setText(path);
     settings.setValue("lastHiMDDirectory", path);
 
-    if(settings.contains(path))
-        ui->statusBar->showMessage(settings.value(path, QString()).toString());
+    himd_device * dev = detect->find_by_path(path);
+    if(dev)
+        ui->statusBar->showMessage(dev->recorder_name);
     else
         ui->statusBar->clearMessage();
 

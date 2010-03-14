@@ -1,5 +1,4 @@
 #include <QDebug>
-#include <QtCore/QSettings>
 #include <QList>
 #include <qhimddetection.h>
 
@@ -42,7 +41,6 @@ protected:
     virtual void closeEvent(QCloseEvent *event);
 
 private:
-    QSettings settings;
     HDEVNOTIFY hDevNotify;
     void autodetect_close();
     win_himd_device *find_by_handle(HANDLE devhandle);
@@ -228,8 +226,6 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name)
     new_device->path = path;
     new_device->recorder_name = name;
 
-    settings.setValue(new_device->path, new_device->recorder_name);
-
     file[0] = path.at(0).toAscii();
     if(OpenFile(file, &OFfile, OF_EXIST) != HFILE_ERROR)
     {
@@ -260,8 +256,6 @@ void QHiMDWinDetection::remove_himddevice(QString path)
     if (dev->devhandle != NULL)
         CloseHandle(dev->devhandle);
 
-    if(settings.contains(dev->path))
-        settings.remove(dev->path);
     emit himd_removed(dev->path);
 
     qDebug() << "himd device at " + dev->path + " removed (" + dev->recorder_name + ")";
