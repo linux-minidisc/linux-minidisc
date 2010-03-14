@@ -241,7 +241,7 @@ void QHiMDMainWindow::init_local_browser()
     localmodel.setNameFilters(QStringList() << "*.mp3" << "*.wav" << "*.oma");
     localmodel.setNameFilterDisables(false);
     localmodel.setReadOnly(false);
-    localmodel.setRootPath("/home");
+    localmodel.setRootPath("/");
     ui->localScan->setModel(&localmodel);
     QModelIndex curdir = localmodel.index(ui->updir->text());
     ui->localScan->expand(curdir);
