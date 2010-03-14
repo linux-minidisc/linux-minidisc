@@ -26,6 +26,10 @@ static const GUID GUID_IO_MEDIA_REMOVAL =
 static const GUID GUID_DEVINTERFACE_USB_DEVICE =
     {0xa5dcbf10, 0x6530, 0x11d2, {0x90, 0x1f, 0x00, 0xc0, 0x4f, 0xb9, 0x51, 0xed} };
 
+static bool is_himddevice(QString devID, QString & name);
+static QString get_deviceID_from_driveletter(char i);
+static bool identified(QString devpath, QString & name);
+static QString FindPath(unsigned long unitmask);
 
 class QHiMDWinDetection : public QHiMDDetection {
 
@@ -43,9 +47,6 @@ private:
     void autodetect_close();
     win_himd_device *find_by_handle(HANDLE devhandle);
     win_himd_device *win_dev_at(int idx);
-    QString get_deviceID_from_driveletter(char i);
-    bool is_himddevice(QString devID, QString & name);
-    bool identified(QString devpath, QString & name);
     void add_himddevice(QString path, QString name);
     void remove_himddevice(QString path);
     void add_himd(HANDLE devhandle);
@@ -53,7 +54,6 @@ private:
     HDEVNOTIFY register_mediaChange(HANDLE devhandle);
     void unregister_mediaChange(HDEVNOTIFY himd_change);
     bool winEvent(MSG * msg, long * result);
-    QString FindPath(unsigned long unitmask);
 };
 
 
@@ -120,7 +120,7 @@ win_himd_device *QHiMDWinDetection::find_by_handle(HANDLE devhandle)
     return NULL;
 }
 
-QString QHiMDWinDetection::get_deviceID_from_driveletter(char i)
+static QString get_deviceID_from_driveletter(char i)
 {
     char subkey[] = "\\DosDevices\\X:";
     DWORD valuesize;
@@ -151,7 +151,7 @@ QString QHiMDWinDetection::get_deviceID_from_driveletter(char i)
     return devname;
 }
 
-bool QHiMDWinDetection::is_himddevice(QString devID, QString & name)
+static bool is_himddevice(QString devID, QString & name)
 {
     DEVINST devinst;
     DEVINST devinstparent;
@@ -178,7 +178,7 @@ bool QHiMDWinDetection::is_himddevice(QString devID, QString & name)
     return false;
 }
 
-bool QHiMDWinDetection::identified(QString devpath, QString & name)
+static bool identified(QString devpath, QString & name)
 {
     int vid = devpath.mid(devpath.indexOf("VID") + 4, 4).toInt(NULL,16);
     int pid = devpath.mid(devpath.indexOf("PID") + 4, 4).toInt(NULL,16);
@@ -450,7 +450,7 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
         return false;
     }
 
-QString QHiMDWinDetection::FindPath (unsigned long unitmask)
+static QString FindPath (unsigned long unitmask)
 {
    char i;
 
@@ -468,6 +468,3 @@ void QHiMDWinDetection::closeEvent(QCloseEvent *event)
     disconnect();
     autodetect_close();
 }
-
-
-
