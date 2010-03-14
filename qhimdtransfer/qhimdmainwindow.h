@@ -66,8 +66,8 @@ private slots:
     void on_localScan_clicked(QModelIndex index);
     void on_upload_button_clicked();
     void handle_selection_change(const QItemSelection&, const QItemSelection&);
-    void on_himd_found(QString path);
-    void on_himd_removed(QString path);
+    void himd_found(QString path);
+    void himd_removed(QString path);
     void on_himd_devices_activated(QString device);
 
 signals:

@@ -256,14 +256,14 @@ bool QHiMDMainWindow::autodetect_init()
 {
     int k;
 
-    k = QObject::connect(detect, SIGNAL(himd_found(QString)), this, SLOT(on_himd_found(QString)));
-    k += QObject::connect(detect, SIGNAL(himd_removed(QString)), this, SLOT(on_himd_removed(QString)));
+    k = QObject::connect(detect, SIGNAL(himd_found(QString)), this, SLOT(himd_found(QString)));
+    k += QObject::connect(detect, SIGNAL(himd_removed(QString)), this, SLOT(himd_removed(QString)));
 
     if(!k)
         return false;
 
-    QObject::connect(this, SIGNAL(himd_busy(QString)), detect, SLOT(on_himd_busy(QString)));
-    QObject::connect(this, SIGNAL(himd_idle(QString)), detect, SLOT(on_himd_idle(QString)));
+    QObject::connect(this, SIGNAL(himd_busy(QString)), detect, SLOT(himd_busy(QString)));
+    QObject::connect(this, SIGNAL(himd_idle(QString)), detect, SLOT(himd_idle(QString)));
 
     detect->scan_for_himd_devices();
     return true;
@@ -474,7 +474,7 @@ void QHiMDMainWindow::handle_selection_change(const QItemSelection&, const QItem
     ui->upload_button->setEnabled(nonempty);
 }
 
-void QHiMDMainWindow::on_himd_found(QString HiMDPath)
+void QHiMDMainWindow::himd_found(QString HiMDPath)
 {
     int index;
 
@@ -500,7 +500,7 @@ void QHiMDMainWindow::on_himd_found(QString HiMDPath)
 
 }
 
-void QHiMDMainWindow::on_himd_removed(QString HiMDPath)
+void QHiMDMainWindow::himd_removed(QString HiMDPath)
 {
     int index;
 

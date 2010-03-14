@@ -58,8 +58,8 @@ private:
     QString FindPath(unsigned long unitmask);
 
 protected slots:
-    void on_himd_busy(QString path);
-    void on_himd_idle(QString path);
+    void himd_busy(QString path);
+    void himd_idle(QString path);
 
 };
 
@@ -493,7 +493,7 @@ void QHiMDWinDetection::closeEvent(QCloseEvent *event)
 
 // slots
 
-void QHiMDWinDetection::on_himd_busy(QString path)
+void QHiMDWinDetection::himd_busy(QString path)
 {
     int i = find_device(NULL, path);
     if (i < 0)
@@ -503,7 +503,7 @@ void QHiMDWinDetection::on_himd_busy(QString path)
     qDebug() << "himd device at " + device_list.at(i)->path + " : device busy, starting transfer";
 }
 
-void QHiMDWinDetection::on_himd_idle(QString path)
+void QHiMDWinDetection::himd_idle(QString path)
 {
     int i = find_device(NULL, path);
     if (i < 0)

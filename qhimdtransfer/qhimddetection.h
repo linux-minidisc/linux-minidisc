@@ -35,8 +35,8 @@ protected:
     virtual void closeEvent(QCloseEvent *event);
 
 protected slots:
-    virtual void on_himd_busy(QString path){};
-    virtual void on_himd_idle(QString path){};
+    virtual void himd_busy(QString path){};
+    virtual void himd_idle(QString path){};
 
 signals:
     void himd_found(QString path);
