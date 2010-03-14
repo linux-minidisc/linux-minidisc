@@ -25,6 +25,8 @@ struct himd_device {
                     virtual ~himd_device(){} /* for polymorphic delete */
                     };
 
+const char * identify_usb_device(int vid, int pid);
+
 class QHiMDDetection : public QDialog {
     Q_OBJECT
     Q_DISABLE_COPY(QHiMDDetection)

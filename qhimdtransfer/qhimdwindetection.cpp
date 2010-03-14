@@ -182,51 +182,13 @@ static bool identified(QString devpath, QString & name)
 {
     int vid = devpath.mid(devpath.indexOf("VID") + 4, 4).toInt(NULL,16);
     int pid = devpath.mid(devpath.indexOf("PID") + 4, 4).toInt(NULL,16);
-
-    if (vid != SONY)
-        return false;
-
-    switch (pid)
+    const char * devname = identify_usb_device(vid, pid);
+    if (devname)
     {
-        case MZ_NH1:
-            name = "SONY MZ-NH1";
-            break;
-        case MZ_NH3D:
-            name = "SONY MZ-NH3D";
-            break;
-        case MZ_NH900:
-            name = "SONY MZ-NH900";
-            break;
-        case MZ_NH700:
-            name = "SONY MZ-NH700 / MZ-NH800";
-            break;
-        case MZ_NH600:
-            name = "SONY MZ-NH600(D)";
-            break;
-        case LAM_3:
-            name = "SONY LAM-3";
-            break;
-        case MZ_DH10P:
-            name = "SONY MZ-DH10P";
-            break;
-        case MZ_RH10:
-            name = "SONY MZ-RH10";
-            break;
-        case MZ_RH910:
-            name = "SONY MZ-RH910";
-            break;
-        case CMT_AH10:
-            name = "SONY CMT-AH10";
-            break;
-        case DS_HMD1:
-            name = "SONY DS-HMD1";
-            break;
-        case MZ_RH1:
-            name = "SONY MZ-RH1";
-            break;
-        default: return false;
+        name = devname;
+        return true;
     }
-    return true;
+    return false;
 }
 
 void QHiMDWinDetection::add_himddevice(QString path, QString name)

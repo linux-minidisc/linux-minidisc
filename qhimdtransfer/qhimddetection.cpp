@@ -37,3 +37,38 @@ void QHiMDDetection::himd_idle(QString path)
     dev->is_busy = false;
     qDebug() << "himd device at " + dev->path + " : device idle, transfer complete";
 }
+
+const char * identify_usb_device(int vid, int pid)
+{
+    if (vid != SONY)
+        return NULL;
+
+    switch (pid)
+    {
+        case MZ_NH1:
+            return "SONY MZ-NH1";
+        case MZ_NH3D:
+            return "SONY MZ-NH3D";
+        case MZ_NH900:
+            return "SONY MZ-NH900";
+        case MZ_NH700:
+            return "SONY MZ-NH700 / MZ-NH800";
+        case MZ_NH600:
+            return "SONY MZ-NH600(D)";
+        case LAM_3:
+            return "SONY LAM-3";
+        case MZ_DH10P:
+            return "SONY MZ-DH10P";
+        case MZ_RH10:
+            return "SONY MZ-RH10";
+        case MZ_RH910:
+            return "SONY MZ-RH910";
+        case CMT_AH10:
+            return "SONY CMT-AH10";
+        case DS_HMD1:
+            return "SONY DS-HMD1";
+        case MZ_RH1:
+            return "SONY MZ-RH1";
+    }
+    return NULL;
+}
