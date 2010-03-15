@@ -42,6 +42,7 @@ SOURCES += main.cpp \
     qhimdmodel.cpp \
     qhimddetection.cpp
 win32:SOURCES += qhimdwindetection.cpp
+else:SOURCES += qhimddummydetection.cpp
 RESOURCES += icons.qrc
 PKGCONFIG += sox \
     taglib
