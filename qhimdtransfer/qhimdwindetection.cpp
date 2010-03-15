@@ -203,7 +203,7 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name)
 
     drv[4] = path.at(0).toAscii();
 
-    hdev = CreateFileA(drv, NULL , FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+    hdev = CreateFileA(drv, NULL , FILE_SHARE_READ, NULL,
                                            OPEN_EXISTING, 0, NULL);
     if(hdev == INVALID_HANDLE_VALUE)
         return;
@@ -213,7 +213,7 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name)
     if(k != 0)
         device.append(QString::number(sdn.DeviceNumber));
 
-    new_device->devhandle = CreateFileA(device.data(), NULL , FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+    new_device->devhandle = CreateFileA(device.data(), NULL , FILE_SHARE_READ, NULL,
                                            OPEN_EXISTING, 0, NULL);
     if(new_device->devhandle == INVALID_HANDLE_VALUE)
         return;
