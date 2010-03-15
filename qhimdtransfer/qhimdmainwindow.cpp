@@ -5,6 +5,8 @@
 #include "qmessagebox.h"
 #include "qapplication.h"
 
+#include <QDebug>
+
 
 QString QHiMDMainWindow::dumpmp3(const QHiMDTrack & trk, QString file)
 {
@@ -362,7 +364,7 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     aboutDialog = new QHiMDAboutDialog;
     formatDialog = new QHiMDFormatDialog;
     uploadDialog = new QHiMDUploadDialog;
-    detect = createDetection();
+    detect = createDetection(this);
     ui->setupUi(this);
     ui->updir->setText(settings.value("lastUploadDirectory",
                                          QDir::homePath()).toString());
@@ -530,9 +532,4 @@ void QHiMDMainWindow::himd_removed(QString HiMDPath)
 void QHiMDMainWindow::on_himd_devices_activated(QString device)
 {
     open_himd_at(device);
-}
-
-void QHiMDMainWindow::closeEvent(QCloseEvent *event)
-{
-    detect->close();
 }

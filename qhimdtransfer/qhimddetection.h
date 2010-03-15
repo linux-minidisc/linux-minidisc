@@ -1,7 +1,9 @@
 #ifndef QHIMDDETECTION_H
 #define QHIMDDETECTION_H
 
-#include <QtGui/QDialog>
+#include <QObject>
+#include <QList>
+#include <QString>
 
 #define SONY 0x054c         //known himd-mode product IDs
 #define MZ_NH1 0x017f
@@ -27,14 +29,14 @@ struct himd_device {
 
 const char * identify_usb_device(int vid, int pid);
 
-class QHiMDDetection : public QDialog {
+class QHiMDDetection : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY(QHiMDDetection)
 
 protected:
     QList<himd_device *> device_list;
 public:
-    explicit QHiMDDetection(QWidget *parent = 0);
+    explicit QHiMDDetection(QObject *parent = 0);
     virtual ~QHiMDDetection() {}
     virtual void scan_for_himd_devices(){}
     himd_device *find_by_path(QString path);
@@ -48,6 +50,6 @@ signals:
     void himd_removed(QString path);
 };
 
-QHiMDDetection * createDetection();
+QHiMDDetection * createDetection(QObject * parent = NULL);
 
 #endif // QHIMDDETECTION_H

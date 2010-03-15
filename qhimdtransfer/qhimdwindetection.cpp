@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <QList>
+#include <QWidget>
 #include <qhimddetection.h>
 
 #define WINVER 0x0500
@@ -30,19 +31,16 @@ static QString get_deviceID_from_driveletter(char i);
 static bool identified(QString devpath, QString & name);
 static QString FindPath(unsigned long unitmask);
 
-class QHiMDWinDetection : public QHiMDDetection {
+class QHiMDWinDetection : public QHiMDDetection, private QWidget {
 
 public:
     void scan_for_himd_devices();
-    QHiMDWinDetection();
+    QHiMDWinDetection(QObject * parent = NULL);
+    ~QHiMDWinDetection();
     win_himd_device *find_by_path(QString path);
-
-protected:
-    virtual void closeEvent(QCloseEvent *event);
 
 private:
     HDEVNOTIFY hDevNotify;
-    void autodetect_close();
     win_himd_device *find_by_handle(HANDLE devhandle);
     win_himd_device *win_dev_at(int idx);
     void add_himddevice(QString path, QString name);
@@ -55,23 +53,22 @@ private:
 };
 
 
-QHiMDDetection * createDetection()
+QHiMDDetection * createDetection(QObject * parent)
 {
-    return new QHiMDWinDetection;
+    return new QHiMDWinDetection(parent);
 }
 
-QHiMDWinDetection()
+QHiMDWinDetection::QHiMDWinDetection(QObject * parent) 
+  : QHiMDDetection(parent), QWidget(0)
 {
     // ask for Window ID to have Qt create the window.
     (void)winId();
 }
 
-void QHiMDWinDetection::autodetect_close()
+QHiMDWinDetection::~QHiMDWinDetection()
 {
     while (!device_list.isEmpty())
         remove_himddevice(device_list.at(0)->path);
-
-    return;
 }
 
 void QHiMDWinDetection::scan_for_himd_devices()
@@ -417,10 +414,4 @@ static QString FindPath (unsigned long unitmask)
       unitmask = unitmask >> 1;
    }
    return QString(i + 'A') + ":/";
-}
-
-void QHiMDWinDetection::closeEvent(QCloseEvent *event)
-{
-    disconnect();
-    autodetect_close();
 }

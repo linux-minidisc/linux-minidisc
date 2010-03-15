@@ -53,9 +53,6 @@ private:
     void open_himd_at(const QString & path);
     void upload_to(const QString & path);
 
-protected:
-    void closeEvent(QCloseEvent *event);
-
 private slots:
     void on_action_Connect_triggered();
     void on_action_Format_triggered();
