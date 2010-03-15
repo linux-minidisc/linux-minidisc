@@ -237,6 +237,11 @@ QString QHiMDTracksModel::open(const QString & path)
     return QString();
 }
 
+bool QHiMDTracksModel::is_open()
+{
+    return himd != NULL;
+}
+
 void QHiMDTracksModel::close()
 {
     struct himd * oldhimd;

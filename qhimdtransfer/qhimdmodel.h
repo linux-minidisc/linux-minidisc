@@ -46,6 +46,7 @@ public:
     virtual int columnCount(const QModelIndex & parent = QModelIndex() ) const;
     /* HiMD containter stuff */
     QString open(const QString & path);	/* returns null if OK, error message otherwise */
+    bool is_open();
     void close();
     QHiMDTrack track(int trackidx) const;
     QHiMDTrackList tracks(const QModelIndexList & indices) const;

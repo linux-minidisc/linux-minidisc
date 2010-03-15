@@ -494,7 +494,7 @@ void QHiMDMainWindow::himd_found(QString HiMDPath)
         ui->himdpath->hide();
     }
 
-    if(ui->himdpath->text() == "(disconnected)")
+    if(!trackmodel.is_open())
     {
         index = ui->himd_devices->findText(HiMDPath);
         ui->himd_devices->setCurrentIndex(index);
@@ -511,7 +511,7 @@ void QHiMDMainWindow::himd_removed(QString HiMDPath)
         return;
     if (ui->himdpath->text() == HiMDPath)
     {
-        ui->himdpath->setText("(disconnected)");
+        ui->himdpath->setText(tr("(disconnected)"));
         ui->statusBar->clearMessage();
         trackmodel.close();
     }
