@@ -1,7 +1,7 @@
-#include <QDebug>
-#include <QList>
-#include <QWidget>
-#include <qhimddetection.h>
+#include <QtCore/QDebug>
+#include <QtCore/QList>
+#include <QtGui/QWidget>
+#include "qhimddetection.h"
 
 #define WINVER 0x0500
 

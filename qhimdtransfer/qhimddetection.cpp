@@ -1,4 +1,4 @@
-#include <QDebug>
+#include <QtCore/QDebug>
 #include "qhimddetection.h"
 #include "ui_qhimddetection.h"
 

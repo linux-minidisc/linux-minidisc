@@ -1,4 +1,4 @@
-#include <qhimddetection.h>
+#include "qhimddetection.h"
 
 QHiMDDetection * createDetection(QObject * parent)
 {

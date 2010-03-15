@@ -2,10 +2,10 @@
 #include "ui_qhimdmainwindow.h"
 #include "qhimdaboutdialog.h"
 #include "qhimduploaddialog.h"
-#include "qmessagebox.h"
-#include "qapplication.h"
+#include <QtGui/QMessageBox>
+#include <QtGui/QApplication>
 
-#include <QDebug>
+#include <QtCore/QDebug>
 
 
 QString QHiMDMainWindow::dumpmp3(const QHiMDTrack & trk, QString file)
