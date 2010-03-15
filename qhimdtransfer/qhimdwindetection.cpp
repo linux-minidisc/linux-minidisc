@@ -17,14 +17,14 @@ struct win_himd_device : himd_device {
                     HDEVNOTIFY himdChange;
                     };
 
-static const GUID GUID_IO_MEDIA_ARRIVAL =
+static const GUID my_GUID_IO_MEDIA_ARRIVAL =
     {0xd07433c0, 0xa98e, 0x11d2, {0x91, 0x7a, 0x00, 0xa0, 0xc9, 0x06, 0x8f, 0xf3} };
 
-static const GUID GUID_IO_MEDIA_REMOVAL =
+static const GUID my_GUID_IO_MEDIA_REMOVAL =
     {0xd07433c1, 0xa98e, 0x11d2, {0x91, 0x7a, 0x00, 0xa0, 0xc9, 0x06, 0x8f, 0xf3} };
 
-static const GUID GUID_DEVINTERFACE_USB_DEVICE =
-    {0xa5dcbf10, 0x6530, 0x11d2, {0x90, 0x1f, 0x00, 0xc0, 0x4f, 0xb9, 0x51, 0xed} };
+static const int my_DBT_CUSTOMEVENT = 0x8006;
+
 
 static bool is_himddevice(QString devID, QString & name);
 static QString get_deviceID_from_driveletter(char i);
@@ -299,7 +299,7 @@ HDEVNOTIFY QHiMDWinDetection::register_mediaChange(HANDLE devhandle)
     filter.dbch_size = sizeof(DEV_BROADCAST_HANDLE);
     filter.dbch_devicetype = DBT_DEVTYP_HANDLE;
     filter.dbch_handle = devhandle;
-    filter.dbch_eventguid = GUID_IO_MEDIA_ARRIVAL;  // includes GUID_IO_MEDIA_REMOVAL notification
+    filter.dbch_eventguid = my_GUID_IO_MEDIA_ARRIVAL;  // includes GUID_IO_MEDIA_REMOVAL notification
 
     return RegisterDeviceNotification( this->winId(), &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
@@ -314,8 +314,6 @@ void QHiMDWinDetection::unregister_mediaChange(HDEVNOTIFY himd_change)
 bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
     {
         QString name, devID, path ;
-        const int DBT_CUSTOMEVENT = 0x8006;
-
         if(msg->message == WM_DEVICECHANGE)
         {
             PDEV_BROADCAST_HDR pHdr = (PDEV_BROADCAST_HDR )msg->lParam;
@@ -375,18 +373,18 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                     }
                     break;
                 }
-                case DBT_CUSTOMEVENT :
+                case my_DBT_CUSTOMEVENT :
                 {
                     if(pHdr->dbch_devicetype & DBT_DEVTYP_HANDLE)
                     {
                         PDEV_BROADCAST_HANDLE pHdrh = (PDEV_BROADCAST_HANDLE)pHdr;
-                        if (pHdrh->dbch_eventguid == GUID_IO_MEDIA_ARRIVAL)
+                        if (pHdrh->dbch_eventguid == my_GUID_IO_MEDIA_ARRIVAL)
                         {
                             qDebug() << "Message:DBT_CUSTOMEVENT - GUID_IO_MEDIA_ARRIVAL";
                             add_himd(pHdrh->dbch_handle);
                             break;
                         }
-                        if (pHdrh->dbch_eventguid == GUID_IO_MEDIA_REMOVAL)
+                        if (pHdrh->dbch_eventguid == my_GUID_IO_MEDIA_REMOVAL)
                         {
                             qDebug() << "Message:DBT_CUSTOMEVENT - GUID_IO_MEDIA_REMOVAL";
                             remove_himd(pHdrh->dbch_handle);
