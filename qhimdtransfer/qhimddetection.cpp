@@ -1,6 +1,5 @@
 #include <QtCore/QDebug>
 #include "qhimddetection.h"
-#include "ui_qhimddetection.h"
 
 QHiMDDetection::QHiMDDetection(QObject *parent) :
     QObject(parent)
