@@ -899,6 +899,7 @@ class NetMDInterface(object):
         (frames,codec,length) = self.scanQuery(reply, '1800 080046 f003010330 0000 1001 ' \
                                 '%w %b %d')
         events.trackinfo(frames, length, codec);
+        sleep(1)
         self.net_md.readBulkToFile(length, outstream, callback=events.progress)
         reply = self.readReply()
         self.scanQuery(reply, '1800 080046 f003010330 0000 1001 %?%? 0000')
