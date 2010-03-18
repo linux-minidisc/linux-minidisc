@@ -1,5 +1,6 @@
 import libusb1
 from cStringIO import StringIO
+from time import sleep
 
 def dump(data):
     if isinstance(data, basestring):
@@ -152,7 +153,10 @@ class NetMD(object):
           Get a raw binary reply from device.
           Returns the reply.
         """
-        reply_length = self._getReplyLength()
+        reply_length = 0
+        while reply_length == 0:
+            reply_length = self._getReplyLength()
+            if reply_length == 0: sleep(0.1)
         reply = self.usb_handle.controlRead(libusb1.LIBUSB_TYPE_VENDOR | \
                                             libusb1.LIBUSB_RECIPIENT_INTERFACE,
                                             0x81, 0, 0, reply_length)
