@@ -7,10 +7,10 @@ from struct import pack
 
 RIFF_FORMAT_TAG_ATRAC3 = 0x270
 
-UPLOAD_FORMAT_LP4 = 0x80
-UPLOAD_FORMAT_LP2 = 0x82
-UPLOAD_FORMAT_SP_MONO = 0x84
-UPLOAD_FORMAT_SP_STEREO = 0x86
+UPLOAD_FORMAT_LP4 = 0
+UPLOAD_FORMAT_LP2 = 2
+UPLOAD_FORMAT_SP_MONO = 4
+UPLOAD_FORMAT_SP_STEREO = 6
 
 def main(bus=None, device_address=None, track_range=None):
     context = usb1.LibUSBContext()
@@ -74,8 +74,9 @@ class aeaUploadEvents(libnetmd.defaultUploadEvents):
         self.name = name
     
     def trackinfo(self, frames, bytes, format):
-        if not ((format == UPLOAD_FORMAT_SP_STEREO and self.channels == 2) or \
-                (format == UPLOAD_FORMAT_SP_MONO   and self.channels == 1)):
+        maskedformat = format & 0x06;
+        if not ((maskedformat == UPLOAD_FORMAT_SP_STEREO and self.channels == 2) or \
+                (maskedformat == UPLOAD_FORMAT_SP_MONO   and self.channels == 1)):
             raise ValueError, 'Unexpected format byte %02x for %d channels' % \
                                  (format, self.channels)
         self.stream.write(formatAeaHeader(name = self.name, soundgroups=frames, channels=self.channels))
@@ -83,10 +84,11 @@ class aeaUploadEvents(libnetmd.defaultUploadEvents):
 
 # LP2/LP4 is always stereo on minidisc.
 def formatWavHeader(format, bytes):
-    if format == UPLOAD_FORMAT_LP4:
+    maskedformat = format & 0x06;
+    if maskedformat == UPLOAD_FORMAT_LP4:
         bytesperframe = 96
         jointstereo = 1
-    elif format == UPLOAD_FORMAT_LP2:
+    elif maskedformat == UPLOAD_FORMAT_LP2:
         bytesperframe = 192
         jointstereo = 0
     else:
