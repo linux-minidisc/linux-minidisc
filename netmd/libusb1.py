@@ -9,6 +9,8 @@ from ctypes import Structure, \
 from ctypes.util import find_library
 
 import struct
+import platform
+import os.path
 
 class Enum(object):
     def __init__(self, member_dict):
@@ -54,7 +56,13 @@ class timeval(Structure):
                 ('tv_usec', c_long)]
 timeval_p = POINTER(timeval)
 
-libusb = cdll.LoadLibrary(find_library("usb-1.0"))
+libusbpath = find_library("usb-1.0")
+# macport standard library path
+if libusbpath == None and platform.system() == 'Darwin' and  \
+   os.path.isfile('/opt/local/lib/libusb-1.0.dylib'):
+    libusbpath = '/opt/local/lib/libusb-1.0.dylib'
+if libusbpath == None: raise Exception('Can''t locate usb-1.0 library' )
+libusb = cdll.LoadLibrary(libusbpath)
 
 # libusb.h
 def bswap16(x):
