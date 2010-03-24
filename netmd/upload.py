@@ -139,7 +139,7 @@ def MDDump(md_iface, track_range):
             extension = 'aea'
         else:
             extension = 'wav'
-        filename = '%s/%02i - %s.%s' % (directory, track + 1, title, extension)
+        filename = '%s/%02i - %s.%s' % (directory, track + 1, ''.join(c for c in title if c in valid_chars), extension)
         print 'Uploading', filename
         aeafile = open(filename,"w")
         if codec == libnetmd.ENCODING_SP:
