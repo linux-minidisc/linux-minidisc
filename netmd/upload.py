@@ -2,6 +2,7 @@
 import os
 import usb1
 import libnetmd
+import string
 from time import sleep
 from struct import pack
 
@@ -123,10 +124,11 @@ def MDDump(md_iface, track_range):
     ascii_title = md_iface.getDiscTitle()
     wchar_title = md_iface.getDiscTitle(True).decode('shift_jis')
     disc_title = wchar_title or ascii_title
+    valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     if disc_title == '':
         directory = '.'
     else:
-        directory = disc_title;
+        directory = ''.join(c for c in disc_title if c in valid_chars);
     print 'Storing in', directory
     if not os.path.exists(directory):
         os.mkdir(directory)
