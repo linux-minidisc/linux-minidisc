@@ -1,7 +1,11 @@
 /*
  * himdformat_scg.c
- * Format HiMDs using the generic SCSI abstraction library
- * from cdrtools (libscg)
+ * - format HiMDs using the generic SCSI abstraction library from cdrtools (libscg)
+ * - requires cdrtools to be installed
+ * - compile with (Linux, 32 bit):
+ *    gcc -D__LINUX_X86_GCC32 himdformat_scg.c \
+ *    I/opt/schily/include -L/opt/schily/lib \
+ *   -lscg -lscgcmd -lschily -o himdformat_scg
  */
 
 #include <stdio.h>
@@ -12,7 +16,8 @@
 #include <scg/scsitransp.h>
 
 #define SONY_SPECIFIC_COMMAND 0xC2
-#define HIMD_FORMAT 3
+#define HIMD_ERASE  0x00
+#define HIMD_FORMAT 0x01
 
 #define MAX_DEVICE_LEN 256
 #define SCSI_TIMEOUT 20
@@ -30,7 +35,7 @@ int main(int argc, char ** argv)
 
 	if(argc < 2)
 	{
-	    fputs("Please specify the path to the scsi device\n",stderr);
+	    fputs("Please specify the path to the scsi device or use cdrecord syntax (X,Y,Z).\n",stderr);
 	    return -1;
 	}
 
@@ -41,7 +46,7 @@ int main(int argc, char ** argv)
 	scgp = scg_open(dev, errstr, sizeof(errstr), 0, NULL);
 	if(!scgp)
 	{
-		fputs("Cannot open scsi driver", stderr);
+		fputs("Cannot open scsi driver.\n", stderr);
 		return -2;
 	}
 
@@ -51,7 +56,7 @@ int main(int argc, char ** argv)
 		ret = scg__open(scgp, dev);
 		if(!ret)
 		{
-			fprintf(stderr, "Cannot open SCSI device for %d\n", dev);
+			fprintf(stderr, "Cannot open SCSI device for %d.\n", dev);
 			err = -3;
 			goto clean;
 		}
@@ -71,18 +76,19 @@ int main(int argc, char ** argv)
 
 	memset(command, 0, 12);
 	command[0] = SONY_SPECIFIC_COMMAND;
-	command[4] = HIMD_FORMAT;
+	command[3] = HIMD_ERASE; /* set HIMD_ERASE or HIMD_FORMAT here */
+	command[4] = 0x03; /* control flags */
 	memcpy(scmd->cdb.cmd_cdb, command, 12);
 
 	// send SCSI command
 	if(scg_cmd(scgp) < 0)
 	{
-		fputs("Cannot send scsi command.", stderr);
+		fputs("Cannot send scsi command.\n", stderr);
 		err = -4;
 		goto clean;
 	}
 	else
-		fprintf(stderr, "SCSI command sent successfully.");
+		fprintf(stderr, "SCSI command sent successfully.\n");
 
 clean:
 	scg__close(scgp);
