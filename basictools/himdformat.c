@@ -35,8 +35,9 @@ int main(int argc, char ** argv)
     }
     
     memset(command,0,12);
-    command[0] = 0xC2;	/* sony special commands */
-    command[4] = 3;     /* subcommand: format */
+    command[0] = 0xC2; /* sony special commands */
+    command[3] = 0x00; /* subcommand: erase all data (0x00); format (0x01) */
+    command[4] = 0x03; /* control flags */
     
     sg.interface_id = 'S';
     sg.dxfer_direction = SG_DXFER_NONE;
