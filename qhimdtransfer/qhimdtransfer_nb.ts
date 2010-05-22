@@ -113,7 +113,7 @@
     <name>QHiMDMainWindowClass</name>
     <message>
         <source>QHiMDTransfer</source>
-        <translation>QHiMDOverføring</translation>
+        <translation type="unfinished">QHiMDTransfer</translation>
     </message>
     <message>
         <source>&amp;File</source>
