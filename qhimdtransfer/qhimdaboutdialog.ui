@@ -62,21 +62,23 @@
       <property name="pixmap">
        <pixmap resource="icons.qrc">:/icons/qhimdtransfer.png</pixmap>
       </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
      </widget>
     </item>
     <item>
      <widget class="QTextBrowser" name="textBrowser">
       <property name="html">
-       <string>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
-        &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;A free music transfer software for MiniDisc walkman.&lt;/p&gt;
-        &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;Brought to you by the linux-minidisc project:&lt;/p&gt;
-        &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
-        &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
-         file LICENSE in the program folder for more information.&lt;/p&gt;</string>
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:14px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:large; font-weight:600;&quot;&gt;QHiMDTransfer, Version 0.0.1&lt;/span&gt; &lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A free music transfer software for MiniDisc walkman. &lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Brought to you by the linux-minidisc project: &lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;https://wiki.physik.fu-berlin.de/linux-minidisc &lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This software is covered by the GNU GPL v2 license. See the file LICENSE in the program folder for more information.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
     </item>
