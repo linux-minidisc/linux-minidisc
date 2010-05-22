@@ -7,7 +7,7 @@ INCLUDEPATH += .
 
 # language logic heavily inspired by Qt Creator's
 # share/qtcreator/translations/translations.pro
-include(translate.pri)
+include(util.pri)
 LANGUAGES = de \
     nb \
     sv \
@@ -22,6 +22,7 @@ LANGUAGES = de \
     el \
     da
 TRANSLATIONS = $$bracketAll(LANGUAGES, qhimdtransfer_,.ts)
+include(translate.pri)
 
 # Input
 HEADERS += qhimdaboutdialog.h \
