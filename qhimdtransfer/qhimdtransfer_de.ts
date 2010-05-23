@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;Über QHiMDTransfer&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;Über QHiMDTransfer&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -36,6 +36,14 @@
     <message>
         <source>&amp;Close</source>
         <translation>&amp;Schliessen</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>Über</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Mitwirkende</translation>
     </message>
 </context>
 <context>
@@ -107,6 +115,10 @@
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
 </source>
         <translation>Fehler beim Öffnen der HiMD-Daten. Stellen Sie sicher dass sie das korrekte Hauptverzeichnis des HiMD-Walkman gewählt haben.</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(nicht verbunden)</translation>
     </message>
 </context>
 <context>

@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;Om QHiMDTransfer&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;Om QHiMDTransfer&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -36,6 +36,14 @@
     <message>
         <source>&amp;Close</source>
         <translation>&amp;Lukk</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>Om</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Bidragsytere</translation>
     </message>
 </context>
 <context>
@@ -108,12 +116,16 @@
 </source>
         <translation>feil i åpningen av HiMD data. Sjekk at du har valgt riktig rotmappe.</translation>
     </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(frakoblet)</translation>
+    </message>
 </context>
 <context>
     <name>QHiMDMainWindowClass</name>
     <message>
         <source>QHiMDTransfer</source>
-        <translation type="unfinished">QHiMDTransfer</translation>
+        <translation>QHiMDTransfer</translation>
     </message>
     <message>
         <source>&amp;File</source>
