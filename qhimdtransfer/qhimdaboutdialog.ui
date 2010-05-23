@@ -80,15 +80,15 @@
         </property>
         <property name="html">
 	  <string>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
-	  &lt;p&gt;&lt;p&gt;
-	  &lt;p&gt;A free music transfer software for MiniDisc walkman.&lt;/p&gt;
-	  &lt;p&gt;&lt;p&gt;
-	  &lt;p&gt;Brought to you by the linux-minidisc project:&lt;/p&gt;
-	  &lt;p&gt;&lt;p&gt;
-	  &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
-	  &lt;p&gt;&lt;p&gt;
-	  &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
-	  file LICENSE in the program folder for more information.&lt;/p&gt;</string>
+        &lt;p&gt;&lt;p&gt;
+        &lt;p&gt;A free music transfer software for MiniDisc walkman.&lt;/p&gt;
+        &lt;p&gt;&lt;p&gt;
+        &lt;p&gt;Brought to you by the linux-minidisc project:&lt;/p&gt;
+        &lt;p&gt;&lt;p&gt;
+        &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
+        &lt;p&gt;&lt;p&gt;
+        &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
+         file LICENSE in the program folder for more information.&lt;/p&gt;</string>
         </property>
        </widget>
       </widget>
