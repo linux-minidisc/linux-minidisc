@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;Om QHiMDTransfer &lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;Om QHiMDTransfer &lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -36,6 +36,14 @@
     <message>
         <source>&amp;Close</source>
         <translation>&amp;Stäng</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>Om</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Bidragsgivare</translation>
     </message>
 </context>
 <context>
@@ -108,6 +116,10 @@
 </source>
         <translation>Fel när HiMD data skulle öppnas. Kontrollera att du valde korrekt rot katalog för din HiMD-Walkman.
 </translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(nedkopplad)</translation>
     </message>
 </context>
 <context>
