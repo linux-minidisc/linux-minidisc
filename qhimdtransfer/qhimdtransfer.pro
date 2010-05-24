@@ -20,7 +20,8 @@ LANGUAGES = de \
     fi \
     ar \
     el \
-    da
+    da \
+    tr
 TRANSLATIONS = $$bracketAll(LANGUAGES, qhimdtransfer_,.ts)
 include(translate.pri)
 
