@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;Su QHiMDTransfer&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;Su QHiMDTransfer&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -36,6 +36,14 @@ Vedi il file LICENSE nella directory del programma  per ulteriori informazioni.&
     <message>
         <source>&amp;Close</source>
         <translation>&amp;Chiudi</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>Su</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Contribuenti</translation>
     </message>
 </context>
 <context>
@@ -108,6 +116,10 @@ Vedi il file LICENSE nella directory del programma  per ulteriori informazioni.&
     <message>
         <source>Select directory of HiMD Medium</source>
         <translation>Seleziona directory per mezzo HiMD</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(disconnesso)</translation>
     </message>
 </context>
 <context>
