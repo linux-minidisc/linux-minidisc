@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;Om QHiMDTransfer &lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;Om QHiMDTransfer &lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -36,6 +36,14 @@
     <message>
         <source>&amp;Close</source>
         <translation>&amp;Ḷuk</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>Om</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Bidragydere</translation>
     </message>
 </context>
 <context>
@@ -65,7 +73,7 @@
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation>Upload avbrudt af bruger</translation>
+        <translation>Overførsel avbrudt af bruger</translation>
     </message>
     <message>
         <source>Error reading audio data: </source>
@@ -85,11 +93,11 @@
     </message>
     <message>
         <source>Select MP3s for download</source>
-        <translation>Vælg MP3 filen du vil downloade</translation>
+        <translation>Vælg MP3 filer du vil hente</translation>
     </message>
     <message>
         <source>Select directory for Upload</source>
-        <translation>Vælg en mappe du vil uploade</translation>
+        <translation>Vælg en mappe du vil sende til</translation>
     </message>
     <message>
         <source>Track %1</source>
@@ -97,7 +105,7 @@
     </message>
     <message>
         <source>upload disabled because of DRM encryption</source>
-        <translation>Kunne ikke uploades på grund af DRM kryptering</translation>
+        <translation>Kunne ikke sendes på grund af DRM kryptering</translation>
     </message>
     <message>
         <source>Select directory of HiMD Medium</source>
@@ -108,6 +116,10 @@
 </source>
         <translation>Fejl: kunne ikke åbne HIMD data. Kontrollér at du har valgt den rette destination for din HIMD Walkman.
 </translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(ikke forbundet)</translation>
     </message>
 </context>
 <context>
@@ -170,7 +182,7 @@
     </message>
     <message>
         <source>HiMD path</source>
-        <translation>HiMD destination</translation>
+        <translation>HiMD sti</translation>
     </message>
     <message>
         <source>(disconnected)</source>
@@ -193,7 +205,7 @@
     </message>
     <message>
         <source>Artist</source>
-        <translation>Artist</translation>
+        <translation>Kunstner</translation>
     </message>
     <message>
         <source>Album</source>
@@ -209,14 +221,14 @@
     </message>
     <message>
         <source>Uploadable</source>
-        <translation>Kan uploades</translation>
+        <translation>Kan overføres</translation>
     </message>
 </context>
 <context>
     <name>QHiMDUploadDialog</name>
     <message>
         <source>%1 track(s) could not be uploaded</source>
-        <translation>%1 spor kunne ikke uploades</translation>
+        <translation>%1 spor kunne ikke sendes</translation>
     </message>
     <message>
         <source>Track %1</source>
@@ -224,11 +236,11 @@
     </message>
     <message>
         <source>%1 track(s) successfully uploaded</source>
-        <translation>%1 spor blev uploaded</translation>
+        <translation>%1 spor blev sendt</translation>
     </message>
     <message>
         <source>upload finished</source>
-        <translation>upload afsluttet</translation>
+        <translation>overførsel afsluttet</translation>
     </message>
     <message>
         <source>current track: %1 - %2</source>
@@ -240,23 +252,23 @@
     </message>
     <message>
         <source>please wait while uploading %1 track(s)</source>
-        <translation>Vent venligst mens %1 spor bliver uploaded</translation>
+        <translation>Vent venligst mens %1 spor bliver sendt</translation>
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation>Upload afbrudt af bruger</translation>
+        <translation>Overførsel afbrudt af bruger</translation>
     </message>
     <message>
         <source>Track upload - QHiMDTransfer</source>
-        <translation>Upload - QHiMDTransfer</translation>
+        <translation>Send lydspor - QHiMDTransfer</translation>
     </message>
     <message>
         <source>please wait while uploading XX track(s)</source>
-        <translation>uploader XX spor, vent venligst</translation>
+        <translation>sender XX spor, vent venligst</translation>
     </message>
     <message>
         <source>overall progress</source>
-        <translation>fremgang</translation>
+        <translation>samlet fremgang</translation>
     </message>
     <message>
         <source>current track: trknum - filename</source>
@@ -264,11 +276,11 @@
     </message>
     <message>
         <source>xx track(s) successfully uploaded</source>
-        <translation>xx spor blev uploadet</translation>
+        <translation>xx spor blev sendt</translation>
     </message>
     <message>
         <source>xx track(s) could not be uploaded</source>
-        <translation>xx spor kunne ikke uploades</translation>
+        <translation>xx spor kunne ikke sendes</translation>
     </message>
     <message>
         <source>Show Details</source>
