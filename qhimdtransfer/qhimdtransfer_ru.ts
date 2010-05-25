@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;О QHiMDTransfer&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;О QHiMDTransfer&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -24,7 +24,7 @@
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
         <translation>&lt;h3&gt;QHiMDTransfer, Версия 0.0.1&lt;/h3&gt;
         &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;Бесплатная программа загрузки музыки для MiniDisc плеера.&lt;/p&gt;
+        &lt;p&gt;Бесплатная программа загрузки музыки для MiniDisc плееров.&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;Создана  проектом linux-minidisc:&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
@@ -36,6 +36,14 @@
     <message>
         <source>&amp;Close</source>
         <translation>Закрыть (&amp;C)</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>О программе</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Помощники</translation>
     </message>
 </context>
 <context>
@@ -108,6 +116,10 @@
     <message>
         <source>Select directory of HiMD Medium</source>
         <translation>Выберите директорию HiMD носителя</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(отключено)</translation>
     </message>
 </context>
 <context>
