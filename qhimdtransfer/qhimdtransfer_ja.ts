@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;QHiMDTransfer について&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;QHiMDTransfer について&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -36,6 +36,14 @@
     <message>
         <source>&amp;Close</source>
         <translation>閉じる (&amp;C)</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>情報</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>開発者</translation>
     </message>
 </context>
 <context>
@@ -107,6 +115,10 @@
     <message>
         <source>Select directory of HiMD Medium</source>
         <translation>HiMDのディレクトリーを選択してください。</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>（未接続）</translation>
     </message>
 </context>
 <context>
@@ -259,7 +271,7 @@
     </message>
     <message>
         <source>overall progress</source>
-        <translation type="unfinished">経過</translation>
+        <translation>経過</translation>
     </message>
     <message>
         <source>current track: trknum - filename</source>
