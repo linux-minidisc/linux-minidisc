@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;Sobre o QHiMDTransfer&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;Sobre o QHiMDTransfer&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -36,6 +36,14 @@
     <message>
         <source>&amp;Close</source>
         <translation>&amp;Fechar</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>Sobre</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Contribuidores</translation>
     </message>
 </context>
 <context>
@@ -108,6 +116,10 @@
     <message>
         <source>Select directory of HiMD Medium</source>
         <translation>Seleccionar o directório do Meio HiMD</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(desconectado)</translation>
     </message>
 </context>
 <context>
