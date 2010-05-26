@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;O...QHiMDTransfer&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;O...QHiMDTransfer&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -22,19 +22,27 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
+        <translation>&lt;h3&gt;QHiMDTransfer, Wersja 0.0.1&lt;/h3&gt;
         &lt;p&gt;&lt;/p&gt;
 &lt;p&gt;Darmowe oprogramowanie do transferu muzyki dla walkmana MiniDisc&lt;/p&gt;
 &lt;p&gt;&lt;/p&gt;
 &lt;p&gt;Dostarczone przez The linux-minidisc project:&lt;/p&gt;
 &lt;p&gt;&lt;/p&gt;
 &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
-&lt;p&gt;Oprogramowanie to jest objęte przez licencje GNU GPL v2.
+&lt;p&gt;Oprogramowanie to jest objęte licencją GNU GPL v2.
 Przejrzyj plik LICENSE w folderze programu w celu uzyskania więcej informacji.&lt;/p&gt;</translation>
     </message>
     <message>
         <source>&amp;Close</source>
-        <translation>Zamknij</translation>
+        <translation>&amp;Zamknij</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>O programie</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Współpracujący</translation>
     </message>
 </context>
 <context>
@@ -68,7 +76,7 @@ Przejrzyj plik LICENSE w folderze programu w celu uzyskania więcej informacji.&
     </message>
     <message>
         <source>Error reading audio data: </source>
-        <translation>Błąd odczytu danych audio</translation>
+        <translation>Błąd odczytu danych audio: </translation>
     </message>
     <message>
         <source>Error opening file for ATRAC output</source>
@@ -85,7 +93,7 @@ Przejrzyj plik LICENSE w folderze programu w celu uzyskania więcej informacji.&
     <message>
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
 </source>
-        <translation>Błąd otwierania danych HiMD. Upewnij się że wybrałeś prawidłowy katalog główny HiMD-Walkman
+        <translation>Błąd otwierania danych HiMD. Upewnij się że wybrałeś prawidłowy katalog główny HiMD-Walkman.
 </translation>
     </message>
     <message>
@@ -107,6 +115,10 @@ Przejrzyj plik LICENSE w folderze programu w celu uzyskania więcej informacji.&
     <message>
         <source>Select directory of HiMD Medium</source>
         <translation>Wybierz katalog nośnika HiMD</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(rozłączony)</translation>
     </message>
 </context>
 <context>
