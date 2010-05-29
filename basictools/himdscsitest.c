@@ -1,3 +1,13 @@
+/* 
+ *   himdscsitest.c - send various SCSI commands to HiMD Walkman
+ *
+ * - see Wiki: <https://wiki.physik.fu-berlin.de/linux-minidisc/doku.php?id=himdscsi>
+ * - requires cdrtools to be installed
+ *
+ * - compile with: gcc -D__LINUX_X86_GCC32 himdscsitest.c -I/opt/schily/include -L/opt/schily/lib  -lscg -lscgcmd -lschily -o himdscsitest (on 32 bit Linux with gcc)
+ * - compile with: gcc -D__LINUX_X86_GCC64 himdscsitest.c -I/opt/schily/include -L/opt/schily/lib  -lscg -lscgcmd -lschily -o himdscsitest (on 64 bit Linux with gcc)
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>

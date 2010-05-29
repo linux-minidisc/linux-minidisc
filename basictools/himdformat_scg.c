@@ -1,11 +1,10 @@
 /*
- * himdformat_scg.c
- * - format HiMDs using the generic SCSI abstraction library from cdrtools (libscg)
+ * himdformat_scg.c - format HiMDs using the generic SCSI abstraction library from cdrtools (libscg)
+ *
  * - requires cdrtools to be installed
- * - compile with (Linux, 32 bit):
- *    gcc -D__LINUX_X86_GCC32 himdformat_scg.c \
- *    I/opt/schily/include -L/opt/schily/lib \
- *   -lscg -lscgcmd -lschily -o himdformat_scg
+ *
+ * - compile with: gcc -D__LINUX_X86_GCC32 himdscsitest.c -I/opt/schily/include -L/opt/schily/lib  -lscg -lscgcmd -lschily -o himdscsitest (on 32 bit Linux with gcc)
+ * - compile with: gcc -D__LINUX_X86_GCC64 himdscsitest.c -I/opt/schily/include -L/opt/schily/lib  -lscg -lscgcmd -lschily -o himdscsitest (on 64 bit Linux with gcc)
  */
 
 #include <stdio.h>
