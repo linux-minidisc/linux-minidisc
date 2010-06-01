@@ -44,11 +44,26 @@ struct descrypt_data {
     unsigned char blockcipher_inited;
 };
 
-int descrypt_open(void ** dataptr, struct himderrinfo * status)
+int descrypt_open(void ** dataptr, const unsigned char * trackkey, 
+                  unsigned int ekbnum, struct himderrinfo * status)
 {
+    static const unsigned char zerokey[] = {0,0,0,0,0,0,0,0};
     static const unsigned char masterkey[] = {0xf2,0x26,0x6c,0x64,0x64,0xc0,0xd6,0x5c};
     struct descrypt_data * data;
     int err;
+
+    if(ekbnum != 0x00010012)
+    {
+        set_status_const(status, HIMD_ERROR_UNSUPPORTED_ENCRYPTION, _("EKB %08x unsupported"));
+        return -1;
+    }
+
+    if(memcmp(trackkey, zerokey, 8) != 0)
+    {
+        set_status_const(status, HIMD_ERROR_UNSUPPORTED_ENCRYPTION,
+                          _("Track uses strong encryption"));
+        return -1;
+    }
 
     data = malloc(sizeof *data);
     if(!data)

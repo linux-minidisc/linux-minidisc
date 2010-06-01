@@ -389,7 +389,6 @@ void himd_mp3stream_close(struct himd_mp3stream * stream)
 int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd_nonmp3stream * stream, struct himderrinfo * status)
 {
     struct trackinfo trkinfo;
-    static const unsigned char zerokey[] = {0,0,0,0,0,0,0,0};
 
     g_return_val_if_fail(himd != NULL, -1);
     g_return_val_if_fail(trackno >= HIMD_FIRST_TRACK, -1);
@@ -407,16 +406,10 @@ int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd
                           _("Track %d does not contain PCM, ATRAC3 or ATRAC3+ data"), trackno);
         return -1;
     }
-    if(memcmp(trkinfo.key, zerokey, 8) != 0)
-    {
-        set_status_printf(status, HIMD_ERROR_UNSUPPORTED_ENCRYPTION,
-                          _("Track %d uses strong encryption"), trackno);
-        return -1;
-    }
     if(himd_blockstream_open(himd, trkinfo.firstfrag, himd_trackinfo_framesperblock(&trkinfo), &stream->stream, status) < 0)
         return -1;
 
-    if(descrypt_open(&stream->cryptinfo, status) < 0)
+    if(descrypt_open(&stream->cryptinfo, trkinfo.key, trkinfo.ekbnum, status) < 0)
     {
         himd_blockstream_close(&stream->stream);
         return -1;
