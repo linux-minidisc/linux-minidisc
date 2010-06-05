@@ -123,7 +123,6 @@ clean:
     return errmsg;
 }
 
-
 QString QHiMDMainWindow::dumppcm(const QHiMDTrack & track, QString file)
 {
     struct himd_nonmp3stream str;
@@ -154,7 +153,7 @@ QString QHiMDMainWindow::dumppcm(const QHiMDTrack & track, QString file)
 
     while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
-      
+
       for(i = 0; i < len/4; i++) {
 
         left = data[i*4]*256+data[i*4+1];
@@ -271,7 +270,6 @@ bool QHiMDMainWindow::autodetect_init()
     return true;
 }
 
-
 void QHiMDMainWindow::open_himd_at(const QString & path)
 {
     QMessageBox himdStatus;
@@ -309,7 +307,7 @@ void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
         allblocks += tracks[i].blockcount();
 
     uploadDialog->init(tracks.length(), allblocks);
-    
+
     for(int i = 0;i < tracks.length(); i++)
     {
         QString filename, errmsg;
@@ -360,7 +358,7 @@ void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
 
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
-{   
+{
     aboutDialog = new QHiMDAboutDialog;
     formatDialog = new QHiMDFormatDialog;
     uploadDialog = new QHiMDUploadDialog;

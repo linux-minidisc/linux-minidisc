@@ -140,7 +140,7 @@ QVariant QHiMDTracksModel::headerData(int section, Qt::Orientation orientation, 
                 return QAbstractListModel::headerData(section,orientation,role);
         }
     }
-    
+
     if(role == Qt::DisplayRole)
     {
         switch((columnum)section)

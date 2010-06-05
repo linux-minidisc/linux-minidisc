@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 {
     int status;
     sox_format_init();
-    
+
     QApplication a(argc, argv);
     QTranslator trans;
     QString transfile = QString("qhimdtransfer_") + QLocale::system().name();
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     a.installTranslator(&trans);
     a.setOrganizationName("linux-minidisc");
     a.setApplicationName("QHiMDTransfer");
-    
+
     QHiMDMainWindow w;
     w.show();
     status = a.exec();
