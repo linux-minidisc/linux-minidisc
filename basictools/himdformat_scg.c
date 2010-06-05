@@ -39,7 +39,7 @@ int main(int argc, char ** argv)
 	}
 
 	memset(dev, 0, MAX_DEVICE_LEN);
-	memcpy(dev, argv[1], sizeof(argv[1]));
+	strcpy(dev, argv[1]);
 
 	// open scsi driver
 	scgp = scg_open(dev, errstr, sizeof(errstr), 0, NULL);
