@@ -417,7 +417,7 @@ int main(int argc, char ** argv)
   if(strcmp(argv[2],"format") == 0)         /* aka "Erase All", deletes all tracks but leaves */
     format_medium(scgp, command, errstr);   /* himd file system on disc                       */
 
-  if(strcmp(argv[2],"erase") == 0)          /* deletes all incl. himd file system, */
+  else if(strcmp(argv[2],"erase") == 0)          /* deletes all incl. himd file system, */
     erase_medium(scgp, command, errstr);    /* will not work on 1GB himd media  */
 
   else if(strcmp(argv[2],"discid") == 0)
