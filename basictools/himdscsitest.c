@@ -1,4 +1,4 @@
-/* 
+/*
  *   himdscsitest.c - send various SCSI commands to HiMD Walkman
  *
  * - see Wiki: <https://wiki.physik.fu-berlin.de/linux-minidisc/doku.php?id=himdscsi>
@@ -362,11 +362,8 @@ int main(int argc, char ** argv)
 
   SCSI * scgp = NULL;
   char command[12];
-  int err = 0;
-  int ret;
   char dev[MAX_DEVICE_LEN];
   char errstr[80];
-  char device[256];
 
   if (argc == 2 && (strcmp (argv[1], "help") == 0)) {
     usage(argv[0]);
