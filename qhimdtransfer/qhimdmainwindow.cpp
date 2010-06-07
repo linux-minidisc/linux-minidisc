@@ -223,14 +223,11 @@ void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool uploa
 
 void QHiMDMainWindow::init_himd_browser()
 {
+    int i = 0;
+
     ui->TrackList->setModel(&trackmodel);
-    ui->TrackList->resizeColumnToContents(0);
-    ui->TrackList->resizeColumnToContents(1);
-    ui->TrackList->resizeColumnToContents(2);
-    ui->TrackList->resizeColumnToContents(3);
-    ui->TrackList->resizeColumnToContents(4);
-    ui->TrackList->resizeColumnToContents(5);
-    ui->TrackList->resizeColumnToContents(6);
+    for(;i < trackmodel.columnCount(); i++)
+        ui->TrackList->resizeColumnToContents(i);
     QObject::connect(ui->TrackList->selectionModel(), SIGNAL(selectionChanged (const QItemSelection &, const QItemSelection &)),
                      this, SLOT(handle_selection_change(const QItemSelection&, const QItemSelection&)));
 }
@@ -251,6 +248,31 @@ void QHiMDMainWindow::init_local_browser()
     ui->localScan->hideColumn(2);
     ui->localScan->hideColumn(3);
     ui->localScan->setColumnWidth(0, 350);
+}
+
+void QHiMDMainWindow::save_window_settings()
+{
+    int i = 0;
+
+    settings.setValue("geometry", QMainWindow::saveGeometry());
+    settings.setValue("windowState", QMainWindow::saveState());
+    for(;i < trackmodel.columnCount(); i++)
+        settings.setValue("himd_browser" + QString::number(i), ui->TrackList->columnWidth(i));
+}
+
+void QHiMDMainWindow::read_window_settings()
+{
+    int i = 0;
+    int width;
+
+    QMainWindow::restoreGeometry(settings.value("geometry").toByteArray());
+    QMainWindow::restoreState(settings.value("windowState").toByteArray());
+    for(; i < trackmodel.columnCount(); i++)
+    {
+        width = settings.value("himd_browser" + QString::number(i), 0).toInt();
+        if(width != 0)
+            ui->TrackList->setColumnWidth(i, width);
+    }
 }
 
 bool QHiMDMainWindow::autodetect_init()
@@ -369,6 +391,7 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     set_buttons_enable(1,0,0,0,0,0,1);
     init_himd_browser();
     init_local_browser();
+    read_window_settings();
     ui->himd_devices->hide();
     if(!autodetect_init())
         ui->statusBar->showMessage(" autodetection disabled", 10000);
@@ -411,6 +434,7 @@ void QHiMDMainWindow::on_action_Upload_triggered()
 
 void QHiMDMainWindow::on_action_Quit_triggered()
 {
+    save_window_settings();
     close();
 }
 

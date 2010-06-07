@@ -49,6 +49,8 @@ private:
     void set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit);
     void init_himd_browser();
     void init_local_browser();
+    void save_window_settings();
+    void read_window_settings();
     bool autodetect_init();
     void open_himd_at(const QString & path);
     void upload_to(const QString & path);
