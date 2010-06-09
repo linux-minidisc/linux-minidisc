@@ -250,24 +250,6 @@ void QHiMDMainWindow::init_local_browser()
     ui->localScan->setColumnWidth(0, 350);
 }
 
-void QHiMDMainWindow::init_context_menu()
-{
-    newdir->setText(tr("new folder"));
-    newdir->setToolTip(tr("Create a new folder"));
-    newdir->setIconText(tr("new folder"));
-
-    remove->setText(tr("remove"));
-    remove->setToolTip(tr("Remove file or directory"));
-    remove->setIconText(tr("remove"));
-
-    QObject::connect(newdir, SIGNAL(triggered()), this, SLOT(action_newdir_triggered()));
-    QObject::connect(remove, SIGNAL(triggered()), this, SLOT(action_remove_triggered()));
-
-    ui->localScan->addAction(newdir);
-    ui->localScan->addAction(remove);
-    ui->localScan->setContextMenuPolicy(Qt::ActionsContextMenu);
-}
-
 void QHiMDMainWindow::save_window_settings()
 {
     int i = 0;
@@ -402,8 +384,6 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     aboutDialog = new QHiMDAboutDialog;
     formatDialog = new QHiMDFormatDialog;
     uploadDialog = new QHiMDUploadDialog;
-    newdir = new QAction(this);
-    remove = new QAction(this);
     detect = createDetection(this);
     ui->setupUi(this);
     ui->updir->setText(settings.value("lastUploadDirectory",
@@ -411,7 +391,6 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     set_buttons_enable(1,0,0,0,0,0,1);
     init_himd_browser();
     init_local_browser();
-    init_context_menu();
     read_window_settings();
     ui->himd_devices->hide();
     if(!autodetect_init())
@@ -422,12 +401,6 @@ QHiMDMainWindow::~QHiMDMainWindow()
 {
     save_window_settings();
     delete ui;
-}
-
-void QHiMDMainWindow::contextMenuEvent(QContextMenuEvent * event)
-{
-    if(event->reason() == QContextMenuEvent::Mouse)
-        event->accept();
 }
 
 /* Slots for the actions */
@@ -581,50 +554,4 @@ void QHiMDMainWindow::himd_removed(QString HiMDPath)
 void QHiMDMainWindow::on_himd_devices_activated(QString device)
 {
     open_himd_at(device);
-}
-
-void QHiMDMainWindow::action_newdir_triggered()
-{
-    QString newdir;
-    QModelIndex cur_index = ui->localScan->currentIndex();
-
-    if(!localmodel.fileInfo(cur_index).isDir())
-        cur_index = localmodel.parent(cur_index);
-
-    newdir = QFileDialog::getExistingDirectory(this,
-                                               tr("Please create the new folder now"),
-                                               localmodel.filePath(cur_index),
-                                               QFileDialog::ShowDirsOnly
-                                               | QFileDialog::DontResolveSymlinks
-                                               | QFileDialog::DontUseNativeDialog);
-
-    if(newdir.isEmpty())
-        return;
-
-    ui->localScan->setCurrentIndex(localmodel.index(newdir));
-    on_localScan_clicked(ui->localScan->currentIndex());
-}
-
-void QHiMDMainWindow::action_remove_triggered()
-{
-    int ret;
-    QModelIndex index = ui->localScan->currentIndex();
-    QString file = localmodel.filePath(index);
-
-    if((file == localmodel.rootPath()) || !localmodel.fileInfo(index).isWritable())
-        return;
-
-    ret = QMessageBox::question(this, tr("Removing file or directory"),
-                                tr("Are you sure you want to remove ") + file + tr(" ?\n\n") +
-                                tr("Note: The file or directory will be removed finally ") +
-                                tr("and cannot be recovered"),
-                                QMessageBox::Ok | QMessageBox::Cancel,
-                                QMessageBox::Cancel);
-
-    if(ret != QMessageBox::Ok)
-        return;
-
-    ui->localScan->setCurrentIndex(localmodel.parent(index));
-    on_localScan_clicked(ui->localScan->currentIndex());
-    localmodel.remove(index);
 }
