@@ -3,6 +3,9 @@ from cStringIO import StringIO
 from time import sleep
 from struct import pack
 from Crypto.Cipher import DES
+from Crypto.Cipher import DES3
+import array
+import random
 
 def dump(data):
     if isinstance(data, basestring):
@@ -243,7 +246,6 @@ DISKFORMAT_SP_MONO = 4
 DISKFORMAT_SP_STEREO = 6
 
 WIREFORMAT_PCM = 0
-WIREFORMAT_SP = 0x40
 WIREFORMAT_105KBPS = 0x90
 WIREFORMAT_LP2 = 0x94
 WIREFORMAT_LP4 = 0xA8
@@ -1101,7 +1103,6 @@ class NetMDInterface(object):
             raise ValueError, 'Supplied Session Key length wrong'
         framesizedict = {
             WIREFORMAT_PCM: 2048,
-            WIREFORMAT_SP: 212,
             WIREFORMAT_LP2: 192,
             WIREFORMAT_105KBPS: 152, 
             WIREFORMAT_LP4: 96,
@@ -1123,4 +1124,56 @@ class NetMDInterface(object):
                                 '%?%? %?%?%?%? %?%?%?%? %*')
         encrypter = DES.new(sessionkey, DES.MODE_CBC, '\0\0\0\0\0\0\0\0')
         replydata = encrypter.decrypt(encryptedreply)
-        return (track, replydata[0:8], replydata[8:12], replydata[12:32])
+        return (track, replydata[0:8], replydata[12:32])
+
+def retailmac(key, value, iv = 8*"\0"):
+    subkeyA = key[0:8]
+    beginning = value[0:-8]
+    end = value[-8:]
+    step1crypt = DES.new(subkeyA, DES.MODE_CBC, iv)
+    iv2 = step1crypt.encrypt(beginning)[-8:]
+    step2crypt = DES3.new(key, DES3.MODE_CBC, iv2)
+    return step2crypt.encrypt(end)
+
+diskforwire = {
+    WIREFORMAT_PCM: DISKFORMAT_SP_STEREO,
+    WIREFORMAT_LP2: DISKFORMAT_LP2,
+    WIREFORMAT_105KBPS: DISKFORMAT_LP2,
+    WIREFORMAT_LP4: DISKFORMAT_LP4,
+}
+
+
+class MDSession:
+    def __init__(self, md_iface, ekbobject):
+        self.md = md_iface
+        self.sessionkey = None
+        self.md.enterSecureSession()
+        (chain, depth, sig) = ekbobject.getEKBDataForLeafId(self.md.getLeafID())
+        self.md.sendKeyData(ekbobject.getEKBID(), chain, depth, sig)
+        hostnonce = array.array('B',[random.randrange(255) for x in range(8)]).tostring()
+        devnonce = self.md.sessionKeyExchange(hostnonce)
+        nonce = hostnonce + devnonce
+        self.sessionkey = retailmac(ekbobject.getRootKey(), nonce)
+
+    def downloadtrack(self, trk):
+        self.md.setupDownload(trk.getContentID(), trk.getKEK(), self.sessionkey)
+        dataformat = trk.getDataFormat()
+        (track,uuid,ccid) = self.md.sendTrack(dataformat, diskforwire[dataformat], \
+                                   trk.getFramecount(), trk.getPacketcount(),
+                                   trk.getPackets(), self.sessionkey)
+        self.md.cacheTOC()
+        self.md.setTrackTitle(track,trk.getTitle())
+        self.md.syncTOC()
+        self.md.commitTrack(track, self.sessionkey)
+        return (track, uuid, ccid)
+
+    
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        if self.sessionkey != None:
+            self.md.sessionKeyForget
+            self.sessionkey = None
+        self.md.leaveSecureSession()
+
