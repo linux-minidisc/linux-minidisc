@@ -589,15 +589,15 @@ class NetMDInterface(object):
         reply = self.send_query(query)
         self.scanQuery(reply, '1840 00 0000')
 
-#    def syncTOC(self):
-#        query = self.formatQuery('1808 10180200 00')
-#        reply = self.send_query(query)
-#        return self.scanQuery(reply, '1808 10180200 00')
+    def syncTOC(self):
+        query = self.formatQuery('1808 10180200 00')
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1808 10180200 00')
 
-#    def cacheTOC(self):
-#        query = self.formatQuery('1808 10180203 00')
-#        reply = self.send_query(query)
-#        return self.scanQuery(reply, '1808 10180203 00')
+    def cacheTOC(self):
+        query = self.formatQuery('1808 10180203 00')
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1808 10180203 00')
 
     def getDiscFlags(self):
         """
