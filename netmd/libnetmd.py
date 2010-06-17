@@ -347,6 +347,8 @@ class NetMDInterface(object):
                     extend(ord(x) for x in value)
                     if char == 's':
                         append(0)
+                elif char == '*':
+                    extend(ord(x) for x in value)
                 else:
                     raise ValueError, 'Unrecognised format char: %r' % (char, )
                 continue
@@ -766,9 +768,12 @@ class NetMDInterface(object):
             wchar = 3
         else:
             wchar = 2
-        old_len = len(self.getTrackTitle(track))
+        try:
+            old_len = len(self.getTrackTitle(track))
+        except NetMDRejected:
+            old_len = 0
         query = self.formatQuery('1807 022018%b %w 3000 0a00 5000 %w 0000 ' \
-                                 '%w %s', wchar, track, len(title), old_len,
+                                 '%w %*', wchar, track, len(title), old_len,
                                  title)
         reply = self.send_query(query)
         self.scanQuery(reply, '1807 022018%? %?%? 3000 0a00 5000 %?%? 0000 ' \
