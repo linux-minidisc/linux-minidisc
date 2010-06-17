@@ -1,6 +1,8 @@
 import libusb1
 from cStringIO import StringIO
 from time import sleep
+from struct import pack
+from Crypto.Cipher import DES
 
 def dump(data):
     if isinstance(data, basestring):
@@ -234,6 +236,17 @@ TRACK_FLAG_PROTECTED = 0x03
 
 DISC_FLAG_WRITABLE = 0x10
 DISC_FLAG_WRITE_PROTECTED = 0x40
+
+DISKFORMAT_LP4 = 0
+DISKFORMAT_LP2 = 2
+DISKFORMAT_SP_MONO = 4
+DISKFORMAT_SP_STEREO = 6
+
+WIREFORMAT_PCM = 0
+WIREFORMAT_SP = 0x40
+WIREFORMAT_105KBPS = 0x90
+WIREFORMAT_LP2 = 0x94
+WIREFORMAT_LP4 = 0xA8
 
 _FORMAT_TYPE_LEN_DICT = {
     'b': 1, # byte
@@ -909,3 +922,205 @@ class NetMDInterface(object):
         self.scanQuery(reply, '1800 080046 f003010330 0000 1001 %?%? 0000')
         # Prevent firmware lockups on successive saveTrackToStream calls
         sleep(0.01)
+
+    def disableNewTrackProtection(self, val):
+        """
+         NetMD downloaded tracks are usually protected from modification
+         at the MD device to prevent loosing the check-out license. This
+         setting can be changed on some later models to have them record
+         unprotected tracks, like Simple Burner does.
+         The setting stays in effect until endSecureSession, where it
+         is reset to 0.
+         val (int)
+           zero enables protection of future downloaded tracks, one
+           disables protection for these tracks.
+        """
+        query = self.formatQuery('1800 080046 f0030103 2b ff %w', val)
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 2b 00 %?%?')
+
+    def enterSecureSession(self):
+        """
+         Enter a session secured by a root key found in an EKB. The
+         EKB for this session has to be download after entering the
+         session.
+        """
+        query = self.formatQuery('1800 080046 f0030103 80 ff')
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 80 00')
+
+    def leaveSecureSession(self):
+        """
+         Forget the key material from the EKB used in the secure
+         session.
+        """
+        query = self.formatQuery('1800 080046 f0030103 81 ff')
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 81 00')
+
+    def getLeafID(self):
+        """
+         Read the leaf ID of the present NetMD device. The leaf ID tells
+         which keys the device posesses, which is needed to find out which
+         parts of the EKB needs to be sent to the device for it to decrypt
+         the root key.
+         The leaf ID is a 8-byte constant
+        """
+        query = self.formatQuery('1800 080046 f0030103 11 ff')
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 11 00 %*')[0]
+
+    def sendKeyData(self, ekbid, keychain, depth, ekbsignature):
+        """
+         Send key data to the device. The device uses it's builtin key
+         to decrypt the root key from an EKB.
+         ekbid (int)
+           The ID of the EKB.
+         keychain (list of 16-byte str)
+           A chain of encrypted keys. The one end of the chain is the
+           encrypted root key, the other end is a key encrypted by a key
+           the device has in it's key set. The direction of the chain is
+           not yet known.
+         depth (str)
+           Selects which key from the devices keyset has to be used to
+           start decrypting the chain. Each key in the key set corresponds
+           to a specific depth in the tree of device IDs.
+         ekbsignature
+           A 24 byte signature of the root key. Used to verify integrity
+           of the decrypted root key by the device.
+        """
+        chainlen = len(keychain)
+        # 16 bytes header, 16 bytes per key, 24 bytes for the signature
+        databytes = 16 + 16*chainlen + 24
+        for key in keychain:
+            if len(key) != 16:
+                raise ValueError, ("Each key in the chain needs to have 16 bytes, this one has %d" % len(key))
+        if depth < 1 or depth > 63:
+            raise ValueError, 'Supplied depth is invalid'
+        if len(ekbsignature) != 24:
+            raise ValueError, 'Supplied EKB signature length wrong'
+        query = self.formatQuery('1800 080046 f0030103 12 ff %w %d' \
+                                 '%d %d %d 00000000 %* %*', databytes, databytes,
+                                 chainlen, depth, ekbid, "".join(keychain), ekbsignature)
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 12 01 %?%? %?%?%?%?')
+
+    def sessionKeyExchange(self, hostnonce):
+        """
+         Exchange a session key with the device. Needs to have a root
+         key sent to the device using sendKeyData before.
+         hostnonce (str)
+           8 bytes random binary data
+         Returns
+           device nonce (str), another 8 bytes random data
+        """
+        if len(hostnonce) != 8:
+            raise ValueError, 'Supplied host nonce length wrong'
+        query = self.formatQuery('1800 080046 f0030103 20 ff 000000 %*', hostnonce)
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 20 00 000000 %*')[0]
+
+    def sessionKeyForget(self):
+        """
+         Invalidate the session key established by nonce exchange.
+         Does not invalidate the root key set up by sendKeyData.
+        """
+        query = self.formatQuery('1800 080046 f0030103 21 ff 000000')
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 21 00 000000')
+
+    def setupDownload(self, contentid, keyenckey, sessionkey):
+        """
+         Prepare the download of a music track to the device.
+         contentid (str)
+           20 bytes Unique Identifier for the DRM system.
+         keyenckey (str)
+           8 bytes DES key used to encrypt the block data keys
+         sessionkey (str)
+           8 bytes DES key used for securing the current session, the key
+           has to be calculated by the caller from the data exchanged in
+           sessionKeyExchange and the root key selected by sendKeyData
+        """
+        if len(contentid) != 20:
+            raise ValueError, 'Supplied Content ID length wrong'
+        if len(keyenckey) != 8:
+            raise ValueError, 'Supplied Key Encryption Key length wrong'
+        if len(sessionkey) != 8:
+            raise ValueError, 'Supplied Session Key length wrong'
+        encrypter = DES.new(sessionkey, DES.MODE_CBC, '\0\0\0\0\0\0\0\0')
+        encryptedarg = encrypter.encrypt('\1\1\1\1' + contentid + keyenckey);
+        query = self.formatQuery('1800 080046 f0030103 22 ff 0000 %*', encryptedarg)
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 22 00 0000')
+
+    def commitTrack(self, tracknum, sessionkey):
+        """
+         Commit a track. The idea is that this command tells the device
+         that the license for the track has been checked out from the
+         computer.
+         track (int)
+           Track number returned from downloading command
+         sessionkey (str)
+           8-byte DES key used for securing the download session
+        """
+        if len(sessionkey) != 8:
+            raise ValueError, 'Supplied Session Key length wrong'
+        encrypter = DES.new(sessionkey, DES.MODE_ECB)
+        authentication = encrypter.encrypt('\0\0\0\0\0\0\0\0')
+        query = self.formatQuery('1800 080046 f0030103 48 ff 00 1001 %w %*',
+                                 tracknum, authentication)
+        reply = self.send_query(query)
+        return self.scanQuery(reply, '1800 080046 f0030103 48 00 00 1001 %?%?')
+
+    def sendTrack(self, wireformat, diskformat, frames, pktcount, packets, sessionkey):
+        """
+         Send a track to the NetMD unit.
+         wireformat (int)
+           The format of the data sent over the USB link.
+           one of WIREFORMAT_PCM, WIREFORMAT_LP2, WIREFORMAT_105KBPS or
+           WIREFORMAT_LP4
+         diskformat (int)
+           The format of the data on the MD medium.
+           one of DISKFORMAT_SP_STEREO, DISKFORMAT_LP2 or DISKFORMAT_LP4.
+         frames (int)
+           The number of frames to transfer. The frame size depends on
+           the wire format. It's 2048 bytes for WIREFORMAT_PCM, 192 bytes
+           for WIREFORMAT_LP2, 152 bytes for WIREFORMAT_105KBPS and 92 bytes
+           for WIREFORMAT_LP4.
+         pktcount (int)
+           Number of data packets to send (needed to calculate the raw
+           packetized stream size
+         packets (iterator)
+           iterator over (str, str, str), with the first string being the
+           encrypted DES encryption key for this packet (8 bytes), the second
+           the IV (8 bytes, too) and the third string the encrypted data.
+         sessionkey (str)
+           8-byte DES key used for securing the download session
+        """
+        if len(sessionkey) != 8:
+            raise ValueError, 'Supplied Session Key length wrong'
+        framesizedict = {
+            WIREFORMAT_PCM: 2048,
+            WIREFORMAT_SP: 212,
+            WIREFORMAT_LP2: 192,
+            WIREFORMAT_105KBPS: 152, 
+            WIREFORMAT_LP4: 96,
+        }
+        totalbytes = framesizedict[wireformat] * frames + pktcount * 24;
+        query = self.formatQuery('1800 080046 f0030103 28 ff 000100 1001' \
+                                 'ffff 00 %b %b %d %d',
+                                 wireformat, diskformat, frames, totalbytes)
+        reply = self.send_query(query)
+        self.scanQuery(reply, '1800 080046 f0030103 28 00 000100 1001 %?%? 00'\
+                              '%*')
+        for (key,iv,data) in packets:
+            binpkt = pack('>Q',len(data)) + key + iv + data
+            self.net_md.writeBulk(binpkt)
+        reply = self.readReply()
+        self.net_md._getReplyLength()
+        (track, encryptedreply) = \
+          self.scanQuery(reply, '1800 080046 f0030103 28 00 000100 1001 %w 00' \
+                                '%?%? %?%?%?%? %?%?%?%? %*')
+        encrypter = DES.new(sessionkey, DES.MODE_CBC, '\0\0\0\0\0\0\0\0')
+        replydata = encrypter.decrypt(encryptedreply)
+        return (track, replydata[0:8], replydata[8:12], replydata[12:32])
