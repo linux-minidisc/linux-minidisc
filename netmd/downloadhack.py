@@ -10,7 +10,6 @@ def main(bus=None, device_address=None):
                                    device_address=device_address):
         md_iface = libnetmd.NetMDInterface(md)
         DownloadHack(md_iface)
-        DownloadHack(md_iface)
 
 class EKB1_10:
     def getRootKey(self):
