@@ -10,7 +10,10 @@ void make_ea3_format_header(char * header, const struct trackinfo * trkinfo)
 
     memset(header, 0, EA3_FORMAT_HEADER_SIZE);
     memcpy(header   , ea3header,12);
-    memcpy(header+12, trkinfo->contentid,20);
+    /* Do not set the content ID - this activates DRM stuff in Sonic Stage.
+       A track with an unknown content ID can not be converted nor transferred.
+       A zero content ID seems to mean "no DRM, for real!" */
+    /*memcpy(header+12, trkinfo->contentid,20);*/
     header[32] = trkinfo->codec_id;
     memcpy(header+33, trkinfo->codecinfo, 3);
 }
