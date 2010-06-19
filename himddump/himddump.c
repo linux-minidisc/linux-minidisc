@@ -1,3 +1,7 @@
+/*
+ *   himddump.c - list contents (tracks, holes), dump tracks and show diskid of a HiMD 
+ */
+
 #include <stdio.h>
 #include <glib.h>
 #include <locale.h>
@@ -5,6 +9,19 @@
 
 #include "himd.h"
 #include "sony_oma.h"
+
+void usage(char * cmdname)
+{
+  printf("Usage: %s <HiMD path> <command>, where <command> is either of:\n\n\
+          strings          - dumps all strings found in the tracklist file\n\
+          tracks           - lists all tracks on disc\n\
+          discid           - reads the disc id of the inserted medium\n\
+          holes            - lists all holes on disc\n\
+          mp3key <TRK>     - show the MP3 encryption key for track <TRK>\n\
+          dumptrack <TRK>  - dump track <TRK>\n\
+          dumpmp3 <TRK>    - dump MP3 track <TRK>\n\
+          dumpnonmp3 <TRK> - dump non-MP3 tracl <TRK>\n", cmdname);
+}
 
 static const char * hexdump(unsigned char * input, int len)
 {
@@ -312,11 +329,22 @@ int main(int argc, char ** argv)
     struct himd h;
     struct himderrinfo status;
     setlocale(LC_ALL,"");
-    if(argc < 2)
-    {
-        fputs("Please specify mountpoint of image\n",stderr);
-        return 1;
+
+    if (argc == 2 && (strcmp (argv[1], "help") == 0)) {
+      usage(argv[0]);
+      return 0;
     }
+
+    if (argc != 2 || argc != 3) {
+      printf("\nPlease specify HiMD path and command to be sent. Use \"%s help\" to display a help.\n\n", argv[0]);
+      return 0;
+    }
+
+    //    if(argc < 2)
+    //{
+    //       fputs("Please specify mountpoint of image\n",stderr);
+    //   return 1;
+    //}
     if(himd_open(&h,argv[1], &status) < 0)
     {
         puts(status.statusmsg);
