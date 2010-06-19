@@ -336,7 +336,7 @@ int main(int argc, char ** argv)
     }
 
     if (argc != 2 || argc != 3) {
-      printf("\nPlease specify HiMD path and command to be sent. Use \"%s help\" to display a help.\n\n", argv[0]);
+      printf("Please specify HiMD path and command to be sent. Use \"%s help\" to display a help.\n", argv[0]);
       return 0;
     }
 

@@ -240,7 +240,7 @@ void erase_medium(SCSI * scgp, char * command, char * errstr)
 
   type = capacity_mb(scgp);
   if(type == 0)
-    printf("Error: Cannot read capacity\n");
+    printf("Error: Cannot read capacity.\n");
   else if(type == MEDIUM_HIMD_1GB)
     printf("Error: Erasing 1GB HiMD medium is not supported\nPlease use format to delete all tracks.\n");
   else
@@ -251,7 +251,7 @@ void erase_medium(SCSI * scgp, char * command, char * errstr)
 			     NULL, errstr, sizeof(errstr)));
       else
 	{
-	  printf("Please wait, erasing medium\n");
+	  printf("Please wait, while erasing medium.\n");
 	  if(!wait_for_unit_ready(scgp))
 	    fprintf(stderr,"Error waiting for unit ready:\n%s",
 		    scg_sensemsg(0, scg_sense_code(scgp), scg_sense_qual(scgp),
@@ -306,7 +306,7 @@ void get_time(SCSI * scgp, char * command, char * errstr)
   else
     {
       read_time(tm, buffer);
-      fprintf(stderr, "device time is: %s\n", asctime(tm));
+      fprintf(stderr, "Device time is: %s\n", asctime(tm));
     }
 }
 
@@ -317,7 +317,7 @@ void set_localtime(SCSI * scgp, char * command, char * errstr)
 
   if(t == -1)
     {
-      printf("Error: cannot get local time\n");
+      printf("Error: Cannot get local time.\n");
       return;
     }
 
@@ -330,7 +330,7 @@ void set_localtime(SCSI * scgp, char * command, char * errstr)
 	    scg_sensemsg(0, scg_sense_code(scgp), scg_sense_qual(scgp),
 			 NULL, errstr, sizeof(errstr)));
   else
-    printf("Time successfully set\n");
+    printf("Time successfully set.\n");
 }
 
 void eject_medium(SCSI * scgp, char * errstr)
@@ -347,14 +347,14 @@ void eject_medium(SCSI * scgp, char * errstr)
 
 void usage(char * cmdname)
 {
-  printf("\nUsage: %s <devicename> <command>, where <command> is either of:\n\n\
+  printf("Usage: %s <devicename> <command>, where <command> is either of:\n\n\
           format       - erases all tracks on disc\n\
           erase        - erases all tracks and himd file system (not om 1GB medium)\n\
           discid       - reads the disc id of the inserted medium\n\
           gettime      - reads the time of device internal clock\n\
           setlocaltime - syncs device internal clock with your local computer time\n\
           capacity     - shows the capacity of inserted medium in MB\n\
-          eject        - ejects the medium (same as pressing stop button on device)\n\n", cmdname);
+          eject        - ejects the medium (same as pressing stop button on device)\n", cmdname);
 }
 
 int main(int argc, char ** argv)
@@ -371,7 +371,7 @@ int main(int argc, char ** argv)
   }
 
   if (argc != 3) {
-    printf("\nPlease specify device name and command to be sent. Use \"%s help\" to display a help.\n\n", argv[0]);
+    printf("Please specify device name and command to be sent. Use \"%s help\" to display a help.\n", argv[0]);
     return 0;
   }
 
