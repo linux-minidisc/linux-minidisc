@@ -389,8 +389,7 @@ int main(int argc, char ** argv)
 
   if(scgp->addr.scsibus == -2 && scgp->addr.target == -2)   // scsi device not found, search by devicename
     {                                                         // this is nessessary on windows when driveletter is used
-      ret = scg__open(scgp, dev);
-      if(!ret || (scgp->addr.scsibus == -2 && scgp->addr.target == -2))
+      if(!scg__open(scgp, dev) || (scgp->addr.scsibus == -2 && scgp->addr.target == -2))
 	{
 	  fprintf(stderr, "Cannot open SCSI device for %s\n", dev);
 	  scg__close(scgp);
