@@ -1152,7 +1152,7 @@ class NetMDInterface(object):
         """
         query = self.formatQuery('1800 080046 f0030103 23 ff 1001 %w', track)
         reply = self.send_query(query)
-        return self.scanQuery(reply,'1800 080046 f0030103 23 00 1001 %?%? %*')
+        return self.scanQuery(reply,'1800 080046 f0030103 23 00 1001 %?%? %*')[0]
 
 def retailmac(key, value, iv = 8*"\0"):
     subkeyA = key[0:8]

@@ -2,13 +2,13 @@
 import usb1
 import libnetmd
 
-def main(bus=None, device_address=None):
+def main(bus=None, device_address=None, show_uuids=False):
     context = usb1.LibUSBContext()
     for md in libnetmd.iterdevices(context, bus=bus,
                                    device_address=device_address):
-        listMD(md)
+        listMD(md, show_uuids)
 
-def listMD(md):
+def listMD(md, show_uuids):
     md_iface = libnetmd.NetMDInterface(md)
 
     codec_name_dict = {
@@ -65,14 +65,19 @@ def listMD(md):
                 channel_count_dict[channel_count], flag_dict[flags],
                 md_iface.getTrackTitle(real_track),
                 md_iface.getTrackTitle(real_track, True).decode('shift_jis_2004'))
+            if show_uuids:
+                uuid = md_iface.getTrackUUID(real_track)
+                print '%s UUID:' % prefix, ''.join(["%02x"%ord(i) for i in uuid])
 
 if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser()
     parser.add_option('-b', '--bus')
     parser.add_option('-d', '--device')
+    parser.add_option('-u', '--uuids', action="store_true")
     (options, args) = parser.parse_args()
     assert len(args) == 0
 
-    main(bus=options.bus, device_address=options.device)
+    main(bus=options.bus, device_address=options.device, 
+         show_uuids=options.uuids)
 
