@@ -66,15 +66,15 @@ def MDDump(md_iface, ext, track_range, disk_title_override=None):
         md_iface.gotoTrack(track)
         # Attemp to reduce the MD play delay by...
         print 'Waiting for MD...'
-        # Waiting for the seek to complete...
-        while md_iface.getPosition() != [track, 0, 0, 0, 1] and \
-              md_iface.getPosition() != [track, 0, 0, 0, 2]:
-            sleep(1)
-        # And waiting for the play to actualy begin.
+        # ...starting to play (some devices start their seek at this
+        # time, others already at gotoTrack)...
         md_iface.play()
-        while md_iface.getPosition() < [track, 0, 0, 1, 1]:
-            sleep(0.5)
-        # Pause and go back to track beginning.
+        # ... wait until playing really begins ... (waits until the second
+        # second of audio playing)
+        while md_iface.getPosition()[0:4] != [track, 0, 0, 1]:
+            print md_iface.getPosition()
+            sleep(0.25)
+        # ... pause and go back to track beginning.
         md_iface.pause()
         md_iface.gotoTrack(track)
         pid = os.fork()
