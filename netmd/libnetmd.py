@@ -129,6 +129,9 @@ class NetMD(object):
         self.interface = interface
         usb_handle.setConfiguration(1)
         usb_handle.claimInterface(interface)
+        if self._getReplyLength() != 0:
+            self.readReply()
+
 
     def __del__(self):
         try:
