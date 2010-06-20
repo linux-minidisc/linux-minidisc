@@ -1101,6 +1101,16 @@ class NetMDInterface(object):
            the IV (8 bytes, too) and the third string the encrypted data.
          sessionkey (str)
            8-byte DES key used for securing the download session
+         Returns
+           A tuple (tracknum, UUID, content ID).
+           tracknum (int)
+             the number the new track got.
+           UUID (str)
+             an 8-byte-value to recognize this track for check-in purpose
+           content ID
+             the content ID. Should always be the same as passed to 
+             setupDownload, probably present to prevent some attack vectors
+             to the DRM system.
         """
         if len(sessionkey) != 8:
             raise ValueError, 'Supplied Session Key length wrong'
@@ -1128,6 +1138,21 @@ class NetMDInterface(object):
         encrypter = DES.new(sessionkey, DES.MODE_CBC, '\0\0\0\0\0\0\0\0')
         replydata = encrypter.decrypt(encryptedreply)
         return (track, replydata[0:8], replydata[12:32])
+
+    def getTrackUUID(self, track):
+        """
+         Gets the DRM tracking ID for a track.
+         NetMD downloaded tracks have an 8-byte identifier (instead of their
+         content ID) stored on the MD medium. This is used to verify the
+         identity of a track when checking in.
+         track (int)
+           The track number
+         Returns
+           An 8-byte binary string containing the track UUID.
+        """
+        query = self.formatQuery('1800 080046 f0030103 23 ff 1001 %w', track)
+        reply = self.send_query(query)
+        return self.scanQuery(reply,'1800 080046 f0030103 23 00 1001 %?%? %*')
 
 def retailmac(key, value, iv = 8*"\0"):
     subkeyA = key[0:8]
