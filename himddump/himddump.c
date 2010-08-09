@@ -15,6 +15,7 @@ void usage(char * cmdname)
   printf("Usage: %s <HiMD path> <command>, where <command> is either of:\n\n\
           strings          - dumps all strings found in the tracklist file\n\
           tracks           - lists all tracks on disc\n\
+          tracks verbose   - lists details of all tracks on disc\n\
           discid           - reads the disc id of the inserted medium\n\
           holes            - lists all holes on disc\n\
           mp3key <TRK>     - show the MP3 encryption key for track <TRK>\n\
@@ -335,25 +336,20 @@ int main(int argc, char ** argv)
       return 0;
     }
 
-    if (argc != 2 || argc != 3) {
+    if (argc < 2) {
       printf("Please specify HiMD path and command to be sent. Use \"%s help\" to display a help.\n", argv[0]);
       return 0;
     }
 
-    //    if(argc < 2)
-    //{
-    //       fputs("Please specify mountpoint of image\n",stderr);
-    //   return 1;
-    //}
     if(himd_open(&h,argv[1], &status) < 0)
     {
         puts(status.statusmsg);
         return 1;
     }
-    if(argc == 2 || strcmp(argv[2],"strings") == 0)
-        himd_stringdump(&h);
-    else if(strcmp(argv[2],"tracks") == 0)
+    if(argc == 2 || strcmp(argv[2],"tracks") == 0)
         himd_trackdump(&h, argc > 3);
+    else if(strcmp(argv[2],"strings") == 0)
+        himd_stringdump(&h);
     else if(strcmp(argv[2],"discid") == 0)
         himd_dumpdiscid(&h);
     else if(strcmp(argv[2],"holes") == 0)
