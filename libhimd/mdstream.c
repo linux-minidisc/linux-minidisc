@@ -82,6 +82,8 @@ static inline int is_mpeg(struct himd_blockstream * stream)
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
                             unsigned int * firstframe, unsigned int * lastframe, struct himderrinfo * status)
 {
+    struct fraginfo * curfrag;
+
     g_return_val_if_fail(stream != NULL, -1);
     g_return_val_if_fail(block != NULL, -1);
 
@@ -91,10 +93,12 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
         return -1;
     }
 
-    if(stream->curblockno == stream->frags[stream->curfragno].firstblock)
+    curfrag = &stream->frags[stream->curfragno];
+
+    if(stream->curblockno == curfrag->firstblock)
     {
         if(firstframe)
-            *firstframe = stream->frags[stream->curfragno].firstframe;
+            *firstframe = curfrag->firstframe;
         if(fseek(stream->atdata, stream->curblockno*16384L, SEEK_SET) < 0)
         {
             set_status_printf(status, HIMD_ERROR_CANT_SEEK_AUDIO,
@@ -114,18 +118,19 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
         return -1;
     }
 
-    if(stream->curblockno == stream->frags[stream->curfragno].lastblock)
+    if(stream->curblockno == curfrag->lastblock)
     {
         if(lastframe)
         {
             if(is_mpeg(stream))
-                *lastframe = stream->frags[stream->curfragno].lastframe - 1;
+                *lastframe = curfrag->lastframe - 1;
             else
-                *lastframe = stream->frags[stream->curfragno].lastframe;
+                *lastframe = curfrag->lastframe;
         }
         stream->curfragno++;
+        curfrag++;
         if(stream->curfragno < stream->fragcount)
-            stream->curblockno = stream->frags[stream->curfragno].firstblock;
+            stream->curblockno = curfrag->firstblock;
     }
     else
     {
