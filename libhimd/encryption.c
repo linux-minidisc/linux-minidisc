@@ -37,12 +37,66 @@ int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himde
 #include "himd_private.h"
 #include <string.h>
 
-struct descrypt_data {
-    MCRYPT masterkeycipher;
-    MCRYPT blockcipher;
-    unsigned char lastkey[8];
-    unsigned char blockcipher_inited;
+struct cached_cipher {
+    unsigned char key[8];
+    MCRYPT cipher;
+    int valid;
 };
+
+struct descrypt_data {
+    struct cached_cipher master;
+    struct cached_cipher block;
+    unsigned char masterkey[8];
+};
+
+static int cached_cipher_init(struct cached_cipher * cipher, char * destype)
+{
+    cipher->cipher = mcrypt_module_open("des", NULL, destype, NULL);
+    if(!cipher->cipher)
+        return -1;
+
+    cipher->valid = 0;
+    return 0;
+}
+
+/* iv should be NULL for ECB mode */
+static int cached_cipher_prepare(struct cached_cipher * cipher,
+                                 unsigned char * key, unsigned char * iv)
+{
+    int err;
+
+    /* not yet initialized or new key */
+    if(!cipher->valid ||
+       memcmp(cipher->key, key, 8))
+    {
+        if(cipher->valid)
+            mcrypt_generic_deinit(cipher->cipher);
+        cipher->valid = 0;
+
+        err = mcrypt_generic_init(cipher->cipher, key, 8, iv);
+        if(err < 0)
+            return err;
+
+        memcpy(cipher->key, key, 8);
+        cipher->valid = 1;
+    }
+    else if(iv)		/* update IV, works for CBC decryption */
+    {
+        unsigned char dummy[8];
+        memcpy(dummy, iv, 8);
+        err = mdecrypt_generic(cipher->cipher, dummy, 8);
+        if(err < 0)
+            return err;
+    }
+    return 0;
+}
+
+static void cached_cipher_deinit(struct cached_cipher * cipher)
+{
+    if(cipher->valid)
+        mcrypt_generic_deinit(cipher->cipher);
+    mcrypt_module_close(cipher->cipher);
+}
 
 int descrypt_open(void ** dataptr, const unsigned char * trackkey, 
                   unsigned int ekbnum, struct himderrinfo * status)
@@ -50,7 +104,6 @@ int descrypt_open(void ** dataptr, const unsigned char * trackkey,
     static const unsigned char zerokey[] = {0,0,0,0,0,0,0,0};
     static const unsigned char masterkey[] = {0xf2,0x26,0x6c,0x64,0x64,0xc0,0xd6,0x5c};
     struct descrypt_data * data;
-    int err;
 
     if(ekbnum != 0x00010012)
     {
@@ -71,28 +124,20 @@ int descrypt_open(void ** dataptr, const unsigned char * trackkey,
         set_status_const(status, HIMD_ERROR_OUT_OF_MEMORY, _("Can't allocate crypt helper structure"));
         return -1;
     }
-    data->masterkeycipher = mcrypt_module_open("des", NULL, "ecb", NULL);
-    if(!data->masterkeycipher)
+    if(cached_cipher_init(&data->master, "ecb") < 0)
     {
         set_status_const(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't aquire DES ECB encryption"));
         return -1;
     }
-    if((err = mcrypt_generic_init(data->masterkeycipher, &masterkey, 8, NULL)) < 0)
-    {
-        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't init DES: %s"), mcrypt_strerror(err));
-        mcrypt_module_close(data->masterkeycipher);
-        return -1;
-    }
-    data->blockcipher = mcrypt_module_open("des", NULL, "cbc", 0);
-    if(!data->blockcipher)
+
+    memcpy(data->masterkey, masterkey, 8);
+    if(cached_cipher_init(&data->block, "cbc") < 0)
     {
         set_status_const(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't aquire DES CBC encryption"));
-        mcrypt_generic_deinit(data->masterkeycipher);
-        mcrypt_module_close(data->masterkeycipher);
+        cached_cipher_deinit(&data->master);
         return -1;
     }
-    data->blockcipher_inited = 0;
-    
+
     *dataptr = data;
     return 0;
 }
@@ -103,34 +148,28 @@ int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen, str
     struct descrypt_data * data = dataptr;
     int err;
 
-    if(!data->blockcipher_inited || memcmp(data->lastkey, block+16, 8) != 0)
+    if((err = cached_cipher_prepare(&data->master, data->masterkey, NULL)) < 0)
     {
-        memcpy(mainkey, block+16, 8);
-        if((err = mcrypt_generic(data->masterkeycipher, &mainkey, 8)) < 0)
-        {
-            set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't calc block key: %s"), mcrypt_strerror(err));
-            return -1;
-        }
-
-        if(data->blockcipher_inited)
-        {
-            mcrypt_generic_deinit(data->blockcipher);
-            data->blockcipher_inited = 0;
-        }
-        if((err = mcrypt_generic_init(data->blockcipher, mainkey, 8, block+24)) < 0)
-        {
-            set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't init CBC block cipher: %s"), mcrypt_strerror(err));
-            return -1;
-        }
-
-        memcpy(data->lastkey, block+16, 8);
-        data->blockcipher_inited = 1;
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't setup track key: %s"), mcrypt_strerror(err));
+        return -1;
     }
 
-    if((err = mdecrypt_generic(data->blockcipher, block+32, cryptlen)) < 0)
+    memcpy(mainkey, block+16, 8);
+    if((err = mcrypt_generic(data->master.cipher, mainkey, 8)) < 0)
+    {
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't calc block key: %s"), mcrypt_strerror(err));
+        return -1;
+    }
+
+    if((err = cached_cipher_prepare(&data->block, mainkey, block + 24)) < 0)
+    {
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't setup block key: %s"), mcrypt_strerror(err));
+        return -1;
+    }
+
+    if((err = mdecrypt_generic(data->block.cipher, block+32, cryptlen)) < 0)
     {
         set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't decrypt: %s"), mcrypt_strerror(err));
-        mcrypt_generic_deinit(data->blockcipher);
         return -1;
     }
 
@@ -139,12 +178,9 @@ int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen, str
 
 void descrypt_close(void * dataptr)
 {
-    const struct descrypt_data * data = dataptr;
-    if(data->blockcipher_inited)
-        mcrypt_generic_deinit(data->blockcipher);
-    mcrypt_module_close(data->blockcipher);
-    mcrypt_generic_deinit(data->masterkeycipher);
-    mcrypt_module_close(data->masterkeycipher);
+    struct descrypt_data * data = dataptr;
+    cached_cipher_deinit(&data->block);
+    cached_cipher_deinit(&data->master);
     free(dataptr);
 }
 
