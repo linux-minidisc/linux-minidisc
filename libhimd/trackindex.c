@@ -152,9 +152,6 @@ unsigned int himd_trackinfo_framesperblock(const struct trackinfo * track)
 
 int himd_track_uploadable(struct himd * himd, const struct trackinfo * track)
 {
-    struct fraginfo frag;
-    int fragnum;
-
     g_return_val_if_fail(himd != NULL, 0);
     g_return_val_if_fail(track != NULL, 0);
 
@@ -168,13 +165,6 @@ int himd_track_uploadable(struct himd * himd, const struct trackinfo * track)
        track->ekbnum != 0x10012)
         return 0;
 
-    for(fragnum = track->firstfrag; fragnum != 0; fragnum = frag.nextfrag)
-    {
-        if(himd_get_fragment_info(himd, fragnum, &frag, NULL) < 0)
-            return 0;
-        if(memcmp(frag.key,"\0\0\0\0\0\0\0",8) != 0)
-            return 0;
-    }
     return 1;
 }
 

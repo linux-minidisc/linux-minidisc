@@ -80,7 +80,8 @@ static inline int is_mpeg(struct himd_blockstream * stream)
 }
 
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
-                            unsigned int * firstframe, unsigned int * lastframe, struct himderrinfo * status)
+                            unsigned int * firstframe, unsigned int * lastframe,
+                            unsigned char * fragkey, struct himderrinfo * status)
 {
     struct fraginfo * curfrag;
 
@@ -118,6 +119,9 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
         return -1;
     }
 
+    if(fragkey)
+        memcpy(fragkey, curfrag->key, sizeof curfrag->key);
+
     if(stream->curblockno == curfrag->lastblock)
     {
         if(lastframe)
@@ -143,6 +147,7 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
         }
         stream->curblockno++;
     }
+
     return 0;
 }
 
@@ -272,7 +277,8 @@ int himd_mp3stream_read_block(struct himd_mp3stream * stream, const unsigned cha
     }
     
     /* need to read next block */
-    if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe, status) < 0)
+    if(himd_blockstream_read(&stream->stream, stream->blockbuf,
+                             &firstframe, &lastframe, NULL, status) < 0)
         return -1;
 
     free(stream->frameptrs);
@@ -445,6 +451,7 @@ int himd_nonmp3stream_read_frame(struct himd_nonmp3stream * stream, const unsign
 int himd_nonmp3stream_read_block(struct himd_nonmp3stream * stream, const unsigned char ** frameout, unsigned int * lenout, unsigned int * framecount, struct himderrinfo * status)
 {
     unsigned int firstframe, lastframe;
+    unsigned char fragkey[8];
 
     g_return_val_if_fail(stream != NULL, -1);
     /* if partial block left */
@@ -461,9 +468,12 @@ int himd_nonmp3stream_read_block(struct himd_nonmp3stream * stream, const unsign
         return 0;
     }
     
-    if(himd_blockstream_read(&stream->stream, stream->blockbuf, &firstframe, &lastframe, status) < 0)
+    if(himd_blockstream_read(&stream->stream, stream->blockbuf,
+                             &firstframe, &lastframe, fragkey, status) < 0)
         return -1;
-    if(descrypt_decrypt(stream->cryptinfo, stream->blockbuf, stream->framesize * stream->stream.frames_per_block, status) < 0)
+    if(descrypt_decrypt(stream->cryptinfo, stream->blockbuf,
+                        stream->framesize * stream->stream.frames_per_block,
+                        fragkey, status) < 0)
         return -1;
     if(frameout)
         *frameout = stream->blockbuf+32 + firstframe * stream->framesize;

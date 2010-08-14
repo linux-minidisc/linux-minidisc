@@ -150,7 +150,8 @@ struct himd_blockstream {
 int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, unsigned int frames_per_block, struct himd_blockstream * stream, struct himderrinfo * status);
 void himd_blockstream_close(struct himd_blockstream * stream);
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
-                            unsigned int * firstframe, unsigned int * lastframe, struct himderrinfo * status);
+                            unsigned int * firstframe, unsigned int * lastframe,
+                            unsigned char * fragkey, struct himderrinfo * status);
 
 struct himd_mp3stream {
     struct himd_blockstream stream;

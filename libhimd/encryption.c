@@ -98,6 +98,14 @@ static void cached_cipher_deinit(struct cached_cipher * cipher)
     mcrypt_module_close(cipher->cipher);
 }
 
+static void xor_keys(unsigned char * out,
+                     const unsigned char * in1, const unsigned char * in2)
+{
+    int i;
+    for(i = 0; i < 8; i++)
+        out[i] = in1[i] ^ in2[i];
+}
+
 int descrypt_open(void ** dataptr, const unsigned char * trackkey, 
                   unsigned int ekbnum, struct himderrinfo * status)
 {
@@ -142,13 +150,16 @@ int descrypt_open(void ** dataptr, const unsigned char * trackkey,
     return 0;
 }
 
-int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen, struct himderrinfo * status)
+int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen,
+                     const unsigned char * fragkey, struct himderrinfo * status)
 {
+    unsigned char finalfragkey[8];
     unsigned char mainkey[8];
     struct descrypt_data * data = dataptr;
     int err;
 
-    if((err = cached_cipher_prepare(&data->master, data->masterkey, NULL)) < 0)
+    xor_keys(finalfragkey, data->masterkey, fragkey);
+    if((err = cached_cipher_prepare(&data->master, finalfragkey, NULL)) < 0)
     {
         set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't setup track key: %s"), mcrypt_strerror(err));
         return -1;

@@ -13,5 +13,6 @@ void set_status_printf(struct himderrinfo * status, enum himdstatus code, const 
 
 int descrypt_open(void ** dataptr, const unsigned char * trackkey, 
                   unsigned int ekbnum, struct himderrinfo * status);
-int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen, struct himderrinfo * status);
+int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen,
+                     const unsigned char * fragkey, struct himderrinfo * status);
 void descrypt_close(void * dataptr);

@@ -175,6 +175,7 @@ void himd_dumptrack(struct himd * himd, int trknum)
     FILE * strdumpf;
     unsigned int firstframe, lastframe;
     unsigned char block[16384];
+    unsigned char fragkey[8];
     int blocknum = 0;
     strdumpf = fopen("stream.dmp","wb");
     if(!strdumpf)
@@ -192,14 +193,15 @@ void himd_dumptrack(struct himd * himd, int trknum)
         fprintf(stderr, "Error opening stream %d: %s\n", t.firstfrag, status.statusmsg);
         return;
     }
-    while(himd_blockstream_read(&str, block, &firstframe, &lastframe, &status) >= 0)
+    while(himd_blockstream_read(&str, block, &firstframe, &lastframe, fragkey, &status) >= 0)
     {
         if(fwrite(block,16384,1,strdumpf) != 1)
         {
             perror("writing dumped stream");
             goto clean;
         }
-        printf("%d: %u..%u\n",blocknum++,firstframe,lastframe);
+        printf("%d: %u..%u %s\n",
+                blocknum++,firstframe,lastframe,hexdump(fragkey,8));
     }
     if(status.status != HIMD_STATUS_AUDIO_EOF)
         fprintf(stderr,"Error reading MP3 data: %s\n", status.statusmsg);
