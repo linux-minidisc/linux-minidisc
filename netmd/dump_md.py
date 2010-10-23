@@ -3,6 +3,8 @@ import os
 import usb1
 import libnetmd
 from time import sleep
+import platform
+import subprocess
 
 def main(bus=None, device_address=None, ext='ogg', track_range=None, title=None):
     context = usb1.LibUSBContext()
@@ -77,24 +79,26 @@ def MDDump(md_iface, ext, track_range, disk_title_override=None):
         # ... pause and go back to track beginning.
         md_iface.pause()
         md_iface.gotoTrack(track)
-        pid = os.fork()
-        if pid == 0:
-            os.execlp('sox', 'sox',
-                      '-d',
-                      '-S',
-                      '-c', channels,
-                      '%s/%s' % (directory, filename),
-                      'silence', '1', '0.1', '0.1%',
-                      'trim', '0', duration,
-            )
+        if platform.system() == 'Windows':
+            sox = 'sox.exe'
         else:
-            md_iface.play()
-            sleep(((hour * 60 + minute) * 60) + second)
-            while md_iface.getPosition()[0] == track:
-                sleep(1)
-            md_iface.pause()
-            print 'Done, waiting for sox to return...'
-            os.waitpid(pid, 0)
+            sox = 'sox'
+        start_sox = [sox,
+                    '-d',
+                    '-S',
+                    '-c', channels,
+                    '%s/%s' % (directory, filename),
+                    'silence', '1', '0.1', '0.1%',
+                    'trim', '0', duration,
+                    ]
+        pid = subprocess.Popen(start_sox)
+        md_iface.play()
+        sleep(((hour * 60 + minute) * 60) + second)
+        while md_iface.getPosition()[0] == track:
+            sleep(1)
+        md_iface.pause()
+        print 'Done, waiting for sox to return...'
+        pid.wait()
     # TODO: generate playlists based on groups defined on the MD
     print 'Finished.'
 
