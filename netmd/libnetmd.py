@@ -135,6 +135,7 @@ class NetMD(object):
 
     def __del__(self):
         try:
+            self.usb_handle.resetDevice()
             self.usb_handle.releaseInterface(self.interface)
         except: # Should specify an usb exception
             pass
