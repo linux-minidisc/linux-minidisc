@@ -21,7 +21,8 @@ LANGUAGES = de \
     ar \
     el \
     da \
-    tr
+    tr \
+    es
 TRANSLATIONS = $$bracketAll(LANGUAGES, qhimdtransfer_,.ts)
 include(translate.pri)
 
