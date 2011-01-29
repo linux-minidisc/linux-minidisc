@@ -27,22 +27,22 @@
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
         <translation>&lt;h3&gt;QHiMDTransfer, Versie 0.0.1&lt;/h3&gt;
         &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;Gratis  beheer software voor de MiniDisc walkman.&lt;/p&gt;
+        &lt;p&gt;Gratis software om muziek op een MiniDisc walkman te beheren.&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;Geleverd door het linux-minidisc project:&lt;/p&gt;
+        &lt;p&gt;Aangeboden door het linux-minidisc project:&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
-        &lt;p&gt;Deze software is beschermd door de GNU GPL v2 licensie. Zie het
-         bestand LICENSE in de programma map voor meer informatie.&lt;/p&gt;</translation>
+        &lt;p&gt;Deze software valt onder de GNU GPL v2 licentie. Kijk in het bestand
+          LICENSE in de programmamap voor nadere informatie.&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="qhimdaboutdialog.ui" line="97"/>
         <source>Contributors</source>
-        <translation>Bijdragers</translation>
+        <translation>Medewerkers</translation>
     </message>
     <message>
-        <location filename="qhimdaboutdialog.ui" line="152"/>
+        <location filename="qhimdaboutdialog.ui" line="154"/>
         <source>&amp;Close</source>
         <translation>&amp;Sluiten</translation>
     </message>
@@ -52,12 +52,12 @@
     <message>
         <location filename="qhimdformatdialog.ui" line="14"/>
         <source>Format Medium</source>
-        <translation>Formateer Medium</translation>
+        <translation>Formatteren van de MiniDisc</translation>
     </message>
     <message>
         <location filename="qhimdformatdialog.ui" line="41"/>
         <source>Really format MiniDisc (all audio-tracks and data will be lost) ?</source>
-        <translation>Zeker formateren Minidisc (alle geluidsnummers en data gaan verloren)?</translation>
+        <translation>Wilt u de MiniDisc werkelijk formatteren (Alle audiotracks en bestanden gaan verloren)?</translation>
     </message>
 </context>
 <context>
@@ -65,77 +65,78 @@
     <message>
         <location filename="qhimdmainwindow.cpp" line="22"/>
         <source>Error opening file for MP3 output</source>
-        <translation>Fout bij het openen voor MP3 afspelen</translation>
+        <translation>Fout bij het openen van MP3-bestand voor conversie</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="27"/>
         <location filename="qhimdmainwindow.cpp" line="91"/>
         <location filename="qhimdmainwindow.cpp" line="151"/>
         <source>Error opening track: </source>
-        <translation>Fout bij het openen van dit nummer:</translation>
+        <translation>Fout bij openen van track:</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="33"/>
         <location filename="qhimdmainwindow.cpp" line="103"/>
         <location filename="qhimdmainwindow.cpp" line="171"/>
         <source>Error writing audio data</source>
-        <translation>Fout bij het schrijven van geluidsdata</translation>
+        <translation>Fout bij wegschrijven van de audiodata</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="40"/>
         <source>upload aborted by the user</source>
-        <translation>upload geannuleerd door de gebruiker</translation>
+        <translation>Upload afgebroken door de gebruiker</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="46"/>
         <source>Error reading audio data: </source>
-        <translation>Fout bij het lezen van geluidsdata:</translation>
+        <translation>Fout bij lezen van de audiodata:</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="86"/>
         <source>Error opening file for ATRAC output</source>
-        <translation>Fout bij het openen voor ATRAC afspelen</translation>
+        <translation>Fout bij openen van het ATRAC-bestand voor conversie</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="96"/>
         <source>Error writing header</source>
-        <translation>Fout bij het schrijven van titel</translation>
+        <translatorcomment>There is no Dutch word for &apos; header&apos; . It is not translated in software.</translatorcomment>
+        <translation>Fout bij wegschrijven header</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="146"/>
         <source>Error opening file for WAV output</source>
-        <translation>Fout bij het openen voor WAV afspelen</translation>
+        <translation>Fout bij openen van WAV-bestand voor conversie</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="303"/>
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
 </source>
-        <translation>Fout bij het openen van HiMD data. Ben er zeker van dat u de juiste hoofddirectory van uw HiMD-Walkman hebt gekozen.</translation>
+        <translation>Fout bij openen van HiMD data. Controleer of de juiste root-directory van de HiMD-Walkman gekozen is.</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="338"/>
         <source>Track %1</source>
-        <translation>Nummer %1</translation>
+        <translation>Track %1</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="365"/>
         <source>upload disabled because of DRM encryption</source>
-        <translation>Upload verboden door DRM beveiliging</translation>
+        <translation>Upload niet mogelijk wegens DRM-encryptie</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="415"/>
         <source>Select MP3s for download</source>
-        <translation>Selecteer MP3s voor download</translation>
+        <translation>Selecteer MP3&apos;s om te downloaden</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="425"/>
         <source>Select directory for Upload</source>
-        <translation>Selecteer map voor Upload</translation>
+        <translation>Selecteer de map voor de upload</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="457"/>
         <source>Select directory of HiMD Medium</source>
-        <translation>Selecteer map van HiMD Schijf</translation>
+        <translation>Selecteer de map voor de HiMD-schijf</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.cpp" line="536"/>
@@ -153,7 +154,7 @@
     <message>
         <location filename="qhimdmainwindow.ui" line="38"/>
         <source>HiMD path</source>
-        <translation>HiMD pad</translation>
+        <translation>HiMD-pad</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="45"/>
@@ -163,7 +164,7 @@
     <message>
         <location filename="qhimdmainwindow.ui" line="138"/>
         <source>local directory</source>
-        <translation>Locale map</translation>
+        <translation>lokale map</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="176"/>
@@ -178,32 +179,32 @@
     <message>
         <location filename="qhimdmainwindow.ui" line="229"/>
         <source>&amp;Download tracks onto MD</source>
-        <translation>&amp;Download nummers op MD</translation>
+        <translation>&amp;Download tracks naar de MD</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="238"/>
         <source>&amp;Upload tracks from MD</source>
-        <translation>&amp;Upload nummers vanaf MD</translation>
+        <translation>&amp;Upload tracks van de MD</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="247"/>
         <source>Re&amp;name</source>
-        <translation>&amp;Hernoem</translation>
+        <translation>Her&amp;noemen</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="250"/>
         <source>Rename selected</source>
-        <translation>Hernoem geselecteerde</translation>
+        <translation>Hernoem geselecteerde bestanden</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="259"/>
         <source>D&amp;elete selected</source>
-        <translation>&amp;Verwijder geselecteerde</translation>
+        <translation>V&amp;erwijder geslecteerde bestanden</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="268"/>
         <source>&amp;Help</source>
-        <translation>&amp;Hulp</translation>
+        <translation>&amp;Help</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="277"/>
@@ -213,17 +214,17 @@
     <message>
         <location filename="qhimdmainwindow.ui" line="286"/>
         <source>&amp;Format MD</source>
-        <translation>&amp;Formateer MD</translation>
+        <translation>&amp;Formatteer de MD</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="289"/>
         <source>Format MD</source>
-        <translation>Formateer MD</translation>
+        <translation>Formatteer de MD</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="298"/>
         <source>&amp;Quit</source>
-        <translation>&amp;Einde</translation>
+        <translation>&amp;Afsluiten</translation>
     </message>
     <message>
         <location filename="qhimdmainwindow.ui" line="307"/>
@@ -246,7 +247,7 @@
     <message>
         <location filename="qhimdmodel.cpp" line="153"/>
         <source>Artist</source>
-        <translation>Artiest</translation>
+        <translation>Uitvoerende</translation>
     </message>
     <message>
         <location filename="qhimdmodel.cpp" line="155"/>
@@ -256,17 +257,17 @@
     <message>
         <location filename="qhimdmodel.cpp" line="157"/>
         <source>Length</source>
-        <translation>Lengte</translation>
+        <translation>Duur</translation>
     </message>
     <message>
         <location filename="qhimdmodel.cpp" line="159"/>
         <source>Format</source>
-        <translation>Formaat</translation>
+        <translation>Bestandsformaat</translation>
     </message>
     <message>
         <location filename="qhimdmodel.cpp" line="161"/>
         <source>Uploadable</source>
-        <translation>Uploadbaar</translation>
+        <translation>Te uploaden</translation>
     </message>
 </context>
 <context>
@@ -274,32 +275,32 @@
     <message>
         <location filename="qhimduploaddialog.ui" line="14"/>
         <source>Track upload - QHiMDTransfer</source>
-        <translation>Nummer upload - QHiMDTransfer</translation>
+        <translation>Track uploaden - QHiMDTransfer</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.ui" line="55"/>
         <source>please wait while uploading XX track(s)</source>
-        <translation>Wacht alstublieft tijdens het uploaden van XX nummer(s)</translation>
+        <translation>Wacht terwijl XX track(s) worden weggeschreven</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.ui" line="69"/>
         <source>overall progress</source>
-        <translation>Totale voortgang</translation>
+        <translation>Voortgang</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.ui" line="93"/>
         <source>current track: trknum - filename</source>
-        <translation>Huidig nummer: trknum -filename</translation>
+        <translation>Huidige track: trknum - filename</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.ui" line="108"/>
         <source>xx track(s) successfully uploaded</source>
-        <translation>xx nummer(s) succesvol geupload</translation>
+        <translation>xx track(s) correct weggeschreven</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.ui" line="115"/>
         <source>xx track(s) could not be uploaded</source>
-        <translation>xx track(s) kon(den) niet worden geupload</translation>
+        <translation>xx track(s) kon(den) niet worden weggeschreven</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.ui" line="129"/>
@@ -314,57 +315,57 @@
     <message>
         <location filename="qhimduploaddialog.ui" line="149"/>
         <source>Close</source>
-        <translation>Sluiten</translation>
+        <translation>Sluit</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.ui" line="186"/>
         <source>Tracknr.</source>
-        <translation>Nummer.</translation>
+        <translation>Tracknr.</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.ui" line="191"/>
         <source>Error message</source>
-        <translation>Foutboodschap</translation>
+        <translation>Foutmelding</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.cpp" line="10"/>
         <source>%1 track(s) could not be uploaded</source>
-        <translation>%1.nummer(s) konden niet worden geupload</translation>
+        <translation>%1 track(s) kon(den) niet worden weggeschreven</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.cpp" line="15"/>
         <source>Track %1</source>
-        <translation>Nummer %1</translation>
+        <translation>Track %1</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.cpp" line="28"/>
         <source>%1 track(s) successfully uploaded</source>
-        <translation>%1.nummer(s).succesvol geupload</translation>
+        <translation>%1 track(s) correct weggeschreven</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.cpp" line="33"/>
         <source>upload finished</source>
-        <translation>Upload klaar</translation>
+        <translation>Upload beëeindigd</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.cpp" line="48"/>
         <source>current track: %1 - %2</source>
-        <translation>Huidig nummer:%1 - %2</translation>
+        <translation>huidige track: %1 - %2</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.cpp" line="74"/>
         <source>no tracks selected</source>
-        <translation>Geen nummers geselecteerd</translation>
+        <translation>geen tracks geslecteerd</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.cpp" line="79"/>
         <source>please wait while uploading %1 track(s)</source>
-        <translation>Wacht alstublieft tijdens uploaden %1 nummer(s)</translation>
+        <translation>Wacht terwijl track(s) %1 worden weggeschreven</translation>
     </message>
     <message>
         <location filename="qhimduploaddialog.cpp" line="135"/>
         <source>upload aborted by the user</source>
-        <translation>Upload geannuleerd door de gebruiker</translation>
+        <translation>Upload afgebroken door gebruiker</translation>
     </message>
 </context>
 </TS>
