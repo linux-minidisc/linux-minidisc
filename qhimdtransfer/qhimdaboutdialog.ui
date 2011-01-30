@@ -157,7 +157,7 @@ p, li { white-space: pre-wrap; }
     <string notr="true">image: url(:/icons/qhimdtransfer.png);</string>
    </property>
    <property name="text">
-    <string/>
+    <string notr="true"/>
    </property>
   </widget>
   <widget class="QLabel" name="VersionLabel">
@@ -208,7 +208,7 @@ p, li { white-space: pre-wrap; }
     </rect>
    </property>
    <property name="text">
-    <string>VERSION</string>
+    <string notr="true">VERSION</string>
    </property>
   </widget>
   <widget class="QLabel" name="BuildDateString">
@@ -221,7 +221,7 @@ p, li { white-space: pre-wrap; }
     </rect>
    </property>
    <property name="text">
-    <string>DATE</string>
+    <string notr="true">DATE</string>
    </property>
   </widget>
  </widget>
