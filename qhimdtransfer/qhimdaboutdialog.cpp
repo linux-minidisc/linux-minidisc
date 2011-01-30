@@ -6,6 +6,7 @@ QHiMDAboutDialog::QHiMDAboutDialog(QWidget *parent) :
     m_ui(new Ui::QHiMDAboutDialog)
 {
     m_ui->setupUi(this);
+    m_ui->VersionString->setText(VER);
 }
 
 QHiMDAboutDialog::~QHiMDAboutDialog()

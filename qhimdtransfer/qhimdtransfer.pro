@@ -5,6 +5,15 @@ TARGET = qhimdtransfer
 DEPENDPATH += .
 INCLUDEPATH += .
 
+# determine version number from git
+VERSION = $$system(git describe --always)
+    !isEmpty(VERSION){
+      VERSION = 0.0.1-$${VERSION}
+    }
+
+VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
+
 # language logic heavily inspired by Qt Creator's
 # share/qtcreator/translations/translations.pro
 include(util.pri)
