@@ -22,7 +22,7 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
+        <translation type="obsolete">&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;En fri överförings mjukvara för musik till MiniDisc walkman.&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
@@ -44,6 +44,28 @@
     <message>
         <source>Contributors</source>
         <translation>Bidragsgivare</translation>
+    </message>
+    <message>
+        <source>A free music transfer software for MiniDisc
+Walkman. Brought to you by the linux-minidisc
+project:</source>
+        <translation>En fri överförings mjukvara för musik till
+MiniDisc walkman. Gjordes möjligt tack
+vare linux-minidisc projektet:</translation>
+    </message>
+    <message>
+        <source>This software is covered by the GNU GPL v2
+license. See the file LICENSE in the program
+folder for more information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>Versjon:</translation>
+    </message>
+    <message>
+        <source>Build Date:</source>
+        <translation>Laget på:</translation>
     </message>
 </context>
 <context>
