@@ -7,6 +7,7 @@ QHiMDAboutDialog::QHiMDAboutDialog(QWidget *parent) :
 {
     m_ui->setupUi(this);
     m_ui->VersionString->setText(VER);
+    m_ui->BuildDateString->setText(BDATE);
 }
 
 QHiMDAboutDialog::~QHiMDAboutDialog()

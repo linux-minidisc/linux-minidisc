@@ -201,9 +201,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="VersionString">
    <property name="geometry">
     <rect>
-     <x>290</x>
+     <x>280</x>
      <y>70</y>
-     <width>91</width>
+     <width>101</width>
      <height>16</height>
     </rect>
    </property>
@@ -214,9 +214,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="BuildDateString">
    <property name="geometry">
     <rect>
-     <x>290</x>
+     <x>280</x>
      <y>90</y>
-     <width>91</width>
+     <width>101</width>
      <height>16</height>
     </rect>
    </property>

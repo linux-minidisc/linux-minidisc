@@ -14,6 +14,13 @@ VERSION = $$system(git describe --always)
 VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
+# determine build date
+unix:BUILDDATE = $$system(date +%a\ %m\/%d\/%Y)
+win32:BUILDDATE = $$system(date /T)
+
+BDATESTR = '\\"$${BUILDDATE}\\"'  # place quotes around the build date string
+DEFINES += BDATE=\"$${BDATESTR}\" # create a BDATE macro containing the build date string
+
 # language logic heavily inspired by Qt Creator's
 # share/qtcreator/translations/translations.pro
 include(util.pri)
