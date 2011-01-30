@@ -148,7 +148,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>50</y>
+     <y>40</y>
      <width>161</width>
      <height>81</height>
     </rect>
@@ -164,7 +164,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>200</x>
-     <y>70</y>
+     <y>40</y>
      <width>61</width>
      <height>16</height>
     </rect>
@@ -183,7 +183,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>200</x>
-     <y>90</y>
+     <y>80</y>
      <width>81</width>
      <height>16</height>
     </rect>
@@ -201,9 +201,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="VersionString">
    <property name="geometry">
     <rect>
-     <x>280</x>
-     <y>70</y>
-     <width>101</width>
+     <x>200</x>
+     <y>60</y>
+     <width>131</width>
      <height>16</height>
     </rect>
    </property>
@@ -214,9 +214,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="BuildDateString">
    <property name="geometry">
     <rect>
-     <x>280</x>
-     <y>90</y>
-     <width>101</width>
+     <x>200</x>
+     <y>100</y>
+     <width>131</width>
      <height>16</height>
     </rect>
    </property>
