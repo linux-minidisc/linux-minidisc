@@ -1,7 +1,7 @@
 LUPDATE = $$[QT_INSTALL_BINS]/lupdate
 LRELEASE = $$[QT_INSTALL_BINS]/lrelease
 
-contains(QT_VERSION, ^4\.[0-5]\..*):ts.commands = @echo This Qt version is too old for the ts target. Need Qt 4.6+.
+contains(QT_VERSION, ^4\\.[0-5]\\..*):ts.commands = @echo This Qt version is too old for the ts target. Need Qt 4.6+.
 else:ts.commands = $$LUPDATE . -ts $$TRANSLATIONS
 QMAKE_EXTRA_TARGETS += ts
 

@@ -15,7 +15,7 @@ VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
 # determine build date
-unix:BUILDDATE = $$system(date +%a\ %m\/%d\/%Y)
+unix:BUILDDATE = $$system(date +%a\\ %m\\/%d\\/%Y)
 win32:BUILDDATE = $$system(date /T)
 
 BDATESTR = '\\"$${BUILDDATE}\\"'  # place quotes around the build date string
