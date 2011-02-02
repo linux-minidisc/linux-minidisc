@@ -22,7 +22,7 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;QHiMDTransfer, ヴァージョン 0.0.1&lt;/h3&gt;
+        <translation type="obsolete">&lt;h3&gt;QHiMDTransfer, ヴァージョン 0.0.1&lt;/h3&gt;
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;無料MDウォークマン音楽移動ソフト。&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
@@ -44,6 +44,29 @@
     <message>
         <source>Contributors</source>
         <translation>開発者</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>ヴァージョン</translation>
+    </message>
+    <message>
+        <source>Build Date:</source>
+        <translation>発売日：</translation>
+    </message>
+    <message>
+        <source>A free music transfer software for MiniDisc
+Walkman. Brought to you by the linux-minidisc
+project:</source>
+        <translation>無料MDウォークマン音楽移動ソフト。
+linux-minidiscプロジェクト作成：</translation>
+    </message>
+    <message>
+        <source>This software is covered by the GNU GPL v2
+license. See the file LICENSE in the program
+folder for more information.</source>
+        <translation>このソフトの著作権はGNU GPL v2にあります。
+ 詳細はプログラムフォルダのライセンスファイルを
+ご覧ください。</translation>
     </message>
 </context>
 <context>
