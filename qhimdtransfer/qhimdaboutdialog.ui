@@ -190,7 +190,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>200</x>
      <y>40</y>
-     <width>61</width>
+     <width>181</width>
      <height>16</height>
     </rect>
    </property>
@@ -209,7 +209,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>200</x>
      <y>80</y>
-     <width>81</width>
+     <width>181</width>
      <height>16</height>
     </rect>
    </property>
