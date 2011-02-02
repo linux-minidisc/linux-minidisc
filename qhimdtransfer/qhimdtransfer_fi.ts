@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;Tietoja QHiMDTransfer-sovelluksesta&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;Tietoja QHiMDTransfer-sovelluksesta&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -22,7 +22,7 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;QHiMDTransfer, Versio 0.0.1&lt;/h3&gt;
+        <translation type="obsolete">&lt;h3&gt;QHiMDTransfer, Versio 0.0.1&lt;/h3&gt;
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;Ilmainen sovellus tiedostojen siirtoa varten MiniDisc-laitteelle.&lt;/p&gt;
         &lt;p&gt;&lt;p&gt;
@@ -36,6 +36,37 @@
     <message>
         <source>&amp;Close</source>
         <translation>&amp;Sulje</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>Tietoja</translation>
+    </message>
+    <message>
+        <source>A free music transfer software for MiniDisc
+Walkman. Brought to you by the linux-minidisc
+project:</source>
+        <translation>Ilmainen sovellus tiedostojen siirtoa varten
+MiniDisc-laitteelle. Tämän sovelluksen teki
+linux-minidisc-projekti:</translation>
+    </message>
+    <message>
+        <source>This software is covered by the GNU GPL v2
+license. See the file LICENSE in the program
+folder for more information.</source>
+        <translation>Sovellus kuuluu GNU GPL v2 lisenssin piiriin.
+Lisätietoja tiedostossa LICENSE sovelluskansiossa.</translation>
+    </message>
+    <message>
+        <source>Contributors</source>
+        <translation>Avustajat</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>Versio:</translation>
+    </message>
+    <message>
+        <source>Build Date:</source>
+        <translation>Rakenna päivämäärä:</translation>
     </message>
 </context>
 <context>
@@ -107,6 +138,10 @@
     <message>
         <source>Select directory of HiMD Medium</source>
         <translation>Valitse kansio HiDM-tiedostoja varten</translation>
+    </message>
+    <message>
+        <source>(disconnected)</source>
+        <translation>(yhteys katkaistu)</translation>
     </message>
 </context>
 <context>

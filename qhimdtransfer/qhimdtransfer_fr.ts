@@ -9,7 +9,7 @@
     </message>
     <message>
         <source>&lt;h1&gt;About QHiMDTransfer&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;À propos de QHiMDTransfer&lt;/h1&gt;</translation>
+        <translation type="obsolete">&lt;h1&gt;À propos de QHiMDTransfer&lt;/h1&gt;</translation>
     </message>
     <message>
         <source>&lt;h3&gt;QHiMDTransfer, Version 0.0.1&lt;/h3&gt;
@@ -22,7 +22,7 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt; QHiMDTransfer, Version 0.0.1 &lt;/h3&gt;
+        <translation type="obsolete">&lt;h3&gt; QHiMDTransfer, Version 0.0.1 &lt;/h3&gt;
          &lt;p&gt;&lt;p&gt;
          &lt;p&gt;Un logiciel libre pour transférer la musique d’un Walkman MiniDisc.&lt;/p&gt;
          &lt;p&gt;&lt;p&gt;
@@ -43,6 +43,30 @@
     <message>
         <source>Contributors</source>
         <translation>Contributeurs</translation>
+    </message>
+    <message>
+        <source>A free music transfer software for MiniDisc
+Walkman. Brought to you by the linux-minidisc
+project:</source>
+        <translation>Un logiciel libre pour transférer la musique
+d’un Walkman MiniDisc. Conçu pour vous
+par le projet Linux-minidisc:</translation>
+    </message>
+    <message>
+        <source>This software is covered by the GNU GPL v2
+license. See the file LICENSE in the program
+folder for more information.</source>
+        <translation>Ce logiciel est couvert par la licence GNU GPL v2.
+Voir la fichier de licence dans le dossier du
+programme pour plus d’informations.</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>Version:</translation>
+    </message>
+    <message>
+        <source>Build Date:</source>
+        <translation>Date de compilation:</translation>
     </message>
 </context>
 <context>
@@ -112,11 +136,16 @@
     </message>
     <message>
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.</source>
-        <translation>Erreur lors de l’ouverture des données HiMD. Assurez-vous d’avoir choisi le dossier racine approprié sur votre Walkman HiMD.</translation>
+        <translation type="obsolete">Erreur lors de l’ouverture des données HiMD. Assurez-vous d’avoir choisi le dossier racine approprié sur votre Walkman HiMD.</translation>
     </message>
     <message>
         <source>(disconnected)</source>
         <translation>(déconnecté)</translation>
+    </message>
+    <message>
+        <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
+</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -187,11 +216,11 @@
     </message>
     <message>
         <source>&gt;&gt;</source>
-        <translation>&gt;&gt;</translation>
+        <translation type="obsolete">&gt;&gt;</translation>
     </message>
     <message>
         <source>&lt;&lt;</source>
-        <translation>&lt;&lt;</translation>
+        <translation type="obsolete">&lt;&lt;</translation>
     </message>
     <message>
         <source>local directory</source>
@@ -199,7 +228,7 @@
     </message>
     <message>
         <source>/tmp</source>
-        <translation>/tmp</translation>
+        <translation type="obsolete">/tmp</translation>
     </message>
 </context>
 <context>

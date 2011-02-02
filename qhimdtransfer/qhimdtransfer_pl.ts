@@ -22,7 +22,7 @@
         &lt;p&gt;&lt;p&gt;
         &lt;p&gt;This software is covered by the GNU GPL v2 license. See the
          file LICENSE in the program folder for more information.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;QHiMDTransfer, Wersja 0.0.1&lt;/h3&gt;
+        <translation type="obsolete">&lt;h3&gt;QHiMDTransfer, Wersja 0.0.1&lt;/h3&gt;
         &lt;p&gt;&lt;/p&gt;
 &lt;p&gt;Darmowe oprogramowanie do transferu muzyki dla walkmana MiniDisc&lt;/p&gt;
 &lt;p&gt;&lt;/p&gt;
@@ -43,6 +43,30 @@ Przejrzyj plik LICENSE w folderze programu w celu uzyskania więcej informacji.&
     <message>
         <source>Contributors</source>
         <translation>Współpracujący</translation>
+    </message>
+    <message>
+        <source>A free music transfer software for MiniDisc
+Walkman. Brought to you by the linux-minidisc
+project:</source>
+        <translation>Darmowe oprogramowanie do transferu muzyki
+dla walkmana MiniDisc. Dostarczone przez
+linux-minidisc project:</translation>
+    </message>
+    <message>
+        <source>This software is covered by the GNU GPL v2
+license. See the file LICENSE in the program
+folder for more information.</source>
+        <translation>Oprogramowanie to jest objęte licencją GNU
+GPL v2. Przejrzyj plik LICENSE w folderze
+programu w celu uzyskania więcej informacji.</translation>
+    </message>
+    <message>
+        <source>Version:</source>
+        <translation>Wersja:</translation>
+    </message>
+    <message>
+        <source>Build Date:</source>
+        <translation>Data kompilacji:</translation>
     </message>
 </context>
 <context>
