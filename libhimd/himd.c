@@ -6,8 +6,9 @@
 
 #define G_LOG_DOMAIN "HiMD"
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <glib/gprintf.h>
-
+#include <glib/gfileutils.h>
 #include "himd.h"
 
 #define _(x) (x)
@@ -57,6 +58,46 @@ static int scanforatdata(GDir * dir)
     return maxdatanum;
 }
 
+
+// scan for TRKIDX files
+static int scanfortif(GDir * dir, int* oldnum, int *newnum)
+{
+    const char * hmafile;
+    int found_blank=FALSE, found_unused=FALSE, found_used=FALSE;
+    int old_datanum, new_datanum;
+
+    while((hmafile = g_dir_read_name(dir)) != NULL)
+    {
+	// Look for old version
+	if(!found_unused)
+	    {
+		if(g_ascii_strncasecmp(hmafile,"_rkidx0",7) == 0 &&
+		   strlen(hmafile) == 12 &&
+		   isxdigit(hmafile[7]) &&
+		   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
+		    {
+			sscanf(hmafile+7,"%x",&old_datanum);
+			*oldnum = old_datanum;
+			found_unused = TRUE;
+		    }
+	    }
+	// Look for current version
+	if(!found_used)
+	    {
+		if(g_ascii_strncasecmp(hmafile,"trkidx0",7) == 0 &&
+		   strlen(hmafile) == 12 &&
+		   isxdigit(hmafile[7]) &&
+		   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
+		    {
+			sscanf(hmafile+7,"%x",&new_datanum);
+			*newnum = new_datanum;
+			found_used = TRUE;
+		    }
+	    }
+    }
+    return (FALSE || found_unused || found_used);
+}
+
 static void nong_inplace_ascii_down(gchar * string)
 {
     while(*string)
@@ -87,9 +128,77 @@ FILE * himd_open_file(struct himd * himd, const char * fileid)
     else
         nong_inplace_ascii_up(filename);
     filepath = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",filename,NULL);
-    file = fopen(filepath,"rb");
+    file = fopen(filepath,"rb+");
     g_free(filepath);
     return file;
+}
+
+
+int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
+{
+    char indexfilename[13], atdatafilename[13];
+    gchar *unusedfile,*usedfile,*tempfile,*atdata;
+    gchar *filepath;
+    GDir * dir;
+    GError * error = NULL;
+    status = status;
+
+    filepath = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI", NULL);
+    dir      = g_dir_open(filepath,0,&error);
+    int oldnum=0, newnum=0;
+
+    if(scanfortif(dir, &oldnum, &newnum))
+	{
+	    sprintf(indexfilename, himd->need_lowercase ? "_rkidx%02x.hma" : "_RKIDX%02X.HMA", oldnum);
+	    unusedfile = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
+					  indexfilename,NULL);
+	    sprintf(indexfilename, himd->need_lowercase ? "trkidx%02x.hma" : "TRKIDX%02X.HMA", newnum);
+	    usedfile = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
+					indexfilename,NULL);
+	}
+    else
+	{
+	    printf("didnt found any .TIF files\n");
+	    exit(1);
+	}
+
+    // Setup filepaths to TRKIDX.TMP, TRKIDX01.HMA
+    tempfile         = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
+					"TRKIDX.TMP",NULL);
+
+    // atdataXX.hma
+    sprintf(atdatafilename, himd->need_lowercase ? "atdata%02x.hma" : "ATDATA%02X.HMA", himd->datanum);
+    atdata            = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
+					 atdatafilename,NULL);
+    if(!g_file_set_contents(unusedfile, (const char*)himd->tifdata, HIMD_TIFFILE_SIZE, &error))
+	{
+	    printf("Could not update unused TIFDATA file %s.\n", unusedfile);
+	    exit(1);
+	}
+
+    // unused                 -> tmp
+    // used                   -> unused
+    // tempfile               -> used
+
+    if(g_rename(unusedfile, tempfile) < 0)
+	{
+	    printf("Could not rename blank unused %s to %s\n", unusedfile, tempfile);
+	    exit(1);
+	}
+    if(g_rename(usedfile, unusedfile) < 0)
+	{
+	    printf("Could not rename %s to %s\n", usedfile, tempfile);
+	    exit(1);
+	}
+    if(g_rename(tempfile, usedfile) < 0)
+	{
+	    printf("Could not rename %s to %s\n", tempfile, usedfile);
+	}
+
+    g_free(filepath);
+    g_dir_close(dir);
+
+    return 0;
 }
 
 static int himd_read_discid(struct himd * himd, struct himderrinfo * status)

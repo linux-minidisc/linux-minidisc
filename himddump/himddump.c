@@ -3,9 +3,13 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <glib.h>
 #include <locale.h>
 #include <string.h>
+#include <mad.h>
+#include <id3tag.h>
+#include <glib/gstdio.h>
 
 #include "himd.h"
 #include "sony_oma.h"
@@ -21,8 +25,58 @@ void usage(char * cmdname)
           mp3key <TRK>     - show the MP3 encryption key for track <TRK>\n\
           dumptrack <TRK>  - dump track <TRK>\n\
           dumpmp3 <TRK>    - dump MP3 track <TRK>\n\
-          dumpnonmp3 <TRK> - dump non-MP3 tracl <TRK>\n", cmdname);
+          dumpnonmp3 <TRK> - dump non-MP3 track <TRK>\n\
+          writemp3 <FILE>  - write mp3 to disc\n", cmdname);
 }
+
+/*
+static void print_hex(unsigned char* buf, size_t size)
+{
+	int i = 0;
+	int j = 0;
+	int breakpoint = 0;
+
+	for(;i < (int)size; i++)
+	{
+		printf("%02x ", buf[i]);
+		breakpoint++;
+		if(!((i + 1)%16) && i)
+		{
+			printf("\t\t");
+			for(j = ((i+1) - 16); j < ((i+1)/16) * 16; j++)
+			{
+				if(buf[j] < 30)
+					printf(".");
+				else
+					printf("%c", buf[j]);
+			}
+			printf("\n");
+			breakpoint = 0;
+		}
+	}
+
+	if(breakpoint == 16)
+	{
+		printf("\n");
+		return;
+	}
+
+	for(; breakpoint < 16; breakpoint++)
+	{
+		printf("   ");
+	}
+	printf("\t\t");
+
+	for(j = size - (size%16); j < (int)size; j++)
+	{
+		if(buf[j] < 30)
+			printf(".");
+		else
+			printf("%c", buf[j]);
+	}
+	printf("\n");
+}
+*/
 
 static const char * hexdump(unsigned char * input, int len)
 {
@@ -326,6 +380,415 @@ void himd_dumpholes(struct himd * h)
         printf("%d: %05u-%05u\n", i, holes.holes[i].firstblock, holes.holes[i].lastblock);
 }
 
+
+void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar **album)
+{
+    //    printf("DBG: get_songinfo()\n");
+    struct id3_file * file;
+    struct id3_frame const *frame;
+    struct id3_tag *tag;
+    union id3_field const *field;
+
+    file = id3_file_open(filepath , ID3_FILE_MODE_READONLY);
+
+    tag = id3_file_tag(file);
+    if(!tag)
+	{
+	    printf("no tags\n");
+	    id3_file_close(file);
+	    return;
+	}
+
+    // Artist
+    frame = id3_tag_findframe (tag, ID3_FRAME_ARTIST, 0);
+    if(frame && (field = &frame->fields[1]))
+	{
+	    if(id3_field_getnstrings(field) > 0)
+		{
+		    //printf("DBG: found artist\n");
+		    gchar *utf8 = NULL;
+
+		    utf8 = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+		    *artist = utf8;
+		    // fix: utf8 buffer
+
+		}
+	}
+
+    // Title
+    frame = id3_tag_findframe (tag, ID3_FRAME_TITLE, 0);
+    if(frame && (field = &frame->fields[1]))
+	{
+	    if(id3_field_getnstrings(field) > 0)
+		{
+		    //		    printf("DBG: found title\n");
+		    gchar *utf8 = NULL;
+
+		    utf8 = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+		    *title = utf8;
+		    // fix: utf8 buffer
+		}
+	}
+
+    // Album
+    frame = id3_tag_findframe (tag, ID3_FRAME_ALBUM, 0);
+    if(frame && (field = &frame->fields[1]))
+	{
+	    if(id3_field_getnstrings(field) > 0)
+		{
+		    //printf("DBG: found album\n");
+		    gchar *utf8 = NULL;
+
+		    utf8 = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+		    *album = utf8;
+		    // fix: utf8 buffer
+		}
+	}
+
+    id3_file_close(file);
+}
+
+void block_init(struct blockinfo * b, short int nframes, short int lendata, unsigned int serial_number)
+{
+    b->nframes       = nframes;
+    b->mcode         = 0;
+    b->lendata       = lendata;
+    b->reserved1     = 0;
+    b->serial_number = serial_number;
+    memset(&b->key, 0, 8);
+    //    print_hex((unsigned char*)&b->key, 8);
+    memset(&b->iv, 0, 8);
+    memset(&b->backup_key, 0, 8);
+    strncpy((char*)&b->backup_type, "SPMA", 4);
+    memset(&b->reserved2, 0, 8);
+    b->backup_reserved      = 0;
+    b->backup_mcode         = 0;
+    b->lo32_contentid       = 0;
+    b->backup_serial_number = serial_number;
+}
+
+void block_printinfo(struct blockinfo * b)
+{
+    printf("block %d, nframes: %d, lendata: %d\n",
+	   b->serial_number, b->nframes, b->lendata);
+}
+
+struct abucket
+{
+    gint totsize;
+    gint nframes;
+    unsigned char *pbuf_current, *pbuf_end;
+    struct blockinfo block;
+};
+
+void bucket_init(struct abucket * pbucket)
+{
+    g_assert(pbucket != NULL);
+    memset(&pbucket->block, 0, sizeof(struct blockinfo));
+
+    pbucket->totsize = 0;
+    pbucket->nframes = 0;
+    pbucket->pbuf_current = &pbucket->block.audio_data[0];
+    pbucket->pbuf_end     = &pbucket->block.audio_data[HIMD_AUDIO_SIZE];
+}
+
+int bucket_append(struct abucket * pbucket, gchar * pframe, guint framelen)
+{
+    g_assert(pbucket != NULL);
+    g_assert(pframe != NULL);
+
+    gint nbytes_to_add = framelen;
+
+    //    printf("totsize: %d, framelen: %d\n", pbucket->totsize, nbytes_to_add);
+
+    // Buffer full? or too big frame for buffer?
+    if( (pbucket->totsize + nbytes_to_add) >= HIMD_AUDIO_SIZE)
+	{
+	    if(pbucket->totsize == 0)
+		{
+		    //		    printf("frame %d is too big for the block\n", pbucket->nframes);
+		    return 0;
+		}
+	    //	    printf("bucket_append: block is full, totsize: %d\n", pbucket->totsize);
+	    //	    print_hex( &pbucket->block.audio_data[0], 100);
+	    return -1;
+	}
+
+    g_assert(pbucket->pbuf_current <= pbucket->pbuf_end);
+
+    memcpy(pbucket->pbuf_current, pframe, nbytes_to_add);
+
+    pbucket->pbuf_current += nbytes_to_add;
+    pbucket->totsize += nbytes_to_add;
+    pbucket->nframes += 1;
+
+    return nbytes_to_add;
+}
+
+//
+// Input parameters:
+//
+//  A opened mp3-stream, himd-write-stream, duration structure, (TODO) block-obfuscation-key
+//
+// Return values:
+//
+//  Return the number of written blocks and frames
+//
+// Side-effects:
+//
+//  Writes audio blocks at the end of the ATDATA container file. Audio blocks contains all frames (TODO: ID3 frames)
+//  in a obfuscated form using a 4 byte key.
+//
+gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stream, mp3key key,
+		   mad_timer_t *duration, gint *nblocks, gint *nframes, struct himderrinfo * status)
+{
+    struct abucket bucket;
+    struct mad_header header;
+    mad_timer_t mad_timer;
+
+    gint iblock=0, iframe=0;
+    gint lenblocks=0;
+
+    mad_timer_reset(&mad_timer);
+    bucket_init(&bucket);
+
+    while(1) {
+
+	if(mad_header_decode(&header, stream) == -1) {
+	    //	    printf("## mad_frame_decode() error: %d, %s\n", stream->error, mad_stream_errorstr(stream));
+	    if(MAD_RECOVERABLE(stream->error))
+		{
+		    // 		    printf("MAD_RECOVERABLE\n");
+		    continue;
+		}
+	    else {
+		//printf("Unrecoverable error\n");
+		break;
+	    }
+	}
+        gchar * pframe = (gpointer) stream->this_frame;
+	gint framelen = (guint) (stream->next_frame - stream->this_frame);
+
+	mad_timer_add(&mad_timer, header.duration);
+
+	//
+	// DBG: frame read.
+	//
+	//	printf("DBG(frame: %d): pframe: %p, framelen: %d\n", iframe, pframe, framelen);
+	//	print_hex((void*) pframe, 10);
+
+	// Append frames to block
+	gint nbytes_added = bucket_append(&bucket, pframe, framelen);
+	if(nbytes_added < 0) {
+	    //printf("DBG: Bucket full!\n");
+	    block_init(&bucket.block, bucket.nframes, bucket.totsize, iblock);
+
+	    //	    block_printinfo(&bucket.block);
+
+	    // obfuscate audio-data using key derived from track-number
+	    //	    printf("\n Decrypted,first 30 bytes:\n");
+	    // print_hex(&bucket.block.audio_data[0], 30);
+
+	    // Encrypt block
+	    int i=0;
+	    for(i=0;i < bucket.totsize; i++)
+		bucket.block.audio_data[i] ^= key[i & 3];
+
+	    // Append block to ATDATA file
+	    if(himd_writestream_write(write_stream, &bucket.block, status) < 0)
+		{
+		    fprintf(stderr, "Failed to write block: %d", iblock);
+		    perror("write block");
+		}
+
+	    lenblocks += bucket.totsize;
+	    //printf("\n Encrypted, first 30 bytes: \n");
+	    //	    print_hex(&bucket.block.audio_data[0], 30);
+
+	    bucket_init(&bucket);
+
+	    // Append the frame to a new block, that not would fit in the previous full block
+	    nbytes_added = bucket_append(&bucket, pframe, framelen);
+	    if(nbytes_added < 0) {
+		//printf("ERROR: Unexpected full block\n");
+		exit(1);
+	    }
+	    else if(nbytes_added == 0) {
+		//printf("DBG: Frame is too big for block\n");
+		iframe++;  // Skip frame
+	    }
+	    else
+		iframe++;
+
+	    iblock += 1;
+	    continue;
+	}
+	else if(nbytes_added == 0) {
+	    //printf("DBG: Frame is too big for block\n");
+	    bucket_init(&bucket);
+	    iframe++;
+	    continue;
+	}
+	else {
+	    //printf("DBG: Added %i bytes\n", nbytes_added);
+	    iframe++;
+
+	}
+    }
+
+    if( (nblocks != NULL) && (nframes != NULL) && (duration != NULL))
+	{
+	    *nblocks = iblock;
+	    *nframes = iframe;
+	    duration->seconds = mad_timer.seconds;
+	}
+
+    // close write-stream to atdata file
+    return iblock;
+}
+
+void himd_writemp3(struct himd  *h, const char *filepath)
+{
+    struct himderrinfo status;
+    gint nblocks=0, nframes=0;
+    struct mad_stream stream;
+    mad_timer_t duration;
+    GMappedFile * mp3file;
+    unsigned long mp3size;
+    gchar * mp3buffer;
+    gchar * artist=NULL, * title=NULL, * album=NULL;
+
+    // Get track ID3 information
+    get_songinfo(filepath, &artist, &title, &album);
+
+    // Load mp3 stream
+    mp3file   = g_mapped_file_new(filepath, FALSE, NULL);
+    mp3size   = g_mapped_file_get_length(mp3file);
+    mp3buffer = g_mapped_file_get_contents(mp3file);
+
+    mad_stream_init(&stream);
+    mad_stream_buffer(&stream, (unsigned char*)mp3buffer, mp3size);
+
+    //
+    // Get track-key using track-index
+    //
+    gint idx_track;
+    mp3key key;
+    idx_track = himd_get_free_trackindex(h);
+
+    if(himd_obtain_mp3key(h, idx_track, &key, &status) < 0)
+	{
+	    printf("Cannot obtain mp3key\n");
+	    exit(1);
+	}
+    // END: Get track-key
+
+    //
+    // Write blocks to ATDATA
+    //
+    struct himd_writestream write_stream;
+    unsigned int first_blockno=0;
+    unsigned int last_blockno=0;
+
+    if(himd_writestream_open(h, &write_stream, &first_blockno, &last_blockno, &status) < 0)
+	{
+	    fprintf(stderr, "Error opening writestream\n");
+	    exit(1);
+	}
+
+    write_blocks(&stream, &write_stream, key, &duration, &nblocks, &nframes, &status);
+
+    himd_writestream_close(&write_stream);
+    // END: Write blocks to ATDATA
+
+    //
+    // Calculate blocknumber of the last written block
+    //
+    last_blockno = first_blockno + nblocks-1;
+
+    //
+    // Add fragment descriptor, get back fragment number
+    //
+    struct fraginfo fragment;
+    gint idx_frag;
+
+    fragment.firstblock = first_blockno;
+    fragment.lastblock  = last_blockno;
+    memcpy(&fragment.key[0], key, 8);
+    fragment.firstframe = 0;
+    fragment.lastframe  = nframes;
+    fragment.fragtype   = 1;
+    fragment.nextfrag   = 0;
+
+    idx_frag  = himd_add_fragment_info(h, &fragment, &status);
+    // END: Add fragment
+
+    // Add strings for title, album and artist strings. Retrieve string index numbers.
+    gint idx_title=0, idx_album=0, idx_artist=0;
+
+    if(title != NULL) {
+	idx_title  = himd_add_string(h, title, STRING_TYPE_TITLE, strlen(title)+1, &status);
+	if(idx_title < 0)
+	    {
+		printf("Failed to add title string\n");
+		exit(1);
+	    }
+    }
+
+    if(album != NULL) {
+	printf("hello\n");
+	idx_album  = himd_add_string(h, album, STRING_TYPE_ALBUM,   strlen(album)+1, &status);
+	if(idx_album < 0)
+	    {
+		printf("Failed to add album string\n");
+		exit(1);
+	    }
+    }
+
+    if(artist != NULL) {
+	idx_artist = himd_add_string(h, artist, STRING_TYPE_ARTIST, strlen(artist)+1, &status);
+	if(idx_artist < 0)
+	    {
+		printf("Failed to add artist string\n");
+		exit(1);
+	    }
+    }
+    //    printf("DBG: idx_title: %d, idx_album: %d, idx_artist: %d\n", idx_title, idx_album, idx_artist);
+    // END: Add strings
+
+    //
+    // Add track descriptor, get trackno back.
+    //
+    struct trackinfo track;
+
+    memcpy(&track.key, key, 8);
+    track.title  = idx_title;
+    track.artist = idx_artist;
+    track.album  = idx_album;
+    track.firstfrag    = idx_frag;
+    track.tracknum     = 1;
+    track.ekbnum       = 0;
+    track.trackinalbum = 1;
+    track.codec_id     = CODEC_ATRAC3PLUS_OR_MPEG;
+    track.seconds      = duration.seconds;
+    memset(&track.codecinfo, 0, 5);
+    track.codecinfo[0] = 3;
+    memset(&track.mac, 0, 8);
+    memset(&track.contentid, 0, 20);
+    memset(&track.recordingtime, 0, sizeof(struct tm));
+    memset(&track.starttime,     0, sizeof(struct tm));
+    memset(&track.endtime,       0, sizeof(struct tm));
+
+    idx_track = himd_add_track_info(h, &track, &status);
+    // END: Add track descriptor
+
+    //
+    // Update TRACK-INDEX file with track strings, fragment descriptor and track-descriptor.
+    //
+    himd_write_tifdata(h, &status);
+    //    free(artist); free(album); free(title);
+}
+
 int main(int argc, char ** argv)
 {
     int idx;
@@ -381,6 +844,10 @@ int main(int argc, char ** argv)
         idx = 1;
         sscanf(argv[3], "%d", &idx);
         himd_dumpnonmp3(&h, idx);
+    }
+    else if(strcmp(argv[2],"writemp3") == 0 && argc > 3)
+    {
+	himd_writemp3(&h, argv[3]);
     }
 
     himd_close(&h);

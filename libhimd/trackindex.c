@@ -58,6 +58,63 @@ static void get_dostime(struct tm * tm, unsigned const char * bytes)
     tm->tm_year = ((thedate & 0xFE00) >> 9) + 80;
 }
 
+
+static void dos_settime(unsigned char * buffer, const struct tm * tm)
+{
+   setbeword16(buffer, (tm->tm_mday) |
+                       ((tm->tm_mon + 1) << 5) |
+                       ((tm->tm_year - 80) << 9));
+   setbeword16(buffer+2, (tm->tm_sec/2) |
+                         (tm->tm_min << 5) |
+                         (tm->tm_hour << 1));
+}
+
+static void settrack(struct trackinfo *t, unsigned char * trackbuffer)
+{
+  dos_settime(trackbuffer+0,  &t->recordingtime);
+  setbeword32(trackbuffer+4,  0x10012);
+  setbeword16(trackbuffer+8,  t->title);
+  setbeword16(trackbuffer+10, t->artist);
+  setbeword16(trackbuffer+12, t->album);
+  trackbuffer[14] = t->trackinalbum;
+
+  memcpy(trackbuffer+16, t->key, 8);
+  memcpy(trackbuffer+24, t->mac, 8);
+  trackbuffer[32] = t->codec_id;
+
+  memcpy(trackbuffer+33, t->codecinfo, 3);
+  memcpy(trackbuffer+44, t->codecinfo+3, 2);
+
+  setbeword16(trackbuffer+36, t->firstfrag);
+  setbeword16(trackbuffer+38, t->tracknum);
+  setbeword16(trackbuffer+40, t->seconds);
+
+  memcpy(trackbuffer+48,      t->contentid, 20);
+  dos_settime(trackbuffer+68, &t->starttime);
+  dos_settime(trackbuffer+72, &t->endtime);
+}
+
+static void setfrag(struct fraginfo *f, unsigned char * fragbuffer)
+{
+  memcpy(fragbuffer, &f->key, 8);
+  setbeword16(fragbuffer+8,  f->firstblock);
+  setbeword16(fragbuffer+10, f->lastblock);
+  fragbuffer[12] = f->firstframe;
+  fragbuffer[13] = f->lastframe;
+  setbeword16(fragbuffer+14,f->nextfrag);
+}
+
+int himd_get_free_trackindex(struct himd * himd)
+{
+    int idx_freeslot;
+    unsigned char * linkbuffer;
+
+    linkbuffer   = get_track(himd, 0);
+    idx_freeslot = beword16(&linkbuffer[38]);
+
+    return idx_freeslot;
+}
+
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t, struct himderrinfo * status)
 {
     unsigned char * trackbuffer;
@@ -96,6 +153,36 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     get_dostime(&t->endtime,trackbuffer+72);
     return 0;
 }
+
+
+int himd_add_track_info(struct himd * himd, struct trackinfo * t, struct himderrinfo * status)
+{
+    int idx_freeslot;
+    unsigned char * linkbuffer;
+    unsigned char * trackbuffer;
+
+    status = status;
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(t != NULL, -1);
+
+    /* get track[0] - the free-chain index */
+    linkbuffer   = get_track(himd, 0);
+    idx_freeslot = beword16(&linkbuffer[38]);
+
+    /* allocate slot idx_freeslot for the new track*/
+    trackbuffer  = get_track(himd, idx_freeslot);
+    t->tracknum  = idx_freeslot;
+
+    /* update track[] - free-chain index */
+    setbeword16(&linkbuffer[38], beword16(&trackbuffer[38]));
+
+    /* copy trackinfo to slot */
+    settrack(t, trackbuffer);
+
+    return idx_freeslot;
+}
+
 
 const char * himd_get_codec_name(const struct trackinfo * track)
 {
@@ -206,6 +293,32 @@ int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo
     return 0;
 }
 
+
+int himd_add_fragment_info(struct himd * himd, struct fraginfo * f, struct himderrinfo * status)
+{
+    int idx_freefrag;
+    unsigned char * linkbuffer;
+    unsigned char * fragbuffer;
+    status = status;
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(f != NULL, -1);
+
+    linkbuffer    = get_frag(himd, 0);
+
+    idx_freefrag  = beword16(linkbuffer+14) & 0xFFF;
+    fragbuffer    = get_frag(himd, idx_freefrag);
+
+    setbeword16(linkbuffer+14, beword16(fragbuffer+14) & 0xFFF);
+    f->nextfrag = 0;
+
+    /* copy fragment struct to slot buffer */
+    setfrag(f, fragbuffer);
+
+    return idx_freefrag;
+}
+
+
 char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length, struct himderrinfo * status)
 {
     int curidx;
@@ -315,4 +428,120 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struc
         return NULL;
     }
     return out;
+}
+
+
+int himd_add_string(struct himd * himd, char *string, int type, int length, struct himderrinfo * status)
+{
+    int curidx, lastidx;
+    int stridx, end_stridx;
+    int nslots=0, rest=0;
+    int idx_freeslot;
+    unsigned char * linkchunk;
+    unsigned char * freeslot;
+    unsigned char * curchunk;
+
+    const char * current_charset;
+    int strencoding=0;
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(string != NULL, -1);
+
+
+    if(g_get_charset(&current_charset))
+	strencoding = HIMD_ENCODING_LATIN1;
+    else if(g_ascii_strncasecmp(current_charset, "UTF16BE", 7) == 0)
+	strencoding = HIMD_ENCODING_UTF16BE;
+    else if(g_ascii_strncasecmp(current_charset, "SHIFT_JIS", 9) == 0)
+	strencoding = HIMD_ENCODING_SHIFT_JIS;
+    else
+	set_status_printf(status, HIMD_ERROR_UNKNOWN_ENCODING,
+			  "unknown encoding");
+
+    /* how many number of slots to store string in? */
+
+    if(length <= 13)
+	{
+	    nslots = 1;
+	}
+    else if(length > 13)
+	{
+	    nslots = 1;
+	    nslots += (length-13) / 14;
+	    rest   = (length-13) % 14;
+	    if(rest)
+		nslots+=1;
+	}
+    else
+	{
+	}
+
+    /* get index to first free slot in array */
+    linkchunk = get_strchunk(himd, 0);
+    idx_freeslot = strlink(linkchunk);
+
+    /* update index link to next free chunk  */
+    setbeword16(&linkchunk[14], idx_freeslot+nslots);
+
+    /* head slot of where string will be stored */
+    freeslot = get_strchunk(himd, idx_freeslot);
+
+    /* indexes  to keep track of copying string into slots
+       (slots[1],...,slot[N]; (N-1) nr of slots) */
+
+    curidx     = idx_freeslot;
+    lastidx    = (idx_freeslot + nslots) - 1;
+    stridx     = 0;
+    end_stridx = nslots;
+
+    g_return_val_if_fail(curidx > 0, -1);
+    g_return_val_if_fail(curidx < 4096, -1);
+    g_return_val_if_fail(lastidx < 4096, -1);
+
+    /* need the string any continuation slots ?*/
+    if(length <= 13)
+	{
+	    curchunk    = get_strchunk(himd, curidx);
+	    curchunk[0] = strencoding;
+
+	    setbeword16(&curchunk[14], (type << 12) + 0x00);      // type | 00
+	    memcpy(curchunk+1, &string[0], length);
+
+	    return idx_freeslot;
+	}
+    /* nslots-1 continuation slots is needed */
+    else
+	{
+	    /*
+	       slot-head
+	       nslots > 1 &&  (rest == 0 || rest > 0)
+	    */
+	    curchunk    = get_strchunk(himd, curidx);
+	    curchunk[0] = strencoding;
+
+	    setbeword16(&curchunk[14], (type << 12) + (curidx+1));      // type | lnk
+	    memcpy(curchunk+1, &string[0], 13);
+
+	    curidx   += 1;
+	    stridx   += 1;
+	}
+
+    for (; curidx < (lastidx+1) && (stridx < end_stridx);
+	 curidx += 1, stridx += 1)
+	{
+	    curchunk = get_strchunk(himd, curidx);
+
+	    /* reached the last continuation slot ? */
+	    if(curidx == lastidx)
+		{
+		    setbeword16(&curchunk[14], (STRING_TYPE_CONTINUATION << 12) + 0);      // type | lnk
+		    memcpy(curchunk, &string[stridx*14], (rest == 0 ? 14 : rest) );
+		    break;
+		}
+
+	    setbeword16(&curchunk[14], (STRING_TYPE_CONTINUATION << 12)+(curidx+1));      // type | lnk
+	    memcpy(curchunk, &string[stridx*14], 14);
+	}
+
+    return idx_freeslot;
 }

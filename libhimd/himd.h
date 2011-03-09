@@ -35,6 +35,10 @@ extern "C" {
 #define HIMD_ATRAC3_SAMPLES_PER_FRAME 1024
 #define HIMD_ATRAC3P_SAMPLES_PER_FRAME 2048
 
+#define HIMD_TIFFILE_SIZE 327680
+#define HIMD_AUDIO_SIZE 0x3FC0
+#define HIMD_BLOCKINFO_SIZE 0x4000
+
 enum himdstatus { HIMD_OK,
                   HIMD_STATUS_AUDIO_EOF,
                   HIMD_ERROR_DISABLED_FEATURE,
@@ -89,6 +93,27 @@ struct fraginfo {
     unsigned int nextfrag;
 };
 
+
+/* a block in the audio file */
+struct blockinfo {
+  unsigned int type;          	     // "LPCM" or "A3D " or "ATX" or "SPMA"
+  short int nframes;
+  short int mcode;
+  short int lendata;
+  short int reserved1;
+  unsigned int serial_number;
+  unsigned char key[8];
+  unsigned char iv[8];
+  unsigned char audio_data[0x3FC0];		// obfuscated audio data
+  unsigned char backup_key[8];
+  unsigned char reserved2[8];
+  unsigned int backup_type;
+  short int backup_reserved;
+  short int backup_mcode;
+  int lo32_contentid;
+  int backup_serial_number;
+};
+
 struct himdstring {
     char data[14];
     unsigned int stringtype : 4;
@@ -114,9 +139,11 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
 void himd_close(struct himd * himd);
 char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length, struct himderrinfo * status);
 char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struct himderrinfo * status);
+int himd_add_string(struct himd * himd, char *string, int type, int length, struct himderrinfo * status);
 void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd, struct himderrinfo * status);
 FILE * himd_open_file(struct himd * himd, const char * fileid);
+int himd_write_tifdata(struct himd * himd, struct himderrinfo * status);
 unsigned int himd_track_count(struct himd * himd);
 unsigned int himd_get_trackslot(struct himd * himd, int unsigned idx, struct himderrinfo * status);
 
@@ -124,6 +151,10 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status);
 int himd_track_uploadable(struct himd * himd, const struct trackinfo * track);
 int himd_track_blocks(struct himd * himd, const struct trackinfo * track, struct himderrinfo * status);
+
+int himd_get_free_trackindex(struct himd * himd);
+int himd_add_track_info(struct himd * himd, struct trackinfo * track, struct himderrinfo * status);
+int himd_add_fragment_info(struct himd * himd, struct fraginfo * f, struct himderrinfo * status);
 
 const char * himd_get_codec_name(const struct trackinfo * t);
 unsigned int himd_trackinfo_framesize(const struct trackinfo * track);
@@ -152,6 +183,19 @@ void himd_blockstream_close(struct himd_blockstream * stream);
 int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * block,
                             unsigned int * firstframe, unsigned int * lastframe,
                             unsigned char * fragkey, struct himderrinfo * status);
+
+
+struct himd_writestream {
+    struct himd * himd;
+    FILE * atdata;
+    unsigned int curblockno;
+};
+
+int himd_writestream_open(struct himd * himd, struct himd_writestream * stream,  unsigned int * out_first_blockno, unsigned int * out_last_blockno, struct himderrinfo * status);
+
+int himd_writestream_write(struct himd_writestream * stream, struct blockinfo *block, struct himderrinfo * status);
+void himd_writestream_close(struct himd_writestream * stream);
+
 
 struct himd_mp3stream {
     struct himd_blockstream stream;

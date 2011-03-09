@@ -151,6 +151,95 @@ int himd_blockstream_read(struct himd_blockstream * stream, unsigned char * bloc
     return 0;
 }
 
+int himd_writestream_open(struct himd * himd, struct himd_writestream * stream,
+		       unsigned int * out_first_blockno, unsigned int * out_last_blockno, struct himderrinfo * status)
+{
+    struct himd_holelist hole_list;
+    int firstblock, lastblock=0;
+    int block_offset=0;
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(stream != NULL, -1);
+    g_return_val_if_fail(status != NULL, -1);
+
+    stream->himd = himd;
+    stream->atdata = himd_open_file(himd, "ATDATA");
+    if(!stream->atdata)
+	{
+	    fprintf(stderr, "Invalid filehandle %d", stream->atdata);
+	    perror("DBG: cannot open ATDATA file for writing\n");
+	    return -1;
+	}
+
+    // himd_find_holes
+    if( himd_find_holes(stream->himd, &hole_list, status) < 0)
+	{
+	    puts(status->statusmsg);
+	    exit(1);
+	}
+
+    // get pointer to freespace
+    firstblock   =  hole_list.holes[0].firstblock;
+    lastblock    =  hole_list.holes[0].lastblock;
+    block_offset = firstblock * HIMD_BLOCKINFO_SIZE;
+
+    // set position where to start writing blocks
+    if(fseek(stream->atdata, block_offset, SEEK_SET) != 0)
+	{
+	    fprintf(stderr, "Error fseeking atdata\n");
+	}
+    stream->curblockno = firstblock;
+
+    if( (out_first_blockno != NULL) && (out_last_blockno != NULL) )
+	{
+	    *out_first_blockno = firstblock;
+	    *out_last_blockno = lastblock;
+	}
+
+    return 0;
+}
+
+void himd_writestream_close(struct himd_writestream * stream)
+{
+    fclose(stream->atdata);
+}
+
+static void setblock(struct blockinfo * b, unsigned char * blockbuffer)
+{
+    memset(blockbuffer, 0, HIMD_BLOCKINFO_SIZE);
+    strncpy((char*)blockbuffer, "SPMA", sizeof(unsigned int));
+    setbeword16(blockbuffer+4, b->nframes);
+    setbeword16(blockbuffer+6, b->mcode);
+    setbeword16(blockbuffer+8, b->lendata);
+    setbeword32(blockbuffer+12, b->serial_number);
+    memcpy(blockbuffer+16, &b->key, 8);
+    memcpy(blockbuffer+24, &b->iv, 8);
+    memcpy(blockbuffer+32, &b->audio_data, HIMD_AUDIO_SIZE);
+    setbeword16(blockbuffer+16374, b->mcode);
+    setbeword32(blockbuffer+16380, b->serial_number);
+}
+
+int himd_writestream_write(struct himd_writestream * stream, struct blockinfo * audioblock, struct himderrinfo *status)
+{
+    unsigned char data[HIMD_BLOCKINFO_SIZE];
+    g_return_val_if_fail(stream != NULL, -1);
+    g_return_val_if_fail(audioblock != NULL, -1);
+    status = status;
+    stream = stream;
+
+    // serialize the block descriptor
+    setblock(audioblock, data);
+
+    // write the block descriptor to the current position in the stream at 'stream->curblockno'
+    if(fwrite(data, 16384, 1, stream->atdata) != 1)
+	{
+	    perror("fwrite block\n");
+	    fprintf(stderr, "Error writing block to position %d\n", stream->curblockno);
+	    return -1;
+	}
+    return 0;
+}
+
 int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp3stream * stream, struct himderrinfo * status)
 {
     struct trackinfo trkinfo;
