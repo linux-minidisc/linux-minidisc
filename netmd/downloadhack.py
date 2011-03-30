@@ -11,16 +11,17 @@ def main(bus=None, device_address=None):
         md_iface = libnetmd.NetMDInterface(md)
         DownloadHack(md_iface)
 
-class EKB1_10:
+class EKBopensource:
     def getRootKey(self):
-        raise NotImplementedError, "Sorry, no confidental key material in here"
+        return "\x12\x34\x56\x78\x9a\xbc\xde\xf0\x0f\xed\xcb\xa9\x87\x65\x43\x21"
 
     def getEKBID(self):
-        return 0x0001000A
+        return 0x26422642
 
     def getEKBDataForLeafId(self,leaf_id):
-        return (["\x25\x45\x06\x4d\xea\xca\x14\xf9\x96\xbd\xc8\xa4\x06\xc2\x2b\x81"], 9, \
-                "\x68\x86\x90\x89\xb7\x24\x18\x1e\xe8\x60\x04\x1d\x2e\xb3\xfd\xdb\xe7\x4c\x7c\xcd\xb1\xe3\x06\xc0")
+        return (["\x25\x45\x06\x4d\xea\xca\x14\xf9\x96\xbd\xc8\xa4\x06\xc2\x2b\x81",
+                 "\xfb\x60\xbd\xdd\x0d\xbc\xab\x84\x8a\x00\x5e\x03\x19\x4d\x3e\xda"], 9, \
+                "\x8f\x2b\xc3\x52\xe8\x6c\x5e\xd3\x06\xdc\xae\x18\xd2\xf3\x8c\x7f\x89\xb5\xe1\x85\x55\xa1\x05\xea")
 
 testframes=4644
 
@@ -69,7 +70,7 @@ def DownloadHack(md_iface):
     except libnetmd.NetMDRejected:
         print "Can't set device to non-protecting"
     trk = MDTrack()
-    md_session = libnetmd.MDSession(md_iface, EKB1_10())
+    md_session = libnetmd.MDSession(md_iface, EKBopensource())
 
     (track, uuid, ccid) = md_session.downloadtrack(trk)
 
