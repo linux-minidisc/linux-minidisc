@@ -482,13 +482,13 @@ int himd_add_string(struct himd * himd, char *string, int type, struct himderrin
 
 
     /* try to use Latin-1 or Shift-JIS. If that fails, use Unicode. */
-    if((convertedstring = g_convert(string,-1,"UTF8","ISO-8859-1",
+    if((convertedstring = g_convert(string,-1,"ISO-8859-1","UTF8",
                                     NULL,&length,NULL)) != NULL)
         strencoding = HIMD_ENCODING_LATIN1;
-    else if((convertedstring = g_convert(string,-1,"UTF8","SHIFT_JIS",
+    else if((convertedstring = g_convert(string,-1,"SHIFT_JIS","UTF8",
                                     NULL,&length,NULL)) != NULL)
         strencoding = HIMD_ENCODING_SHIFT_JIS;
-    else if((convertedstring = g_convert(string,-1,"UTF8","UTF-16BE",
+    else if((convertedstring = g_convert(string,-1,"UTF-16BE","UTF8",
                                     NULL,&length,NULL)) != NULL)
         strencoding = HIMD_ENCODING_UTF16BE;
     else {
