@@ -155,7 +155,7 @@ void himd_trackdump(struct himd * himd, int verbose)
                         break;
                     }
                 }
-                printf("     Contend ID: %s\n", hexdump(t.contentid, 20));
+                printf("     Content ID: %s\n", hexdump(t.contentid, 20));
                 printf("     Key: %s (EKB %08x); MAC: %s\n", hexdump(t.key, 8), t.ekbnum, hexdump(t.mac, 8));
                 if(t.recordingtime.tm_mon != -1)
                     strftime(rtime,sizeof rtime, "%x %X", &t.recordingtime);
@@ -392,7 +392,7 @@ void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar *
     struct id3_tag *tag;
     union id3_field const *field;
 
-    file = id3_file_open(filepath , ID3_FILE_MODE_READONLY);
+    file = id3_file_open(filepath, ID3_FILE_MODE_READONLY);
 
     tag = id3_file_tag(file);
     if(!tag)
@@ -405,21 +405,21 @@ void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar *
     frame = id3_tag_findframe (tag, ID3_FRAME_ARTIST, 0);
     if(frame && (field = &frame->fields[1]) && 
                  id3_field_getnstrings(field) > 0)
-        *artist = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+        *artist = (gchar*) id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
     else
         *artist = NULL;
 
     frame = id3_tag_findframe (tag, ID3_FRAME_TITLE, 0);
     if(frame && (field = &frame->fields[1]) &&
                  id3_field_getnstrings(field) > 0)
-        *title = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+        *title = (gchar*) id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
     else
         *title = NULL;
 
     frame = id3_tag_findframe (tag, ID3_FRAME_ALBUM, 0);
     if(frame && (field = &frame->fields[1]) &&
                  id3_field_getnstrings(field) > 0)
-        *album = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+        *album = (gchar*) id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
     else
         *album = NULL;
 
@@ -657,7 +657,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 
     if(himd_writestream_open(h, &write_stream, &first_blockno, &last_blockno, &status) < 0)
 	{
-	    fprintf(stderr, "Error opening writestream\n");
+	    fprintf(stderr, "Error opening write stream\n");
 	    exit(1);
 	}
 
@@ -702,7 +702,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 
     if(album != NULL) {
 	printf("hello\n");
-	idx_album  = himd_add_string(h, album, STRING_TYPE_ALBUM,   strlen(album)+1, &status);
+	idx_album  = himd_add_string(h, album, STRING_TYPE_ALBUM, strlen(album)+1, &status);
 	if(idx_album < 0)
 	    {
 		printf("Failed to add album string\n");
