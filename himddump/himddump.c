@@ -29,55 +29,6 @@ void usage(char * cmdname)
           writemp3 <FILE>  - write mp3 to disc\n", cmdname);
 }
 
-/*
-static void print_hex(unsigned char* buf, size_t size)
-{
-	int i = 0;
-	int j = 0;
-	int breakpoint = 0;
-
-	for(;i < (int)size; i++)
-	{
-		printf("%02x ", buf[i]);
-		breakpoint++;
-		if(!((i + 1)%16) && i)
-		{
-			printf("\t\t");
-			for(j = ((i+1) - 16); j < ((i+1)/16) * 16; j++)
-			{
-				if(buf[j] < 30)
-					printf(".");
-				else
-					printf("%c", buf[j]);
-			}
-			printf("\n");
-			breakpoint = 0;
-		}
-	}
-
-	if(breakpoint == 16)
-	{
-		printf("\n");
-		return;
-	}
-
-	for(; breakpoint < 16; breakpoint++)
-	{
-		printf("   ");
-	}
-	printf("\t\t");
-
-	for(j = size - (size%16); j < (int)size; j++)
-	{
-		if(buf[j] < 30)
-			printf(".");
-		else
-			printf("%c", buf[j]);
-	}
-	printf("\n");
-}
-*/
-
 static const char * hexdump(unsigned char * input, int len)
 {
     static char dumpspace[5][41];
@@ -386,7 +337,6 @@ void himd_dumpholes(struct himd * h)
  */
 void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar **album)
 {
-    //    printf("DBG: get_songinfo()\n");
     struct id3_file * file;
     struct id3_frame const *frame;
     struct id3_tag *tag;
@@ -478,18 +428,13 @@ int bucket_append(struct abucket * pbucket, gchar * pframe, guint framelen)
 
     gint nbytes_to_add = framelen;
 
-    //    printf("totsize: %d, framelen: %d\n", pbucket->totsize, nbytes_to_add);
-
     // Buffer full? or too big frame for buffer?
     if( (pbucket->totsize + nbytes_to_add) >= HIMD_AUDIO_SIZE)
 	{
 	    if(pbucket->totsize == 0)
 		{
-		    //		    printf("frame %d is too big for the block\n", pbucket->nframes);
 		    return 0;
 		}
-	    //	    printf("bucket_append: block is full, totsize: %d\n", pbucket->totsize);
-	    //	    print_hex( &pbucket->block.audio_data[0], 100);
 	    return -1;
 	}
 
@@ -533,14 +478,11 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
     while(1) {
 
 	if(mad_header_decode(&header, stream) == -1) {
-	    //	    printf("## mad_frame_decode() error: %d, %s\n", stream->error, mad_stream_errorstr(stream));
 	    if(MAD_RECOVERABLE(stream->error))
 		{
-		    // 		    printf("MAD_RECOVERABLE\n");
 		    continue;
 		}
 	    else {
-		//printf("Unrecoverable error\n");
 		break;
 	    }
 	}
@@ -549,16 +491,9 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 
 	mad_timer_add(&mad_timer, header.duration);
 
-	//
-	// DBG: frame read.
-	//
-	//	printf("DBG(frame: %d): pframe: %p, framelen: %d\n", iframe, pframe, framelen);
-	//	print_hex((void*) pframe, 10);
-
 	// Append frames to block
 	gint nbytes_added = bucket_append(&bucket, pframe, framelen);
 	if(nbytes_added < 0) {
-	    //printf("DBG: Bucket full!\n");
             block_init(&bucket.block, bucket.nframes, bucket.totsize, iblock, cid);
 
 	    // Encrypt block
@@ -581,7 +516,6 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 	    // Append the frame to a new block, that not would fit in the previous full block
 	    nbytes_added = bucket_append(&bucket, pframe, framelen);
 	    if(nbytes_added < 0) {
-		//printf("ERROR: Unexpected full block\n");
 		exit(1);
 	    }
 
@@ -589,7 +523,6 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 	    continue;
 	}
 	else if(nbytes_added == 0) {
-	    //printf("DBG: Frame is too big for block\n");
             bucket_init(&bucket);
 	    continue;
 	}
@@ -701,7 +634,6 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     }
 
     if(album != NULL) {
-	printf("hello\n");
 	idx_album  = himd_add_string(h, album, STRING_TYPE_ALBUM, &status);
 	if(idx_album < 0)
 	    {
@@ -718,7 +650,6 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 		idx_artist = 0;
 	    }
     }
-    //    printf("DBG: idx_title: %d, idx_album: %d, idx_artist: %d\n", idx_title, idx_album, idx_artist);
     // END: Add strings
 
     //
