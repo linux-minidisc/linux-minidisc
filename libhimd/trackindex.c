@@ -31,6 +31,16 @@ static int strlink(unsigned char * stringchunk)
     return beword16(stringchunk+14) & 0xFFF;
 }
 
+static void set_strlink(unsigned char * stringchunk, int link)
+{
+    setbeword16(stringchunk+14, (beword16(stringchunk+14) & 0xF000) | link);
+}
+
+static void set_strtype(unsigned char * stringchunk, int type)
+{
+    stringchunk[14] = (stringchunk[14] & 0x0F) |  (type << 4);
+}
+
 unsigned int himd_track_count(struct himd * himd)
 {
     return beword16(himd->tifdata + 0x100);
@@ -457,117 +467,94 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struc
 }
 
 
-int himd_add_string(struct himd * himd, char *string, int type, int length, struct himderrinfo * status)
+int himd_add_string(struct himd * himd, char *string, int type, struct himderrinfo * status)
 {
-    int curidx, lastidx;
-    int stridx, end_stridx;
-    int nslots=0, rest=0;
-    int idx_freeslot;
-    unsigned char * linkchunk;
-    unsigned char * freeslot;
+    int curidx, curtype, i, nextidx;
+    int nslots;
+    int idx_firstslot;
+    gsize length;
+    gchar * convertedstring;
     unsigned char * curchunk;
-
-    const char * current_charset;
-    int strencoding=0;
+    unsigned char strencoding;
 
     g_return_val_if_fail(himd != NULL, -1);
     g_return_val_if_fail(string != NULL, -1);
 
 
-    if(g_get_charset(&current_charset))
-	strencoding = HIMD_ENCODING_LATIN1;
-    else if(g_ascii_strncasecmp(current_charset, "UTF16BE", 7) == 0)
-	strencoding = HIMD_ENCODING_UTF16BE;
-    else if(g_ascii_strncasecmp(current_charset, "SHIFT_JIS", 9) == 0)
-	strencoding = HIMD_ENCODING_SHIFT_JIS;
-    else
+    /* try to use Latin-1 or Shift-JIS. If that fails, use Unicode. */
+    if((convertedstring = g_convert(string,-1,"UTF8","ISO-8859-1",
+                                    NULL,&length,NULL)) != NULL)
+        strencoding = HIMD_ENCODING_LATIN1;
+    else if((convertedstring = g_convert(string,-1,"UTF8","SHIFT_JIS",
+                                    NULL,&length,NULL)) != NULL)
+        strencoding = HIMD_ENCODING_SHIFT_JIS;
+    else if((convertedstring = g_convert(string,-1,"UTF8","UTF-16BE",
+                                    NULL,&length,NULL)) != NULL)
+        strencoding = HIMD_ENCODING_UTF16BE;
+    else {
+        /* should never happen, as utf-16 can encode anything */
 	set_status_printf(status, HIMD_ERROR_UNKNOWN_ENCODING,
-			  "unknown encoding");
+			  "can't encode the string '%s' into anything usable",
+                          string);
+        return -1;
+    }
 
     /* how many number of slots to store string in? */
+    nslots = (length+14)/14;	/* +13 for rounding up, +1 for the encoding byte */
 
-    if(length <= 13)
-	{
-	    nslots = 1;
-	}
-    else if(length > 13)
-	{
-	    nslots = 1;
-	    nslots += (length-13) / 14;
-	    rest   = (length-13) % 14;
-	    if(rest)
-		nslots+=1;
-	}
-    else
-	{
-	}
+    /* check that there are enough free slots. Start at slot 0 which
+       is the head of the free list. */
+    curidx = 0;
+    for(i = 0; i < nslots; i--)
+    {
+        curtype = strtype(get_strchunk(himd, curidx));
+        curidx = strlink(get_strchunk(himd, curidx));
+        if(!curidx)
+        {
+            set_status_printf(status, HIMD_ERROR_OUT_OF_STRINGS,
+                "Not enough string space to allocate %d string slots\n", nslots);
+            return -1;
+        }
+        if(curtype != STRING_TYPE_UNUSED)
+        {
+            set_status_printf(status, HIMD_ERROR_STRING_CHAIN_BROKEN,
+                "String slot %d in free list has type %d\n", curidx, curtype);
+            return -1;
+        }
+    }
 
-    /* get index to first free slot in array */
-    linkchunk = get_strchunk(himd, 0);
-    idx_freeslot = strlink(linkchunk);
+    idx_firstslot = strlink(get_strchunk(himd, 0));
+    curidx = idx_firstslot;
+    for(i = 0; i < nslots; i++)
+    {
+        /* reserve space for the encoding byte in the first slot */
+        gsize slotlen = (i != 0) ? 14 : 13;
+        gsize stroffset = i*14 - 1;
 
-    /* update index link to next free chunk  */
-    setbeword16(&linkchunk[14], idx_freeslot+nslots);
+        /* limit length to what is remaining of the string */
+        if(slotlen > length - stroffset)
+            slotlen = length - stroffset;
 
-    /* head slot of where string will be stored */
-    freeslot = get_strchunk(himd, idx_freeslot);
+        curchunk = get_strchunk(himd, curidx);
+        nextidx  = strlink(curchunk);
+        if(i == 0)
+        {
+            curchunk[0] = strencoding;
+            memcpy(curchunk + 1, convertedstring, slotlen);
+            set_strtype(curchunk, type);
+        }
+        else
+        {
+            memcpy(curchunk, convertedstring + stroffset, slotlen);
+            set_strtype(curchunk, STRING_TYPE_CONTINUATION);
+        }
+        if(i == nslots-1)
+            set_strlink(curchunk, 0);
+        curidx = nextidx;
+    }
 
-    /* indexes  to keep track of copying string into slots
-       (slots[1],...,slot[N]; (N-1) nr of slots) */
+    /* adjust free list head pointer */
+    set_strlink(get_strchunk(himd, 0), curidx);
 
-    curidx     = idx_freeslot;
-    lastidx    = (idx_freeslot + nslots) - 1;
-    stridx     = 0;
-    end_stridx = nslots;
-
-    g_return_val_if_fail(curidx > 0, -1);
-    g_return_val_if_fail(curidx < 4096, -1);
-    g_return_val_if_fail(lastidx < 4096, -1);
-
-    /* need the string any continuation slots ?*/
-    if(length <= 13)
-	{
-	    curchunk    = get_strchunk(himd, curidx);
-	    curchunk[0] = strencoding;
-
-	    setbeword16(&curchunk[14], (type << 12) + 0x00);      // type | 00
-	    memcpy(curchunk+1, &string[0], length);
-
-	    return idx_freeslot;
-	}
-    /* nslots-1 continuation slots is needed */
-    else
-	{
-	    /*
-	       slot-head
-	       nslots > 1 &&  (rest == 0 || rest > 0)
-	    */
-	    curchunk    = get_strchunk(himd, curidx);
-	    curchunk[0] = strencoding;
-
-	    setbeword16(&curchunk[14], (type << 12) + (curidx+1));      // type | lnk
-	    memcpy(curchunk+1, &string[0], 13);
-
-	    curidx   += 1;
-	    stridx   += 1;
-	}
-
-    for (; curidx < (lastidx+1) && (stridx < end_stridx);
-	 curidx += 1, stridx += 1)
-	{
-	    curchunk = get_strchunk(himd, curidx);
-
-	    /* reached the last continuation slot ? */
-	    if(curidx == lastidx)
-		{
-		    setbeword16(&curchunk[14], (STRING_TYPE_CONTINUATION << 12) + 0);      // type | lnk
-		    memcpy(curchunk, &string[stridx*14], (rest == 0 ? 14 : rest) );
-		    break;
-		}
-
-	    setbeword16(&curchunk[14], (STRING_TYPE_CONTINUATION << 12)+(curidx+1));      // type | lnk
-	    memcpy(curchunk, &string[stridx*14], 14);
-	}
-
-    return idx_freeslot;
+    return idx_firstslot;
 }

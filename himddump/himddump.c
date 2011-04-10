@@ -380,7 +380,10 @@ void himd_dumpholes(struct himd * h)
         printf("%d: %05u-%05u\n", i, holes.holes[i].firstblock, holes.holes[i].lastblock);
 }
 
-
+/*
+ * gets artist, title and album info from an ID3 tag.
+ * The output strings are to be free()d.
+ */
 void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar **album)
 {
     //    printf("DBG: get_songinfo()\n");
@@ -399,51 +402,26 @@ void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar *
 	    return;
 	}
 
-    // Artist
     frame = id3_tag_findframe (tag, ID3_FRAME_ARTIST, 0);
-    if(frame && (field = &frame->fields[1]))
-	{
-	    if(id3_field_getnstrings(field) > 0)
-		{
-		    //printf("DBG: found artist\n");
-		    gchar *utf8 = NULL;
+    if(frame && (field = &frame->fields[1]) && 
+                 id3_field_getnstrings(field) > 0)
+        *artist = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+    else
+        *artist = NULL;
 
-		    utf8 = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
-		    *artist = utf8;
-		    // fix: utf8 buffer
-
-		}
-	}
-
-    // Title
     frame = id3_tag_findframe (tag, ID3_FRAME_TITLE, 0);
-    if(frame && (field = &frame->fields[1]))
-	{
-	    if(id3_field_getnstrings(field) > 0)
-		{
-		    //		    printf("DBG: found title\n");
-		    gchar *utf8 = NULL;
+    if(frame && (field = &frame->fields[1]) &&
+                 id3_field_getnstrings(field) > 0)
+        *title = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+    else
+        *title = NULL;
 
-		    utf8 = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
-		    *title = utf8;
-		    // fix: utf8 buffer
-		}
-	}
-
-    // Album
     frame = id3_tag_findframe (tag, ID3_FRAME_ALBUM, 0);
-    if(frame && (field = &frame->fields[1]))
-	{
-	    if(id3_field_getnstrings(field) > 0)
-		{
-		    //printf("DBG: found album\n");
-		    gchar *utf8 = NULL;
-
-		    utf8 = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
-		    *album = utf8;
-		    // fix: utf8 buffer
-		}
-	}
+    if(frame && (field = &frame->fields[1]) &&
+                 id3_field_getnstrings(field) > 0)
+        *album = (gchar*) id3_ucs4_utf8duplicate( id3_field_getstrings(field,0));
+    else
+        *album = NULL;
 
     id3_file_close(file);
 }
@@ -710,7 +688,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     idx_frag  = himd_add_fragment_info(h, &fragment, &status);
     // END: Add fragment
 
-    // Add strings for title, album and artist strings. Retrieve string index numbers.
+    // Add strings for title, album and artist. Retrieve string index numbers.
     gint idx_title=0, idx_album=0, idx_artist=0;
 
     if(title != NULL) {
@@ -718,7 +696,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 	if(idx_title < 0)
 	    {
 		printf("Failed to add title string\n");
-		exit(1);
+		idx_title = 0;
 	    }
     }
 
@@ -728,7 +706,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 	if(idx_album < 0)
 	    {
 		printf("Failed to add album string\n");
-		exit(1);
+		idx_album = 0;
 	    }
     }
 
@@ -737,7 +715,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 	if(idx_artist < 0)
 	    {
 		printf("Failed to add artist string\n");
-		exit(1);
+		idx_artist = 0;
 	    }
     }
     //    printf("DBG: idx_title: %d, idx_album: %d, idx_artist: %d\n", idx_title, idx_album, idx_artist);
@@ -786,7 +764,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     // Update TRACK-INDEX file with track strings, fragment descriptor and track-descriptor.
     //
     himd_write_tifdata(h, &status);
-    //    free(artist); free(album); free(title);
+    free(artist); free(album); free(title);
 }
 
 int main(int argc, char ** argv)

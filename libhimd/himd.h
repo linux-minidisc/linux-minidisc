@@ -16,6 +16,7 @@ extern "C" {
 #define HIMD_ENCODING_UTF16BE 0x84
 #define HIMD_ENCODING_SHIFT_JIS 0x90
 
+#define STRING_TYPE_UNUSED 0
 #define STRING_TYPE_CONTINUATION 1
 #define STRING_TYPE_TITLE 8
 #define STRING_TYPE_ARTIST 9
@@ -57,6 +58,7 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_FRAGMENT_CHAIN_BROKEN,
                   HIMD_ERROR_STRING_CHAIN_BROKEN,
                   HIMD_ERROR_STRING_ENCODING_ERROR,
+                  HIMD_ERROR_OUT_OF_STRINGS,
                   HIMD_ERROR_NOT_STRING_HEAD,
                   HIMD_ERROR_UNKNOWN_ENCODING,
                   HIMD_ERROR_BAD_FRAME_NUMBERS,
@@ -147,7 +149,7 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
 void himd_close(struct himd * himd);
 char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length, struct himderrinfo * status);
 char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struct himderrinfo * status);
-int himd_add_string(struct himd * himd, char *string, int type, int length, struct himderrinfo * status);
+int himd_add_string(struct himd * himd, char *string, int type, struct himderrinfo * status);
 void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd, struct himderrinfo * status);
 FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode mode);
