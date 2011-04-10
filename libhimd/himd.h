@@ -149,7 +149,7 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
 void himd_close(struct himd * himd);
 char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length, struct himderrinfo * status);
 char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struct himderrinfo * status);
-int himd_add_string(struct himd * himd, char *string, int type, int length, struct himderrinfo * status);
+int himd_add_string(struct himd * himd, char *string, int type, struct himderrinfo * status);
 void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd, struct himderrinfo * status);
 FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode mode);

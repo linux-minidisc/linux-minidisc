@@ -692,7 +692,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     gint idx_title=0, idx_album=0, idx_artist=0;
 
     if(title != NULL) {
-	idx_title  = himd_add_string(h, title, STRING_TYPE_TITLE, strlen(title)+1, &status);
+	idx_title  = himd_add_string(h, title, STRING_TYPE_TITLE, &status);
 	if(idx_title < 0)
 	    {
 		printf("Failed to add title string\n");
@@ -702,7 +702,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 
     if(album != NULL) {
 	printf("hello\n");
-	idx_album  = himd_add_string(h, album, STRING_TYPE_ALBUM, strlen(album)+1, &status);
+	idx_album  = himd_add_string(h, album, STRING_TYPE_ALBUM, &status);
 	if(idx_album < 0)
 	    {
 		printf("Failed to add album string\n");
@@ -711,7 +711,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     }
 
     if(artist != NULL) {
-	idx_artist = himd_add_string(h, artist, STRING_TYPE_ARTIST, strlen(artist)+1, &status);
+	idx_artist = himd_add_string(h, artist, STRING_TYPE_ARTIST, &status);
 	if(idx_artist < 0)
 	    {
 		printf("Failed to add artist string\n");
