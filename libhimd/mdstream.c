@@ -207,7 +207,7 @@ void himd_writestream_close(struct himd_writestream * stream)
 static void setblock(struct blockinfo * b, unsigned char * blockbuffer)
 {
     memset(blockbuffer, 0, HIMD_BLOCKINFO_SIZE);
-    strncpy((char*)blockbuffer, "SPMA", sizeof(unsigned int));
+    setbeword32(blockbuffer, GUINT32_TO_BE(b->type)); /* ensure to use big endian on all platforms */
     setbeword16(blockbuffer+4, b->nframes);
     setbeword16(blockbuffer+6, b->mcode);
     setbeword16(blockbuffer+8, b->lendata);
@@ -215,8 +215,10 @@ static void setblock(struct blockinfo * b, unsigned char * blockbuffer)
     memcpy(blockbuffer+16, &b->key, 8);
     memcpy(blockbuffer+24, &b->iv, 8);
     memcpy(blockbuffer+32, &b->audio_data, HIMD_AUDIO_SIZE);
-    setbeword16(blockbuffer+16374, b->mcode);
-    setbeword32(blockbuffer+16380, b->serial_number);
+    setbeword32(blockbuffer+16368, GUINT32_TO_BE(b->backup_type));
+    setbeword16(blockbuffer+16374, b->backup_mcode);
+    setbeword32(blockbuffer+16376, b->lo32_contentid);
+    setbeword32(blockbuffer+16380, b->backup_serial_number);
 }
 
 int himd_writestream_write(struct himd_writestream * stream, struct blockinfo * audioblock, struct himderrinfo *status)

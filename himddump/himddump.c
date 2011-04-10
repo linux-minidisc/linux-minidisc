@@ -448,8 +448,9 @@ void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar *
     id3_file_close(file);
 }
 
-void block_init(struct blockinfo * b, short int nframes, short int lendata, unsigned int serial_number)
+void block_init(struct blockinfo * b, short int nframes, short int lendata, unsigned int serial_number, unsigned char * cid)
 {
+    strncpy((char*)&b->type, "SPMA", 4);
     b->nframes       = nframes;
     b->mcode         = 0;
     b->lendata       = lendata;
@@ -459,12 +460,12 @@ void block_init(struct blockinfo * b, short int nframes, short int lendata, unsi
     //    print_hex((unsigned char*)&b->key, 8);
     memset(&b->iv, 0, 8);
     memset(&b->backup_key, 0, 8);
-    strncpy((char*)&b->backup_type, "SPMA", 4);
+    b->backup_type   = b->type;
     memset(&b->reserved2, 0, 8);
     b->backup_reserved      = 0;
-    b->backup_mcode         = 0;
-    b->lo32_contentid       = 0;
-    b->backup_serial_number = serial_number;
+    b->backup_mcode         = b->mcode;
+    b->lo32_contentid       = cid[16]*16777216+cid[17]*65536+cid[18]*256+cid[19];
+    b->backup_serial_number = b->serial_number;
 }
 
 void block_printinfo(struct blockinfo * b)
@@ -540,7 +541,7 @@ int bucket_append(struct abucket * pbucket, gchar * pframe, guint framelen)
 //  in a obfuscated form using a 4 byte key.
 //
 gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stream, mp3key key,
-		   mad_timer_t *duration, gint *nblocks, gint *nframes, struct himderrinfo * status)
+                   mad_timer_t *duration, gint *nblocks, gint *nframes, unsigned char * cid, struct himderrinfo * status)
 {
     struct abucket bucket;
     struct mad_header header;
@@ -581,7 +582,7 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 	gint nbytes_added = bucket_append(&bucket, pframe, framelen);
 	if(nbytes_added < 0) {
 	    //printf("DBG: Bucket full!\n");
-	    block_init(&bucket.block, bucket.nframes, bucket.totsize, iblock);
+            block_init(&bucket.block, bucket.nframes, bucket.totsize, iblock, cid);
 
 	    //	    block_printinfo(&bucket.block);
 
@@ -657,6 +658,12 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     unsigned long mp3size;
     gchar * mp3buffer;
     gchar * artist=NULL, * title=NULL, * album=NULL;
+    int i;
+    unsigned char cid[20] = {0x02, 0x03, 0x00, 0x00};
+
+    // Generate random content ID
+    for(i = 4; i <=19; i++)
+        cid[i] = g_random_int_range(0,0xFF);
 
     // Get track ID3 information
     get_songinfo(filepath, &artist, &title, &album);
@@ -696,7 +703,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 	    exit(1);
 	}
 
-    write_blocks(&stream, &write_stream, key, &duration, &nblocks, &nframes, &status);
+    write_blocks(&stream, &write_stream, key, &duration, &nblocks, &nframes, cid, &status);
 
     himd_writestream_close(&write_stream);
     // END: Write blocks to ATDATA
