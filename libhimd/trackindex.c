@@ -58,15 +58,29 @@ static void get_dostime(struct tm * tm, unsigned const char * bytes)
     tm->tm_year = ((thedate & 0xFE00) >> 9) + 80;
 }
 
+static gboolean is_out_of_range(const struct tm * tm)
+{
+    return tm->tm_mday < 1 || tm->tm_mday > 31 ||
+           tm->tm_mon < 0 || tm->tm_mon > 11 ||
+           tm->tm_year < 80 || tm->tm_year > 207 ||
+           tm->tm_sec < 0 || tm->tm_sec > 59 ||
+           tm->tm_min < 0 || tm->tm_min > 59 ||
+           tm->tm_hour < 0 || tm->tm_hour > 23 ;
+}
 
 static void dos_settime(unsigned char * buffer, const struct tm * tm)
 {
-   setbeword16(buffer, (tm->tm_mday) |
-                       ((tm->tm_mon + 1) << 5) |
-                       ((tm->tm_year - 80) << 9));
-   setbeword16(buffer+2, (tm->tm_sec/2) |
-                         (tm->tm_min << 5) |
-                         (tm->tm_hour << 1));
+   if(is_out_of_range(tm))
+       memset(buffer, 0, 4);
+   else
+   {
+       setbeword16(buffer, (tm->tm_mday) |
+                           ((tm->tm_mon + 1) << 5) |
+                           ((tm->tm_year - 80) << 9));
+       setbeword16(buffer+2, (tm->tm_sec/2) |
+                             (tm->tm_min << 5) |
+                             (tm->tm_hour << 11));
+   }
 }
 
 static void settrack(struct trackinfo *t, unsigned char * trackbuffer)
