@@ -548,7 +548,6 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
     mad_timer_t mad_timer;
 
     gint iblock=0, iframe=0;
-    gint lenblocks=0;
 
     mad_timer_reset(&mad_timer);
     bucket_init(&bucket);
@@ -584,12 +583,6 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 	    //printf("DBG: Bucket full!\n");
             block_init(&bucket.block, bucket.nframes, bucket.totsize, iblock, cid);
 
-	    //	    block_printinfo(&bucket.block);
-
-	    // obfuscate audio-data using key derived from track-number
-	    //	    printf("\n Decrypted,first 30 bytes:\n");
-	    // print_hex(&bucket.block.audio_data[0], 30);
-
 	    // Encrypt block
 	    int i=0;
 	    for(i=0;i < bucket.totsize; i++)
@@ -602,9 +595,8 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 		    perror("write block");
 		}
 
-	    lenblocks += bucket.totsize;
-	    //printf("\n Encrypted, first 30 bytes: \n");
-	    //	    print_hex(&bucket.block.audio_data[0], 30);
+            // remember number of frames in current audio block
+            iframe = bucket.nframes;
 
 	    bucket_init(&bucket);
 
@@ -614,26 +606,14 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 		//printf("ERROR: Unexpected full block\n");
 		exit(1);
 	    }
-	    else if(nbytes_added == 0) {
-		//printf("DBG: Frame is too big for block\n");
-		iframe++;  // Skip frame
-	    }
-	    else
-		iframe++;
 
 	    iblock += 1;
 	    continue;
 	}
 	else if(nbytes_added == 0) {
 	    //printf("DBG: Frame is too big for block\n");
-	    bucket_init(&bucket);
-	    iframe++;
+            bucket_init(&bucket);
 	    continue;
-	}
-	else {
-	    //printf("DBG: Added %i bytes\n", nbytes_added);
-	    iframe++;
-
 	}
     }
 
