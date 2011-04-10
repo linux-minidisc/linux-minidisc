@@ -72,7 +72,7 @@ static void dos_settime(unsigned char * buffer, const struct tm * tm)
 static void settrack(struct trackinfo *t, unsigned char * trackbuffer)
 {
   dos_settime(trackbuffer+0,  &t->recordingtime);
-  setbeword32(trackbuffer+4,  0x10012);
+  setbeword32(trackbuffer+4,  t->ekbnum);
   setbeword16(trackbuffer+8,  t->title);
   setbeword16(trackbuffer+10, t->artist);
   setbeword16(trackbuffer+12, t->album);
@@ -92,6 +92,12 @@ static void settrack(struct trackinfo *t, unsigned char * trackbuffer)
   memcpy(trackbuffer+48,      t->contentid, 20);
   dos_settime(trackbuffer+68, &t->starttime);
   dos_settime(trackbuffer+72, &t->endtime);
+
+  /* DRM stuff */
+  trackbuffer[42] = t->Lt;
+  trackbuffer[43] = t->Dest;
+  trackbuffer[76] = t->Xcc;
+  trackbuffer[78] = t->Cc;
 }
 
 static void setfrag(struct fraginfo *f, unsigned char * fragbuffer)
@@ -160,6 +166,7 @@ int himd_add_track_info(struct himd * himd, struct trackinfo * t, struct himderr
     int idx_freeslot;
     unsigned char * linkbuffer;
     unsigned char * trackbuffer;
+    unsigned char * play_order_table = himd->tifdata+0x100;
 
     status = status;
 
@@ -180,6 +187,11 @@ int himd_add_track_info(struct himd * himd, struct trackinfo * t, struct himderr
     /* copy trackinfo to slot */
     settrack(t, trackbuffer);
 
+    /* increase track count */
+    setbeword16(play_order_table, himd_track_count(himd)+1);
+
+    /* add entry for new track in play order table */
+    setbeword16(play_order_table+2*idx_freeslot, t->tracknum);
     return idx_freeslot;
 }
 

@@ -80,6 +80,12 @@ struct trackinfo {
     unsigned char contentid[20];
     int ekbnum;
     struct tm recordingtime, starttime, endtime;
+    char Lt;
+    char Dest;
+    char Xcc;
+    char Ct;
+    char Cc;
+    char Cn;
 };
 
 /* a fragment in the audio file */

@@ -768,7 +768,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     //
     struct trackinfo track;
 
-    memcpy(&track.key, key, 8);
+    memset(&track.key, 0, 8); /* use zero key on mp3 files */
     track.title  = idx_title;
     track.artist = idx_artist;
     track.album  = idx_album;
@@ -780,11 +780,24 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     track.seconds      = duration.seconds;
     memset(&track.codecinfo, 0, 5);
     track.codecinfo[0] = 3;
+
+    /* file dependent codec information, these values are for my test mp3 file only, */
+    /* values fetched from trkidx file by downloading the same mp3 file with SonicStage */
+    track.codecinfo[2] = 0xB0; /* mp3, stereo, 128kb/s@44k1Hz */
+    track.codecinfo[3] = 0xD9;
+    track.codecinfo[4] = 0x10;
+
     memset(&track.mac, 0, 8);
-    memset(&track.contentid, 0, 20);
+    memcpy(&track.contentid, cid, 20);
     memset(&track.recordingtime, 0, sizeof(struct tm));
     memset(&track.starttime,     0, sizeof(struct tm));
     memset(&track.endtime,       0, sizeof(struct tm));
+
+    /* set DRM stuff correctly for compatibility reasons */
+    track.Lt = 0x10;
+    track.Dest = 1;
+    track.Xcc = 1;
+    track.Cc = 0x40;
 
     idx_track = himd_add_track_info(h, &track, &status);
     // END: Add track descriptor
