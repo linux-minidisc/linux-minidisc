@@ -53,7 +53,7 @@ int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, unsigned i
         fragnum = stream->frags[fragcount].nextfrag;
     }
 
-    stream->atdata = himd_open_file(himd, "ATDATA");
+    stream->atdata = himd_open_file(himd, "ATDATA", HIMD_READ_ONLY);
     if(!stream->atdata)
     {
         set_status_printf(status, HIMD_ERROR_CANT_OPEN_AUDIO,
@@ -163,7 +163,7 @@ int himd_writestream_open(struct himd * himd, struct himd_writestream * stream,
     g_return_val_if_fail(status != NULL, -1);
 
     stream->himd = himd;
-    stream->atdata = himd_open_file(himd, "ATDATA");
+    stream->atdata = himd_open_file(himd, "ATDATA", HIMD_READ_WRITE);
     if(!stream->atdata)
 	{
 	    fprintf(stderr, "Invalid filehandle %d", stream->atdata);

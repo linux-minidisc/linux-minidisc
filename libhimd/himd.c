@@ -116,7 +116,7 @@ static void nong_inplace_ascii_up(gchar * string)
     }
 }
 
-FILE * himd_open_file(struct himd * himd, const char * fileid)
+FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode mode)
 {
     char filename[13];
     FILE * file;
@@ -128,7 +128,7 @@ FILE * himd_open_file(struct himd * himd, const char * fileid)
     else
         nong_inplace_ascii_up(filename);
     filepath = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",filename,NULL);
-    file = fopen(filepath,"rb+");
+    file = fopen(filepath,mode == HIMD_READ_WRITE ? "rb+" : "rb");
     g_free(filepath);
     return file;
 }
@@ -203,7 +203,7 @@ int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 
 static int himd_read_discid(struct himd * himd, struct himderrinfo * status)
 {
-    FILE * mclistfile = himd_open_file(himd, "MCLIST");
+    FILE * mclistfile = himd_open_file(himd, "MCLIST", HIMD_READ_ONLY);
 
     if(!mclistfile)
     {

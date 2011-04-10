@@ -66,6 +66,8 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_ENCRYPTION_FAILURE,
                   HIMD_ERROR_OUT_OF_MEMORY };
 
+enum himd_rw_mode { HIMD_READ_ONLY, HIMD_READ_WRITE };
+
 /* a track on the HiMD */
 struct trackinfo {
     int title, artist, album;
@@ -148,7 +150,7 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struc
 int himd_add_string(struct himd * himd, char *string, int type, int length, struct himderrinfo * status);
 void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd, struct himderrinfo * status);
-FILE * himd_open_file(struct himd * himd, const char * fileid);
+FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode mode);
 int himd_write_tifdata(struct himd * himd, struct himderrinfo * status);
 unsigned int himd_track_count(struct himd * himd);
 unsigned int himd_get_trackslot(struct himd * himd, int unsigned idx, struct himderrinfo * status);
