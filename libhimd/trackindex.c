@@ -467,12 +467,11 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struc
 }
 
 
-int himd_add_string(struct himd * himd, char *string, int type, struct himderrinfo * status)
+int himd_add_string(struct himd * himd, char *string, int type, int length, struct himderrinfo * status)
 {
     int curidx, curtype, i, nextidx;
     int nslots;
     int idx_firstslot;
-    gsize length;
     gchar * convertedstring;
     unsigned char * curchunk;
     unsigned char strencoding;
