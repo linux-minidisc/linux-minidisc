@@ -511,12 +511,14 @@ int himd_add_string(struct himd * himd, char *string, int type, struct himderrin
         curidx = strlink(get_strchunk(himd, curidx));
         if(!curidx)
         {
+            g_free(convertedstring);
             set_status_printf(status, HIMD_ERROR_OUT_OF_STRINGS,
                 "Not enough string space to allocate %d string slots\n", nslots);
             return -1;
         }
         if(curtype != STRING_TYPE_UNUSED)
         {
+            g_free(convertedstring);
             set_status_printf(status, HIMD_ERROR_STRING_CHAIN_BROKEN,
                 "String slot %d in free list has type %d\n", curidx, curtype);
             return -1;
@@ -555,6 +557,7 @@ int himd_add_string(struct himd * himd, char *string, int type, struct himderrin
 
     /* adjust free list head pointer */
     set_strlink(get_strchunk(himd, 0), curidx);
+    g_free(convertedstring);
 
     return idx_firstslot;
 }
