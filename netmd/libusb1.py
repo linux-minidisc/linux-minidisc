@@ -1,16 +1,13 @@
 # libusb-1.0 python wrapper
 from ctypes import Structure, \
-                   CFUNCTYPE, POINTER, sizeof, cast, \
-                   cdll, \
+                   CFUNCTYPE, POINTER, addressof, sizeof, cast, \
                    c_short, c_int, c_uint, c_size_t, c_long, \
                    c_uint8, c_uint16, \
-                   c_void_p, c_char_p, py_object
-
+                   c_void_p, c_char, c_char_p, py_object, string_at
 from ctypes.util import find_library
-
-import struct
 import platform
 import os.path
+import sys
 
 class Enum(object):
     def __init__(self, member_dict):
@@ -24,8 +21,8 @@ class Enum(object):
                 next_value += 1
             forward_dict[name] = value
             if value in reverse_dict:
-                raise ValueError, 'Multiple names for value %r: %r, %r' % \
-                    (value, reverse_dict[value], name)
+                raise ValueError('Multiple names for value %r: %r, %r' %
+                    (value, reverse_dict[value], name))
             reverse_dict[value] = name
             module_globals[name] = value
         self.forward_dict = forward_dict
@@ -39,6 +36,7 @@ class Enum(object):
 
 class USBError(Exception):
     def __init__(self, value):
+        Exception.__init__(self)
         self.value = value
 
     def __str__(self):
@@ -49,20 +47,35 @@ c_uchar = c_uint8
 c_int_p = POINTER(c_int)
 
 PATH_MAX = 4096 # XXX: True on linux, no idea about others.
-LITTLE_ENDIAN = struct.unpack('h', '\x01\x00')[0] == 1
+LITTLE_ENDIAN = sys.byteorder == 'little'
 
 class timeval(Structure):
     _fields_ = [('tv_sec', c_long),
                 ('tv_usec', c_long)]
 timeval_p = POINTER(timeval)
 
-libusbpath = find_library("usb-1.0")
-# macport standard library path
-if libusbpath == None and platform.system() == 'Darwin' and  \
-   os.path.isfile('/opt/local/lib/libusb-1.0.dylib'):
-    libusbpath = '/opt/local/lib/libusb-1.0.dylib'
-if libusbpath == None: raise Exception('Can''t locate usb-1.0 library' )
-libusb = cdll.LoadLibrary(libusbpath)
+def _loadLibrary():
+    system = platform.system()
+    if system == 'Windows':
+        from ctypes import WinDLL as dll_loader
+        libusb_path = find_library("libusb-1.0.dll")
+    else:
+        from ctypes import CDLL as dll_loader
+        libusb_path = find_library("usb-1.0")
+        if libusb_path is None and system == 'Darwin':
+            # macport standard library path
+            libusb_path = '/opt/local/lib/libusb-1.0.dylib'
+            if not os.path.isfile(libusb_path):
+                libusb_path = None
+    if libusb_path is None:
+        raise Exception('Can\'t locate usb-1.0 library')
+    loader_kw = {}
+    if sys.version_info[:2] >= (2, 6):
+        loader_kw['use_errno'] = True
+        loader_kw['use_last_error'] = True
+    return dll_loader(libusb_path, **loader_kw)
+
+libusb = _loadLibrary()
 
 # libusb.h
 def bswap16(x):
@@ -101,6 +114,10 @@ libusb_class_code = Enum({
 'LIBUSB_CLASS_HUB': 9,
 # Data class
 'LIBUSB_CLASS_DATA': 10,
+# Wireless class
+'LIBUSB_CLASS_WIRELESS': 0xe0,
+# Application class
+'LIBUSB_CLASS_APPLICATION': 0xfe,
 # Class is vendor-specific
 'LIBUSB_CLASS_VENDOR_SPEC': 0xff
 })
@@ -289,7 +306,7 @@ class libusb_endpoint_descriptor(Structure):
                 ('bInterval', c_uint8),
                 ('bRefresh', c_uint8),
                 ('bSynchAddress', c_uint8),
-                ('extra', c_char_p),
+                ('extra', c_void_p),
                 ('extra_length', c_int)]
 libusb_endpoint_descriptor_p = POINTER(libusb_endpoint_descriptor)
 
@@ -304,7 +321,7 @@ class libusb_interface_descriptor(Structure):
                 ('bInterfaceProtocol', c_uint8),
                 ('iInterface', c_uint8),
                 ('endpoint', libusb_endpoint_descriptor_p),
-                ('extra', c_char_p),
+                ('extra', c_void_p),
                 ('extra_length', c_int)]
 libusb_interface_descriptor_p = POINTER(libusb_interface_descriptor)
 
@@ -323,7 +340,7 @@ class libusb_config_descriptor(Structure):
                 ('bmAttributes', c_uint8),
                 ('MaxPower', c_uint8),
                 ('interface', libusb_interface_p),
-                ('extra', c_char_p),
+                ('extra', c_void_p),
                 ('extra_length', c_int)]
 libusb_config_descriptor_p = POINTER(libusb_config_descriptor)
 libusb_config_descriptor_p_p = POINTER(libusb_config_descriptor_p)
@@ -479,7 +496,7 @@ libusb_transfer._fields_ = [('dev_handle', libusb_device_handle_p),
                             ('user_data', py_object),
                             ('buffer', c_void_p),
                             ('num_iso_packets', c_int),
-                            ('iso_packet_desc', libusb_iso_packet_descriptor_p)
+                            ('iso_packet_desc', libusb_iso_packet_descriptor)
 ]
 
 #int libusb_init(libusb_context **ctx);
@@ -493,6 +510,16 @@ libusb_exit.restype = None
 libusb_set_debug = libusb.libusb_set_debug
 libusb_set_debug.argtypes = [libusb_context_p, c_int]
 libusb_set_debug.restype = None
+try:
+    #char *libusb_strerror(enum libusb_error errcode);
+    libusb_strerror = libusb.libusb_strerror
+except AttributeError:
+    # Place holder
+    def libusb_strerror(errcode):
+        return None
+else:
+    libusb_strerror.argtypes = [c_int]
+    libusb_strerror.restype = c_char_p
 
 #ssize_t libusb_get_device_list(libusb_context *ctx,
 #        libusb_device ***list);
@@ -551,6 +578,9 @@ libusb_get_device_address.restype = c_uint8
 #int libusb_get_max_packet_size(libusb_device *dev, unsigned char endpoint);
 libusb_get_max_packet_size = libusb.libusb_get_max_packet_size
 libusb_get_max_packet_size.argtypes = [libusb_device_p, c_uchar]
+#int libusb_get_max_iso_packet_size(libusb_device *dev, unsigned char endpoint);
+libusb_get_max_iso_packet_size = libusb.libusb_get_max_iso_packet_size
+libusb_get_max_iso_packet_size.argtypes = [libusb_device_p, c_uchar]
 
 #int libusb_open(libusb_device *dev, libusb_device_handle **handle);
 libusb_open = libusb.libusb_open
@@ -614,11 +644,13 @@ libusb_attach_kernel_driver.argtypes = [libusb_device_handle_p, c_int]
 # \param transfer a transfer
 # \returns pointer to the first byte of the data section
 
-def libusb_control_transfer_get_data(transfer):
-    return transfer.buffer.content[LIBUSB_CONTROL_SETUP_SIZE:]
+def libusb_control_transfer_get_data(transfer_p):
+    transfer = transfer_p.contents
+    return string_at(transfer.buffer, transfer.length)[
+        LIBUSB_CONTROL_SETUP_SIZE:]
 
-def libusb_control_transfer_get_setup(transfer):
-    return cast(transfer, libusb_control_setup_p)
+def libusb_control_transfer_get_setup(transfer_p):
+    return cast(transfer_p.contents.buffer, libusb_control_setup_p)
 
 def libusb_fill_control_setup(setup_p, bmRequestType, bRequest, wValue, wIndex,
                               wLength):
@@ -651,11 +683,11 @@ def libusb_fill_control_transfer(transfer_p, dev_handle, buffer, callback,
     transfer.endpoint = 0
     transfer.type = LIBUSB_TRANSFER_TYPE_CONTROL
     transfer.timeout = timeout
+    transfer.buffer = cast(buffer, c_void_p)
     if buffer is not None:
         setup = cast(buffer, libusb_control_setup_p).contents
         transfer.length = LIBUSB_CONTROL_SETUP_SIZE + \
                           libusb_le16_to_cpu(setup.wLength)
-        transfer.buffer = cast(buffer, c_void_p)
     transfer.user_data = user_data
     transfer.callback = callback
 
@@ -690,32 +722,62 @@ def libusb_fill_iso_transfer(transfer_p, dev_handle, endpoint, buffer, length,
     transfer.endpoint = endpoint
     transfer.type = LIBUSB_TRANSFER_TYPE_ISOCHRONOUS
     transfer.timeout = timeout
-    transfer.buffer = buffer
+    transfer.buffer = cast(buffer, c_void_p)
     transfer.length = length
     transfer.num_iso_packets = num_iso_packets
     transfer.user_data = user_data
     transfer.callback = callback
 
+def _get_iso_packet_list(transfer):
+    list_type = libusb_iso_packet_descriptor * transfer.num_iso_packets
+    return list_type.from_address(addressof(transfer.iso_packet_desc))
+
+def get_iso_packet_list(transfer_p):
+    """
+    Python-specific helper extracting a list of iso packet descriptors,
+    because it's not as straight-forward as in C.
+    """
+    return _get_iso_packet_list(transfer_p.contents)
+
+def _get_iso_packet_buffer(transfer, offset, length):
+    return string_at(addressof(transfer.buffer) + offset, length)
+
+def get_iso_packet_buffer_list(transfer_p):
+    """
+    Python-specific helper extracting a list of iso packet buffers.
+    """
+    transfer = transfer_p.contents
+    offset = 0
+    result = []
+    append = result.append
+    for iso_transfer in _get_iso_packet_list(transfer):
+        length = iso_transfer.length
+        append(_get_iso_packet_buffer(transfer, offset, length))
+        offset += length
+    return result
+
 def libusb_set_iso_packet_lengths(transfer_p, length):
     transfer = transfer_p.contents
-    for i in xrange(transfer.num_iso_packets):
-        transfer.iso_packet_desc[i].length = length
+    for iso_packet_desc in _get_iso_packet_list(transfer):
+        iso_packet_desc.length = length
 
 def libusb_get_iso_packet_buffer(transfer_p, packet):
     transfer = transfer_p.contents
     offset = 0
     if packet >= transfer.num_iso_packets:
         return None
+    iso_packet_desc_list = _get_iso_packet_list(transfer)
     for i in xrange(packet):
-        offset += transfer.iso_packet_desc[i].length
-    return transfer.buffer[offset:]
+        offset += iso_packet_desc_list[i].length
+    return _get_iso_packet_buffer(transfer, offset,
+        iso_packet_desc_list[packet].length)
 
 def libusb_get_iso_packet_buffer_simple(transfer_p, packet):
     transfer = transfer_p.contents
     if packet >= transfer.num_iso_packets:
         return None
-    return transfer.buffer[transfer.iso_packet_desc[0].length * packet:]
-
+    iso_length = transfer.iso_packet_desc.length
+    return _get_iso_packet_buffer(transfer, iso_length * packet, iso_length)
  
 # sync I/O
 

@@ -2,8 +2,12 @@ import libusb1
 from cStringIO import StringIO
 from time import sleep
 from struct import pack
-from Crypto.Cipher import DES
-from Crypto.Cipher import DES3
+try:
+    from Crypto.Cipher import DES
+    from Crypto.Cipher import DES3
+except ImportError:
+    DES = None
+    DES3 = None
 import array
 import random
 
@@ -287,13 +291,12 @@ def int2BCD(value, length=1):
       Returns the same value in BCD.
     """
     if value > 10 ** (length * 2 - 1):
-        raise ValueError, 'Value %r cannot fit in %i bytes in BCD' % \
-             (value, length)
+        raise ValueError('Value %r cannot fit in %i bytes in BCD' %
+             (value, length))
     bcd = 0
     nibble = 0
     while value:
-        nibble_value = value % 10
-        value /= 10
+        value, nibble_value = divmod(value, 10)
         bcd |= nibble_value << (4 * nibble)
         nibble += 1
     return bcd
@@ -331,13 +334,13 @@ class NetMDInterface(object):
         result = self.net_md.readReply()
         status = ord(result[0])
         if status == STATUS_NOT_IMPLEMENTED:
-            raise NetMDNotImplemented, 'Not implemented'
+            raise NetMDNotImplemented('Not implemented')
         elif status == STATUS_REJECTED:
-            raise NetMDRejected, 'Rejected'
+            raise NetMDRejected('Rejected')
         elif status not in (STATUS_ACCEPTED, STATUS_IMPLEMENTED,
                             STATUS_INTERIM):
-            raise NotImplementedError, 'Unknown returned status: %02X' % \
-                                       (status, )
+            raise NotImplementedError('Unknown returned status: %02X' %
+                (status, ))
         return result[1:]
 
     def formatQuery(self, format, *args):
@@ -369,7 +372,7 @@ class NetMDInterface(object):
                 elif char == '*':
                     extend(ord(x) for x in value)
                 else:
-                    raise ValueError, 'Unrecognised format char: %r' % (char, )
+                    raise ValueError('Unrecognised format char: %r' % (char, ))
                 continue
             if char == '%':
                 assert half is None
@@ -419,7 +422,7 @@ class NetMDInterface(object):
                     input_stack = []
                     append(value)
                 else:
-                    raise ValueError, 'Unrecognised format char: %r' % (char, )
+                    raise ValueError('Unrecognised format char: %r' % (char, ))
                 continue
             if char == '%':
                 assert half is None
@@ -433,10 +436,10 @@ class NetMDInterface(object):
                 input_value = pop()
                 format_value = int(half + char, 16)
                 if format_value != input_value:
-                    raise ValueError, 'Format and input mismatch at %i: ' \
-                                      'expected %02x, got %02x' % \
-                                      (len(query) - len(input_stack) - 1,
-                                       format_value, input_value)
+                    raise ValueError('Format and input mismatch at %i: '
+                        'expected %02x, got %02x' % (
+                            len(query) - len(input_stack) - 1,
+                            format_value, input_value))
                 half = None
         assert len(input_stack) == 0
         return result
@@ -718,9 +721,9 @@ class NetMDInterface(object):
             track_append = track_list.append
             for track in xrange(track_min - 1, track_max):
                 if track in track_dict:
-                    raise ValueError, 'Track %i is in 2 groups: %r[%i] & ' \
+                    raise ValueError('Track %i is in 2 groups: %r[%i] & '
                          '%r[%i]' % (track, track_dict[track][0],
-                         track_dict[track][1], group_name, group_index)
+                         track_dict[track][1], group_name, group_index))
                 track_dict[track] = group_name, group_index
                 track_append(track)
             append((group_name, track_list))
@@ -1000,11 +1003,11 @@ class NetMDInterface(object):
         databytes = 16 + 16*chainlen + 24
         for key in keychain:
             if len(key) != 16:
-                raise ValueError, ("Each key in the chain needs to have 16 bytes, this one has %d" % len(key))
+                raise ValueError("Each key in the chain needs to have 16 bytes, this one has %d" % len(key))
         if depth < 1 or depth > 63:
-            raise ValueError, 'Supplied depth is invalid'
+            raise ValueError('Supplied depth is invalid')
         if len(ekbsignature) != 24:
-            raise ValueError, 'Supplied EKB signature length wrong'
+            raise ValueError('Supplied EKB signature length wrong')
         query = self.formatQuery('1800 080046 f0030103 12 ff %w %d' \
                                  '%d %d %d 00000000 %* %*', databytes, databytes,
                                  chainlen, depth, ekbid, "".join(keychain), ekbsignature)
@@ -1021,7 +1024,7 @@ class NetMDInterface(object):
            device nonce (str), another 8 bytes random data
         """
         if len(hostnonce) != 8:
-            raise ValueError, 'Supplied host nonce length wrong'
+            raise ValueError('Supplied host nonce length wrong')
         query = self.formatQuery('1800 080046 f0030103 20 ff 000000 %*', hostnonce)
         reply = self.send_query(query)
         return self.scanQuery(reply, '1800 080046 f0030103 20 00 000000 %*')[0]
@@ -1047,12 +1050,15 @@ class NetMDInterface(object):
            has to be calculated by the caller from the data exchanged in
            sessionKeyExchange and the root key selected by sendKeyData
         """
+        if DES is None:
+            raise ImportError('Crypto.Cypher.DES not found, you cannot '
+                'download tracks')
         if len(contentid) != 20:
-            raise ValueError, 'Supplied Content ID length wrong'
+            raise ValueError('Supplied Content ID length wrong')
         if len(keyenckey) != 8:
-            raise ValueError, 'Supplied Key Encryption Key length wrong'
+            raise ValueError('Supplied Key Encryption Key length wrong')
         if len(sessionkey) != 8:
-            raise ValueError, 'Supplied Session Key length wrong'
+            raise ValueError('Supplied Session Key length wrong')
         encrypter = DES.new(sessionkey, DES.MODE_CBC, '\0\0\0\0\0\0\0\0')
         encryptedarg = encrypter.encrypt('\1\1\1\1' + contentid + keyenckey);
         query = self.formatQuery('1800 080046 f0030103 22 ff 0000 %*', encryptedarg)
@@ -1069,8 +1075,11 @@ class NetMDInterface(object):
          sessionkey (str)
            8-byte DES key used for securing the download session
         """
+        if DES is None:
+            raise ImportError('Crypto.Cypher.DES not found, you cannot '
+                'download tracks')
         if len(sessionkey) != 8:
-            raise ValueError, 'Supplied Session Key length wrong'
+            raise ValueError('Supplied Session Key length wrong')
         encrypter = DES.new(sessionkey, DES.MODE_ECB)
         authentication = encrypter.encrypt('\0\0\0\0\0\0\0\0')
         query = self.formatQuery('1800 080046 f0030103 48 ff 00 1001 %w %*',
@@ -1113,8 +1122,11 @@ class NetMDInterface(object):
              setupDownload, probably present to prevent some attack vectors
              to the DRM system.
         """
+        if DES is None:
+            raise ImportError('Crypto.Cypher.DES not found, you cannot '
+                'download tracks')
         if len(sessionkey) != 8:
-            raise ValueError, 'Supplied Session Key length wrong'
+            raise ValueError('Supplied Session Key length wrong')
         framesizedict = {
             WIREFORMAT_PCM: 2048,
             WIREFORMAT_LP2: 192,
@@ -1156,6 +1168,9 @@ class NetMDInterface(object):
         return self.scanQuery(reply,'1800 080046 f0030103 23 00 1001 %?%? %*')[0]
 
 def retailmac(key, value, iv = 8*"\0"):
+    if DES is None or DES3 is None:
+        raise ImportError('Crypto.Cypher.DES or DES3 not found, you cannot '
+            'download tracks')
     subkeyA = key[0:8]
     beginning = value[0:-8]
     end = value[-8:]

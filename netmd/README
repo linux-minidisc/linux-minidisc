@@ -9,9 +9,37 @@ DISCLAIMER
 
 REQUIREMENTS
   libusb1
-  python2.4 or later
+  python2.4 or later (not compatible with python 3.x), ctypes (required by
+    python-libusb1, included here)
   A NetMD minidisc player.
   An USB cable.
+
+  Linux:
+    Your distro should package everything you need (python2.4 + ctypes).
+
+  Windows:
+    As of this writing, Windows XP, 2003, Vista & later are supported by
+    libusb-1.0, both in 32 and 64 bits.
+    - Go here:
+         http://code.google.com/p/libusb-winusb-wip/downloads/list
+      and download:
+      - latest libusb release (libusb_2010.10.14.7z as of this writing)
+      - zadig.exe
+    - Extract libusb-1.0.dll to your system32 folder (should be something like
+      C:\windows\system32).
+    - Plug your NetMD via USB
+    - Run zadig.exe, and select your inidisc in the drop-down list, then click
+      "install". You will be prompted for confirmation that you really want to
+      install this non-certified driver, then installation will happen.
+      If you get errors, it might mean a driver is already installed for this
+      device, you should uninstall it and retry installing zadig's driver.
+    - If prompted, reboot.
+    - Run python NetMD tools (example: c:\Python26\python.exe lsmd.py)
+      Note: wait for the driver to be loaded before running commands, otherwise
+      you will get errors, like "LIBUSB_ERROR_NOT_SUPPORTED".
+
+    Note: by default, python does not package the Crypto package, required to
+    download track to NetMD devices. (TODO: add Crypto URL here.)
 
   For dump_md.py:
     sox (and plugins to access your audio system)
