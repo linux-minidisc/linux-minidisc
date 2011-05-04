@@ -56,8 +56,14 @@
         <property name="editTriggers">
          <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
         </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::MultiSelection</enum>
+        </property>
+        <property name="indentation">
+         <number>5</number>
         </property>
         <attribute name="headerHighlightSections">
          <bool>true</bool>
