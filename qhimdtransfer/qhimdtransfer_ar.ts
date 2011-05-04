@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>&amp;Close</source>
-        <translation></translation>
+        <translation>غلق )C&amp;(</translation>
     </message>
     <message>
         <source>About</source>
@@ -154,7 +154,7 @@
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>ملف(&amp;F)</translation>
+        <translation>ملف)&amp;F(</translation>
     </message>
     <message>
         <source>&amp;?</source>
