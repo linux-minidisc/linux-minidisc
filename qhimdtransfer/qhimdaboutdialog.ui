@@ -59,14 +59,17 @@
        <widget class="QLabel" name="HomepageLink">
         <property name="geometry">
          <rect>
-          <x>20</x>
+          <x>0</x>
           <y>110</y>
-          <width>321</width>
+          <width>341</width>
           <height>16</height>
          </rect>
         </property>
         <property name="text">
          <string notr="true">&lt;a href=&quot;https://wiki.physik.fu-berlin.de/linux-minidisc&quot;&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/a&gt;</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
         <property name="openExternalLinks">
          <bool>true</bool>
@@ -75,9 +78,9 @@
        <widget class="QLabel" name="AboutTextLower">
         <property name="geometry">
          <rect>
-          <x>20</x>
+          <x>0</x>
           <y>20</y>
-          <width>321</width>
+          <width>341</width>
           <height>71</height>
          </rect>
         </property>
@@ -86,13 +89,16 @@
 Walkman. Brought to you by the linux-minidisc
 project:</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
        <widget class="QLabel" name="AboutTextUpper">
         <property name="geometry">
          <rect>
-          <x>20</x>
+          <x>0</x>
           <y>150</y>
-          <width>321</width>
+          <width>341</width>
           <height>71</height>
          </rect>
         </property>
@@ -100,6 +106,9 @@ project:</string>
          <string>This software is covered by the GNU GPL v2
 license. See the file LICENSE in the program
 folder for more information.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </widget>
