@@ -30,25 +30,25 @@
 #include <usb.h>
 
 /** Error codes of the USB transport layer */
-#define NETMDERR_USB					-1	/* general USB error */
-#define NETMDERR_NOTREADY			-2	/* player not ready for command */
-#define NETMDERR_TIMEOUT			-3	/* timeout while waiting for response */
-#define NETMDERR_CMD_FAILED		-4	/* minidisc responded with 08 response */
-#define NETMDERR_CMD_INVALID	-5	/* minidisc responded with 0A response */
+#define NETMDERR_USB            -1      /* general USB error */
+#define NETMDERR_NOTREADY       -2      /* player not ready for command */
+#define NETMDERR_TIMEOUT        -3      /* timeout while waiting for response */
+#define NETMDERR_CMD_FAILED     -4      /* minidisc responded with 08 response */
+#define NETMDERR_CMD_INVALID    -5      /* minidisc responded with 0A response */
 
 
 typedef struct netmd_device_t {
-	struct netmd_device_t	*link;
-	char			name[32];
-	struct usb_device	*usb_dev;
+    struct netmd_device_t       *link;
+    char                        name[32];
+    struct usb_device           *usb_dev;
 } netmd_device_t;
 
-typedef usb_dev_handle*		netmd_dev_handle;
+typedef usb_dev_handle*	        netmd_dev_handle;
 
 /** Struct to hold the vendor and product id's for each unit. */
 struct netmd_devices {
-	int	idVendor;
-	int	idProduct;
+    int	idVendor;
+    int	idProduct;
 };
 
 /** intialises the netmd device layer, scans the USB and fills in a list of supported devices
@@ -74,14 +74,14 @@ int netmd_get_devname(netmd_dev_handle* devh, char* buf, int buffsize);
 // int request_disc_title(usb_dev_handle* dev, char* buffer, int size);
 
 /*! Function to exchange command/response buffer with minidisc
-	\param dev device handle
-	\param cmd command buffer
-	\param cmdlen length of command
-	\param rsp response buffer
-	\return number of bytes received if >0, or error if <0
+  \param dev device handle
+  \param cmd command buffer
+  \param cmdlen length of command
+  \param rsp response buffer
+  \return number of bytes received if >0, or error if <0
 */
 int netmd_exch_message(netmd_dev_handle *dev, char *cmd, int cmdlen,
-	char *rsp);
+                       char *rsp);
 
 /*! closes the usb descriptors
   \param dev pointer to device returned by netmd_open
@@ -102,46 +102,46 @@ void netmd_clean(netmd_device_t *device_list);
 #define NETMD_PLAYMODE_SHUFFLE	0x0100
 
 /** trace levels for netmd_trace calls */
-#define NETMD_TRACE_NONE	0
+#define NETMD_TRACE_NONE        0
 #define NETMD_TRACE_ERROR	1
 #define NETMD_TRACE_INFO	2
 
 /** Data about a group, start track, finish track and name.
-  Used to generate disc header info.
+    Used to generate disc header info.
 */
 typedef struct netmd_group
 {
-	int start;
-	int finish;
-	char* name;
+    int start;
+    int finish;
+    char* name;
 } netmd_group_t;
 
 /** Basic track data. */
 struct netmd_track
 {
-	int track;
-	int minute;
-	int second;
-	int tenth;
+    int track;
+    int minute;
+    int second;
+    int tenth;
 };
 
 /** stores hex value from protocol and text value of name */
 typedef struct netmd_pair
 {
-	unsigned char hex;
-	char* name;
+    unsigned char hex;
+    char* name;
 } netmd_pair_t;
 
 /** stores misc data for a minidisc **/
 typedef struct {
-	int header_length;
-	struct netmd_group *groups;
-	int group_count;
+    int header_length;
+    struct netmd_group *groups;
+    int group_count;
 } minidisc;
 
 
 /** Global variable containing netmd_group data for each group
-	There will be enough for group_count total in the alloced memory
+    There will be enough for group_count total in the alloced memory
 */
 extern struct netmd_group* groups;
 extern struct netmd_pair const trprot_settings[];
@@ -150,31 +150,32 @@ extern struct netmd_pair const unknown_pair;
 
 /* Functions from netmd_trace.c */
 /** Sets the global trace level
-  \param level The trace level
+    \param level The trace level
 */
 void netmd_trace_level(int level);
+
 /** Shows a hexdump of binary data
-  \param level Trace level
-  \param data pointer to binary data to trace
-  \param len number of bytes to trace
+    \param level Trace level
+    \param data pointer to binary data to trace
+    \param len number of bytes to trace
 */
 void netmd_trace_hex(int level, char *data, int len);
+
 /** Printf like trace function
-  \param level Trace level
-  \param fmt printf-like format string
+    \param level Trace level
+    \param fmt printf-like format string
 */
 void netmd_trace(int level, char *fmt, ...);
 
-
 /** enum through an array of pairs looking for a specific hex code.
-	\param hex hex code to find.
-	\param pair array of pairs to look through.
+    \param hex hex code to find.
+    \param pair array of pairs to look through.
 */
 struct netmd_pair const* find_pair(int hex, struct netmd_pair const* pair);
 
 /** used internally to get the size of buffer needed for the returning data.
-	\param dev USB device handle.
-	\return size of buffer to alloc.
+    \param dev USB device handle.
+    \return size of buffer to alloc.
 */
 //unsigned int request_buffer_length(netmd_dev_handle* dev);
 
@@ -292,7 +293,7 @@ int netmd_secure_cmd_21(netmd_dev_handle *dev);
 int netmd_secure_cmd_81(netmd_dev_handle *dev);
 int netmd_secure_cmd_22(netmd_dev_handle *dev, unsigned char *hash);
 int netmd_secure_cmd_28(netmd_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
-	unsigned int length, unsigned int *track_nr);
+                        unsigned int length, unsigned int *track_nr);
 int netmd_secure_cmd_48(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash);
 int netmd_secure_cmd_23(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash_id);
 int netmd_secure_cmd_40(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *signature);
@@ -314,12 +315,12 @@ void test(netmd_dev_handle* dev);
 
 /*! gets the position within the currently playing track in seconds.hundreds
   \param dev pointer to device returned by netmd_open
- */
+*/
 float netmd_get_playback_position(netmd_dev_handle* dev);
 
 /*! gets the currently playing track
   \param dev pointer to device returned by netmd_open
- */
+*/
 int netmd_get_current_track(netmd_dev_handle* dev);
 
 /*! sets group data
@@ -345,4 +346,3 @@ int netmd_get_current_track(netmd_dev_handle* dev);
   \param dev a handler to the usb device
 */
 //void waitforsync(netmd_dev_handle* dev);
-

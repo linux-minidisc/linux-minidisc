@@ -24,82 +24,80 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-  
+
 #include "libnetmd.h"
- 
+
 
 static int trace_level = 0;
 
- 
+
 void netmd_trace_level(int level)
 {
- 	trace_level = level;
+    trace_level = level;
 }
 
 
 void netmd_trace_hex(int level, char *buf, int len)
 {
- 	int i;
-	int j = 0;
-	int breakpoint = 0;
+    int i;
+    int j = 0;
+    int breakpoint = 0;
 
-	if (level > trace_level) {
-		return;
-	}
-	
-	for (i = 0; i < len; i++)
-	{
-		printf("%02x ", buf[i]);
-		breakpoint++;
-		if(!((i + 1)%16) && i)
-		{
-			printf("\t\t");
-			for(j = ((i+1) - 16); j < ((i+1)/16) * 16; j++)
-			{
-				if(buf[j] < 30)
-					printf(".");
-				else
-					printf("%c", buf[j]);
-			}
-			printf("\n");
-			breakpoint = 0;
-		}
-	}
+    if (level > trace_level) {
+        return;
+    }
 
-	if(breakpoint == 16)
-	{
-		printf("\n");
-		return;
-	}
+    for (i = 0; i < len; i++)
+    {
+        printf("%02x ", buf[i]);
+        breakpoint++;
+        if(!((i + 1)%16) && i)
+        {
+            printf("\t\t");
+            for(j = ((i+1) - 16); j < ((i+1)/16) * 16; j++)
+            {
+                if(buf[j] < 30)
+                    printf(".");
+                else
+                    printf("%c", buf[j]);
+            }
+            printf("\n");
+            breakpoint = 0;
+        }
+    }
 
-	for(; breakpoint < 16; breakpoint++)
-	{
-		printf("   ");
-	}
-	printf("\t\t");
+    if(breakpoint == 16)
+    {
+        printf("\n");
+        return;
+    }
 
-	for(j = len - (len%16); j < len; j++)
-	{
-		if(buf[j] < 30)
-			printf(".");
-		else
-			printf("%c", buf[j]);
-	}
-	printf("\n");
+    for(; breakpoint < 16; breakpoint++)
+    {
+        printf("   ");
+    }
+    printf("\t\t");
+
+    for(j = len - (len%16); j < len; j++)
+    {
+        if(buf[j] < 30)
+            printf(".");
+        else
+            printf("%c", buf[j]);
+    }
+    printf("\n");
 }
 
 
 void netmd_trace(int level, char *fmt, ...)
 {
-	va_list	arg;
-	
-	if (level > trace_level) {
-		return;
-	}
-	
-	va_start(arg, fmt);
-	vprintf(fmt, arg);
-	va_end(arg);
+    va_list	arg;
+
+    if (level > trace_level) {
+        return;
+    }
+
+    va_start(arg, fmt);
+    vprintf(fmt, arg);
+    va_end(arg);
 }
-
-
