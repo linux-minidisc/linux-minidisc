@@ -68,7 +68,7 @@ netmd_dev_handle* netmd_open(netmd_device_t *devh);
   \param buffsize of buf.
   \return Actual size of buffer, if your buffer is too small resize buffer and recall function.
 */
-int netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, int buffsize);
+int netmd_get_devname(netmd_dev_handle* devh, char* buf, int buffsize);
 
 /*! Function for internal use by init_disc_info */
 // int request_disc_title(usb_dev_handle* dev, char* buffer, int size);
@@ -80,8 +80,8 @@ int netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, int buffsize);
 	\param rsp response buffer
 	\return number of bytes received if >0, or error if <0
 */
-int netmd_exch_message(netmd_dev_handle *dev, unsigned char *cmd, int cmdlen,
-	unsigned char *rsp);
+int netmd_exch_message(netmd_dev_handle *dev, char *cmd, int cmdlen,
+	char *rsp);
 
 /*! closes the usb descriptors
   \param dev pointer to device returned by netmd_open
@@ -158,7 +158,7 @@ void netmd_trace_level(int level);
   \param data pointer to binary data to trace
   \param len number of bytes to trace
 */
-void netmd_trace_hex(int level, unsigned char *data, int len);
+void netmd_trace_hex(int level, char *data, int len);
 /** Printf like trace function
   \param level Trace level
   \param fmt printf-like format string

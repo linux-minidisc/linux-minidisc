@@ -69,9 +69,9 @@ static void waitforsync(usb_dev_handle* dev)
 
 }
 
-static char* sendcommand(netmd_dev_handle* devh, char* str, int len, char* response, int rlen)
+static char* sendcommand(netmd_dev_handle* devh, char* str, int len, unsigned char* response, int rlen)
 {
-	int i, ret, size;
+	int i, ret, size = 0;
 	static char buf[256];
   
 	ret = netmd_exch_message(devh, str, len, buf);
@@ -835,9 +835,9 @@ int netmd_set_track( netmd_dev_handle* dev, int track)
 static int netmd_playback_control(netmd_dev_handle* dev, unsigned char code)
 {
 	int ret = 0;
-	unsigned char request[] = {0x00, 0x18, 0xc3, 0xff, 0x75, 0x00, 0x00, 0x00};                   // Play
+	char request[] = {0x00, 0x18, 0xc3, 0xff, 0x75, 0x00, 0x00, 0x00};                   // Play
 	int size;
-	unsigned char buf[255];
+	char buf[255];
 
 	request[4] = code;
 
@@ -909,13 +909,15 @@ int netmd_stop(netmd_dev_handle* dev)
 
 int netmd_set_playmode(netmd_dev_handle* dev, int playmode)
 {
-	unsigned char cmd[] = {0x00, 0x18, 0xd1, 0xff, 0x01, 0x00, 0x00, 0x00, 0x88, 0x08, 0x00, 0x00, 0x00};
-	unsigned char rsp[255];
+	char request[] = {0x00, 0x18, 0xd1, 0xff, 0x01, 0x00,
+                          0x00, 0x00, 0x88, 0x08, 0x00, 0x00,
+                          0x00};
+	char buf[255];
 	int rsplen;
-	
-	cmd[10] = (playmode >> 8) & 0xFF;
-	cmd[11] = (playmode >> 0) & 0xFF;
-	rsplen = netmd_exch_message(dev, cmd, sizeof(cmd), rsp);
+
+	request[10] = (playmode >> 8) & 0xFF;
+	request[11] = (playmode >> 0) & 0xFF;
+	rsplen = netmd_exch_message(dev, request, sizeof(request), buf);
 	if (rsplen < 0) {
 		printf("Error: netmd_exch_message failed %d\n", rsplen);
 	}
@@ -1045,7 +1047,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 {
         int ret = 0;
 	int fd = open(szFile, O_RDONLY); /* File descriptor to omg file */
-	unsigned char *data = malloc(4096); /* Buffer for reading the omg file */
+	char *data = malloc(4096); /* Buffer for reading the omg file */
 	char *p = NULL; /* Pointer to index into data */
 	char track_number='\0'; /* Will store the track number of the recorded song */
 
@@ -1060,7 +1062,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 								   0x01, 0x03, 0x28, 0xff, 0x00, 0x01, 0x00, 0x10,
 								   0x01, 0xff, 0xff, 0x00, 0x94, 0x02, 0x00, 0x00,
 								   0x00, 0x06, 0x00, 0x00, 0x04, 0x98};   /* Record command */
-	char movetoendresp[] = {0x0f, 0x18, 0x00, 0x08, 0x00, 0x46, 0xf0, 0x03,
+	unsigned char movetoendresp[] = {0x0f, 0x18, 0x00, 0x08, 0x00, 0x46, 0xf0, 0x03,
 							0x01, 0x03, 0x28, 0x00, 0x00, 0x01, 0x00, 0x10,
 							0x01, 0x00, 0x11, 0x00, 0x94, 0x02, 0x00, 0x00,
 							0x43, 0x8c, 0x00, 0x32, 0xbc, 0x50}; /* The expected response from the record command. */
@@ -1344,7 +1346,7 @@ void test(netmd_dev_handle* devh)
 	//					   0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00,
 	//					   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	//					   0x00, 0x00, 0x00, 0x00, 0x00, 0x00};   // 30 Move to end and start record;
-  char movetoendresp[] = {0x0f, 0x18, 0x00, 0x08, 0x00, 0x46, 0xf0, 0x03,
+  unsigned char movetoendresp[] = {0x0f, 0x18, 0x00, 0x08, 0x00, 0x46, 0xf0, 0x03,
 						  0x01, 0x03, 0x28, 0x00, 0x00, 0x01, 0x00, 0x10,
 						  0x01, 0x00, 0x11, 0x00, 0x94, 0x02, 0x00, 0x00,
 						  0x43, 0x8c, 0x00, 0x32, 0xbc, 0x50};

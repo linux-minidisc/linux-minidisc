@@ -37,7 +37,7 @@ void netmd_trace_level(int level)
 }
 
 
-void netmd_trace_hex(int level, unsigned char *buf, int len)
+void netmd_trace_hex(int level, char *buf, int len)
 {
  	int i;
 	int j = 0;

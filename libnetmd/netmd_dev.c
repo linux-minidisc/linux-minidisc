@@ -53,7 +53,7 @@ static struct netmd_devices const known_devices[] =
 	<0	if error
 	>=0	number of bytes that md wants to send
 */
-static int netmd_poll(usb_dev_handle *dev, unsigned char *buf, int tries)
+static int netmd_poll(usb_dev_handle *dev, char *buf, int tries)
 {
 	int i;
 
@@ -86,10 +86,10 @@ static int netmd_poll(usb_dev_handle *dev, unsigned char *buf, int tries)
 
 	Returns >0 on success, <0 on failure
 */
-int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd, int cmdlen,
-	unsigned char *rsp)
+int netmd_exch_message(netmd_dev_handle *devh, char *cmd, int cmdlen,
+                       char *rsp)
 {
-	unsigned char	pollbuf[4];
+	char	pollbuf[4];
 	unsigned char	rsp_code;
 	int		len;
 	usb_dev_handle	*dev;
@@ -200,7 +200,7 @@ netmd_dev_handle* netmd_open(netmd_device_t *netmd_dev)
 }
 
 
-int netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, int buffsize)
+int netmd_get_devname(netmd_dev_handle* devh, char* buf, int buffsize)
 {
 	usb_dev_handle *dev;
 	

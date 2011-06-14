@@ -111,7 +111,7 @@ static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
 
 static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
 {
-	unsigned char cmd[255], rsp[255];
+	char cmd[255], rsp[255];
 	unsigned int data;
 	char szBuf[4];
 	int cmdlen, rsplen;
@@ -376,7 +376,8 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
 	int i = 0;
 	int size = 1;
 	int g, group = 0, lastgroup = 0;
-	unsigned char flags, bitrate_id;
+	unsigned char bitrate_id;
+        char flags;
 	char *name, buffer[256];
 	struct netmd_track time;
 	struct netmd_pair const *trprot, *bitrate;
