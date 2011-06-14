@@ -7,7 +7,7 @@ UTILS = utilities/hex-to-char utilities/char-to-hex
 LIBRARY = libnetmd.o
 LIB = libnetmd.0.1.so
 APP = netmd
-PEDANTIC = -Wall
+PEDANTIC = -Wall -Wextra
 
 LDFLAGS = `libusb-config --libs`
 CFLAGS = `libusb-config --cflags`
