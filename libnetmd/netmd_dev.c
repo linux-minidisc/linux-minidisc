@@ -28,17 +28,38 @@
 /*! list of known vendor/prod id's for NetMD devices */
 static struct netmd_devices const known_devices[] =
 {
+    {0x54c, 0x36}, /* Sony (unknown model) */
     {0x54c, 0x75}, /* Sony MZ-N1 */
+    {0x54c, 0x7c}, /* Sony (unknown model) */
     {0x54c, 0x80}, /* Sony LAM-1 */
     {0x54c, 0x81}, /* Sony MDS-JB980 */
     {0x54c, 0x84}, /* Sony MZ-N505 */
     {0x54c, 0x85}, /* Sony MZ-S1 */
     {0x54c, 0x86}, /* Sony MZ-N707 */
     {0x54c, 0xc6}, /* Sony MZ-N10 */
+    {0x54c, 0xc7}, /* Sony MZ-N910 */
     {0x54c, 0xc8}, /* Sony MZ-N710/N810 */
     {0x54c, 0xc9}, /* Sony MZ-N510/N610 */
     {0x54c, 0xca}, /* Sony MZ-NE410/NF520D */
+    {0x54c, 0xeb}, /* Sony (unknown model) */
+    {0x54c, 0x101}, /* Sony (unknown model) */
+    {0x54c, 0x113}, /* Sony (unknown model) */
+    {0x54c, 0x14c}, /* Aiwa AM-NX9 */
+    {0x54c, 0x17e}, /* Sony MZ-NH1 */
+    {0x54c, 0x180}, /* Sony MZ-NH3D */
+    {0x54c, 0x182}, /* Sony MZ-NH900 */
+    {0x54c, 0x184}, /* Sony MZ-NH700/800 */
+    {0x54c, 0x186}, /* Sony MZ-NH600/600D */
+    {0x54c, 0x188}, /* Sony MZ-N920 */
+    {0x54c, 0x18a}, /* Sony (unknown model) */
+    {0x54c, 0x1e9}, /* Sony MZ-DH10P */
+    {0x54c, 0x219}, /* Sony MZ-RH10 */
+    {0x54c, 0x21b}, /* Sony MZ-RH910 */
+    {0x54c, 0x21d}, /* Sony (unknown model) */
+    {0x54c, 0x22c}, /* Sony CMT-AH10 */
+    {0x54c, 0x23c}, /* Sony DS-HMD1 */
     {0x54c, 0x286}, /* Sony MZ-RH1 */
+    {0x4dd, 0x7202}, /* Sharp IM-MT899H */
     {0, 0} /* terminating pair */
 };
 
