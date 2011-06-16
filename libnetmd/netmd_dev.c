@@ -38,6 +38,7 @@ static struct netmd_devices const known_devices[] =
     {0x54c, 0xc8}, /* Sony MZ-N710/N810 */
     {0x54c, 0xc9}, /* Sony MZ-N510/N610 */
     {0x54c, 0xca}, /* Sony MZ-NE410/NF520D */
+    {0x54c, 0x286}, /* Sony MZ-RH1 */
     {0, 0} /* terminating pair */
 };
 
