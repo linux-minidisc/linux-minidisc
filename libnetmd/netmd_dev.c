@@ -59,7 +59,11 @@ static struct netmd_devices const known_devices[] =
     {0x54c, 0x22c}, /* Sony CMT-AH10 */
     {0x54c, 0x23c}, /* Sony DS-HMD1 */
     {0x54c, 0x286}, /* Sony MZ-RH1 */
+
     {0x4dd, 0x7202}, /* Sharp IM-MT899H */
+    {0x4dd, 0x9013}, /* Sharp IM-DR400/DR410 */
+    {0x4dd, 0x9014}, /* Sharp IM-DR420 */
+
     {0, 0} /* terminating pair */
 };
 
