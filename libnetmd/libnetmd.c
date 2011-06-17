@@ -522,58 +522,47 @@ void print_groups(minidisc *md)
 
 int netmd_create_group(netmd_dev_handle* devh, char* name)
 {
-    int disc_size;
-    int seperator = 0;
-    char* disc = malloc(sizeof(char) * 60);
-    char* new_title = 0;
+    char* title = malloc(sizeof(char) * 60);
+    size_t title_length;
+    size_t seperator_length;
+
     char* p = 0;
     int ret;
 
-    disc_size = request_disc_title(devh, disc, 60);
-
-    if(disc_size > 60)
+    title_length = request_disc_title(devh, title, 60);
+    if(title_length > 60)
     {
-        disc = realloc(disc, disc_size);
-        disc_size = request_disc_title(devh, disc, disc_size);
+        title = realloc(title, title_length);
+        title_length = request_disc_title(devh, title, title_length);
     }
 
-    seperator = strlen(disc);
-    if(disc[0] != '0')
+    seperator_length = 1;
+    if (title_length > 2)
     {
-        disc_size += 2;
-        seperator += 2;
+        p = title + (title_length - 2);
+        if (strncmp(p, "//", 2) != 0) {
+            seperator_length = 3;
+        }
     }
 
-    p = disc + strlen(disc) - 2;
-    if(strcmp(p, "//") != 0)
-        disc_size += 2;
-
-    /* need a ; // and name added */
-    disc_size += (strlen(name) + 3);
-    new_title = malloc(disc_size);
-
-    memset(new_title, 0, disc_size);
-    if(disc[0] != '0')
+    title_length = title_length + seperator_length + strlen(name) + 2;
+    title = realloc(title, title_length);
+    if (seperator_length == 3)
     {
-        new_title[0] = '0';
-        new_title[1] = ';';
+        strcat(title, "//;");
     }
-    strcat(new_title, disc);
-
-    if(strcmp(p, "//") != 0)
+    else
     {
-        strcat(new_title, "//");
-        seperator += 2;
+        strcat(title, ";");
     }
 
-    new_title[seperator] = ';';
+    strcat(title, name);
+    strcat(title, "//");
 
-    strcat(new_title, name);
-    strcat(new_title, "//");
+    ret = netmd_set_disc_title(devh, title, title_length);
 
-    printf("%s\n", new_title);
-
-    ret = netmd_set_disc_title(devh, new_title, disc_size);
+    free(title);
+    
     return ret;
 }
 
