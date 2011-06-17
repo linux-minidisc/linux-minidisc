@@ -290,6 +290,9 @@ int netmd_pause(netmd_dev_handle* dev);
 int netmd_rewind(netmd_dev_handle* dev);
 int netmd_fast_forward(netmd_dev_handle* dev);
 int netmd_set_playmode(netmd_dev_handle* dev, int playmode);
+int netmd_track_next(netmd_dev_handle* dev);
+int netmd_track_previous(netmd_dev_handle* dev);
+int netmd_track_restart(netmd_dev_handle* dev);
 
 int netmd_delete_track(netmd_dev_handle* dev, int track);
 

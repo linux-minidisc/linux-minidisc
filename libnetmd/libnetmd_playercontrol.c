@@ -5,6 +5,10 @@
 #define NETMD_REWIND	0x49
 #define NETMD_FFORWARD  0x39
 
+#define NETMD_TRACK_PREVIOUS    0x0002
+#define NETMD_TRACK_NEXT        0x8001
+#define NETMD_TRACK_RESTART     0x0001
+
 static int netmd_playback_control(netmd_dev_handle* dev, unsigned char code)
 {
     char request[] = {0x00, 0x18, 0xc3, 0xff, 0x00, 0x00,
@@ -97,4 +101,33 @@ int netmd_set_track( netmd_dev_handle* dev, int track)
     }
 
     return 1;
+}
+
+int netmd_track_change(netmd_dev_handle* dev, int direction)
+{
+    char request[] = {0x00, 0x18, 0x50, 0xff, 0x10, 0x00,
+                      0x00, 0x00, 0x00, 0x00, 0x00};
+    char buf[255];
+    int size;
+
+    request[9] = (direction >> 8) & 0xFF;
+    request[10] = (direction >> 0) & 0xFF;
+
+    size = netmd_exch_message(dev, request, sizeof(request), buf);
+    return size;
+}
+
+int netmd_track_next(netmd_dev_handle* dev)
+{
+    return netmd_track_change(dev, NETMD_TRACK_NEXT);
+}
+
+int netmd_track_previous(netmd_dev_handle* dev)
+{
+    return netmd_track_change(dev, NETMD_TRACK_PREVIOUS);
+}
+
+int netmd_track_restart(netmd_dev_handle* dev)
+{
+    return netmd_track_change(dev, NETMD_TRACK_RESTART);
 }
