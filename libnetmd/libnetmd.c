@@ -520,50 +520,20 @@ void print_groups(minidisc *md)
     printf("\n");
 }
 
-int netmd_create_group(netmd_dev_handle* devh, char* name)
+int netmd_create_group(netmd_dev_handle* dev, minidisc* md, char* name)
 {
-    char* title = malloc(sizeof(char) * 60);
-    size_t title_length;
-    size_t seperator_length;
+    int new_index;
 
-    char* p = 0;
-    int ret;
+    new_index = md->group_count;
+    md->group_count++;
+    md->groups = realloc(md->groups, sizeof(struct netmd_group) * (md->group_count + 1));
 
-    title_length = request_disc_title(devh, title, 60);
-    if(title_length > 60)
-    {
-        title = realloc(title, title_length);
-        title_length = request_disc_title(devh, title, title_length);
-    }
+    md->groups[new_index].name = strdup(name);
+    md->groups[new_index].start = 0;
+    md->groups[new_index].finish = 0;
 
-    seperator_length = 1;
-    if (title_length > 2)
-    {
-        p = title + (title_length - 2);
-        if (strncmp(p, "//", 2) != 0) {
-            seperator_length = 3;
-        }
-    }
-
-    title_length = title_length + seperator_length + strlen(name) + 2;
-    title = realloc(title, title_length);
-    if (seperator_length == 3)
-    {
-        strcat(title, "//;");
-    }
-    else
-    {
-        strcat(title, ";");
-    }
-
-    strcat(title, name);
-    strcat(title, "//");
-
-    ret = netmd_set_disc_title(devh, title, title_length);
-
-    free(title);
-    
-    return ret;
+    netmd_write_disc_header(dev, md);
+    return 0;
 }
 
 int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length)

@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("newgroup", argv[1]) == 0)
         {
-            netmd_create_group(devh, argv[2]);
+            netmd_create_group(devh, md, argv[2]);
         }
         else if(strcmp("settitle", argv[1]) == 0)
         {

@@ -258,7 +258,7 @@ void netmd_parse_group(minidisc* md, char* group, int* group_count);
 
 void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_count, char* tracks);
 
-int netmd_create_group(netmd_dev_handle* devh, char* name);
+int netmd_create_group(netmd_dev_handle* dev, minidisc* md, char* name);
 
 int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length);
 
