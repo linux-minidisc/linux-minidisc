@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 
 #include <usb.h>
 
@@ -124,6 +125,13 @@ struct netmd_track
     int second;
     int tenth;
 };
+
+typedef struct {
+    uint8_t hour;
+    uint8_t minute;
+    uint8_t second;
+    uint8_t frame;
+} netmd_time;
 
 /** stores hex value from protocol and text value of name */
 typedef struct netmd_pair
@@ -284,6 +292,7 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, int track, int group);
 int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, int group);
 
 int netmd_set_track(netmd_dev_handle* dev, int track);
+int netmd_set_time(netmd_dev_handle* dev, int track, const netmd_time* time);
 int netmd_play(netmd_dev_handle* dev);
 int netmd_stop(netmd_dev_handle* dev);
 int netmd_pause(netmd_dev_handle* dev);
