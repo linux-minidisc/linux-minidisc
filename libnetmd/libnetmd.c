@@ -401,6 +401,12 @@ int netmd_initialize_disc_info(netmd_dev_handle* devh, minidisc* md)
         netmd_parse_disc_title(md, disc, disc_size);
     }
 
+    if (NULL == md->groups[0].name)
+    {
+        // set untitled disc title
+        set_group_data(md, 0, "<Untitled>", 0, 0);
+    }
+
     return disc_size;
 }
 
