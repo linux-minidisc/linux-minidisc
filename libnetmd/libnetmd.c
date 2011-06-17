@@ -806,35 +806,24 @@ int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, int group)
     return 0;
 }
 
-int netmd_write_disc_header(netmd_dev_handle* devh, minidisc *md)
+int netmd_calculate_disc_header_length(minidisc* md)
 {
     int i;
-    int dash = 0;
-    int ret = 1;
-    int header_size = 0;
-    int tmp_size = 0;
-    char* header = 0;
-    char* tmp = 0;
-    char* request = 0;
-    char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
-                        0x01, 0x00, 0x00, 0x30, 0x00, 0x0a,
-                        0x00, 0x50, 0x00, 0x00};
-    char reply[255];
+    size_t header_size;
+
+    if (md->groups[0].start == 0)
+    {
+        header_size = 1;
+    }
+    else
+    {
+        header_size = 0;
+    }
 
     /* calculate header length */
     for(i = 0; i < md->group_count; i++)
     {
-        if(md->groups[i].start < 100)
-        {
-            if(md->groups[i].start < 10)
-                header_size += 1;
-            else
-                header_size += 2;
-        }
-        else
-            header_size += 3;
-
-        if(md->groups[i].finish != 0)
+        if(md->groups[i].start > 0)
         {
             if(md->groups[i].start < 100)
             {
@@ -846,79 +835,113 @@ int netmd_write_disc_header(netmd_dev_handle* devh, minidisc *md)
             else
                 header_size += 3;
 
-            header_size++; /* room for the - */
+            if(md->groups[i].finish != 0)
+            {
+                if(md->groups[i].start < 100)
+                {
+                    if(md->groups[i].start < 10)
+                        header_size += 1;
+                    else
+                        header_size += 2;
+                }
+                else
+                    header_size += 3;
+
+                header_size++; /* room for the - */
+            }
         }
 
         header_size += 3; /* room for the ; and // tokens */
         header_size += strlen(md->groups[i].name);
     }
+
     header_size++;
+    return header_size;
+}
 
-    /* 	printf("New header length - %i (%02x)\n", header_size, header_size); */
+size_t netmd_calculate_remaining(char** position, size_t remaining, size_t written)
+{
+    if (remaining > written)
+    {
+        (*position) += written;
+        remaining -= written;
+    }
+    else
+    {
+        (*position) += remaining;
+        remaining = 0;
+    }
 
+    return remaining;
+}
+
+char* netmd_generate_disc_header(minidisc* md, char* header, size_t header_length)
+{
+    int i, remaining, written;
+    char* position;
+
+    position = header;
+    remaining = header_length - 1;
+
+    if (md->groups[0].start == 0)
+    {
+        strncat(position, "0", remaining);
+        written = strlen(position);
+        remaining = netmd_calculate_remaining(&position, remaining, written);
+    }
+
+    for(i = 0; i < md->group_count; i++)
+    {
+        if(md->groups[i].start > 0)
+        {
+            written = snprintf(position, remaining, "%d", md->groups[i].start);
+            remaining = netmd_calculate_remaining(&position, remaining, written);
+
+            if(md->groups[i].finish != 0)
+            {
+                written = snprintf(position, remaining, "-%d", md->groups[i].finish);
+                remaining = netmd_calculate_remaining(&position, remaining, written);
+            }
+        }
+
+        written = snprintf(position, remaining, ";%s//", md->groups[i].name);
+        remaining = netmd_calculate_remaining(&position, remaining, written);
+    }
+
+    position[0] = '\0';
+    return header;
+}
+
+int netmd_write_disc_header(netmd_dev_handle* devh, minidisc* md)
+{
+    size_t header_size;
+    size_t request_size;
+    char* header = 0;
+    char* request = 0;
+    char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
+                        0x01, 0x00, 0x00, 0x30, 0x00, 0x0a,
+                        0x00, 0x50, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00};
+    char reply[255];
+    int ret;
+
+    header_size = netmd_calculate_disc_header_length(md);
     header = malloc(sizeof(char) * header_size);
     memset(header, 0, header_size);
 
-    /* now generate the actual header from each group's info */
-    for(i = 0; i < md->group_count; i++)
-    {
-        dash = 0; /* no dash */
-        tmp_size = 0;
+    netmd_generate_disc_header(md, header, header_size);
 
-        if(md->groups[i].start < 100)
-        {
-            if(md->groups[i].start < 10)
-                tmp_size += 1;
-            else
-                tmp_size += 2;
-        }
-        else
-            header_size += 3;
+    request_size = header_size + sizeof(write_req);
+    request = malloc(request_size);
+    memset(request, 0, request_size);
 
-        if(md->groups[i].finish != 0)
-        {
-            if(md->groups[i].start < 100)
-            {
-                if(md->groups[i].start < 10)
-                    tmp_size += 1;
-                else
-                    tmp_size += 2;
-            }
-            else
-                tmp_size += 3;
-
-            dash = 1;
-            tmp_size++; /* room for the - */
-        }
-
-        tmp_size += strlen(md->groups[i].name) + 3; /* name length + ; + // + NULL */
-        tmp = malloc((tmp_size + 2));
-        memset(tmp, 0, tmp_size);
-
-        /* if group starts at 0 and it isn't the disc name group */
-        if(md->groups[i].start == 0 && i != 0)
-            snprintf(tmp, tmp_size, ";%s//", md->groups[i].name);
-        else if(dash)
-            snprintf(tmp, tmp_size, "%i-%i;%s//", md->groups[i].start, md->groups[i].finish, md->groups[i].name);
-        else
-            snprintf(tmp, tmp_size, "%i;%s//", md->groups[i].start, md->groups[i].name);
-
-        strcat(header, tmp);
-        strcat(header, "/");
-
-        free(tmp);
-    }
-
-    request = malloc(header_size + 21);
-    memset(request, 0, header_size + 21);
-
-    memcpy(request, write_req, 16);
+    memcpy(request, write_req, sizeof(write_req));
     request[16] = (header_size - 1); /* new size - null */
     request[20] = md->header_length; /* old size */
 
-    memcpy(request + 21, header, header_size);
+    memcpy(request + sizeof(write_req), header, header_size);
 
-    ret = netmd_exch_message(devh, request, (header_size + 20), reply);
+    ret = netmd_exch_message(devh, request, request_size, reply);
     free(request);
 
     return ret;
