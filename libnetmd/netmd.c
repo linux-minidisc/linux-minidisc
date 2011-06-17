@@ -154,6 +154,7 @@ int main(int argc, char* argv[])
     int j = 0;
     char name[16];
     int	cmdid, track, playmode, num_dev, c;
+    netmd_time time;
 
     num_dev = netmd_init(&device_list);
     printf("Found %d NetMD device(s).\n", num_dev);
@@ -296,6 +297,33 @@ int main(int argc, char* argv[])
         else if(strcmp("restart", argv[1]) == 0)
         {
             netmd_track_restart(devh);
+        }
+        else if(strcmp("settime", argv[1]) == 0)
+        {
+            track = atoi(argv[2]);
+            if (argc > 6)
+            {
+                time.hour = atoi(argv[3]);
+                time.minute = atoi(argv[4]);
+                time.second = atoi(argv[5]);
+                time.frame = atoi(argv[6]);
+            }
+            else
+            {
+                time.hour = 0;
+                time.minute = atoi(argv[3]);
+                time.second = atoi(argv[4]);
+                if (argc > 5)
+                {
+                    time.frame = atoi(argv[5]);
+                }
+                else
+                {
+                    time.frame = 0;
+                }
+            }
+
+            netmd_set_time(devh, track, &time);
         }
         else if(strcmp("test", argv[1]) == 0)
         {
