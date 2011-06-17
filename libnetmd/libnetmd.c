@@ -414,12 +414,12 @@ void netmd_parse_disc_title(minidisc* md, char* title, size_t title_length)
 {
     char *group;
     char *delim;
-    int group_count = 0;
+    int group_count = 1;
 
     group = title;
     delim = strstr(group, "//");
 
-    while (delim < title+title_length)
+    while (delim < (title + title_length))
     {
         if (delim != NULL)
         {
@@ -435,13 +435,14 @@ void netmd_parse_disc_title(minidisc* md, char* title, size_t title_length)
             break;
         }
 
-        if (delim+2 > title+title_length)
+        group = delim + 2;
+
+        if (group > (title + title_length))
         {
-            // finish if delimiter was at end of title
+            // end of title
             break;
         }
 
-        group = delim + 2;
         delim = strstr(group, "//");
     }
 }
@@ -455,8 +456,8 @@ void netmd_parse_group(minidisc* md, char* group, int* group_count)
     {
         if (strlen(group) > 0)
         {
-            set_group_data(md, *group_count, group, 0, 0);
-            (*group_count)++;
+            // disc title
+            set_group_data(md, 0, group, 0, 0);
         }
     }
     else
@@ -484,22 +485,30 @@ void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_cou
     char *track_last;
     int start, finish;
 
-    track_last = strchr(tracks, '-');
-    if (NULL == track_last)
+    start = atoi(tracks);
+    if (start == 0)
     {
-        finish = start = atoi(tracks);
+        // disc title
+        set_group_data(md, 0, group_name, 0, 0);
     }
-    else
-    {
-        track_last[0] = '\0';
-        track_last++;
+    else {
+        track_last = strchr(tracks, '-');
 
-        start = atoi(tracks);
-        finish = atoi(track_last);
+        if (NULL == track_last)
+        {
+            finish = start;
+        }
+        else
+        {
+            track_last[0] = '\0';
+            track_last++;
+
+            finish = atoi(track_last);
+        }
+
+        set_group_data(md, *group_count, group_name, start, finish);
+        (*group_count)++;
     }
-
-    set_group_data(md, *group_count, group_name, start, finish);
-    (*group_count)++;
 }
 
 void print_groups(minidisc *md)
