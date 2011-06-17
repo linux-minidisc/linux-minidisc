@@ -235,6 +235,10 @@ int main(int argc, char* argv[])
         {
             netmd_create_group(devh, argv[2]);
         }
+        else if(strcmp("settitle", argv[1]) == 0)
+        {
+            netmd_set_disc_title(devh, argv[2], strlen(argv[2]));
+        }
         else if(strcmp("group", argv[1]) == 0)
         {
             i = strtol(argv[2], NULL, 10);
@@ -567,6 +571,7 @@ void print_syntax()
     puts("raw - send raw command (hex)\n");
     puts("setplaymode (single, repeat, shuffle) - set play mode\n");
     puts("newgroup <string> - create a new group named <string>\n");
+    puts("settitle <string> - manually set the complete disc title (with group information)\n");
     puts("secure #1 #2 - execute secure command #1 on track #2 (where applicable)\n");
     puts("  --- general ---\n");
     puts("  0x80 = start secure session\n");
