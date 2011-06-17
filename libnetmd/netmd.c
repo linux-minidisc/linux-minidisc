@@ -285,6 +285,18 @@ int main(int argc, char* argv[])
         {
             netmd_rewind(devh);
         }
+        else if(strcmp("next", argv[1]) == 0)
+        {
+            netmd_track_next(devh);
+        }
+        else if(strcmp("previous", argv[1]) == 0)
+        {
+            netmd_track_previous(devh);
+        }
+        else if(strcmp("restart", argv[1]) == 0)
+        {
+            netmd_track_restart(devh);
+        }
         else if(strcmp("test", argv[1]) == 0)
         {
             test(devh);
@@ -566,6 +578,9 @@ void print_syntax()
     puts("play #1 - play track #");
     puts("fforward - start fast forwarding");
     puts("rewind - start rewinding");
+    puts("next - starts next track");
+    puts("previous - starts previous track");
+    puts("restart - restarts current track");
     puts("pause - pause the unit");
     puts("stop - stop the unit");
     puts("delete #1 - delete track");
