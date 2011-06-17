@@ -617,6 +617,8 @@ void print_syntax()
     puts("setplaymode (single, repeat, shuffle) - set play mode");
     puts("newgroup <string> - create a new group named <string>");
     puts("settitle <string> - manually set the complete disc title (with group information)");
+    puts("settime <track> [<hour>] <minute> <second> [<frame>] - seeks to the given timestamp");
+    puts("      (if three values are given, they are minute, second and frame)");
     puts("secure #1 #2 - execute secure command #1 on track #2 (where applicable)");
     puts("  --- general ---");
     puts("  0x80 = start secure session");
