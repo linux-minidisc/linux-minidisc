@@ -297,51 +297,50 @@ int netmd_move_track(netmd_dev_handle* dev, int start, int finish)
     return 1;
 }
 
-static int get_group_count(netmd_dev_handle* devh, minidisc* md)
+static int get_group_count(netmd_dev_handle* devh)
 {
+    char title[256];
+    size_t title_length;
+    char *group;
+    char *delim;
+    int group_count = 1;
 
-    int disc_size = 0;
-    int track;
-    char disc[256];
-    char *tok = 0;
-    char *next_tok;
-    char *semicolon;		/* Pointers to markers in group data */
+    title_length = request_disc_title(devh, title, 256);
 
-    int g = 0;
+    group = title;
+    delim = strstr(group, "//");
 
-    disc_size = request_disc_title(devh, disc, 256);
-    md->header_length = disc_size;
-
-    if(disc_size != 0)
+    while (delim < (title + title_length))
     {
-        track = strtol(disc, NULL, 10); // returns 0 on 0 or non conversion
-
-        tok = disc;
-        next_tok = strstr(disc, "//");
-        while(0 != next_tok)
+        if (delim != NULL)
         {
-            *next_tok = 0;
-            next_tok += 2;
-
-            semicolon = strchr( tok, ';' );
-            if((!track && g == 0) && tok[0] != ';') {
-            }
-            else
-            {
-                if(g == 0) {
-                    g++;
-                    continue;
-                }
-
-                /* Terminate string at the semicolon for easier parsing */
-            }
-            g++;
-            tok = next_tok;
-            next_tok = strstr(tok, "//");
+            // if delimiter was found
+            delim[0] = '\0';
         }
+
+        if (strlen(group) > 0) {
+            if (atoi(group) > 0 || group[0] == ';') {
+                group_count++;
+            }
+        }
+
+        if (NULL == delim)
+        {
+            // finish if delimiter was not found the last time
+            break;
+        }
+
+        if (delim+2 > title+title_length)
+        {
+            // finish if delimiter was at end of title
+            break;
+        }
+
+        group = delim + 2;
+        delim = strstr(group, "//");
     }
 
-    return (g);
+    return group_count;
 }
 
 int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, int group, char* title)
@@ -383,7 +382,7 @@ int netmd_initialize_disc_info(netmd_dev_handle* devh, minidisc* md)
     int disc_size = 0;
     char disc[256];
 
-    md->group_count = get_group_count(devh, md);
+    md->group_count = get_group_count(devh);
 
     /* You always have at least one group, the disc title */
     if(md->group_count == 0)
