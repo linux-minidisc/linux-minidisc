@@ -103,7 +103,7 @@ int netmd_set_track( netmd_dev_handle* dev, int track)
     return 1;
 }
 
-int netmd_track_change(netmd_dev_handle* dev, int direction)
+int netmd_change_track(netmd_dev_handle* dev, int direction)
 {
     char request[] = {0x00, 0x18, 0x50, 0xff, 0x10, 0x00,
                       0x00, 0x00, 0x00, 0x00, 0x00};
@@ -119,17 +119,17 @@ int netmd_track_change(netmd_dev_handle* dev, int direction)
 
 int netmd_track_next(netmd_dev_handle* dev)
 {
-    return netmd_track_change(dev, NETMD_TRACK_NEXT);
+    return netmd_change_track(dev, NETMD_TRACK_NEXT);
 }
 
 int netmd_track_previous(netmd_dev_handle* dev)
 {
-    return netmd_track_change(dev, NETMD_TRACK_PREVIOUS);
+    return netmd_change_track(dev, NETMD_TRACK_PREVIOUS);
 }
 
 int netmd_track_restart(netmd_dev_handle* dev)
 {
-    return netmd_track_change(dev, NETMD_TRACK_RESTART);
+    return netmd_change_track(dev, NETMD_TRACK_RESTART);
 }
 
 #define PROPPER_TO_BCD(x) ((((x / 10) & 0xf) << 4) + ((x % 10) & 0xf))
