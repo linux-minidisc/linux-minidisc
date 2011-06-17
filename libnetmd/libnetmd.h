@@ -252,6 +252,8 @@ void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_cou
 
 int netmd_create_group(netmd_dev_handle* devh, char* name);
 
+int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length);
+
 /*! Creates disc header out of groups and writes it to disc
   \param devh pointer to device returned by netmd_open
   \param md pointer to minidisc structure

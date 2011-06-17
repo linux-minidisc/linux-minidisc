@@ -513,17 +513,14 @@ int netmd_create_group(netmd_dev_handle* devh, char* name)
     char* disc = malloc(sizeof(char) * 60);
     char* new_title = 0;
     char* p = 0;
-    char* request = 0;
-    char reply[255];
     int ret;
-    char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18, 0x01, 0x00, 0x00, 0x30, 0x00, 0x0a, 0x00, 0x50, 0x00, 0x00};
 
     disc_size = request_disc_title(devh, disc, 60);
 
     if(disc_size > 60)
     {
         disc = realloc(disc, disc_size);
-        disc_size = request_disc_title(devh, disc, 60);
+        disc_size = request_disc_title(devh, disc, disc_size);
     }
 
     seperator = strlen(disc);
@@ -562,18 +559,31 @@ int netmd_create_group(netmd_dev_handle* devh, char* name)
 
     printf("%s\n", new_title);
 
-    request = malloc(21 + disc_size);
-    memset(request, 0, 21 + disc_size);
+    ret = netmd_set_disc_title(devh, new_title, disc_size);
+    return ret;
+}
+
+int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length)
+{
+    char *request, *p;
+    char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
+                        0x01, 0x00, 0x00, 0x30, 0x00, 0x0a,
+                        0x00, 0x50, 0x00, 0x00};
+    char reply[256];
+    int result;
+
+    request = malloc(21 + title_length);
+    memset(request, 0, 21 + title_length);
 
     memcpy(request, write_req, 16);
-    request[16] = disc_size;
-    request[20] = disc_size;
+    request[16] = title_length;
+    request[20] = title_length;
 
     p = request + 21;
-    memcpy(p, new_title, disc_size);
+    memcpy(p, title, title_length);
 
-    ret = netmd_exch_message(devh, request, (int)(0x15 + disc_size), reply);
-    return ret;
+    result = netmd_exch_message(dev, request, 0x15 + title_length, reply);
+    return result;
 }
 
 /* move track, then manipulate title string */
