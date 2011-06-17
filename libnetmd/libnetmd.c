@@ -381,22 +381,13 @@ static void set_group_data(minidisc* md, int group, char* name, int start, int f
 int netmd_initialize_disc_info(netmd_dev_handle* devh, minidisc* md)
 {
     int disc_size = 0;
-    int track;
     char disc[256];
-    char *tok = 0;
-    char *next_tok;
-    char *hyphen, *semicolon;		/* Pointers to markers in group data */
-    char *name;
-
-    int start, finish;
-    int g = 0;
 
     md->group_count = get_group_count(devh, md);
 
     /* You always have at least one group, the disc title */
     if(md->group_count == 0)
         md->group_count++;
-
 
     md->groups = malloc(sizeof(struct netmd_group) * md->group_count);
     memset(md->groups, 0, sizeof(struct netmd_group) * md->group_count);
@@ -407,88 +398,102 @@ int netmd_initialize_disc_info(netmd_dev_handle* devh, minidisc* md)
 
     if(disc_size != 0)
     {
-        track = strtol(disc, NULL, 10); // returns 0 on 0 or non conversion
+        netmd_parse_disc_title(md, disc, disc_size);
+    }
 
-        tok = disc;
-        next_tok = strstr(disc, "//");
-        while(0 != next_tok)
+    return disc_size;
+}
+
+void netmd_parse_disc_title(minidisc* md, char* title, size_t title_length)
+{
+    char *group;
+    char *delim;
+    int group_count = 0;
+
+    group = title;
+    delim = strstr(group, "//");
+
+    while (delim < title+title_length)
+    {
+        if (delim != NULL)
         {
-            *next_tok = 0;
-            next_tok += 2;
+            // if delimiter was found
+            delim[0] = '\0';
+        }
 
-            semicolon = strchr( tok, ';' );
-            if((!track && g == 0) && tok[0] != ';') {
+        netmd_parse_group(md, group, &group_count);
 
-                if(semicolon == NULL) {
-                    /* <title>// */
-                    name = tok;
-                    start = 0;
-                    finish = 0;
+        if (NULL == delim)
+        {
+            // finish if delimiter was not found the last time
+            break;
+        }
 
-                    set_group_data(md, 0, name, start, finish);
-                }
-                else
-                {
-                    /* TODO: following code looks buggy: unreachable */
-                    if(semicolon == 0)
-                    {
-                        /* ;group// */
-                        name = strdup("<Untitled>");
-                        start = 0;
-                        finish = 0;
-                        set_group_data(md, 0, name, start, finish);
-                        g++;
-                        name = semicolon + 1;
-                        set_group_data(md, g, name, start, finish);
-                    }
-                    else
-                    {
-                        //0[-n];<title>//
-                        name = semicolon + 1;
-                        set_group_data(md, 0, name, 0, 0);
-                    }
-                }
+        if (delim+2 > title+title_length)
+        {
+            // finish if delimiter was at end of title
+            break;
+        }
+
+        group = delim + 2;
+        delim = strstr(group, "//");
+    }
+}
+
+void netmd_parse_group(minidisc* md, char* group, int* group_count)
+{
+    char *group_name;
+
+    group_name = strchr(group, ';');
+    if (NULL == group_name)
+    {
+        if (strlen(group) > 0)
+        {
+            set_group_data(md, *group_count, group, 0, 0);
+            (*group_count)++;
+        }
+    }
+    else
+    {
+        group_name[0] = '\0';
+        group_name++;
+
+        if (strlen(group_name) > 0)
+        {
+            if (0 == strlen(group))
+            {
+                set_group_data(md, *group_count, group_name, 0, 0);
+                (*group_count)++;
             }
             else
             {
-                if(g == 0) {
-                    name = strdup("<Untitled>");
-                    start = 0;
-                    finish = 0;
-                    set_group_data(md, 0, name, start, finish);
-
-                    g++;
-                    continue;
-                }
-
-                /* Terminate string at the semicolon for easier parsing */
-                name = semicolon + 1;
-                hyphen = strchr( tok, '-' );
-                if( hyphen )
-                {
-                    *hyphen = '\0';
-                    start = atoi( tok );
-                    finish = atoi( hyphen + 1 );
-                }
-                else
-                {
-                    start = atoi( tok );
-                    finish = start;
-                }
-
-                if( finish < start )
-                {
-                    printf( "Title parse error\n" );
-                    return -1;
-                }
-                set_group_data(md, g, name, start, finish);
+                netmd_parse_trackinformation(md, group_name, group_count, group);
             }
-            g++;
-            tok = next_tok;
-            next_tok = strstr(tok, "//");
         }
     }
-    return disc_size;
+}
+
+void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_count, char* tracks)
+{
+    char *track_last;
+    int start, finish;
+
+    track_last = strchr(tracks, '-');
+    if (NULL == track_last)
+    {
+        finish = start = atoi(tracks);
+    }
+    else
+    {
+        track_last[0] = '\0';
+        track_last++;
+
+        start = atoi(tracks);
+        finish = atoi(track_last);
+    }
+
+    set_group_data(md, *group_count, group_name, start, finish);
+    (*group_count)++;
 }
 
 void print_groups(minidisc *md)

@@ -244,6 +244,12 @@ int netmd_move_track(netmd_dev_handle* dev, int start, int finish);
 */
 int netmd_initialize_disc_info(netmd_dev_handle* dev, minidisc* md);
 
+void netmd_parse_disc_title(minidisc* md, char* title, size_t title_length);
+
+void netmd_parse_group(minidisc* md, char* group, int* group_count);
+
+void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_count, char* tracks);
+
 int netmd_create_group(netmd_dev_handle* devh, char* name);
 
 /*! Creates disc header out of groups and writes it to disc
