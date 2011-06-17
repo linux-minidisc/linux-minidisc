@@ -33,11 +33,13 @@ all: app utils
 clean:
 	rm -fr *~ *.o *.so* *.a $(APP) $(UTILS) $(LIB) $(LIBRARY) documentation/html documentation/latex
 
-libnetmd.o: libnetmd.c libnetmd.h libnetmd_secure.c
-	$(CC) -c ${INCLUDE} ${CFLAGS} -fPIC $<
+libnetmd.o: libnetmd.c libnetmd.h libnetmd_secure.c libnetmd_playercontrol.c
+	$(CC) -c ${INCLUDE} ${CFLAGS} -fPIC libnetmd.c libnetmd_secure.c libnetmd_playercontrol.c
 
-netmd: netmd.c libnetmd.c libnetmd.h libnetmd_secure.c netmd_dev.c netmd_trace.c
-	$(CC) $(CFLAGS) $(PEDANTIC) -g -o netmd netmd.c libnetmd.c libnetmd_secure.c netmd_dev.c netmd_trace.c $(LDFLAGS)
+netmd: netmd.c libnetmd.h netmd_dev.c netmd_trace.c libnetmd.o
+	$(CC) $(CFLAGS) $(PEDANTIC) -g -o netmd netmd.c netmd_dev.c \
+		netmd_trace.c libnetmd.o libnetmd_secure.o \
+		libnetmd_playercontrol.o $(LDFLAGS)
 
 dist: clean
 	cd .. && $(TAR) --exclude={CVS,cvs} -cvzf $(PKG_NAME)-$(DATE).tar.gz \
