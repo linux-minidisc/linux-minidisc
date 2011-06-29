@@ -32,15 +32,15 @@ static struct netmd_devices const known_devices[] =
     {0x54c, 0x75}, /* Sony MZ-N1 */
     {0x54c, 0x7c}, /* Sony (unknown model) */
     {0x54c, 0x80}, /* Sony LAM-1 */
-    {0x54c, 0x81}, /* Sony MDS-JB980 */
+    {0x54c, 0x81}, /* Sony MDS-JE780/JB980 */
     {0x54c, 0x84}, /* Sony MZ-N505 */
     {0x54c, 0x85}, /* Sony MZ-S1 */
     {0x54c, 0x86}, /* Sony MZ-N707 */
     {0x54c, 0xc6}, /* Sony MZ-N10 */
     {0x54c, 0xc7}, /* Sony MZ-N910 */
-    {0x54c, 0xc8}, /* Sony MZ-N710/N810 */
-    {0x54c, 0xc9}, /* Sony MZ-N510/N610 */
-    {0x54c, 0xca}, /* Sony MZ-NE410/NF520D */
+    {0x54c, 0xc8}, /* Sony MZ-N710/NE810/NF810 */
+    {0x54c, 0xc9}, /* Sony MZ-N510/NF610 */
+    {0x54c, 0xca}, /* Sony MZ-NE410/NF520 */
     {0x54c, 0xeb}, /* Sony MZ-NE810/NE910 */
     {0x54c, 0x101}, /* Sony LAM-10 */
     {0x54c, 0x113}, /* Aiwa AM-NX1 */
@@ -55,14 +55,14 @@ static struct netmd_devices const known_devices[] =
     {0x54c, 0x1e9}, /* Sony MZ-DH10P */
     {0x54c, 0x219}, /* Sony MZ-RH10 */
     {0x54c, 0x21b}, /* Sony MZ-RH910 */
-    {0x54c, 0x21d}, /* Sony (unknown model) */
+    {0x54c, 0x21d}, /* Sony CMT-AH10 */
     {0x54c, 0x22c}, /* Sony CMT-AH10 */
     {0x54c, 0x23c}, /* Sony DS-HMD1 */
     {0x54c, 0x286}, /* Sony MZ-RH1 */
 
-    {0x4dd, 0x7202}, /* Sharp IM-MT899H */
+    {0x4dd, 0x7202}, /* Sharp IM-MT880H/MT899H */
     {0x4dd, 0x9013}, /* Sharp IM-DR400/DR410 */
-    {0x4dd, 0x9014}, /* Sharp IM-DR80/DR420/DR580 */
+    {0x4dd, 0x9014}, /* Sharp IM-DR80/DR420/DR580 and Kenwood DMC-S9NET */
 
     {0, 0} /* terminating pair */
 };
