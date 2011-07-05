@@ -325,10 +325,6 @@ int main(int argc, char* argv[])
 
             netmd_set_time(devh, track, &time);
         }
-        else if(strcmp("test", argv[1]) == 0)
-        {
-            test(devh);
-        }
         else if(strcmp("m3uimport", argv[1]) == 0)
         {
             import_m3u_playlist(devh, argv[2]);
