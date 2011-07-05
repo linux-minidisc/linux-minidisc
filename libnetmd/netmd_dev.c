@@ -28,6 +28,7 @@
 /*! list of known vendor/prod id's for NetMD devices */
 static struct netmd_devices const known_devices[] =
 {
+    {0x54c, 0x34}, /* Sony PCLK-XX */
     {0x54c, 0x36}, /* Sony (unknown model) */
     {0x54c, 0x75}, /* Sony MZ-N1 */
     {0x54c, 0x7c}, /* Sony (unknown model) */
@@ -36,13 +37,16 @@ static struct netmd_devices const known_devices[] =
     {0x54c, 0x84}, /* Sony MZ-N505 */
     {0x54c, 0x85}, /* Sony MZ-S1 */
     {0x54c, 0x86}, /* Sony MZ-N707 */
+    {0x54c, 0x8e}, /* Sony CMT-C7NT */
     {0x54c, 0x97}, /* Sony PCGA-MDN1 */
+    {0x54c, 0xad}, /* Sony CMT-L7HD */
     {0x54c, 0xc6}, /* Sony MZ-N10 */
     {0x54c, 0xc7}, /* Sony MZ-N910 */
     {0x54c, 0xc8}, /* Sony MZ-N710/NE810/NF810 */
     {0x54c, 0xc9}, /* Sony MZ-N510/NF610 */
-    {0x54c, 0xca}, /* Sony MZ-NE410/NF520 */
+    {0x54c, 0xca}, /* Sony MZ-NE410/DN430/NF520 */
     {0x54c, 0xeb}, /* Sony MZ-NE810/NE910 */
+    {0x54c, 0xe7}, /* Sony CMT-M333NT/M373NT */
     {0x54c, 0x101}, /* Sony LAM-10 */
     {0x54c, 0x113}, /* Aiwa AM-NX1 */
     {0x54c, 0x14c}, /* Aiwa AM-NX9 */
