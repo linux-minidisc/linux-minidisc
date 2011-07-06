@@ -380,15 +380,16 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void print_current_track_info(netmd_dev_handle* devh) {
-    float f = 0;
+void print_current_track_info(netmd_dev_handle* devh)
+{
     int i = 0;
     int size = 0;
     char buffer[256];
+    netmd_time time;
 
 
-    f = netmd_get_playback_position(devh);
-    i = netmd_get_current_track(devh);
+    netmd_get_position(devh, &time);
+    i = netmd_get_track(devh);
 
     size = netmd_request_title(devh, i, buffer, 256);
 
@@ -400,7 +401,7 @@ void print_current_track_info(netmd_dev_handle* devh) {
         printf("Current track: %s \n", buffer);
     }
 
-    printf("Current playback position: %f \n", f);
+    printf("Current playback position: %d:%d:%d.%d \n", time.hour, time.minute, time.second, time.frame);
 
 }
 

@@ -117,6 +117,22 @@ int netmd_change_track(netmd_dev_handle* dev, int direction)
     return size;
 }
 
+int netmd_get_track(netmd_dev_handle* dev)
+{
+    char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04,
+                      0x30, 0x88, 0x02, 0x00, 0x30, 0x88,
+                      0x05, 0x00, 0x30, 0x00, 0x03, 0x00,
+                      0x30, 0x00, 0x02, 0x00, 0xff, 0x00,
+                      0x00, 0x00, 0x00, 0x00};
+    char buf[255];
+    int track = 0;
+
+    netmd_exch_message(dev, request, 28, buf);
+    track = buf[36];
+
+    return track;
+}
+
 int netmd_track_next(netmd_dev_handle* dev)
 {
     return netmd_change_track(dev, NETMD_TRACK_NEXT);
@@ -159,3 +175,24 @@ int netmd_set_time(netmd_dev_handle* dev, int track, const netmd_time* time)
 
     return 1;
 }
+
+const netmd_time* netmd_get_position(netmd_dev_handle* dev, netmd_time* time)
+{
+    char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04,
+                      0x30, 0x88, 0x02, 0x00, 0x30, 0x88,
+                      0x05, 0x00, 0x30, 0x00, 0x03, 0x00,
+                      0x30, 0x00, 0x02, 0x00, 0xff, 0x00,
+                      0x00, 0x00, 0x00, 0x00};
+    char buf[255];
+    int ret = 0;
+
+    ret = netmd_exch_message(dev, request, sizeof(request), buf);
+
+    time->hour = bcd_to_proper(buf[37]);
+    time->minute = bcd_to_proper(buf[38]);
+    time->second = bcd_to_proper(buf[39]);
+    time->frame = bcd_to_proper(buf[40]);
+
+    return time;
+}
+

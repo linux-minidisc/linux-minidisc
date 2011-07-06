@@ -336,12 +336,12 @@ void test(netmd_dev_handle* dev);
 /*! gets the position within the currently playing track in seconds.hundreds
   \param dev pointer to device returned by netmd_open
 */
-float netmd_get_playback_position(netmd_dev_handle* dev);
+const netmd_time* netmd_get_position(netmd_dev_handle* dev, netmd_time* time);
 
 /*! gets the currently playing track
   \param dev pointer to device returned by netmd_open
 */
-int netmd_get_current_track(netmd_dev_handle* dev);
+int netmd_get_track(netmd_dev_handle* dev);
 
 /*! sets group data
   \param md

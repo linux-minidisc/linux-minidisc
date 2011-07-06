@@ -1149,57 +1149,6 @@ int netmd_delete_track(netmd_dev_handle* dev, int track)
     return ret;
 }
 
-int netmd_get_current_track(netmd_dev_handle* dev)
-{
-    int ret = 0;
-    char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04,
-                      0x30, 0x88, 0x02, 0x00, 0x30, 0x88,
-                      0x05, 0x00, 0x30, 0x00, 0x03, 0x00,
-                      0x30, 0x00, 0x02, 0x00, 0xff, 0x00,
-                      0x00, 0x00, 0x00, 0x00};
-    char buf[255];
-    int track = 0;
-
-    ret = netmd_exch_message(dev, request, 28, buf);
-
-    track = buf[36];
-
-    return track;
-
-}
-
-float netmd_get_playback_position(netmd_dev_handle* dev)
-{
-    int ret = 0;
-    char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04,
-                      0x30, 0x88, 0x02, 0x00, 0x30, 0x88,
-                      0x05, 0x00, 0x30, 0x00, 0x03, 0x00,
-                      0x30, 0x00, 0x02, 0x00, 0xff, 0x00,
-                      0x00, 0x00, 0x00, 0x00};
-    char buf[255];
-
-    float position = 0.0f;
-
-    int minutes = 0;
-    int seconds = 0;
-    int hundreds = 0;
-
-    ret = netmd_exch_message(dev, request, 28, buf);
-
-    minutes = BCD_TO_PROPER(buf[38]);
-    seconds = BCD_TO_PROPER(buf[39]);
-    hundreds = BCD_TO_PROPER(buf[40]);
-
-    position = (minutes * 60) + seconds + ((float)hundreds / 100);
-
-    if(position > 0)
-    {
-        return position;
-    } else {
-        return 0;
-    }
-}
-
 void netmd_clean_disc_info(minidisc *md)
 {
     int i = 0;
