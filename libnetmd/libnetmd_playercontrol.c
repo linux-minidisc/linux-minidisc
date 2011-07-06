@@ -74,8 +74,8 @@ int netmd_set_playmode(netmd_dev_handle* dev, int playmode)
     char buf[255];
     int size;
 
-    request[10] = (playmode >> 0) & 0xFF;
-    request[11] = (playmode >> 8) & 0xFF;
+    request[10] = (playmode >> 8) & 0xFF;
+    request[11] = (playmode >> 0) & 0xFF;
 
     size = netmd_exch_message(dev, request, sizeof(request), buf);
     return size;
