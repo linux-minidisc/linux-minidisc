@@ -1,5 +1,4 @@
 CC=gcc
-#CC=gcc-3.1
 TAR=tar
 INSTALL=install -c
 
