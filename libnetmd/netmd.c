@@ -254,14 +254,6 @@ int main(int argc, char* argv[])
             i = strtol(argv[2], NULL, 10);
             netmd_set_group_title(devh, md, i, argv[3]);
         }
-        else if(strcmp("writeheader", argv[1]) == 0)
-        {
-            /* edit group cause my logic fucked it up. */
-            i = strtol(argv[2], NULL, 10);
-            md->groups[i].start = strtol(argv[3], NULL, 10);
-            md->groups[i].finish = strtol(argv[4], NULL, 10);
-            netmd_write_disc_header(devh, md);
-        }
         else if(strcmp("play", argv[1]) == 0)
         {
             if( argc > 2 ) {
