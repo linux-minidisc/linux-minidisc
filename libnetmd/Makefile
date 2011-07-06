@@ -37,10 +37,12 @@ libnetmd.o: libnetmd.c libnetmd.h libnetmd_secure.c libnetmd_playercontrol.c uti
 	$(CC) -c ${INCLUDE} ${CFLAGS} ${PEDANTIC} -fPIC libnetmd.c \
 		libnetmd_secure.c libnetmd_playercontrol.c utils.c
 
-netmd: netmd.c libnetmd.h netmd_dev.c netmd_trace.c libnetmd.o
+libnetmd.a: libnetmd.o libnetmd_secure.o libnetmd_playercontrol.o utils.o
+	$(AR) rcs libnetmd.a libnetmd.o libnetmd_secure.o libnetmd_playercontrol.o utils.o
+
+netmd: netmd.c libnetmd.h netmd_dev.c netmd_trace.c libnetmd.a
 	$(CC) $(CFLAGS) $(PEDANTIC) -g -o netmd netmd.c netmd_dev.c \
-		netmd_trace.c libnetmd.o libnetmd_secure.o \
-		libnetmd_playercontrol.o utils.o $(LDFLAGS)
+		netmd_trace.c libnetmd.a $(LDFLAGS)
 
 dist: clean
 	cd .. && $(TAR) --exclude={CVS,cvs} -cvzf $(PKG_NAME)-$(DATE).tar.gz \
