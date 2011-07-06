@@ -331,8 +331,6 @@ int netmd_write_track(netmd_dev_handle* dev, char* szFile);
 */
 void netmd_clean_disc_info(minidisc* md);
 
-void test(netmd_dev_handle* dev);
-
 /*! gets the position within the currently playing track in seconds.hundreds
   \param dev pointer to device returned by netmd_open
 */
