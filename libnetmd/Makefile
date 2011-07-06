@@ -28,7 +28,7 @@ lib: $(LIBRARY)
 docs: libnetmd.h
 	doxygen Doxyfile
 
-all: app utils
+all: app lib utils
 
 clean:
 	rm -fr *~ *.o *.so* *.a $(APP) $(UTILS) $(LIB) $(LIBRARY) documentation/html documentation/latex
