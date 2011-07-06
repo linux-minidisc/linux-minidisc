@@ -1,4 +1,5 @@
 #include "libnetmd.h"
+#include "utils.h"
 
 #define NETMD_PLAY	0x75
 #define NETMD_PAUSE	0x7d
