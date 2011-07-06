@@ -343,13 +343,14 @@ int main(int argc, char* argv[])
                 if (strcmp(argv[i], "single") == 0) {
                     playmode |= NETMD_PLAYMODE_SINGLE;
                 }
-                if (strcmp(argv[i], "repeat") == 0) {
+                else if (strcmp(argv[i], "repeat") == 0) {
                     playmode |= NETMD_PLAYMODE_REPEAT;
                 }
-                if (strcmp(argv[i], "shuffle") == 0) {
+                else if (strcmp(argv[i], "shuffle") == 0) {
                     playmode |= NETMD_PLAYMODE_SHUFFLE;
                 }
             }
+            printf("%x\n", playmode);
             netmd_set_playmode(devh, playmode);
         }
         else if (strcmp("secure", argv[1]) == 0) {
