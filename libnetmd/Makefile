@@ -1,52 +1,27 @@
-CC=gcc
-TAR=tar
-INSTALL=install -c
-
-UTILS = utilities/hex-to-char utilities/char-to-hex
-LIBRARY = libnetmd.o
-LIB = libnetmd.0.1.so
 APP = netmd
+LIB = libnetmd.so.0.1
+UTILS = utilities/hex-to-char utilities/char-to-hex
+
 PEDANTIC = -Wall -Wextra
 
 LDFLAGS = `libusb-config --libs`
-CFLAGS = `libusb-config --cflags`
+CFLAGS = `libusb-config --cflags` $(PEDANTIC)
 
-PKG_NAME	= unstable
-DATE		= $$(date +%Y%m%d)
-
-app: $(APP)
-
-pedantic: PEDANTIC = -Wall -ansi
-pedantic: $(APP)
+all: $(APP) $(LIB)
 
 utils: $(UTILS)
-
-lib: $(LIBRARY)
-	$(CC) $(CFLAGS) $(LDFLAGS) -shared -Wl,-soname,${LIB} -o ${LIB} $(LIBRARY)
 
 docs: libnetmd.h
 	doxygen Doxyfile
 
-all: app lib utils
-
 clean:
 	rm -fr *~ *.o *.so* *.a $(APP) $(UTILS) $(LIB) $(LIBRARY) documentation/html documentation/latex
 
-libnetmd.o: libnetmd.c libnetmd.h libnetmd_secure.c libnetmd_playercontrol.c utils.c
-	$(CC) -c ${INCLUDE} ${CFLAGS} ${PEDANTIC} -fPIC libnetmd.c \
-		libnetmd_secure.c libnetmd_playercontrol.c utils.c
-
 libnetmd.a: libnetmd.o libnetmd_secure.o libnetmd_playercontrol.o utils.o
-	$(AR) rcs libnetmd.a libnetmd.o libnetmd_secure.o libnetmd_playercontrol.o utils.o
+	$(AR) rcs $@ $^
 
-netmd: netmd.c libnetmd.h netmd_dev.c netmd_trace.c libnetmd.a
-	$(CC) $(CFLAGS) $(PEDANTIC) -g -o netmd netmd.c netmd_dev.c \
-		netmd_trace.c libnetmd.a $(LDFLAGS)
+$(APP): netmd.c netmd_dev.c netmd_trace.c libnetmd.a
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-dist: clean
-	cd .. && $(TAR) --exclude={CVS,cvs} -cvzf $(PKG_NAME)-$(DATE).tar.gz \
-        $(PKG_NAME)
-
-install-hotplug:
-	$(INSTALL) -m 755 hotplug-netmd /etc/hotplug/usb/minidisc
-	$(INSTALL) -m 644 minidisc.usermap /etc/hotplug/usb
+$(LIB): libnetmd.a
+	$(CC) $(LDFLAGS) -shared -Wl,-soname,$@ -o $@ $^
