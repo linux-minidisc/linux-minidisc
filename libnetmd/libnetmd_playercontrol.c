@@ -132,8 +132,6 @@ int netmd_track_restart(netmd_dev_handle* dev)
     return netmd_change_track(dev, NETMD_TRACK_RESTART);
 }
 
-#define PROPPER_TO_BCD(x) ((((x / 10) & 0xf) << 4) + ((x % 10) & 0xf))
-
 int netmd_set_time(netmd_dev_handle* dev, int track, const netmd_time* time)
 {
     char request[] = {0x00, 0x18, 0x50, 0xff, 0x00, 0x00,
@@ -144,10 +142,10 @@ int netmd_set_time(netmd_dev_handle* dev, int track, const netmd_time* time)
 
     request[9] = (track >> 8) & 0xFF;
     request[10] = (track >> 0) & 0xFF;
-    request[11] = PROPPER_TO_BCD(time->hour);
-    request[12] = PROPPER_TO_BCD(time->minute);
-    request[13] = PROPPER_TO_BCD(time->second);
-    request[14] = PROPPER_TO_BCD(time->frame);
+    request[11] = proper_to_bcd(time->hour);
+    request[12] = proper_to_bcd(time->minute);
+    request[13] = proper_to_bcd(time->second);
+    request[14] = proper_to_bcd(time->frame);
 
     size = netmd_exch_message(dev, request, sizeof(request), buf);
 

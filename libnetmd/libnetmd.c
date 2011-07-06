@@ -19,12 +19,7 @@
  */
 
 #include "libnetmd.h"
-
-int min(int a,int b)
-{
-    if (a<b) return a;
-    return b;
-}
+#include "utils.h"
 
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
 /*! Bertrik: the original interpretation of these numbers as codecs appears incorrect.
@@ -176,10 +171,6 @@ int netmd_request_track_flags(netmd_dev_handle*dev, int track, char* data)
     return ret;
 }
 
-/*  equiv. of
-    sprintf(tmp, "%02x", time_request[ 	time = strtol(tmp, NULL, 10); */
-#define BCD_TO_PROPER(x) (((((x) & 0xf0) >> 4) * 10) + ((x) & 0x0f))
-
 int netmd_request_track_time(netmd_dev_handle* dev, int track, struct netmd_track* buffer)
 {
     int ret = 0;
@@ -200,9 +191,9 @@ int netmd_request_track_time(netmd_dev_handle* dev, int track, struct netmd_trac
 
     size = ret;
 
-    buffer->minute = BCD_TO_PROPER(time_request[28]);
-    buffer->second = BCD_TO_PROPER(time_request[29]);
-    buffer->tenth = BCD_TO_PROPER(time_request[30]);
+    buffer->minute = bcd_to_proper(time_request[28]);
+    buffer->second = bcd_to_proper(time_request[29]);
+    buffer->tenth = bcd_to_proper(time_request[30]);
     buffer->track = track;
 
     return 1;
