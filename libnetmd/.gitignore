@@ -1,3 +1,5 @@
 netmd
 documentation/html
 documentation/latex
+libnetmd.so.*
+libnetmd.a
