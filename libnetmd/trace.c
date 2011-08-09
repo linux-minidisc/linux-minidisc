@@ -1,4 +1,4 @@
-/* netmd_trace.c
+/* trace.c
  *      Copyright (C) 2004, Bertrik Sikken
  *
  * This file is part of libnetmd.
@@ -18,18 +18,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-/*	Very simple tracing facility.
-*/
-
-
 #include <stdio.h>
 #include <stdarg.h>
 
 #include "libnetmd.h"
-
+#include "trace.h"
 
 static int trace_level = 0;
-
 
 void netmd_trace_level(int level)
 {

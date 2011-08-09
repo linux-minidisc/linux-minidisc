@@ -30,21 +30,16 @@
 
 #include <usb.h>
 
-/** Error codes of the USB transport layer */
-#define NETMDERR_USB            -1      /* general USB error */
-#define NETMDERR_NOTREADY       -2      /* player not ready for command */
-#define NETMDERR_TIMEOUT        -3      /* timeout while waiting for response */
-#define NETMDERR_CMD_FAILED     -4      /* minidisc responded with 08 response */
-#define NETMDERR_CMD_INVALID    -5      /* minidisc responded with 0A response */
-
+#include "const.h"
+#include "common.h"
+#include "playercontrol.h"
+#include "trace.h"
 
 typedef struct netmd_device_t {
     struct netmd_device_t       *link;
     char                        name[32];
     struct usb_device           *usb_dev;
 } netmd_device_t;
-
-typedef usb_dev_handle*	        netmd_dev_handle;
 
 /** Struct to hold the vendor and product id's for each unit. */
 struct netmd_devices {
@@ -74,15 +69,6 @@ int netmd_get_devname(netmd_dev_handle* devh, char* buf, int buffsize);
 /*! Function for internal use by init_disc_info */
 // int request_disc_title(usb_dev_handle* dev, char* buffer, int size);
 
-/*! Function to exchange command/response buffer with minidisc
-  \param dev device handle
-  \param cmd command buffer
-  \param cmdlen length of command
-  \param rsp response buffer
-  \return number of bytes received if >0, or error if <0
-*/
-int netmd_exch_message(netmd_dev_handle *dev, char *cmd, int cmdlen,
-                       char *rsp);
 
 /*! closes the usb descriptors
   \param dev pointer to device returned by netmd_open
@@ -93,19 +79,6 @@ void netmd_close(netmd_dev_handle* dev);
   \param device_list list of devices returned by netmd_init
 */
 void netmd_clean(netmd_device_t *device_list);
-
-/** Playmode values to be sent to netmd_set_playmode.
-    These can be combined by OR-ing them to do shuffle repeat for example.
-    See also: http://article.gmane.org/gmane.comp.audio.netmd.devel/848
-*/
-#define NETMD_PLAYMODE_SINGLE	0x0040
-#define NETMD_PLAYMODE_REPEAT	0x0080
-#define NETMD_PLAYMODE_SHUFFLE	0x0100
-
-/** trace levels for netmd_trace calls */
-#define NETMD_TRACE_NONE        0
-#define NETMD_TRACE_ERROR	1
-#define NETMD_TRACE_INFO	2
 
 /** Data about a group, start track, finish track and name.
     Used to generate disc header info.
@@ -125,13 +98,6 @@ struct netmd_track
     int second;
     int tenth;
 };
-
-typedef struct {
-    uint8_t hour;
-    uint8_t minute;
-    uint8_t second;
-    uint8_t frame;
-} netmd_time;
 
 /** stores hex value from protocol and text value of name */
 typedef struct netmd_pair
@@ -155,25 +121,6 @@ extern struct netmd_group* groups;
 extern struct netmd_pair const trprot_settings[];
 extern struct netmd_pair const bitrates[];
 extern struct netmd_pair const unknown_pair;
-
-/* Functions from netmd_trace.c */
-/** Sets the global trace level
-    \param level The trace level
-*/
-void netmd_trace_level(int level);
-
-/** Shows a hexdump of binary data
-    \param level Trace level
-    \param data pointer to binary data to trace
-    \param len number of bytes to trace
-*/
-void netmd_trace_hex(int level, char *data, int len);
-
-/** Printf like trace function
-    \param level Trace level
-    \param fmt printf-like format string
-*/
-void netmd_trace(int level, char *fmt, ...);
 
 /** enum through an array of pairs looking for a specific hex code.
     \param hex hex code to find.
@@ -291,18 +238,6 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, int track, int group);
 */
 int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, int group);
 
-int netmd_set_track(netmd_dev_handle* dev, int track);
-int netmd_set_time(netmd_dev_handle* dev, int track, const netmd_time* time);
-int netmd_play(netmd_dev_handle* dev);
-int netmd_stop(netmd_dev_handle* dev);
-int netmd_pause(netmd_dev_handle* dev);
-int netmd_rewind(netmd_dev_handle* dev);
-int netmd_fast_forward(netmd_dev_handle* dev);
-int netmd_set_playmode(netmd_dev_handle* dev, int playmode);
-int netmd_track_next(netmd_dev_handle* dev);
-int netmd_track_previous(netmd_dev_handle* dev);
-int netmd_track_restart(netmd_dev_handle* dev);
-
 int netmd_delete_track(netmd_dev_handle* dev, int track);
 
 int netmd_secure_cmd_80(netmd_dev_handle *dev);
@@ -331,15 +266,6 @@ int netmd_write_track(netmd_dev_handle* dev, char* szFile);
 */
 void netmd_clean_disc_info(minidisc* md);
 
-/*! gets the position within the currently playing track in seconds.hundreds
-  \param dev pointer to device returned by netmd_open
-*/
-const netmd_time* netmd_get_position(netmd_dev_handle* dev, netmd_time* time);
-
-/*! gets the currently playing track
-  \param dev pointer to device returned by netmd_open
-*/
-int netmd_get_track(netmd_dev_handle* dev);
 
 /*! sets group data
   \param md

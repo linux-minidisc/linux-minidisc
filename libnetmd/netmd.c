@@ -144,6 +144,11 @@ static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
     }
 }
 
+void print_time(const netmd_time *time)
+{
+    printf("%02d:%02d:%02d.%02d", time->hour, time->minute, time->second, time->frame);
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -353,6 +358,18 @@ int main(int argc, char* argv[])
             printf("%x\n", playmode);
             netmd_set_playmode(devh, playmode);
         }
+        else if (strcmp("capacity", argv[1]) == 0) {
+            netmd_disc_capacity capacity;
+            netmd_get_disc_capacity(devh, &capacity);
+
+            printf("Recorded:  ");
+            print_time(&capacity.recorded);
+            printf("\nTotal:     ");
+            print_time(&capacity.total);
+            printf("\nAvailable: ");
+            print_time(&capacity.available);
+            printf("\n");
+        }
         else if (strcmp("secure", argv[1]) == 0) {
             cmdid = strtol(argv[2], NULL, 16);
             track = 0;
@@ -402,7 +419,9 @@ void print_current_track_info(netmd_dev_handle* devh)
         printf("Current track: %s \n", buffer);
     }
 
-    printf("Current playback position: %d:%d:%d.%d \n", time.hour, time.minute, time.second, time.frame);
+    printf("Current playback position: ");
+    print_time(&time);
+    printf("\n");
 
 }
 
