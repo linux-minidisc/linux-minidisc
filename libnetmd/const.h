@@ -16,11 +16,6 @@
 #define NETMD_PLAYMODE_REPEAT 0x0080
 #define NETMD_PLAYMODE_SHUFFLE 0x0100
 
-/** trace levels for netmd_trace calls */
-#define NETMD_TRACE_NONE 0
-#define NETMD_TRACE_ERROR 1
-#define NETMD_TRACE_INFO 2
-
 /** playback controll commands */
 #define NETMD_PLAY 0x75
 #define NETMD_PAUSE 0x7d

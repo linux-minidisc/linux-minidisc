@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
     printf("Disc Title: %s\n\n", md->groups[0].name);
 
     /* by default, log only errors */
-    netmd_trace_level(NETMD_TRACE_ERROR);
+    netmd_set_log_level(NETMD_LOG_ERROR);
 
     /* parse options */
     while (1) {
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
         }
         switch (c) {
         case 't':
-            netmd_trace_level(NETMD_TRACE_INFO);
+            netmd_set_log_level(NETMD_LOG_ALL);
             break;
         default:
             fprintf(stderr, "Unknown option '%c'\n", c);

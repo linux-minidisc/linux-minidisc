@@ -1105,8 +1105,8 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
             }
         }
 
-        netmd_trace(NETMD_TRACE_INFO, "Sending %d bytes to md\n", bytes_to_send);
-        netmd_trace_hex(NETMD_TRACE_INFO, data, min(0x4000, bytes_to_send));
+        netmd_log(NETMD_LOG_DEBUG, "Sending %d bytes to md\n", bytes_to_send);
+        netmd_log_hex(NETMD_LOG_DEBUG, data, bytes_to_send);
         ret = usb_bulk_write(dev,0x02, (char*)data, (int)bytes_to_send, 5000);
     } /* End while */
 
@@ -1122,16 +1122,16 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
         usb_control_msg(dev, 0xc1, 0x01, 0, 0, (char*)size_request, 0x04, 5000);
     } while  (memcmp(size_request,"\0\0\0\0",4)==0);
 
-    netmd_trace(NETMD_TRACE_INFO, "Recieving response: \n");
-    netmd_trace_hex(NETMD_TRACE_INFO, size_request, 4);
+    netmd_log(NETMD_LOG_DEBUG, "Recieving response: \n");
+    netmd_log_hex(NETMD_LOG_DEBUG, size_request, 4);
     size = size_request[2];
     if (size<1) {
         fprintf(stderr, "Invalid size\n");
         return -1;
     }
     buf = malloc(size);
-    netmd_trace_hex(NETMD_TRACE_INFO, buf, size);
     usb_control_msg(dev, 0xc1, 0x81, 0, 0, (char*)buf, (int)size, 500);
+    netmd_log_hex(NETMD_LOG_DEBUG, buf, size);
     free(buf);
 
     /******** Title the transfered song *******/

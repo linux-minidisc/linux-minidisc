@@ -122,9 +122,9 @@ int netmd_get_devname(netmd_dev_handle* devh, char* buf, int buffsize)
 {
     usb_dev_handle *dev;
 
-    dev = (usb_dev_handle *)devh;
-    if (usb_get_string_simple(dev, 2, buf, buffsize) < 0) {
-        netmd_trace(NETMD_TRACE_ERROR, "usb_get_string_simple failed, %s (%d)\n", strerror(errno), errno);
+    result = usb_get_string_simple((usb_dev_handle *)devh, 2, buf, buffsize);
+    if (result < 0) {
+        netmd_log(NETMD_LOG_ERROR, "usb_get_string_simple failed, %s (%d)\n", strerror(errno), errno);
         buf[0] = 0;
         return 0;
     }

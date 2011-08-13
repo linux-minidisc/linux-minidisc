@@ -23,7 +23,7 @@
 
 #include "common.h"
 #include "const.h"
-#include "trace.h"
+#include "log.h"
 
 #define NETMD_POLL_TIMEOUT 1000	/* miliseconds */
 #define NETMD_SEND_TIMEOUT 1000
@@ -49,7 +49,7 @@ static int netmd_poll(usb_dev_handle *dev, char *buf, int tries)
         if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
                             USB_RECIP_INTERFACE, 0x01, 0, 0, buf, 4,
                             NETMD_POLL_TIMEOUT) < 0) {
-            netmd_trace(NETMD_TRACE_ERROR, "netmd_poll: usb_control_msg failed\n");
+            netmd_log(NETMD_LOG_ERROR, "netmd_poll: usb_control_msg failed\n");
             return NETMDERR_USB;
         }
 
@@ -79,17 +79,17 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd,
     /* poll to see if we can send data */
     len = netmd_poll(dev, pollbuf, 1);
     if (len != 0) {
-        netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: netmd_poll failed\n");
+        netmd_log(NETMD_LOG_ERROR, "netmd_exch_message: netmd_poll failed\n");
         return (len > 0) ? NETMDERR_NOTREADY : len;
     }
 
     /* send data */
-    netmd_trace(NETMD_TRACE_INFO, "Command:\n");
-    netmd_trace_hex(NETMD_TRACE_INFO, cmd, cmdlen);
+    netmd_log(NETMD_LOG_DEBUG, "Command:\n");
+    netmd_log_hex(NETMD_LOG_DEBUG, cmd, cmdlen);
     if (usb_control_msg(dev, USB_ENDPOINT_OUT | USB_TYPE_VENDOR |
                         USB_RECIP_INTERFACE, 0x80, 0, 0, (char*)cmd, (int)cmdlen,
                         NETMD_SEND_TIMEOUT) < 0) {
-        netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: usb_control_msg failed\n");
+        netmd_log(NETMD_LOG_ERROR, "netmd_exch_message: usb_control_msg failed\n");
         return NETMDERR_USB;
     }
 
@@ -97,7 +97,7 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd,
         /* poll for data that minidisc wants to send */
         len = netmd_poll(dev, pollbuf, NETMD_RECV_TRIES);
         if (len <= 0) {
-            netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: netmd_poll failed\n");
+            netmd_log(NETMD_LOG_ERROR, "netmd_exch_message: netmd_poll failed\n");
             return (len == 0) ? NETMDERR_TIMEOUT : len;
         }
 
@@ -105,21 +105,21 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd,
         if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
                             USB_RECIP_INTERFACE, pollbuf[1], 0, 0, (char*)rsp, len,
                             NETMD_RECV_TIMEOUT) < 0) {
-            netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: usb_control_msg failed\n");
+            netmd_log(NETMD_LOG_ERROR, "netmd_exch_message: usb_control_msg failed\n");
             return NETMDERR_USB;
         }
 
-        netmd_trace(NETMD_TRACE_INFO, "Response:\n");
-        netmd_trace_hex(NETMD_TRACE_INFO, rsp, len);
+        netmd_log(NETMD_LOG_DEBUG, "Response:\n");
+        netmd_log_hex(NETMD_LOG_DEBUG, rsp, (size_t)len);
 
         rsp_code = rsp[0];
         switch (rsp_code) {
-        case 0x0f:	netmd_trace(NETMD_TRACE_INFO, "Command acknowledged\n"); break;
-        case 0x0c:	netmd_trace(NETMD_TRACE_INFO, "** Unknown Header\n"); break;
-        case 0x09:	netmd_trace(NETMD_TRACE_INFO, "Command successful\n"); break;
-        case 0x08:	netmd_trace(NETMD_TRACE_INFO, "** Unknown Command\n"); break;
-        case 0x0a:	netmd_trace(NETMD_TRACE_INFO, "** Error on record\n"); break;
-        default: 	netmd_trace(NETMD_TRACE_INFO, "** Unknown return code\n"); break;
+        case 0x0f:	netmd_log(NETMD_LOG_DEBUG, "Command acknowledged\n"); break;
+        case 0x0c:	netmd_log(NETMD_LOG_DEBUG, "** Unknown Header\n"); break;
+        case 0x09:	netmd_log(NETMD_LOG_DEBUG, "Command successful\n"); break;
+        case 0x08:	netmd_log(NETMD_LOG_DEBUG, "** Unknown Command\n"); break;
+        case 0x0a:	netmd_log(NETMD_LOG_DEBUG, "** Error on record\n"); break;
+        default: 	netmd_log(NETMD_LOG_DEBUG, "** Unknown return code\n"); break;
         }
 
         /* get response again if player responds with 0x0F.	*/

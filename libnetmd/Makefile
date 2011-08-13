@@ -24,7 +24,7 @@ docs: libnetmd.h
 clean:
 	rm -fr *~ *.o *.so* *.a $(APP) $(UTILS) $(LIB) $(LIBRARY) documentation/html documentation/latex
 
-libnetmd.a: libnetmd.o libnetmd_secure.o playercontrol.o utils.o common.o trace.o
+libnetmd.a: libnetmd.o libnetmd_secure.o playercontrol.o utils.o common.o log.o
 	$(AR) rcs $@ $^
 
 $(LIB): libnetmd.a

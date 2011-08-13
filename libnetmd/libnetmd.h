@@ -33,7 +33,7 @@
 #include "const.h"
 #include "common.h"
 #include "playercontrol.h"
-#include "trace.h"
+#include "log.h"
 
 typedef struct netmd_device_t {
     struct netmd_device_t       *link;

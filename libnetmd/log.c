@@ -21,21 +21,20 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "libnetmd.h"
-#include "trace.h"
+#include "log.h"
 
-static int trace_level = 0;
+static netmd_loglevel trace_level = 0;
 
-void netmd_trace_level(int level)
+void netmd_set_log_level(netmd_loglevel level)
 {
     trace_level = level;
 }
 
 
-void netmd_trace_hex(int level, char *buf, int len)
+void netmd_log_hex(netmd_loglevel level, const unsigned char* const buf, const size_t len)
 {
-    int i;
-    int j = 0;
+    size_t i;
+    size_t j = 0;
     int breakpoint = 0;
 
     if (level > trace_level) {
@@ -44,7 +43,7 @@ void netmd_trace_hex(int level, char *buf, int len)
 
     for (i = 0; i < len; i++)
     {
-        printf("%02x ", buf[i]);
+        printf("%02x ", buf[i] & 0xff);
         breakpoint++;
         if(!((i + 1)%16) && i)
         {
@@ -84,9 +83,9 @@ void netmd_trace_hex(int level, char *buf, int len)
 }
 
 
-void netmd_trace(int level, char *fmt, ...)
+void netmd_log(netmd_loglevel level, const char* const fmt, ...)
 {
-    va_list	arg;
+    va_list arg;
 
     if (level > trace_level) {
         return;
