@@ -18,7 +18,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include "libnetmd.h"
+#include <string.h>
+#include <errno.h>
+#include <assert.h>
+
+#include "netmd_dev.h"
+#include "log.h"
+#include "const.h"
 
 /*! list of known vendor/prod id's for NetMD devices */
 static struct netmd_devices const known_devices[] =
@@ -68,13 +74,12 @@ static struct netmd_devices const known_devices[] =
 };
 
 
-int netmd_init(netmd_device_t **device_list)
+netmd_error netmd_init(netmd_device **device_list)
 {
     struct usb_bus *bus;
     struct usb_device *dev;
     int count = 0;
-    int num_devices;
-    netmd_device_t	*new_device;
+    netmd_device *new_device;
 
     usb_init();
 
@@ -82,7 +87,6 @@ int netmd_init(netmd_device_t **device_list)
     usb_find_devices();
 
     *device_list = NULL;
-    num_devices = 0;
     for(bus = usb_get_busses(); bus; bus = bus->next)
     {
         for(dev = bus->devices; dev; dev = dev->next)
@@ -92,65 +96,80 @@ int netmd_init(netmd_device_t **device_list)
                 if(dev->descriptor.idVendor == known_devices[count].idVendor
                    && dev->descriptor.idProduct == known_devices[count].idProduct)
                 {
-                    /* TODO: check if linked list stuff is really correct */
-                    new_device = malloc(sizeof(netmd_device_t));
+                    new_device = malloc(sizeof(netmd_device));
                     new_device->usb_dev = dev;
                     new_device->link = *device_list;
                     *device_list = new_device;
-                    num_devices++;
                 }
             }
         }
     }
 
-    return num_devices;
+    return NETMD_NO_ERROR;
 }
 
 
-netmd_dev_handle* netmd_open(netmd_device_t *netmd_dev)
+netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
 {
-    usb_dev_handle* dh;
+    int result;
+    usb_dev_handle *dh;
 
-    dh = usb_open(netmd_dev->usb_dev);
-    usb_claim_interface(dh, 0);
+    dh = usb_open(dev->usb_dev);
+    result = usb_claim_interface(dh, 0);
 
-    return (netmd_dev_handle *)dh;
+    if (result == 0) {
+        *dev_handle = (netmd_dev_handle*)dh;
+        return NETMD_NO_ERROR;
+    }
+    else {
+        *dev_handle = NULL;
+        return NETMD_USB_OPEN_ERROR;
+    }
 }
 
-
-int netmd_get_devname(netmd_dev_handle* devh, char* buf, int buffsize)
+netmd_error netmd_get_devname(netmd_dev_handle* devh, char* buf, size_t buffsize)
 {
-    usb_dev_handle *dev;
+    int result;
 
     result = usb_get_string_simple((usb_dev_handle *)devh, 2, buf, buffsize);
     if (result < 0) {
         netmd_log(NETMD_LOG_ERROR, "usb_get_string_simple failed, %s (%d)\n", strerror(errno), errno);
         buf[0] = 0;
-        return 0;
+        return NETMD_USB_ERROR;
     }
 
-    return strlen(buf);
+    return NETMD_NO_ERROR;
 }
 
-
-void netmd_close(netmd_dev_handle* devh)
+netmd_error netmd_close(netmd_dev_handle* devh)
 {
+    int result;
     usb_dev_handle *dev;
 
     dev = (usb_dev_handle *)devh;
-    usb_release_interface(dev, 0);
-    usb_close(dev);
+    result = usb_release_interface(dev, 0);
+    if (result == 0) {
+        result = usb_close(dev);
+    }
+
+    if (result < 0) {
+        return NETMD_USB_ERROR;
+    }
+
+    return NETMD_NO_ERROR;
 }
 
 
-void netmd_clean(netmd_device_t *device_list)
+void netmd_clean(netmd_device **device_list)
 {
-    netmd_device_t *tmp, *device;
+    netmd_device *tmp, *device;
 
-    device = device_list;
+    device = *device_list;
     while (device != NULL) {
         tmp = device->link;
         free(device);
         device = tmp;
     }
+
+    *device_list = NULL;
 }

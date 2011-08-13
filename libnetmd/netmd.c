@@ -145,33 +145,40 @@ int main(int argc, char* argv[])
 {
     netmd_dev_handle* devh;
     minidisc my_minidisc, *md = &my_minidisc;
-    netmd_device_t	*device_list, *netmd;
+    netmd_device *device_list, *netmd;
     unsigned int i = 0;
     unsigned int j = 0;
     char name[16];
     uint16_t track, playmode;
     int c;
     netmd_time time;
+    netmd_error error;
 
-    num_dev = netmd_init(&device_list);
-    printf("Found %d NetMD device(s).\n", num_dev);
-    if (num_dev != 1) {
+    error = netmd_init(&device_list);
+    if (error != NETMD_NO_ERROR) {
+        printf("Error initializing netmd\n%s\n", netmd_strerror(error));
+        return -1;
+    }
+
+    if (device_list == NULL) {
+        puts("Found no NetMD device(s).");
         return -1;
     }
 
     /* pick first available device */
     netmd = device_list;
 
-    devh = netmd_open(netmd);
-    if(!devh)
+    error = netmd_open(netmd, &devh);
+    if(error != NETMD_NO_ERROR)
     {
-        printf("Error opening netmd\n%s\n", strerror(errno));
+        printf("Error opening netmd\n%s\n", netmd_strerror(error));
         return -1;
     }
 
-    if(!netmd_get_devname(devh, name, 16))
+    error = netmd_get_devname(devh, name, 16);
+    if (error != NETMD_NO_ERROR)
     {
-        printf("Could not get device name\n");
+        printf("Could not get device name\n%s\n", netmd_strerror(error));
         return -1;
     }
     printf("%s\n", name);
@@ -386,7 +393,7 @@ int main(int argc, char* argv[])
 
     netmd_clean_disc_info(md);
     netmd_close(devh);
-    netmd_clean(device_list);
+    netmd_clean(&device_list);
 
     return 0;
 }
