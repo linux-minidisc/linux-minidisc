@@ -2,10 +2,17 @@ APP = netmd
 LIB = libnetmd.so.0.1
 UTILS = utilities/hex-to-char utilities/char-to-hex
 
-PEDANTIC = -Wall -Wextra -g
+PEDANTIC = -Wall -W -Wextra -Wswitch-enum -Wpointer-arith -Wcast-qual -Wcast-align
+PEDANTIC += -Wconversion
+PEDANTIC += -Werror
+#PEDANTIC += -Wmissing-prototypes -Wstrict-prototypes
+PEDANTIC += -Wwrite-strings
+
+CFLAGS = -fshort-enums `libusb-config --cflags`
+CFLAGS += $(PEDANTIC)
+CFLAGS += -g
 
 LDFLAGS = `libusb-config --libs`
-CFLAGS = `libusb-config --cflags` $(PEDANTIC)
 
 all: $(APP) $(LIB)
 
@@ -20,8 +27,7 @@ clean:
 libnetmd.a: libnetmd.o libnetmd_secure.o playercontrol.o utils.o common.o trace.o
 	$(AR) rcs $@ $^
 
-$(APP): netmd.c netmd_dev.c libnetmd.a
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
 $(LIB): libnetmd.a
 	$(CC) $(LDFLAGS) -shared -Wl,-soname,$@ -o $@ $^
+
+$(APP): netmd.o netmd_dev.o libnetmd.a

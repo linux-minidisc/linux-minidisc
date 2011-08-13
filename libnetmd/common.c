@@ -66,8 +66,8 @@ static int netmd_poll(usb_dev_handle *dev, char *buf, int tries)
 }
 
 
-int netmd_exch_message(netmd_dev_handle *devh, char *cmd, int cmdlen,
-                       char *rsp)
+int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd,
+                       const size_t cmdlen, unsigned char *rsp)
 {
     char pollbuf[4];
     unsigned char rsp_code;
@@ -87,7 +87,7 @@ int netmd_exch_message(netmd_dev_handle *devh, char *cmd, int cmdlen,
     netmd_trace(NETMD_TRACE_INFO, "Command:\n");
     netmd_trace_hex(NETMD_TRACE_INFO, cmd, cmdlen);
     if (usb_control_msg(dev, USB_ENDPOINT_OUT | USB_TYPE_VENDOR |
-                        USB_RECIP_INTERFACE, 0x80, 0, 0, cmd, cmdlen,
+                        USB_RECIP_INTERFACE, 0x80, 0, 0, (char*)cmd, (int)cmdlen,
                         NETMD_SEND_TIMEOUT) < 0) {
         netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: usb_control_msg failed\n");
         return NETMDERR_USB;
@@ -103,7 +103,7 @@ int netmd_exch_message(netmd_dev_handle *devh, char *cmd, int cmdlen,
 
         /* receive data */
         if (usb_control_msg(dev, USB_ENDPOINT_IN | USB_TYPE_VENDOR |
-                            USB_RECIP_INTERFACE, pollbuf[1], 0, 0, rsp, len,
+                            USB_RECIP_INTERFACE, pollbuf[1], 0, 0, (char*)rsp, len,
                             NETMD_RECV_TIMEOUT) < 0) {
             netmd_trace(NETMD_TRACE_ERROR, "netmd_exch_message: usb_control_msg failed\n");
             return NETMDERR_USB;

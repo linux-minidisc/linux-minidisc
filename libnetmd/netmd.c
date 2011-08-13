@@ -29,17 +29,7 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 #define M3U_LINE_MAX	128
 
 
-static void print_hex(unsigned char *buf, int len)
-{
-    int i;
-
-    for (i = 0; i < len; i++) {
-        printf("%02X ", buf[i]);
-    }
-    printf("\n");
-}
-
-
+/*
 static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
 {
     unsigned int player_id;
@@ -82,9 +72,9 @@ static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
             fprintf(stdout, "Hash id of track %d =\n", track);
             print_hex(hash8, sizeof(hash8));
         }
-        break;
-/*case 0x28: TODO */
-    case 0x40:
+        break;*/
+/*case 0x28: TODO*/
+        /*case 0x40:
         if (netmd_secure_cmd_40(devh, track, hash8) > 0) {
             fprintf(stdout, "Signature of deleted track %d =\n", track);
             print_hex(hash8, sizeof(hash8));
@@ -108,14 +98,15 @@ static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
         break;
     }
 }
-
+*/
 
 static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
 {
-    char cmd[255], rsp[255];
+    unsigned char cmd[255], rsp[255];
     unsigned int data;
     char szBuf[4];
-    int cmdlen, rsplen;
+    size_t cmdlen;
+    int rsplen;
 
     /* check raw message length */
     if ((strlen(pszRaw) % 2) != 0) {
@@ -133,7 +124,7 @@ static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
             printf("Error: invalid character at byte %d ('%s')\n", cmdlen, szBuf);
             return;
         }
-        cmd[cmdlen++] = data;
+        cmd[cmdlen++] = data & 0xff;
     }
 
     /* send it */
@@ -155,10 +146,11 @@ int main(int argc, char* argv[])
     netmd_dev_handle* devh;
     minidisc my_minidisc, *md = &my_minidisc;
     netmd_device_t	*device_list, *netmd;
-    int i = 0;
-    int j = 0;
+    unsigned int i = 0;
+    unsigned int j = 0;
     char name[16];
-    int	cmdid, track, playmode, num_dev, c;
+    uint16_t track, playmode;
+    int c;
     netmd_time time;
 
     num_dev = netmd_init(&device_list);
@@ -215,20 +207,20 @@ int main(int argc, char* argv[])
     {
         if(strcmp("rename", argv[1]) == 0)
         {
-            i = strtol(argv[2], NULL, 10);
-            netmd_set_title(devh, i, argv[3]);
+            i = strtoul(argv[2], NULL, 10);
+            netmd_set_title(devh, i & 0xff, argv[3]);
         }
         else if(strcmp("move", argv[1]) == 0)
         {
-            i = strtol(argv[2], NULL, 10);
-            j = strtol(argv[3], NULL, 10);
-            netmd_move_track(devh, i, j);
+            i = strtoul(argv[2], NULL, 10);
+            j = strtoul(argv[3], NULL, 10);
+            netmd_move_track(devh, i & 0xff, j & 0xff);
         }
         else if(strcmp("groupmove", argv[1]) == 0)
         {
-            i = strtol(argv[2], NULL, 10);
-            j = strtol(argv[3], NULL, 10);
-            netmd_move_group(devh, md, j, i);
+            i = strtoul(argv[2], NULL, 10);
+            j = strtoul(argv[3], NULL, 10);
+            netmd_move_group(devh, md, j & 0xff, i & 0xff);
         }
         else if(strcmp("write", argv[1]) == 0)
         {
@@ -247,23 +239,23 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("group", argv[1]) == 0)
         {
-            i = strtol(argv[2], NULL, 10);
-            j = strtol(argv[3], NULL, 10);
-            if(!netmd_put_track_in_group(devh, md, i, j))
+            i = strtoul(argv[2], NULL, 10);
+            j = strtoul(argv[3], NULL, 10);
+            if(!netmd_put_track_in_group(devh, md, i & 0xff, j & 0xff))
             {
                 printf("Something screwy happened\n");
             }
         }
         else if(strcmp("retitle", argv[1]) == 0)
         {
-            i = strtol(argv[2], NULL, 10);
+            i = strtoul(argv[2], NULL, 10);
             netmd_set_group_title(devh, md, i, argv[3]);
         }
         else if(strcmp("play", argv[1]) == 0)
         {
             if( argc > 2 ) {
-                i = strtol(argv[2],NULL, 10);
-                netmd_set_track( devh, i );
+                i = strtoul(argv[2],NULL, 10);
+                netmd_set_track( devh, i & 0xffff );
             }
             netmd_play(devh);
         }
@@ -297,22 +289,22 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("settime", argv[1]) == 0)
         {
-            track = atoi(argv[2]);
+            track = strtoul(argv[2], (char **) NULL, 10) & 0xffff;
             if (argc > 6)
             {
-                time.hour = atoi(argv[3]);
-                time.minute = atoi(argv[4]);
-                time.second = atoi(argv[5]);
-                time.frame = atoi(argv[6]);
+                time.hour = strtoul(argv[3], (char **) NULL, 10) & 0xffff;
+                time.minute = strtoul(argv[4], (char **) NULL, 10) & 0xff;
+                time.second = strtoul(argv[5], (char **) NULL, 10) & 0xff;
+                time.frame = strtoul(argv[6], (char **) NULL, 10) & 0xff;
             }
             else
             {
                 time.hour = 0;
-                time.minute = atoi(argv[3]);
-                time.second = atoi(argv[4]);
+                time.minute = strtoul(argv[3], (char **) NULL, 10) & 0xff;
+                time.second = strtoul(argv[4], (char **) NULL, 10) & 0xff;
                 if (argc > 5)
                 {
-                    time.frame = atoi(argv[5]);
+                    time.frame = strtoul(argv[5], (char **) NULL, 10) & 0xff;;
                 }
                 else
                 {
@@ -328,13 +320,13 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("delete", argv[1]) == 0)
         {
-            i = strtol(argv[2], NULL, 10);
-            netmd_delete_track(devh, i);
+            i = strtoul(argv[2], NULL, 10);
+            netmd_delete_track(devh, i & 0xff);
         }
         else if(strcmp("deletegroup", argv[1]) == 0)
         {
-            i = strtol(argv[2], NULL, 10);
-            netmd_delete_group(devh, md, i);
+            i = strtoul(argv[2], NULL, 10);
+            netmd_delete_group(devh, md, i & 0xff);
         }
         else if(strcmp("status", argv[1]) == 0) {
             print_current_track_info(devh);
@@ -344,6 +336,7 @@ int main(int argc, char* argv[])
         }
         else if (strcmp("setplaymode", argv[1]) == 0) {
             playmode = 0;
+            int i;
             for (i = 2; i < argc; i++) {
                 if (strcmp(argv[i], "single") == 0) {
                     playmode |= NETMD_PLAYMODE_SINGLE;
@@ -371,12 +364,12 @@ int main(int argc, char* argv[])
             printf("\n");
         }
         else if (strcmp("secure", argv[1]) == 0) {
-            cmdid = strtol(argv[2], NULL, 16);
+            /*cmdid = strtol(argv[2], NULL, 16);
             track = 0;
             if (argc > 3) {
                 track = strtol(argv[3], NULL, 10);
-            }
-            handle_secure_cmd(devh, cmdid, track);
+                }*/
+            /*handle_secure_cmd(devh, cmdid, track);*/
         }
         else if(strcmp("help", argv[1]) == 0)
         {
@@ -400,25 +393,16 @@ int main(int argc, char* argv[])
 
 void print_current_track_info(netmd_dev_handle* devh)
 {
-    int i = 0;
-    int size = 0;
+    uint8_t track;
     char buffer[256];
     netmd_time time;
 
-
+    /* TODO: error checking */
     netmd_get_position(devh, &time);
-    i = netmd_get_track(devh);
+    netmd_get_track(devh, (uint16_t*)&track);
+    netmd_request_title(devh, track, buffer, 256);
 
-    size = netmd_request_title(devh, i, buffer, 256);
-
-    if(size < 0)
-    {
-        printf("something really really nasty just happened.");
-    }
-    else {
-        printf("Current track: %s \n", buffer);
-    }
-
+    printf("Current track: %s \n", buffer);
     printf("Current playback position: ");
     print_time(&time);
     printf("\n");
@@ -427,11 +411,11 @@ void print_current_track_info(netmd_dev_handle* devh)
 
 void print_disc_info(netmd_dev_handle* devh, minidisc* md)
 {
-    int i = 0;
+    uint8_t i = 0;
     int size = 1;
-    int g, group = 0, lastgroup = 0;
+    uint8_t g, group = 0, lastgroup = 0;
     unsigned char bitrate_id;
-    char flags;
+    unsigned char flags;
     char *name, buffer[256];
     struct netmd_track time;
     struct netmd_pair const *trprot, *bitrate;
@@ -450,7 +434,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
         /* Figure out which group this track is in */
         for( group = 0, g = 1; g < md->group_count; g++ )
         {
-            if( (md->groups[g].start <= i+1) && (md->groups[g].finish >= i+1 ))
+            if( (md->groups[g].start <= i+1U) && (md->groups[g].finish >= i+1U ))
             {
                 group = g;
                 break;
@@ -512,7 +496,8 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
     FILE *fp;
     char buffer[M3U_LINE_MAX + 1];
     char *s;
-    int track, discard;
+    uint8_t track;
+    int discard;
 
     if( file == NULL )
     {

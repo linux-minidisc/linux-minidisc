@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "utils.h"
 
 inline int min(int a,int b)
@@ -9,20 +11,20 @@ inline int min(int a,int b)
     return b;
 }
 
-inline char proper_to_bcd_single(int value)
+inline unsigned char proper_to_bcd_single(unsigned char value)
 {
-    int high, low;
+    unsigned char high, low;
 
     low = (value % 10) & 0xf;
-    high = ((value / 10) % 10) & 0xf;
+    high = (((value / 10) % 10) * 0xfU) & 0xf0;
 
-    return (high << 4) + low;
+    return high | low;
 }
 
-inline char* proper_to_bcd(int value, char* target, size_t len)
+inline unsigned char* proper_to_bcd(unsigned int value, unsigned char* target, size_t len)
 {
     while (value > 0 && len > 0) {
-        target[len - 1] = proper_to_bcd_single(value);
+        target[len - 1] = proper_to_bcd_single(value & 0xff);
         value /= 100;
         len--;
     }
@@ -30,20 +32,20 @@ inline char* proper_to_bcd(int value, char* target, size_t len)
     return target;
 }
 
-inline int bcd_to_proper_single(char value)
+inline unsigned char bcd_to_proper_single(unsigned char value)
 {
-    int high, low;
+    unsigned char high, low;
 
     high = (value & 0xf0) >> 4;
     low = (value & 0xf);
 
-    return (high * 10) + low;
+    return ((high * 10U) | low) & 0xff;
 }
 
-inline int bcd_to_proper(char* value, size_t len)
+inline unsigned int bcd_to_proper(unsigned char* value, size_t len)
 {
-    int result = 0;
-    int nibble_value = 1;
+    unsigned int result = 0;
+    unsigned int nibble_value = 1;
 
     for (; len > 0; len--) {
         result += nibble_value * bcd_to_proper_single(value[len - 1]);
