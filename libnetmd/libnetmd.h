@@ -35,6 +35,7 @@
 #include "common.h"
 #include "playercontrol.h"
 #include "log.h"
+#include "secure.h"
 #include "netmd_dev.h"
 
 /** Data about a group, start track, finish track and name.
@@ -193,18 +194,6 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int tra
   \param md pointer to minidisc structure
   \param group Zero based track to delete
 */
-int netmd_secure_cmd_80(netmd_dev_handle *dev);
-int netmd_secure_cmd_11(netmd_dev_handle *dev, unsigned int *player_id);
-int netmd_secure_cmd_12(netmd_dev_handle *dev, unsigned char *ekb_head, unsigned char *ekb_body);
-int netmd_secure_cmd_20(netmd_dev_handle *dev, unsigned char *rand_in, unsigned char *rand_out);
-int netmd_secure_cmd_21(netmd_dev_handle *dev);
-int netmd_secure_cmd_81(netmd_dev_handle *dev);
-int netmd_secure_cmd_22(netmd_dev_handle *dev, unsigned char *hash);
-int netmd_secure_cmd_28(netmd_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
-                        unsigned int length, unsigned int *track_nr);
-int netmd_secure_cmd_48(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash);
-int netmd_secure_cmd_23(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash_id);
-int netmd_secure_cmd_40(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *signature);
 int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, const unsigned int group);
 
 int netmd_delete_track(netmd_dev_handle* dev, const uint8_t track);
