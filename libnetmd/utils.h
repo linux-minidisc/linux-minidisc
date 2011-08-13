@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "error.h"
+
 typedef struct {
         unsigned char content[255];
         size_t length;
@@ -16,5 +18,22 @@ unsigned char* proper_to_bcd(unsigned int value, unsigned char* target, size_t l
 unsigned char bcd_to_proper_single(unsigned char value);
 unsigned int bcd_to_proper(unsigned char* value, size_t len);
 
+void netmd_check_response_bulk(netmd_response *response, const unsigned char* const expected,
+                               const size_t expected_length, netmd_error *error);
+
+void netmd_check_response_word(netmd_response *response, const uint16_t expected,
+                               netmd_error *error);
+
+void netmd_check_response(netmd_response *response, const unsigned char expected,
+                          netmd_error *error);
+
+
+unsigned char *netmd_copy_word_to_buffer(unsigned char **buf, uint16_t value);
+unsigned char *netmd_copy_doubleword_to_buffer(unsigned char **buf, uint32_t value);
+unsigned char *netmd_copy_quadword_to_buffer(unsigned char **buf, uint64_t value);
+
+uint16_t netmd_read_word(netmd_response *response);
+uint32_t netmd_read_doubleword(netmd_response *response);
+uint64_t netmd_read_quadword(netmd_response *response);
 
 #endif
