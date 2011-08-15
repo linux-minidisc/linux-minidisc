@@ -33,6 +33,25 @@ typedef struct {
     char *signature;
 } netmd_ekb;
 
+/*
+  linked list, storing all information of the single packets, send to the device
+  while uploading a track
+
+  @param key encrypted key for this packet (8 bytes)
+  @param iv IV for the encryption  (8 bytes)
+  @param data the packet data itself
+  @param length of the data
+  @param next next packet to transfer (linked list)
+ */
+typedef struct netmd_track_packets {
+    unsigned char *key;
+    unsigned char *iv;
+    unsigned char *data;
+    size_t length;
+
+    struct netmd_track_packets *next;
+} netmd_track_packets;
+
 typedef enum {
     NETMD_WIREFORMAT_PCM = 0,
     NETMD_WIREFORMAT_105KBPS = 0x90,
@@ -96,8 +115,34 @@ netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
                                         unsigned char *key_encryption_key,
                                         unsigned char *sessionkey);
 
-int netmd_secure_cmd_28(netmd_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
-                        unsigned int length, unsigned int *track_nr);
+/*
+  Send a track to the NetMD unit.
+  @param wireformat Format of the packets that are transported over usb
+  @param discformat Format of the song in the minidisc
+  @param frames Number of frames we need to transfer. Framesize depends on the
+                wireformat.
+  @param packets Linked list with all packets that are nessesary to transfer the
+                 complete song.
+  @param packet_count Count of the packets in the linked list.
+  @param sessionkey 8 bytes DES key used for securing the current session,
+  @param track Pointer to where the new track number should be written to after
+               trackupload.
+  @param uuid Pointer to 8 byte of memory where the uuid of the new track is
+              written to after upload.
+  @param content_id Pointer to 20 byte of memory where the content id of the
+                    song is written to afte upload.
+
+*/
+netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
+                                    netmd_wireformat wireformat,
+                                    unsigned char discformat,
+                                    unsigned int frames,
+                                    netmd_track_packets *packets,
+                                    size_t packet_count,
+                                    unsigned char *sessionkey,
+
+                                    uint16_t *track, unsigned char *uuid,
+                                    unsigned char *content_id)
 
 /*
   Commit a track. The idea is that this command tells the device hat the license

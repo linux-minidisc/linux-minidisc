@@ -289,43 +289,120 @@ netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
 }
 
 
-/** Prepare USB download?
-    \param dev USB device handle
-    \param track_type SP=0x006, LP2=0x9402, LP4=0xA800
-    \param length_byte ??? 0x58 and 0x5A have been seen here
-    \param length length of USB download
-    \param *track_nr new track number
-*/
-int netmd_secure_cmd_28(netmd_dev_handle *dev, unsigned int track_type,
-                        unsigned int length_byte, size_t length,
-                        unsigned int *track_nr)
+size_t netmd_get_frame_size(netmd_wireformat wireformat)
 {
-    unsigned char cmdhdr[] = {0x00, 0x01, 0x00, 0x10,
-                              0x01, 0xff, 0xff, 0x00};
-    unsigned char cmd[30];
-    size_t cmd_length;
-    int ret;
-    netmd_response response;
+    switch (wireformat) {
+    case NETMD_WIREFORMAT_PCM:
+        return 2048;
 
-    cmd_length = 0;
-    memcpy(cmd, cmdhdr, sizeof(cmdhdr));
-    cmd_length += sizeof(cmdhdr);
-    cmd[cmd_length++] = (track_type >> 8) & 0xff;
-    cmd[cmd_length++] = (track_type >> 0) & 0xff;
-    cmd[cmd_length++] = 0;
-    cmd[cmd_length++] = 0;
-    cmd[cmd_length++] = (length_byte >> 8) & 0xff;
-    cmd[cmd_length++] = (length_byte >> 0) & 0xff;
-    cmd[cmd_length++] = (unsigned char)((length >> 24) & 0xff);
-    cmd[cmd_length++] = (length >> 16) & 0xff;
-    cmd[cmd_length++] = (length >> 8) & 0xff;
-    cmd[cmd_length++] = (length >> 0) & 0xff;
+    case NETMD_WIREFORMAT_LP2:
+        return 192;
+        break;
 
-    ret = exch_secure_msg(dev, 0x28, cmd, cmd_length, &response);
-    if (ret > 0) {
-            *track_nr = (unsigned int)(response.content[17] << 8) | response.content[18];
+    case NETMD_WIREFORMAT_105KBPS:
+        return 152;
+
+    case NETMD_WIREFORMAT_LP4:
+        return 96;
     }
-    return ret;
+
+    return 0;
+}
+
+void netmd_transfer_song_packets(netmd_dev_handle *dev,
+                                 netmd_track_packets *packets)
+{
+    netmd_track_packets *p;
+    unsigned char *packet, *buf;
+    size_t packet_size;
+
+    p = packets;
+    while (p != NULL) {
+        /* length + key + iv + data */
+        packet_size = 8 + 8 + 8 + p->length;
+        packet = malloc(packet_size);
+        buf = packet;
+
+        /* build packet... */
+        netmd_copy_quadword_to_buffer(&buf, p->length);
+        memcpy(buf, p->key, 8);
+        memcpy(buf + 8, p->iv, 8);
+        memcpy(buf + 16, p->data, p->length);
+
+        /* ... send it */
+        usb_bulk_write((usb_dev_handle*)dev, 2, (char*)packet, (int)packet_size, 1000);
+
+        /* cleanup */
+        free(buf);
+        buf = NULL;
+
+        p = p->next;
+    }
+}
+
+netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
+                                    netmd_wireformat wireformat,
+                                    unsigned char discformat,
+                                    unsigned int frames,
+                                    netmd_track_packets *packets,
+                                    size_t packet_count,
+                                    unsigned char *sessionkey,
+
+                                    uint16_t *track, unsigned char *uuid,
+                                    unsigned char *content_id)
+{
+    unsigned char cmdhdr[] = {0x00, 0x01, 0x00, 0x10, 0x01};
+    unsigned char cmd[sizeof(cmdhdr) + 13];
+    unsigned char *buf;
+    size_t totalbytes;
+
+    netmd_response response;
+    netmd_error error;
+    unsigned char encryptedreply[32] = { 0 };
+    unsigned char iv[8] = { 0 };
+    int des_error;
+
+    memcpy(cmd, cmdhdr, sizeof(cmdhdr));
+    buf = cmd + sizeof(cmdhdr);
+    netmd_copy_word_to_buffer(&buf, 0xffffU);
+    *(buf++) = 0;
+    *(buf++) = wireformat & 0xffU;
+    *(buf++) = discformat & 0xffU;
+    netmd_copy_doubleword_to_buffer(&buf, frames);
+
+    totalbytes = netmd_get_frame_size(wireformat) * frames + packet_count * 24U;
+    netmd_copy_doubleword_to_buffer(&buf, totalbytes);
+
+    /* TODO: fix this - reply with 09 at beginning */
+    error = exch_secure_msg(dev, 0x28, cmd, sizeof(cmd), &response);
+    netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
+    netmd_check_response_word(&response, 0xffffU, &error);
+    netmd_check_response(&response, 0x00, &error);
+
+    if (error == NETMD_NO_ERROR) {
+        netmd_transfer_song_packets(dev, packets);
+
+        /* TODO: read reply */
+        netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
+        *track = netmd_read_word(&response);
+        netmd_check_response(&response, 0x00, &error);
+        netmd_read_response_bulk(&response, NULL, 10, &error);
+        netmd_read_response_bulk(&response, encryptedreply,
+                                 sizeof(encryptedreply), &error);
+    }
+
+    if (error == NETMD_NO_ERROR) {
+        des_error = cbc_crypt((char*)sessionkey, (char*)encryptedreply,
+                              sizeof(encryptedreply), DES_DECRYPT, (char*)iv);
+        if (DES_FAILED(des_error)) {
+            return NETMD_DES_ERROR;
+        }
+
+        memcpy(uuid, encryptedreply, 8);
+        memcpy(content_id, encryptedreply + 12, 20);
+    }
+
+    return error;
 }
 
 netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
@@ -340,7 +417,8 @@ netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
     netmd_response response;
     netmd_error error;
 
-    des_error = ecb_crypt((char*)sessionkey, (char*)hash, sizeof(hash), DES_ENCRYPT);
+    des_error = ecb_crypt((char*)sessionkey, (char*)hash, sizeof(hash),
+                          DES_ENCRYPT);
     if (DES_FAILED(des_error)) {
         return NETMD_DES_ERROR;
     }
