@@ -142,6 +142,22 @@ void netmd_check_response(netmd_response *response, const unsigned char expected
     }
 }
 
+void netmd_read_response_bulk(netmd_response *response, unsigned char* target,
+                              const size_t length, netmd_error *error)
+{
+    /* only copy if there was no error before */
+    if (*error == NETMD_NO_ERROR) {
+
+        if ((response->length - response->position) < length) {
+            *error = NETMD_RESPONSE_TO_SHORT;
+        }
+        else {
+            memcpy(target, response->content + response->position, length);
+            response->position += length;
+        }
+    }
+}
+
 unsigned char *netmd_copy_word_to_buffer(unsigned char **buf, uint16_t value)
 {
     **buf = (unsigned char)((value >> 8) & 0xff);

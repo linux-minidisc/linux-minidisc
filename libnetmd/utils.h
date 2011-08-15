@@ -27,6 +27,10 @@ void netmd_check_response_word(netmd_response *response, const uint16_t expected
 void netmd_check_response(netmd_response *response, const unsigned char expected,
                           netmd_error *error);
 
+void netmd_read_response_bulk(netmd_response *response, unsigned char* target,
+                              const size_t length, netmd_error *error);
+
+
 
 unsigned char *netmd_copy_word_to_buffer(unsigned char **buf, uint16_t value);
 unsigned char *netmd_copy_doubleword_to_buffer(unsigned char **buf, uint32_t value);
