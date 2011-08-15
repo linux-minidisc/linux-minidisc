@@ -181,13 +181,13 @@ void netmd_build_send_key_data_command(unsigned char *buf, uint16_t databytes,
 
     /* add all keys from the keychain to the buffer */
     while (chain != NULL) {
-        memcpy(&buf, chain->key, 16);
+        memcpy(buf, chain->key, 16);
         buf += 16;
 
         chain = chain->next;
     }
 
-    memcpy(&buf, signature, 24);
+    memcpy(buf, signature, 24);
 }
 
 /*
