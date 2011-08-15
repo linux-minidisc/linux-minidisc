@@ -392,7 +392,6 @@ netmd_error netmd_secure_delete_track(netmd_dev_handle *dev, uint16_t track,
     netmd_error error;
 
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
-    cmd_length += sizeof(cmdhdr);
 
     uint16_t tmp = track >> 8;
     cmd[sizeof(cmdhdr)] = tmp & 0xffU;
