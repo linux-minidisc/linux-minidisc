@@ -33,6 +33,13 @@ typedef struct {
     char *signature;
 } netmd_ekb;
 
+typedef enum {
+    NETMD_WIREFORMAT_PCM = 0,
+    NETMD_WIREFORMAT_105KBPS = 0x90,
+    NETMD_WIREFORMAT_LP2 = 0x94,
+    NETMD_WIREFORMAT_LP4 = 0xa8
+} netmd_wireformat;
+
 /*
   Enter a session secured by a root key found in an EKB. The EKB for this
   session has to be download after entering the session.
