@@ -152,7 +152,10 @@ void netmd_read_response_bulk(netmd_response *response, unsigned char* target,
             *error = NETMD_RESPONSE_TO_SHORT;
         }
         else {
-            memcpy(target, response->content + response->position, length);
+            if (target) {
+                memcpy(target, response->content + response->position, length);
+            }
+
             response->position += length;
         }
     }
