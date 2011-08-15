@@ -57,18 +57,72 @@ netmd_error netmd_secure_get_leaf_id(netmd_dev_handle *dev, uint64_t *player_id)
 */
 netmd_error netmd_secure_send_key_data(netmd_dev_handle *dev, netmd_ekb *ekb);
 
-int netmd_secure_session_key_exchange(netmd_dev_handle *dev,
-                                      uint64_t rand_in,
-                                      uint64_t *rand_out);
+/*
+  Exchange a session key with the device. Needs to have a root key sent to the
+  device using sendKeyData before.
 
-int netmd_secure_session_key_forget(netmd_dev_handle *dev);
+  @param rand_in 8 bytes random binary data
+  @param rand_out device nonce, another 8 bytes random data
+*/
+netmd_error netmd_secure_session_key_exchange(netmd_dev_handle *dev,
+                                              unsigned char *rand_in,
+                                              unsigned char *rand_out);
 
-int netmd_secure_cmd_22(netmd_dev_handle *dev, unsigned char *hash);
+/*
+  Invalidate the session key established by nonce exchange. Does not invalidate
+  the root key set up by sendKeyData.
+*/
+netmd_error netmd_secure_session_key_forget(netmd_dev_handle *dev);
+
+/*
+  Prepare the download of a music track to the device.
+
+  @param contentid 20 bytes Unique Identifier for the DRM system.
+  @param keyenckey 8 bytes DES key used to encrypt the block data keys
+  @param sessionkey 8 bytes DES key used for securing the current session, the
+                    key has to be calculated by the caller from the data
+                    exchanged in sessionKeyExchange and the root key selected by
+                    sendKeyData
+*/
+netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
+                                        unsigned char *contentid,
+                                        unsigned char *key_encryption_key,
+                                        unsigned char *sessionkey);
+
 int netmd_secure_cmd_28(netmd_dev_handle *dev, unsigned int track_type, unsigned int length_byte,
                         unsigned int length, unsigned int *track_nr);
-int netmd_secure_cmd_48(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash);
-int netmd_secure_cmd_23(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *hash_id);
-int netmd_secure_cmd_40(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *signature);
+
+/*
+  Commit a track. The idea is that this command tells the device hat the license
+  for the track has been checked out from the computer.
+
+  @param track  Track number returned from downloading command
+  @param sessionkey 8-byte DES key used for securing the download session
+*/
+netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
+                                      unsigned char *sessionkey);
+
+/*
+  Gets the DRM tracking ID for a track.
+  NetMD downloaded tracks have an 8-byte identifier (instead of their content
+  ID) stored on the MD medium. This is used to verify the identity of a track
+  when checking in.
+
+  @param track The track number
+  @param uuid  Pointer to the memory, where the 8-byte uuid of the track sould
+               be saved.
+*/
+netmd_error netmd_secure_get_track_uuid(netmd_dev_handle *dev, uint16_t track,
+                                        unsigned char *uuid);
+
+/*
+  Secure delete with 8-byte signature?
+
+  \param track track number to delete
+  \param signature 8-byte signature of deleted track
+*/
+netmd_error netmd_secure_delete_track(netmd_dev_handle *dev, uint16_t track,
+                                      unsigned char *signature);
 
 
 #endif

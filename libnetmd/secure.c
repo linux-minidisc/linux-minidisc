@@ -10,10 +10,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <usb.h>
+#include <rpc/des_crypt.h>
 
 #include "secure.h"
 #include "const.h"
 #include "utils.h"
+#include "log.h"
 
 static const unsigned char secure_header[] = { 0x18, 0x00, 0x08, 0x00, 0x46,
                                                0xf0, 0x03, 0x01, 0x03 };
@@ -221,61 +223,69 @@ netmd_error netmd_secure_send_key_data(netmd_dev_handle *dev, netmd_ekb* ekb)
     return error;
 }
 
-int netmd_secure_session_key_exchange(netmd_dev_handle *dev,
-                                      uint64_t rand_in,
-                                      uint64_t *rand_out)
+netmd_error netmd_secure_session_key_exchange(netmd_dev_handle *dev,
+                                              unsigned char *rand_in,
+                                              unsigned char *rand_out)
 {
     unsigned char cmdhdr[] = {0x00, 0x00, 0x00};
     unsigned char cmd[sizeof(cmdhdr) + 8];
-    unsigned char *buf;
-    int ret;
+
     netmd_response response;
+    netmd_error error;
 
+    memcpy(cmd, cmdhdr, sizeof(cmdhdr));
+    memcpy(cmd + sizeof(cmdhdr), rand_in, 8);
 
-    buf = cmd;
-    memcpy(buf, cmdhdr, sizeof(cmdhdr));
-    buf += sizeof(cmdhdr);
-    netmd_copy_quadword_to_buffer(&buf, rand_in);
+    error = exch_secure_msg(dev, 0x20, cmd, sizeof(cmd), &response);
 
-    ret = exch_secure_msg(dev, 0x20, cmd, sizeof(cmd), &response);
-    if (ret > 0) {
-        buf = response.content + sizeof(cmdhdr);
-        *rand_out = netmd_read_quadword(&response);
-    }
+    netmd_check_response(&response, 0x00, &error);
+    netmd_check_response(&response, 0x00, &error);
+    netmd_check_response(&response, 0x00, &error);
+    netmd_read_response_bulk(&response, rand_out, 8, &error);
 
-    return ret;
+    return error;
 }
 
 
-int netmd_secure_session_key_forget(netmd_dev_handle *dev)
+netmd_error netmd_secure_session_key_forget(netmd_dev_handle *dev)
 {
     unsigned char cmd[] = {0x00, 0x00, 0x00};
     netmd_response response;
+    netmd_error error;
 
-    return exch_secure_msg(dev, 0x21, cmd, sizeof(cmd), &response);
+    error = exch_secure_msg(dev, 0x21, cmd, sizeof(cmd), &response);
+    netmd_check_response_bulk(&response, cmd, sizeof(cmd), &error);
+    return error;
 }
 
-
-
-/************************************************************
-	Functions related to check-out
-*/
-
-/** Send 32-byte hash? */
-int netmd_secure_cmd_22(netmd_dev_handle *dev, unsigned char *hash)
+netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
+                                        unsigned char *contentid,
+                                        unsigned char *key_encryption_key,
+                                        unsigned char *sessionkey)
 {
-    unsigned char cmdhdr[] = {0x00, 0x00};
-    unsigned char cmd[sizeof(cmdhdr) + 32];
-    size_t cmd_length;
+    unsigned char cmdhdr[] = { 0x00, 0x00 };
+    unsigned char data[32] = { 0x01, 0x01, 0x01, 0x01 /* ... */};
+    unsigned char cmd[sizeof(cmdhdr) + sizeof(data)];
+    unsigned char iv[8] = { 0 };
+
+    int des_error;
     netmd_response response;
+    netmd_error error;
 
-    cmd_length = 0;
+    memcpy(data + 4, contentid, 20);
+    memcpy(data + 24, key_encryption_key, 8);
+    des_error = cbc_crypt((char*)sessionkey, (char*)data, sizeof(data),
+                          DES_ENCRYPT, (char*)iv);
+    if (DES_FAILED(des_error)) {
+        return NETMD_DES_ERROR;
+    }
+
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
-    cmd_length += sizeof(cmdhdr);
-    memcpy(cmd + sizeof(cmdhdr), hash, 32);
-    cmd_length += 32;
+    memcpy(cmd + sizeof(cmdhdr), data, 32);
 
-    return exch_secure_msg(dev, 0x22, cmd, cmd_length, &response);
+    error = exch_secure_msg(dev, 0x22, cmd, sizeof(cmd), &response);
+    netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
+    return error;
 }
 
 
@@ -318,78 +328,79 @@ int netmd_secure_cmd_28(netmd_dev_handle *dev, unsigned int track_type,
     return ret;
 }
 
-
-/** Verify track with 8-byte hash? */
-int netmd_secure_cmd_48(netmd_dev_handle *dev, unsigned int track_nr,
-                        unsigned char *hash)
+netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
+                                      unsigned char* sessionkey)
 {
     unsigned char cmdhdr[] = {0x00, 0x10, 0x01};
-    unsigned char cmd[sizeof(cmdhdr) + 10];
-    size_t cmd_length;
+    unsigned char hash[8] = { 0 };
+    unsigned char cmd[sizeof(cmdhdr) + sizeof(track) + sizeof(hash)];
+    unsigned char *buf;
+
+    int des_error;
     netmd_response response;
+    netmd_error error;
 
-    cmd_length = 0;
-    memcpy(cmd, cmdhdr, sizeof(cmdhdr));
-    cmd_length += sizeof(cmdhdr);
-    cmd[cmd_length++] = (track_nr >> 8) & 0xFF;
-    cmd[cmd_length++] = (track_nr >> 0) & 0xFF;
-    memcpy(cmd + cmd_length, hash, 8);
-    cmd_length += 8;
+    des_error = ecb_crypt((char*)sessionkey, (char*)hash, sizeof(hash), DES_ENCRYPT);
+    if (DES_FAILED(des_error)) {
+        return NETMD_DES_ERROR;
+    }
 
-    return exch_secure_msg(dev, 0x48, cmd, cmd_length, &response);
+    buf = cmd;
+    memcpy(buf, cmdhdr, sizeof(cmdhdr));
+    buf += sizeof(cmdhdr);
+    netmd_copy_word_to_buffer(&buf, track);
+
+    memcpy(buf, hash, sizeof(hash));
+    buf += sizeof(hash);
+
+    error = exch_secure_msg(dev, 0x48, cmd, sizeof(cmd), &response);
+    netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
+    netmd_check_response_word(&response, track, &error);
+
+    return error;
 }
 
-
-/************************************************************
-	Functions related to check-in
-*/
-
-/** Get 8-byte hash id of a track? */
-int netmd_secure_cmd_23(netmd_dev_handle *dev, unsigned int track_nr,
-                        unsigned char *hash_id)
+netmd_error netmd_secure_get_track_uuid(netmd_dev_handle *dev, uint16_t track,
+                                        unsigned char *uuid)
 {
     unsigned char cmdhdr[] = {0x10, 0x01};
-    unsigned char cmd[sizeof(cmdhdr) + 2];
-    size_t cmd_length;
-    int ret;
+    unsigned char cmd[sizeof(cmdhdr) + sizeof(track)];
+
     netmd_response response;
+    netmd_error error;
 
-    cmd_length = 0;
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
-    cmd_length += sizeof(cmdhdr);
-    cmd[cmd_length++] = (track_nr >> 8) & 0xFF;
-    cmd[cmd_length++] = (track_nr >> 0) & 0xFF;
 
-    ret = exch_secure_msg(dev, 0x23, cmd, cmd_length, &response);
-    if (ret > 0) {
-        memcpy(hash_id, response.content + 16, 8);
-    }
-    return ret;
+    uint16_t tmp = track >> 8;
+    cmd[sizeof(cmdhdr)] = tmp & 0xffU;
+    cmd[sizeof(cmdhdr) + 1] = track & 0xffU;
+
+    error = exch_secure_msg(dev, 0x23, cmd, sizeof(cmd), &response);
+    netmd_check_response_bulk(&response, cmd, sizeof(cmd), &error);
+    netmd_read_response_bulk(&response, uuid, 8, &error);
+
+    return error;
 }
 
-
-/** Secure delete with 8-byte signature?
-    \param dev USB device handle
-    \param track_nr track number to delete?
-    \param signature 8-byte signature of deleted track
-*/
-int netmd_secure_cmd_40(netmd_dev_handle *dev, unsigned int track_nr, unsigned char *signature)
+netmd_error netmd_secure_delete_track(netmd_dev_handle *dev, uint16_t track,
+                                      unsigned char *signature)
 {
     unsigned char cmdhdr[] = {0x00, 0x10, 0x01};
-    unsigned char cmd[sizeof(cmdhdr) + 2];
-    size_t cmd_length;
-    int ret;
-    netmd_response response;
+    unsigned char cmd[sizeof(cmdhdr) + sizeof(track)];
 
-    cmd_length = 0;
+    netmd_response response;
+    netmd_error error;
+
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
     cmd_length += sizeof(cmdhdr);
-    cmd[cmd_length++] = (track_nr >> 8) & 0xFF;
-    cmd[cmd_length++] = (track_nr >> 0) & 0xFF;
 
-    ret = exch_secure_msg(dev, 0x40, cmd, cmd_length, &response);
-    if (ret > 0) {
-        memcpy(signature, response.content + 17, 8);
-    }
-    return ret;
+    uint16_t tmp = track >> 8;
+    cmd[sizeof(cmdhdr)] = tmp & 0xffU;
+    cmd[sizeof(cmdhdr) + 1] = track & 0xffU;
+
+    error = exch_secure_msg(dev, 0x40, cmd, sizeof(cmd), &response);
+    netmd_check_response_bulk(&response, cmd, sizeof(cmd), &error);
+    netmd_read_response_bulk(&response, signature, 8, &error);
+
+    return error;
 }
