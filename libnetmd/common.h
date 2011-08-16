@@ -5,8 +5,9 @@
 
 typedef usb_dev_handle*	netmd_dev_handle;
 
-/*
+/**
   Function to exchange command/response buffer with minidisc
+
   @param dev device handle
   @param cmd command buffer
   @param cmdlen length of command

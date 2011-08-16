@@ -38,8 +38,9 @@
 #include "secure.h"
 #include "netmd_dev.h"
 
-/** Data about a group, start track, finish track and name.
-    Used to generate disc header info.
+/**
+   Data about a group, start track, finish track and name. Used to generate disc
+   header info.
 */
 typedef struct netmd_group
 {
@@ -48,7 +49,9 @@ typedef struct netmd_group
     char* name;
 } netmd_group_t;
 
-/** Basic track data. */
+/**
+   Basic track data.
+*/
 struct netmd_track
 {
     int track;
@@ -57,14 +60,18 @@ struct netmd_track
     int tenth;
 };
 
-/** stores hex value from protocol and text value of name */
+/**
+   stores hex value from protocol and text value of name
+*/
 typedef struct netmd_pair
 {
     unsigned char hex;
     const char* const name;
 } netmd_pair_t;
 
-/** stores misc data for a minidisc **/
+/**
+   stores misc data for a minidisc
+*/
 typedef struct {
     size_t header_length;
     struct netmd_group *groups;
@@ -72,88 +79,92 @@ typedef struct {
 } minidisc;
 
 
-/** Global variable containing netmd_group data for each group
-    There will be enough for group_count total in the alloced memory
+/**
+   Global variable containing netmd_group data for each group. There will be
+   enough for group_count total in the alloced memory
 */
 extern struct netmd_group* groups;
 extern struct netmd_pair const trprot_settings[];
 extern struct netmd_pair const bitrates[];
 extern struct netmd_pair const unknown_pair;
 
-/** enum through an array of pairs looking for a specific hex code.
-    \param hex hex code to find.
-    \param pair array of pairs to look through.
+/**
+   enum through an array of pairs looking for a specific hex code.
+   @param hex hex code to find.
+   @param pair array of pairs to look through.
 */
 struct netmd_pair const* find_pair(int hex, struct netmd_pair const* pair);
 
-/** used internally to get the size of buffer needed for the returning data.
-    \param dev USB device handle.
-    \return size of buffer to alloc.
-*/
-/* unsigned int request_buffer_length(netmd_dev_handle* dev);*/
+/**
+   Get the flags used for a specific track.
 
-/*! Get the flags used for a specific track.
-  \param dev pointer to device returned by netmd_open
-  \param track Zero based index of track your requesting.
-  \param data pointer to store the hex code representing the codec.
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param data pointer to store the hex code representing the codec.
 */
-int netmd_request_track_flags(netmd_dev_handle*dev, const uint8_t track, unsigned char* data);
+int netmd_request_track_flags(netmd_dev_handle* dev, const uint8_t track, unsigned char* data);
 
-/*! Get the bitrate used to encode a specific track.
-  \param dev pointer to device returned by netmd_open
-  \param track Zero based index of track your requesting.
-  \param data pointer to store the hex code representing the bitrate.
+/**
+   Get the bitrate used to encode a specific track.
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param data pointer to store the hex code representing the bitrate.
 */
 int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint8_t track, unsigned char* data);
 
-/*! Get the title for a specific track.
-  \param dev pointer to device returned by netmd_open
-  \param track Zero based index of track your requesting.
-  \param buffer buffer to hold the name.
-  \param size of buf.
-  \return Actual size of buffer, if your buffer is too small resize buffer and recall function.
+/**
+   Get the title for a specific track.
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param buffer buffer to hold the name.
+   @param size of buf.
+   @return Actual size of buffer, if your buffer is too small resize buffer and
+           recall function.
 */
 int netmd_request_title(netmd_dev_handle* dev, const uint8_t track, char* buffer, const size_t size);
 
 int netmd_request_track_time(netmd_dev_handle* dev, const uint8_t track, struct netmd_track* buffer);
 
-/*! Sets title for the specified track.
-  \param dev pointer to device returned by netmd_open
-  \param track Zero based index of track your requesting.
-  \param buffer buffer to hold the name.
-  \return returns 0 for fail 1 for success.
+/**
+   Sets title for the specified track.
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param buffer buffer to hold the name.
+   @return returns 0 for fail 1 for success.
 */
 int netmd_set_title(netmd_dev_handle* dev, const uint8_t track, const char* const buffer);
 
-/*! Sets title for the specified track.
-  \param dev pointer to device returned by netmd_open
-  \param md pointer to minidisc structure
-  \param group Zero based index of group your renaming (zero is disc title).
-  \param title buffer holding the name.
-  \return returns 0 for fail 1 for success.
+/**
+   Sets title for the specified track.
+
+   @param dev pointer to device returned by netmd_open
+   @param md pointer to minidisc structure
+   @param group Zero based index of group your renaming (zero is disc title).
+   @param title buffer holding the name.
+   @return returns 0 for fail 1 for success.
 */
 int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, unsigned int group, char* title);
 
-/*! Moves track around the disc.
-  \param dev pointer to device returned by netmd_open
-  \param start Zero based index of track to move
-  \param finish Zero based track to make it
-  \return 0 for fail 1 for success
+/**
+   Moves track around the disc.
+
+   @param dev pointer to device returned by netmd_open
+   @param start Zero based index of track to move
+   @param finish Zero based track to make it
+   @return 0 for fail 1 for success
 */
 int netmd_move_track(netmd_dev_handle* dev, const uint8_t start, const uint8_t finish);
 
-/*! used internally - use the int group_count var.
-  \param dev pointer to device returned by netmd_open
-  \param md pointer to minidisc structure
-  \return Number of groups, counting disc title as a group (which it is)
-*/
-/* int get_group_count(netmd_dev_handle* dev, minidisc* md);*/
+/**
+   sets up buffer containing group info.
 
-/*! sets up buffer containing group info.
-  \param dev pointer to device returned by netmd_open
-  \param md pointer to minidisc structure
-  \return total size of disc header
-  Group[0] is disc name.  You need to make sure you call clean_disc_info before recalling
+  @param dev pointer to device returned by netmd_open
+  @param md pointer to minidisc structure
+  @return total size of disc header Group[0] is disc name.  You need to make
+          sure you call clean_disc_info before recalling
 */
 int netmd_initialize_disc_info(netmd_dev_handle* dev, minidisc* md);
 
@@ -167,71 +178,91 @@ int netmd_create_group(netmd_dev_handle* dev, minidisc* md, char* name);
 
 int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length);
 
-/*! Creates disc header out of groups and writes it to disc
-  \param devh pointer to device returned by netmd_open
-  \param md pointer to minidisc structure
+/**
+   Creates disc header out of groups and writes it to disc
+
+   @param devh pointer to device returned by netmd_open
+   @param md pointer to minidisc structure
 */
 int netmd_write_disc_header(netmd_dev_handle* devh, minidisc *md);
 
-/*! Moves track into group
-  \param dev pointer to device returned by netmd_open
-  \param md pointer to minidisc structure
-  \param track Zero based track to add to group.
-  \param group number of group (0 is title group).
+/**
+   Moves track into group
+
+   @param dev pointer to device returned by netmd_open
+   @param md pointer to minidisc structure
+   @param track Zero based track to add to group.
+   @param group number of group (0 is title group).
 */
 int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc* md, const uint8_t track, const unsigned int group);
 
-/*! Moves group around the disc.
-  \param dev pointer to device returned by netmd_open
-  \param md pointer to minidisc structure
-  \param track Zero based track to make group start at.
-  \param group number of group (0 is title group).
+/**
+   Moves group around the disc.
+
+   @param dev pointer to device returned by netmd_open
+   @param md pointer to minidisc structure
+   @param track Zero based track to make group start at.
+   @param group number of group (0 is title group).
 */
 int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int track, const unsigned int group);
 
-/*! Deletes group from disc (but not the tracks in it)
-  \param dev pointer to device returned by netmd_open
-  \param md pointer to minidisc structure
-  \param group Zero based track to delete
+/**
+   Deletes group from disc (but not the tracks in it)
+
+   @param dev pointer to device returned by netmd_open
+   @param md pointer to minidisc structure
+   @param group Zero based track to delete
 */
 int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, const unsigned int group);
 
 int netmd_delete_track(netmd_dev_handle* dev, const uint8_t track);
 
-/*! Writes atrac file to device
-  \param dev pointer to device returned by netmd_open
-  \param szFile Full path to file to write.
-  \return < 0 on fail else 1
-  \bug doesnt work yet
+/**
+   Writes atrac file to device
+
+   @param dev pointer to device returned by netmd_open
+   @param szFile Full path to file to write.
+   @return < 0 on fail else 1
+   @bug doesnt work yet
 */
 int netmd_write_track(netmd_dev_handle* dev, char* szFile);
 
-/*! Cleans memory allocated for the name of each group, then cleans groups pointer
-  \param md pointer to minidisc structure
+/**
+   Cleans memory allocated for the name of each group, then cleans groups
+   pointer
+
+   @param md pointer to minidisc structure
 */
 void netmd_clean_disc_info(minidisc* md);
 
 
-/*! sets group data
-  \param md
-  \param group
-  \param name
-  \param start
-  \param finish
+/**
+   sets group data
+
+   @param md
+   @param group
+   @param name
+   @param start
+   @param finish
 */
 /* void set_group_data(minidisc* md, int group, char* name, int start, int finish);*/
 
-/*! Sends a command to the MD unit and compare the result with response unless response is NULL
-  \param dev a handler to the usb device
-  \param str the string that should be sent
-  \param len length of the string
-  \param response string of the expected response. NULL for no expectations.
-  \param length of the expected response
-  \return the response. NOTE: this has to be freed up after calling.
+/**
+   Sends a command to the MD unit and compare the result with response unless
+   response is NULL
+
+   @param dev a handler to the usb device
+   @param str the string that should be sent
+   @param len length of the string
+   @param response string of the expected response. NULL for no expectations.
+   @param length of the expected response
+   @return the response. NOTE: this has to be freed up after calling.
 */
 /* char* sendcommand(netmd_dev_handle* dev, char* str, int len, char* response, int rlen);*/
 
-/*! Wait for syncronisation signal from minidisc
-  \param dev a handler to the usb device
+/**
+   Wait for syncronisation signal from minidisc
+
+   @param dev a handler to the usb device
 */
 /* void waitforsync(netmd_dev_handle* dev);*/

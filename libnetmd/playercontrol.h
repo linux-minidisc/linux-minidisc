@@ -34,25 +34,25 @@ netmd_error netmd_track_restart(netmd_dev_handle* dev);
 netmd_error netmd_set_time(netmd_dev_handle* dev, const uint16_t track,
                            const netmd_time* time);
 
-/*
-  gets the currently playing track
+/**
+   gets the currently playing track
 
-  @param dev pointer to device returned by netmd_open
+   @param dev pointer to device returned by netmd_open
 */
 netmd_error netmd_get_track(netmd_dev_handle* dev, uint16_t *track);
 
-/*
-  gets the position within the currently playing track
+/**
+   gets the position within the currently playing track
 
-  @param dev pointer to device returned by netmd_open
+   @param dev pointer to device returned by netmd_open
 */
 netmd_error netmd_get_position(netmd_dev_handle* dev, netmd_time* time);
 
-/*
-  gets the used, total and available disc capacity (total and available
-  capacity depend on current recording settings)
+/**
+   gets the used, total and available disc capacity (total and available
+   capacity depend on current recording settings)
 
-  @param dev pointer to device returned by netmd_open
+   @param dev pointer to device returned by netmd_open
 */
 netmd_error netmd_get_disc_capacity(netmd_dev_handle* dev,
                                     netmd_disc_capacity* capacity);
