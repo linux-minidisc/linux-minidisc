@@ -142,7 +142,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
                                     unsigned char *sessionkey,
 
                                     uint16_t *track, unsigned char *uuid,
-                                    unsigned char *content_id)
+                                    unsigned char *content_id);
 
 /*
   Commit a track. The idea is that this command tells the device hat the license
