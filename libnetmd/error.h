@@ -1,6 +1,11 @@
 #ifndef LIBNETMD_ERROR_H
 #define LIBNETMD_ERROR_H
 
+/**
+   Enum with possible error codes the netmd_* functions could return.
+
+   @see netmd_strerror
+*/
 typedef enum {
 
     NETMD_NO_ERROR = 0,
@@ -23,6 +28,14 @@ typedef enum {
 
 } netmd_error;
 
+/**
+   Function that could be used to get a string describing the given error
+   number.
+
+   @param error Error number to get the description for.
+   @return Pointer to static char buffer to the error description. (Should not
+           be freed.)
+*/
 const char* netmd_strerror(netmd_error error);
 
 #endif

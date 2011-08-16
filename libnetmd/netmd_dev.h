@@ -10,50 +10,52 @@ typedef struct netmd_device {
     struct usb_device *usb_dev;
 } netmd_device;
 
-/*
-  Struct to hold the vendor and product id's for each unit
+/**
+  Struct to hold the vendor and product id's for each unit.
 */
 struct netmd_devices {
     int	idVendor;
     int	idProduct;
 };
 
-/*
+/**
   Intialises the netmd device layer, scans the USB and fills in a list of
-  supported devices
+  supported devices.
 
-  @param device_list head of linked list of netmd_device_t structures to fill
+  @param device_list Linked list of netmd_device_t structures to fill.
 */
 netmd_error netmd_init(netmd_device **device_list);
 
-/*
-  Opens a NetMD device
+/**
+  Opens a NetMD device.
 
-  @param dev Pointer returned by netmd_init.
-  @param dev_handle Pointer to variable to save handle of device to.
+  @param dev Pointer to a device discoverd by netmd_init.
+  @param dev_handle Pointer to variable to save the handle of the opened
+                    device used for communication in all other netmd_
+                    functions.
 */
 netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle);
 
-/*
-  Get the device name stored in USB device
+/**
+  Get the device name stored in USB device.
 
-  @param devh pointer to device returned by netmd_open
-  @param buf buffer to hold the name.
-  @param buffsize of buf.
+  @param devh Pointer to device, returned by netmd_open.
+  @param buf Buffer to hold the name.
+  @param buffsize Available size in buf.
 */
 netmd_error netmd_get_devname(netmd_dev_handle* devh, char* buf, size_t buffsize);
 
-/*
-  Closes the usb descriptors
+/**
+  Closes the usb descriptors.
 
-  @param dev pointer to device returned by netmd_open
+  @param dev Pointer to device returned by netmd_open.
 */
 netmd_error netmd_close(netmd_dev_handle* dev);
 
-/*
-  Cleans structures created by netmd_init
+/**
+  Cleans structures created by netmd_init.
 
-  @param device_list list of devices returned by netmd_init
+  @param device_list List of devices filled by netmd_init.
 */
 void netmd_clean(netmd_device **device_list);
 

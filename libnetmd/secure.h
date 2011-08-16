@@ -16,44 +16,50 @@ typedef struct netmd_keychain {
 
 /**
    enabling key block
-
-   @param id The ID of the EKB.
-   @param chain A chain of encrypted keys. The one end of the chain is the
-                encrypted root key, the other end is a key encrypted by a key
-                the device has in it's key set. The direction of the chain is
-                not yet known.
-   @param depth Selects which key from the devices keyset has to be used to
-                start decrypting the chain. Each key in the key set corresponds
-                to a specific depth in the tree of device IDs.
-   @param signature Signature of the root key (24 byte). Used to verify
-                    integrity of the decrypted root key by the device.
 */
 typedef struct {
+    /** The ID of the EKB. */
     uint32_t id;
+
+    /** A chain of encrypted keys. The one end of the chain is the encrypted
+       root key, the other end is a key encrypted by a key the device has in
+       it's key set. The direction of the chain is not yet known. */
     netmd_keychain *chain;
+
+    /** Selects which key from the devices keyset has to be used to start
+       decrypting the chain. Each key in the key set corresponds to a specific
+       depth in the tree of device IDs. */
     uint32_t depth;
+
+    /** Signature of the root key (24 byte). Used to verify integrity of the
+       decrypted root key by the device. */
     char *signature;
 } netmd_ekb;
 
 /**
    linked list, storing all information of the single packets, send to the device
    while uploading a track
-
-   @param key encrypted key for this packet (8 bytes)
-   @param iv IV for the encryption  (8 bytes)
-   @param data the packet data itself
-   @param length of the data
-   @param next next packet to transfer (linked list)
 */
 typedef struct netmd_track_packets {
+    /** encrypted key for this packet (8 bytes) */
     unsigned char *key;
+
+    /** IV for the encryption  (8 bytes) */
     unsigned char *iv;
+
+    /** the packet data itself */
     unsigned char *data;
+
+    /** length of the data */
     size_t length;
 
+    /** next packet to transfer (linked list) */
     struct netmd_track_packets *next;
 } netmd_track_packets;
 
+/**
+   Format of the song data packets, that are transfered over USB.
+*/
 typedef enum {
     NETMD_WIREFORMAT_PCM = 0,
     NETMD_WIREFORMAT_105KBPS = 0x90,
@@ -119,6 +125,7 @@ netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
 
 /**
    Send a track to the NetMD unit.
+
    @param wireformat Format of the packets that are transported over usb
    @param discformat Format of the song in the minidisc
    @param frames Number of frames we need to transfer. Framesize depends on the
