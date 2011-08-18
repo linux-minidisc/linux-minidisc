@@ -218,6 +218,13 @@ unsigned char *netmd_copy_quadword_to_buffer(unsigned char **buf, uint64_t value
     return *buf;
 }
 
+/* TODO: add error */
+
+unsigned char netmd_read(netmd_response *response)
+{
+    return response->content[response->position++];
+}
+
 uint16_t netmd_read_word(netmd_response *response)
 {
     int i;

@@ -36,6 +36,7 @@ unsigned char *netmd_copy_word_to_buffer(unsigned char **buf, uint16_t value);
 unsigned char *netmd_copy_doubleword_to_buffer(unsigned char **buf, uint32_t value);
 unsigned char *netmd_copy_quadword_to_buffer(unsigned char **buf, uint64_t value);
 
+unsigned char netmd_read(netmd_response *response);
 uint16_t netmd_read_word(netmd_response *response);
 uint32_t netmd_read_doubleword(netmd_response *response);
 uint64_t netmd_read_quadword(netmd_response *response);
