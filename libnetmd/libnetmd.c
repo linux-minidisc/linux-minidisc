@@ -237,7 +237,7 @@ int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffe
 
     memset(buffer, 0, size);
     memcpy(buffer, (title + 25), title_size - 25);
-    buffer[size + 1] = 0;
+    buffer[size] = 0;
 
     return (int)title_size - 25;
 }
