@@ -168,16 +168,16 @@ void netmd_build_send_key_data_command(unsigned char *buf, uint16_t databytes,
                                        uint32_t key_depth, uint32_t key_id,
                                        netmd_keychain *chain, char *signature)
 {
-    netmd_copy_word_to_buffer(&buf, databytes);
-    netmd_copy_word_to_buffer(&buf, 0);
-    netmd_copy_word_to_buffer(&buf, databytes);
-    netmd_copy_word_to_buffer(&buf, 0);
+    netmd_copy_word_to_buffer(&buf, databytes, 0);
+    netmd_copy_word_to_buffer(&buf, 0, 0);
+    netmd_copy_word_to_buffer(&buf, databytes, 0);
+    netmd_copy_word_to_buffer(&buf, 0, 0);
 
     /* data */
-    netmd_copy_word_to_buffer(&buf, chain_length);
-    netmd_copy_doubleword_to_buffer(&buf, key_depth);
-    netmd_copy_doubleword_to_buffer(&buf, key_id);
-    netmd_copy_doubleword_to_buffer(&buf, 0);
+    netmd_copy_word_to_buffer(&buf, chain_length, 0);
+    netmd_copy_doubleword_to_buffer(&buf, key_depth, 0);
+    netmd_copy_doubleword_to_buffer(&buf, key_id, 0);
+    netmd_copy_doubleword_to_buffer(&buf, 0, 0);
 
     /* add all keys from the keychain to the buffer */
     while (chain != NULL) {
@@ -364,14 +364,14 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
 
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
     buf = cmd + sizeof(cmdhdr);
-    netmd_copy_word_to_buffer(&buf, 0xffffU);
+    netmd_copy_word_to_buffer(&buf, 0xffffU, 0);
     *(buf++) = 0;
     *(buf++) = wireformat & 0xffU;
     *(buf++) = discformat & 0xffU;
-    netmd_copy_doubleword_to_buffer(&buf, frames);
+    netmd_copy_doubleword_to_buffer(&buf, frames, 0);
 
     totalbytes = netmd_get_frame_size(wireformat) * frames + packet_count * 24U;
-    netmd_copy_doubleword_to_buffer(&buf, totalbytes);
+    netmd_copy_doubleword_to_buffer(&buf, totalbytes, 0);
 
     /* TODO: fix this - reply with 09 at beginning */
     error = exch_secure_msg(dev, 0x28, cmd, sizeof(cmd), &response);
@@ -426,7 +426,7 @@ netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
     buf = cmd;
     memcpy(buf, cmdhdr, sizeof(cmdhdr));
     buf += sizeof(cmdhdr);
-    netmd_copy_word_to_buffer(&buf, track);
+    netmd_copy_word_to_buffer(&buf, track, 0);
 
     memcpy(buf, hash, sizeof(hash));
     buf += sizeof(hash);

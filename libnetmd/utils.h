@@ -32,8 +32,8 @@ void netmd_read_response_bulk(netmd_response *response, unsigned char* target,
 
 
 
-unsigned char *netmd_copy_word_to_buffer(unsigned char **buf, uint16_t value);
-unsigned char *netmd_copy_doubleword_to_buffer(unsigned char **buf, uint32_t value);
+unsigned char *netmd_copy_word_to_buffer(unsigned char **buf, uint16_t value, int little_endian);
+unsigned char *netmd_copy_doubleword_to_buffer(unsigned char **buf, uint32_t value, int little_endian);
 unsigned char *netmd_copy_quadword_to_buffer(unsigned char **buf, uint64_t value);
 
 unsigned char netmd_read(netmd_response *response);

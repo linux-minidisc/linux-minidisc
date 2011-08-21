@@ -95,7 +95,7 @@ void netmd_check_response_word(netmd_response *response, const uint16_t expected
             *error = NETMD_RESPONSE_TO_SHORT;
         }
         else {
-            netmd_copy_word_to_buffer(&tmp, expected);
+            netmd_copy_word_to_buffer(&tmp, expected, 0);
             netmd_check_response_bulk(response, buf, 2, error);
         }
     }
@@ -113,7 +113,7 @@ void netmd_check_response_doubleword(netmd_response *response, const uint32_t ex
             *error = NETMD_RESPONSE_TO_SHORT;
         }
         else {
-            netmd_copy_doubleword_to_buffer(&tmp, expected);
+            netmd_copy_doubleword_to_buffer(&tmp, expected, 0);
             netmd_check_response_bulk(response, buf, 4, error);
         }
     }
@@ -161,30 +161,39 @@ void netmd_read_response_bulk(netmd_response *response, unsigned char* target,
     }
 }
 
-unsigned char *netmd_copy_word_to_buffer(unsigned char **buf, uint16_t value)
+unsigned char *netmd_copy_word_to_buffer(unsigned char **buf, uint16_t value, int little_endian)
 {
-    **buf = (unsigned char)((value >> 8) & 0xff);
-    (*buf)++;
+    if (little_endian == 0) {
+        **buf = (unsigned char)((value >> 8) & 0xff);
+        (*buf)++;
+    }
 
     **buf = (unsigned char)((value >> 0) & 0xff);
     (*buf)++;
 
+    if (little_endian == 1) {
+        **buf = (unsigned char)((value >> 8) & 0xff);
+        (*buf)++;
+    }
+
     return *buf;
 }
 
-unsigned char *netmd_copy_doubleword_to_buffer(unsigned char **buf, uint32_t value)
+unsigned char *netmd_copy_doubleword_to_buffer(unsigned char **buf, uint32_t value, int little_endian)
 {
-    **buf = (unsigned char)(value >> 24) & 0xff;
-    (*buf)++;
+    int8_t diff = 8;
+    int bit = 24;
+    int i;
 
-    **buf = (value >> 16) & 0xff;
-    (*buf)++;
+    if (little_endian == 1) {
+        diff = -8;
+        bit = 0;
+    }
 
-    **buf = (value >> 8) & 0xff;
-    (*buf)++;
-
-    **buf = (value >> 0) & 0xff;
-    (*buf)++;
+    for (i = 0; i < 4; i++, bit = (bit - diff) & 0xff) {
+        **buf = (unsigned char)(value >> bit) & 0xff;
+        (*buf)++;
+    }
 
     return *buf;
 }
