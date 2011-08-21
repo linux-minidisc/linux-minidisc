@@ -36,32 +36,12 @@ void build_request(unsigned char *request, const unsigned char cmd, unsigned cha
     memcpy(request + header_length + 2, data, data_size);
 }
 
-void execute_request(netmd_dev_handle *dev, const unsigned char cmd, unsigned char *data,
-                     const size_t data_size, netmd_response *response)
+netmd_error parse_netmd_return_status(unsigned char status, unsigned char expected)
 {
-    unsigned char *request;
-    size_t request_length;
+    if (status == expected) {
+        return NETMD_NO_ERROR;
+    }
 
-    /* alloc memory */
-    request_length = 1 + sizeof(secure_header) + 2 + data_size;
-    request = malloc(request_length);
-
-    /* build request */
-    build_request(request, cmd, data, data_size);
-
-    /* execute */
-    response->length = (size_t)netmd_exch_message(dev, request, request_length,
-                                                  response->content);
-    response->position = 0;
-
-    /* free memory */
-    free(request);
-    request = NULL;
-}
-
-
-netmd_error parse_netmd_return_status(unsigned char status)
-{
     switch (status) {
     case NETMD_STATUS_NOT_IMPLEMENTED:
         return NETMD_COMMAND_FAILED_NOT_IMPLEMENTED;
@@ -83,27 +63,46 @@ netmd_error parse_netmd_return_status(unsigned char status)
 
     case NETMD_STATUS_INTERIM:
         break;
-
-    default:
-        return NETMD_COMMAND_FAILED_UNKNOWN_ERROR;
     }
 
-    return NETMD_NO_ERROR;
+    return NETMD_COMMAND_FAILED_UNKNOWN_ERROR;
 }
 
-/** Helper function to make life a little simpler for other netmd_secure_cmd_* functions */
-netmd_error exch_secure_msg(netmd_dev_handle *dev, unsigned char cmd, unsigned char *data, size_t data_size, netmd_response *response)
+void netmd_send_secure_msg(netmd_dev_handle *dev, unsigned char cmd,
+                           unsigned char *data, size_t data_size)
+{
+    unsigned char *request;
+    size_t request_length;
+
+    /* alloc memory */
+    request_length = 1 + sizeof(secure_header) + 2 + data_size;
+    request = malloc(request_length);
+
+    /* build request */
+    build_request(request, cmd, data, data_size);
+
+    netmd_send_message(dev, request, request_length);
+
+    /* free memory */
+    free(request);
+    request = NULL;
+}
+
+netmd_error netmd_recv_secure_msg(netmd_dev_handle *dev, unsigned char cmd,
+                                  netmd_response *response,
+                                  unsigned char expected_response_code)
 {
     netmd_error error;
 
-    /* execure request */
-    execute_request(dev, cmd, data, data_size, response);
+    /* recv response */
+    response->length = (size_t)netmd_recv_message(dev, response->content);
+    response->position = 0;
 
     if (response->length < 1) {
         return NETMD_COMMAND_FAILED_NO_RESPONSE;
     }
 
-    error = parse_netmd_return_status(response->content[0]);
+    error = parse_netmd_return_status(response->content[0], expected_response_code);
     response->position = 1;
 
     netmd_check_response_bulk(response, secure_header, sizeof(secure_header), &error);
@@ -113,6 +112,15 @@ netmd_error exch_secure_msg(netmd_dev_handle *dev, unsigned char cmd, unsigned c
     return error;
 }
 
+/** Helper function to make life a little simpler for other netmd_secure_cmd_* functions */
+netmd_error netmd_exch_secure_msg(netmd_dev_handle *dev, unsigned char cmd,
+                                  unsigned char *data, size_t data_size,
+                                  netmd_response *response)
+{
+    netmd_send_secure_msg(dev, cmd, data, data_size);
+    return netmd_recv_secure_msg(dev, cmd, response, NETMD_STATUS_ACCEPTED);
+}
+
 /*
   => 00  18 00 08 00 46 f0 03 01 03  80 ff
   <= 09  18 00 08 00 46 f0 03 01 03  80 00
@@ -120,7 +128,7 @@ netmd_error exch_secure_msg(netmd_dev_handle *dev, unsigned char cmd, unsigned c
 netmd_error netmd_secure_enter_session(netmd_dev_handle *dev)
 {
     netmd_response response;
-    return exch_secure_msg(dev, 0x80, NULL, 0, &response);
+    return netmd_exch_secure_msg(dev, 0x80, NULL, 0, &response);
 }
 
 /*
@@ -130,7 +138,7 @@ netmd_error netmd_secure_enter_session(netmd_dev_handle *dev)
 netmd_error netmd_secure_leave_session(netmd_dev_handle *dev)
 {
     netmd_response response;
-    return exch_secure_msg(dev, 0x81, NULL, 0, &response);
+    return netmd_exch_secure_msg(dev, 0x81, NULL, 0, &response);
 }
 
 /*
@@ -142,7 +150,7 @@ netmd_error netmd_secure_get_leaf_id(netmd_dev_handle *dev, uint64_t *player_id)
     netmd_response response;
     netmd_error error;
 
-    error = exch_secure_msg(dev, 0x11, NULL, 0, &response);
+    error = netmd_exch_secure_msg(dev, 0x11, NULL, 0, &response);
     if (error == NETMD_NO_ERROR) {
         *player_id = netmd_read_quadword(&response);
     }
@@ -212,7 +220,7 @@ netmd_error netmd_secure_send_key_data(netmd_dev_handle *dev, netmd_ekb* ekb)
     netmd_build_send_key_data_command(cmd, (size - 8) & 0xffff, chain_length, ekb->depth,
                                       ekb->id, ekb->chain, ekb->signature);
 
-    error = exch_secure_msg(dev, 0x12, cmd, size, &response);
+    error = netmd_exch_secure_msg(dev, 0x12, cmd, size, &response);
     free(cmd);
 
     netmd_check_response_word(&response, (size - 8) & 0xffff, &error);
@@ -236,7 +244,7 @@ netmd_error netmd_secure_session_key_exchange(netmd_dev_handle *dev,
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
     memcpy(cmd + sizeof(cmdhdr), rand_in, 8);
 
-    error = exch_secure_msg(dev, 0x20, cmd, sizeof(cmd), &response);
+    error = netmd_exch_secure_msg(dev, 0x20, cmd, sizeof(cmd), &response);
 
     netmd_check_response(&response, 0x00, &error);
     netmd_check_response(&response, 0x00, &error);
@@ -253,7 +261,7 @@ netmd_error netmd_secure_session_key_forget(netmd_dev_handle *dev)
     netmd_response response;
     netmd_error error;
 
-    error = exch_secure_msg(dev, 0x21, cmd, sizeof(cmd), &response);
+    error = netmd_exch_secure_msg(dev, 0x21, cmd, sizeof(cmd), &response);
     netmd_check_response_bulk(&response, cmd, sizeof(cmd), &error);
     return error;
 }
@@ -283,7 +291,7 @@ netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
     memcpy(cmd + sizeof(cmdhdr), data, 32);
 
-    error = exch_secure_msg(dev, 0x22, cmd, sizeof(cmd), &response);
+    error = netmd_exch_secure_msg(dev, 0x22, cmd, sizeof(cmd), &response);
     netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
     return error;
 }
@@ -373,8 +381,8 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     totalbytes = netmd_get_frame_size(wireformat) * frames + packet_count * 24U;
     netmd_copy_doubleword_to_buffer(&buf, totalbytes, 0);
 
-    /* TODO: fix this - reply with 09 at beginning */
-    error = exch_secure_msg(dev, 0x28, cmd, sizeof(cmd), &response);
+    netmd_send_secure_msg(dev, 0x28, cmd, sizeof(cmd));
+    error = netmd_recv_secure_msg(dev, 0x28, &response, NETMD_STATUS_INTERIM);
     netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
     netmd_check_response_word(&response, 0xffffU, &error);
     netmd_check_response(&response, 0x00, &error);
@@ -382,7 +390,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     if (error == NETMD_NO_ERROR) {
         netmd_transfer_song_packets(dev, packets);
 
-        /* TODO: read reply */
+        error = netmd_recv_secure_msg(dev, 0x28, &response, NETMD_STATUS_ACCEPTED);
         netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
         *track = netmd_read_word(&response);
         netmd_check_response(&response, 0x00, &error);
@@ -431,7 +439,7 @@ netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
     memcpy(buf, hash, sizeof(hash));
     buf += sizeof(hash);
 
-    error = exch_secure_msg(dev, 0x48, cmd, sizeof(cmd), &response);
+    error = netmd_exch_secure_msg(dev, 0x48, cmd, sizeof(cmd), &response);
     netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
     netmd_check_response_word(&response, track, &error);
 
@@ -453,7 +461,7 @@ netmd_error netmd_secure_get_track_uuid(netmd_dev_handle *dev, uint16_t track,
     cmd[sizeof(cmdhdr)] = tmp & 0xffU;
     cmd[sizeof(cmdhdr) + 1] = track & 0xffU;
 
-    error = exch_secure_msg(dev, 0x23, cmd, sizeof(cmd), &response);
+    error = netmd_exch_secure_msg(dev, 0x23, cmd, sizeof(cmd), &response);
     netmd_check_response_bulk(&response, cmd, sizeof(cmd), &error);
     netmd_read_response_bulk(&response, uuid, 8, &error);
 
@@ -475,7 +483,7 @@ netmd_error netmd_secure_delete_track(netmd_dev_handle *dev, uint16_t track,
     cmd[sizeof(cmdhdr)] = tmp & 0xffU;
     cmd[sizeof(cmdhdr) + 1] = track & 0xffU;
 
-    error = exch_secure_msg(dev, 0x40, cmd, sizeof(cmd), &response);
+    error = netmd_exch_secure_msg(dev, 0x40, cmd, sizeof(cmd), &response);
     netmd_check_response_bulk(&response, cmd, sizeof(cmd), &error);
     netmd_read_response_bulk(&response, signature, 8, &error);
 
