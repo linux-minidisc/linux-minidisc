@@ -84,10 +84,11 @@ netmd_error netmd_set_playmode(netmd_dev_handle* dev, const uint16_t playmode)
                                0x00};
     unsigned char buf[255];
 
-    request[10] = (unsigned char)(playmode >> 8) & 0xff;
-    request[11] = (unsigned int)playmode & 0xff;
+    uint16_t tmp = playmode >> 8;
+    request[10] = tmp & 0xffU;
+    request[11] = playmode & 0xffU;
 
-    /* TODO: error checking */
+    /* TODO: error checkxing */
     netmd_exch_message(dev, request, sizeof(request), buf);
 
     return NETMD_NO_ERROR;
@@ -113,8 +114,9 @@ netmd_error netmd_change_track(netmd_dev_handle* dev, const uint16_t direction)
                                0x00, 0x00, 0x00, 0x00, 0x00};
     unsigned char buf[255];
 
-    request[9] = (unsigned char)(direction >> 8) & 0xff;
-    request[10] = (unsigned char)direction & 0xff;
+    uint16_t tmp = direction >> 8;
+    request[9] = tmp & 0xffU;
+    request[10] = direction & 0xffU;
 
     /* TODO: error checking */
     netmd_exch_message(dev, request, sizeof(request), buf);

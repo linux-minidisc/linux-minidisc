@@ -34,9 +34,9 @@ struct netmd_pair const trprot_settings[] =
 /*! list of known bitrates (mapped to protocol ID) that can be used in NetMD devices */
 struct netmd_pair const bitrates[] =
 {
-    {0x90, "Stereo"},
-    {0x92, "LP2"},
-    {0x93, "LP4"},
+    {NETMD_ENCODING_SP, "Stereo"},
+    {NETMD_ENCODING_LP2, "LP2"},
+    {NETMD_ENCODING_LP4, "LP4"},
     {0, 0} /* terminating pair */
 };
 
@@ -1181,14 +1181,13 @@ int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track)
 
 void netmd_clean_disc_info(minidisc *md)
 {
-    unsigned int i = 0;
-    for(; i < md->group_count; i++)
+    unsigned int i;
+    for(i = 0; i < md->group_count; i++)
     {
         free(md->groups[i].name);
-        md->groups[i].name = 0;
+        md->groups[i].name = NULL;
     }
 
     free(md->groups);
-
-    md->groups = 0;
+    md->groups = NULL;
 }
