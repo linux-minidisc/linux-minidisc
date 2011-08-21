@@ -40,7 +40,7 @@ inline unsigned char bcd_to_proper_single(unsigned char value)
     high = (value & 0xf0) >> 4;
     low = (value & 0xf);
 
-    return ((high * 10U) | low) & 0xff;
+    return ((high * 10U) + low) & 0xff;
 }
 
 inline unsigned int bcd_to_proper(unsigned char* value, size_t len)
