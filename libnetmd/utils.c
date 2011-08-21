@@ -17,7 +17,7 @@ inline unsigned char proper_to_bcd_single(unsigned char value)
     unsigned char high, low;
 
     low = (value % 10) & 0xf;
-    high = (((value / 10) % 10) * 0xfU) & 0xf0;
+    high = (((value / 10) % 10) * 0x10U) & 0xf0;
 
     return high | low;
 }
