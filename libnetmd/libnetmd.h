@@ -44,8 +44,8 @@
 */
 typedef struct netmd_group
 {
-    unsigned int start;
-    unsigned int finish;
+    uint16_t start;
+    uint16_t finish;
     char* name;
 } netmd_group_t;
 
@@ -102,7 +102,7 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* pair);
    @param track Zero based index of track your requesting.
    @param data pointer to store the hex code representing the codec.
 */
-int netmd_request_track_flags(netmd_dev_handle* dev, const uint8_t track, unsigned char* data);
+int netmd_request_track_flags(netmd_dev_handle* dev, const uint16_t track, unsigned char* data);
 
 /**
    Get the bitrate used to encode a specific track.
@@ -123,9 +123,9 @@ int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint8_t track, unsig
    @return Actual size of buffer, if your buffer is too small resize buffer and
            recall function.
 */
-int netmd_request_title(netmd_dev_handle* dev, const uint8_t track, char* buffer, const size_t size);
+int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffer, const size_t size);
 
-int netmd_request_track_time(netmd_dev_handle* dev, const uint8_t track, struct netmd_track* buffer);
+int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer);
 
 /**
    Sets title for the specified track.
@@ -135,7 +135,7 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint8_t track, struct 
    @param buffer buffer to hold the name.
    @return returns 0 for fail 1 for success.
 */
-int netmd_set_title(netmd_dev_handle* dev, const uint8_t track, const char* const buffer);
+int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer);
 
 /**
    Sets title for the specified track.
@@ -156,7 +156,7 @@ int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, unsigned int grou
    @param finish Zero based track to make it
    @return 0 for fail 1 for success
 */
-int netmd_move_track(netmd_dev_handle* dev, const uint8_t start, const uint8_t finish);
+int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t finish);
 
 /**
    sets up buffer containing group info.
@@ -194,7 +194,7 @@ int netmd_write_disc_header(netmd_dev_handle* devh, minidisc *md);
    @param track Zero based track to add to group.
    @param group number of group (0 is title group).
 */
-int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc* md, const uint8_t track, const unsigned int group);
+int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc* md, const uint16_t track, const unsigned int group);
 
 /**
    Moves group around the disc.
@@ -204,7 +204,7 @@ int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc* md, const uint8_t 
    @param track Zero based track to make group start at.
    @param group number of group (0 is title group).
 */
-int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int track, const unsigned int group);
+int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const uint16_t track, const unsigned int group);
 
 /**
    Deletes group from disc (but not the tracks in it)
@@ -215,7 +215,7 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int tra
 */
 int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, const unsigned int group);
 
-int netmd_delete_track(netmd_dev_handle* dev, const uint8_t track);
+int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track);
 
 /**
    Writes atrac file to device

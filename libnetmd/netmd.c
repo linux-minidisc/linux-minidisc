@@ -215,19 +215,19 @@ int main(int argc, char* argv[])
         if(strcmp("rename", argv[1]) == 0)
         {
             i = strtoul(argv[2], NULL, 10);
-            netmd_set_title(devh, i & 0xff, argv[3]);
+            netmd_set_title(devh, i & 0xffff, argv[3]);
         }
         else if(strcmp("move", argv[1]) == 0)
         {
             i = strtoul(argv[2], NULL, 10);
             j = strtoul(argv[3], NULL, 10);
-            netmd_move_track(devh, i & 0xff, j & 0xff);
+            netmd_move_track(devh, i & 0xffff, j & 0xffff);
         }
         else if(strcmp("groupmove", argv[1]) == 0)
         {
             i = strtoul(argv[2], NULL, 10);
             j = strtoul(argv[3], NULL, 10);
-            netmd_move_group(devh, md, j & 0xff, i & 0xff);
+            netmd_move_group(devh, md, j & 0xffff, i & 0xffff);
         }
         else if(strcmp("write", argv[1]) == 0)
         {
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
         {
             i = strtoul(argv[2], NULL, 10);
             j = strtoul(argv[3], NULL, 10);
-            if(!netmd_put_track_in_group(devh, md, i & 0xff, j & 0xff))
+            if(!netmd_put_track_in_group(devh, md, i & 0xffff, j & 0xffff))
             {
                 printf("Something screwy happened\n");
             }
@@ -328,12 +328,12 @@ int main(int argc, char* argv[])
         else if(strcmp("delete", argv[1]) == 0)
         {
             i = strtoul(argv[2], NULL, 10);
-            netmd_delete_track(devh, i & 0xff);
+            netmd_delete_track(devh, i & 0xffff);
         }
         else if(strcmp("deletegroup", argv[1]) == 0)
         {
             i = strtoul(argv[2], NULL, 10);
-            netmd_delete_group(devh, md, i & 0xff);
+            netmd_delete_group(devh, md, i & 0xffff);
         }
         else if(strcmp("status", argv[1]) == 0) {
             print_current_track_info(devh);
@@ -400,13 +400,13 @@ int main(int argc, char* argv[])
 
 void print_current_track_info(netmd_dev_handle* devh)
 {
-    uint8_t track;
+    uint16_t track;
     char buffer[256];
     netmd_time time;
 
     /* TODO: error checking */
     netmd_get_position(devh, &time);
-    netmd_get_track(devh, (uint16_t*)&track);
+    netmd_get_track(devh, &track);
     netmd_request_title(devh, track, buffer, 256);
 
     printf("Current track: %s \n", buffer);

@@ -174,7 +174,7 @@ int netmd_request_track_flags(netmd_dev_handle*dev, const uint8_t track, unsigne
     return ret;
 }
 
-int netmd_request_track_time(netmd_dev_handle* dev, const uint8_t track, struct netmd_track* buffer)
+int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer)
 {
     int ret = 0;
     int size = 0;
@@ -183,8 +183,10 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint8_t track, struct 
                                0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
                                0x00};
     unsigned char time_request[255];
+    unsigned char *buf;
 
-    request[8] = track;
+    buf = request + 7;
+    netmd_copy_word_to_buffer(&buf, track, 0);
     ret = netmd_exch_message(dev, request, 0x13, time_request);
     if(ret < 0)
     {
@@ -202,7 +204,7 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint8_t track, struct 
     return 1;
 }
 
-int netmd_request_title(netmd_dev_handle* dev, const uint8_t track, char* buffer, const size_t size)
+int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffer, const size_t size)
 {
     int ret = -1;
     size_t title_size = 0;
@@ -211,8 +213,10 @@ int netmd_request_title(netmd_dev_handle* dev, const uint8_t track, char* buffer
                                      0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
                                      0x00};
     unsigned char title[255];
+    unsigned char *buf;
 
-    title_request[8] = track;
+    buf = title_request + 7;
+    netmd_copy_word_to_buffer(&buf, track, 0);
     ret = netmd_exch_message(dev, title_request, 0x13, title);
     if(ret < 0)
     {
@@ -238,7 +242,7 @@ int netmd_request_title(netmd_dev_handle* dev, const uint8_t track, char* buffer
     return (int)title_size - 25;
 }
 
-int netmd_set_title(netmd_dev_handle* dev, const uint8_t track, const char* const buffer)
+int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
 {
     int ret = 1;
     unsigned char *title_request = NULL;
@@ -247,6 +251,7 @@ int netmd_set_title(netmd_dev_handle* dev, const uint8_t track, const char* cons
                                     0x00, 0x50, 0x00, 0x00, 0x0a, 0x00,
                                     0x00, 0x00, 0x0d};
     unsigned char reply[255];
+    unsigned char *buf;
     size_t size;
 
     size = strlen(buffer);
@@ -254,7 +259,8 @@ int netmd_set_title(netmd_dev_handle* dev, const uint8_t track, const char* cons
     memcpy(title_request, title_header, 0x15);
     memcpy((title_request + 0x15), buffer, size);
 
-    title_request[8] = track;
+    buf = title_request + 7;
+    netmd_copy_word_to_buffer(&buf, track, 0);
     title_request[16] = size & 0xff;
     title_request[20] = size & 0xff;
 
@@ -269,16 +275,20 @@ int netmd_set_title(netmd_dev_handle* dev, const uint8_t track, const char* cons
     return 1;
 }
 
-int netmd_move_track(netmd_dev_handle* dev, const uint8_t start, const uint8_t finish)
+int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t finish)
 {
     int ret = 0;
     unsigned char request[] = {0x00, 0x18, 0x43, 0xff, 0x00, 0x00,
                                0x20, 0x10, 0x01, 0x00, 0x04, 0x20,
                                0x10, 0x01, 0x00, 0x03};
     unsigned char reply[255];
+    unsigned char *buf;
 
-    request[10] = start;
-    request[15] = finish;
+    buf = request + 9;
+    netmd_copy_word_to_buffer(&buf, start, 0);
+
+    buf = request + 14;
+    netmd_copy_word_to_buffer(&buf, finish, 0);
 
     ret = netmd_exch_message(dev, request, 16, reply);
 
@@ -353,7 +363,7 @@ int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, unsigned int grou
     return 1;
 }
 
-static void set_group_data(minidisc* md, const int group, const char* const name, const unsigned int start, const unsigned int finish) {
+static void set_group_data(minidisc* md, const int group, const char* const name, const uint16_t start, const uint16_t finish) {
     md->groups[group].name = strdup(name);
     md->groups[group].start = start;
     md->groups[group].finish = finish;
@@ -476,9 +486,9 @@ void netmd_parse_group(minidisc* md, char* group, int* group_count)
 void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_count, char* tracks)
 {
     char *track_last;
-    unsigned int start, finish;
+    uint16_t start, finish;
 
-    start = strtoul(tracks, (char **) NULL, 10);
+    start = strtoul(tracks, (char **) NULL, 10) & 0xffffU;
     if (start == 0)
     {
         /* disc title */
@@ -496,7 +506,7 @@ void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_cou
             track_last[0] = '\0';
             track_last++;
 
-            finish = strtoul(track_last, (char **) NULL, 10);
+            finish = strtoul(track_last, (char **) NULL, 10) & 0xffffU;
         }
 
         set_group_data(md, *group_count, group_name, start, finish);
@@ -554,7 +564,7 @@ int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length
 }
 
 /* move track, then manipulate title string */
-int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc *md, const uint8_t track, const unsigned int group)
+int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc *md, const uint16_t track, const unsigned int group)
 {
     unsigned int i = 0;
     unsigned int j = 0;
@@ -580,7 +590,7 @@ int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc *md, const uint8_t 
                 /* nothing in group  */
                 found = 1;
             }
-            if(((track + 1) & 0xff) < md->groups[i+1].start)
+            if(((track + 1U) & 0xffffU) < md->groups[i+1].start)
             {
                 found = 1;
                 for(j = i+1; j < md->group_count; j++)
@@ -633,9 +643,9 @@ int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc *md, const uint8_t 
     else
     {
         if(md->groups[group].start == 0)
-            md->groups[group].start = (track + 1) & 0xff;
+            md->groups[group].start = (track + 1U) & 0xffffU;
         else
-            md->groups[group].finish = md->groups[group].start + 1;
+            md->groups[group].finish = (md->groups[group].start + 1U) & 0xffffU;
     }
 
     /* if not last group */
@@ -661,28 +671,28 @@ int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc *md, const uint8_t 
 
     if(md->groups[group].finish != 0)
     {
-        netmd_move_track(dev, track, (md->groups[group].finish - 1) & 0xff);
+        netmd_move_track(dev, track, (md->groups[group].finish - 1U) & 0xffffU);
     }
     else
     {
         if(md->groups[group].start != 0)
-            netmd_move_track(dev, track, (md->groups[group].start - 1) & 0xff);
+            netmd_move_track(dev, track, (md->groups[group].start - 1U) & 0xffffU);
         else
-            netmd_move_track(dev, track, md->groups[group].start & 0xff);
+            netmd_move_track(dev, track, md->groups[group].start & 0xffffU);
     }
 
     return netmd_write_disc_header(dev, md);
 }
 
-int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int track, const unsigned int group)
+int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const uint16_t track, const unsigned int group)
 {
-    unsigned int index = 0;
+    uint16_t index = 0;
     unsigned int i = 0;
-    unsigned int gs = 0;
+    uint16_t gs = 0;
     struct netmd_group store1;
     struct netmd_group *p, *p2;
-    unsigned int gt = md->groups[group].start;
-    unsigned int finish = (md->groups[group].finish - md->groups[group].start) + track;
+    uint16_t gt = md->groups[group].start;
+    uint16_t finish = (((unsigned int)md->groups[group].finish - md->groups[group].start) + track) & 0xffffU;
 
     p = p2 = 0;
 
@@ -693,10 +703,10 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int tra
     /* loop, moving tracks to new positions */
     for(index = track; index <= finish; index++, gt++)
     {
-        printf("Moving track %i to %i\n", (gt - 1) & 0xff, index & 0xff);
-        netmd_move_track(dev, (gt - 1) & 0xff, index & 0xff);
+        printf("Moving track %i to %i\n", (gt - 1U) & 0xffffU, index & 0xffffU);
+        netmd_move_track(dev, (gt - 1U) & 0xffffU, index & 0xffffU);
     }
-    md->groups[group].start = track + 1;
+    md->groups[group].start = (track + 1U) & 0xffffU;
     md->groups[group].finish = index;
 
     /* create a copy of groups */
@@ -710,7 +720,7 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int tra
     }
 
     store1 = p[group];
-    gs = store1.finish - store1.start + 1; /* how many tracks got moved? */
+    gs = ((unsigned int)store1.finish - store1.start + 1) & 0xffffU; /* how many tracks got moved? */
 
     /* find group to bump */
     if(track < md->groups[group].start)
@@ -722,10 +732,10 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int tra
                 for(i = group - 1; i >= index; i--)
                 {
                     /* all tracks get moved gs spots */
-                    p[i].start += gs;
+                    p[i].start = ((unsigned int)p[i].start + gs) & 0xffffU;
 
                     if(p[i].finish != 0)
-                        p[i].finish += gs;
+                        p[i].finish = ((unsigned int)p[1].finish + gs) & 0xffffU;
 
                     p[i + 1] = p[i]; /* bump group down the list */
                 }
@@ -740,10 +750,10 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const unsigned int tra
                     for(i = group + 1; i < md->group_count; i++)
                     {
                         /* all tracks get moved gs spots */
-                        p[i].start -= gs;
+                        p[i].start = ((unsigned int)p[i].start - gs) & 0xffffU;;
 
                         if(p[i].finish != 0)
-                            p[i].finish -= gs;
+                            p[i].finish = ((unsigned int)p[1].finish - gs) & 0xffffU;
 
                         p[i - 1] = p[i]; /* bump group down the list */
                     }
@@ -957,7 +967,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
     int fd = open(szFile, O_RDONLY); /* File descriptor to omg file */
     unsigned char *data = malloc(4096); /* Buffer for reading the omg file */
     unsigned char *p = NULL; /* Pointer to index into data */
-    uint8_t track_number='\0'; /* Will store the track number of the recorded song */
+    uint16_t track_number='\0'; /* Will store the track number of the recorded song */
 
     /* Some unknown command being send before titling */
     unsigned char begintitle[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02,
@@ -1154,14 +1164,16 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
     return ret;
 }
 
-int netmd_delete_track(netmd_dev_handle* dev, const uint8_t track)
+int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track)
 {
     int ret = 0;
     unsigned char request[] = {0x00, 0x18, 0x40, 0xff, 0x01, 0x00,
                                0x20, 0x10, 0x01, 0x00, 0x00};
     unsigned char reply[255];
+    unsigned char *buf;
 
-    request[10] = track;
+    buf = request + 9;
+    netmd_copy_word_to_buffer(&buf, track, 0);
     ret = netmd_exch_message(dev, request, 11, reply);
 
     return ret;
