@@ -2,6 +2,7 @@
 #define LIBNETMD_SECURE_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "common.h"
 #include "error.h"
@@ -151,6 +152,10 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
 
                                     uint16_t *track, unsigned char *uuid,
                                     unsigned char *content_id);
+
+netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
+                                    FILE* file);
+
 
 /**
    Commit a track. The idea is that this command tells the device hat the license

@@ -153,6 +153,7 @@ int main(int argc, char* argv[])
     int c;
     netmd_time time;
     netmd_error error;
+    FILE *f;
 
     error = netmd_init(&device_list);
     if (error != NETMD_NO_ERROR) {
@@ -369,6 +370,12 @@ int main(int argc, char* argv[])
             printf("\nAvailable: ");
             print_time(&capacity.available);
             printf("\n");
+        }
+        else if (strcmp("recv", argv[1]) == 0) {
+            i = strtoul(argv[2], NULL, 10);
+            f = fopen(argv[3], "w");
+            netmd_secure_recv_track(devh, i & 0xffff, f);
+            fclose(f);
         }
         else if (strcmp("secure", argv[1]) == 0) {
             /*cmdid = strtol(argv[2], NULL, 16);

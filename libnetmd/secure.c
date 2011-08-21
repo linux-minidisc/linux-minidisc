@@ -11,11 +11,14 @@
 #include <stdio.h>
 #include <usb.h>
 #include <rpc/des_crypt.h>
+#include <errno.h>
 
 #include "secure.h"
 #include "const.h"
 #include "utils.h"
 #include "log.h"
+#include "trackinformation.h"
+
 
 static const unsigned char secure_header[] = { 0x18, 0x00, 0x08, 0x00, 0x46,
                                                0xf0, 0x03, 0x01, 0x03 };
@@ -408,6 +411,187 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
 
         memcpy(uuid, encryptedreply, 8);
         memcpy(content_id, encryptedreply + 12, 20);
+    }
+
+    return error;
+}
+
+netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length, FILE *file, size_t chunksize)
+{
+    uint32_t done = 0;
+    char *data;
+    int32_t read;
+    netmd_error error = NETMD_NO_ERROR;
+
+    data = malloc(chunksize);
+    while (done < length) {
+        if ((length - done) < chunksize) {
+            chunksize = length - done;
+        }
+
+        read = usb_bulk_read((usb_dev_handle*)dev, 0x81, data, (int)chunksize, 10000);
+
+        if (read >= 0) {
+            done += (uint32_t)read;
+            fwrite(data, (uint32_t)read, 1, file);
+
+            netmd_log(NETMD_LOG_DEBUG, "%.1f%%\n", (double)done/(double)length * 100);
+        }
+        else if (read != -ETIMEDOUT) {
+            error = NETMD_USB_ERROR;
+        }
+    }
+    free(data);
+
+    return error;
+}
+
+uint8_t netmd_get_channel_count(unsigned char channel)
+{
+    if (channel == NETMD_CHANNELS_MONO) {
+        return 1;
+    }
+    else if (channel == NETMD_CHANNELS_STEREO) {
+        return 2;
+    }
+    else {
+        return 0;
+    }
+}
+
+void netmd_write_aea_header(char *name, uint32_t frames, unsigned char channel, FILE* f)
+{
+    unsigned char header[2048] = { 0 };
+    unsigned char *buf;
+
+    buf = header;
+    netmd_copy_doubleword_to_buffer(&buf, 2048, 1);
+    strncpy((char *)buf, name, 255);
+    buf += 256;
+
+    netmd_copy_doubleword_to_buffer(&buf, frames, 1);
+    *(buf++) = netmd_get_channel_count(channel);
+    *(buf++) = 0; /* flags */
+    netmd_copy_doubleword_to_buffer(&buf, 0, 1);
+    netmd_copy_doubleword_to_buffer(&buf, 0, 1); /* encrypted*/
+    netmd_copy_doubleword_to_buffer(&buf, 0, 1); /*groupstart*/
+
+    netmd_log_hex(NETMD_LOG_DEBUG, header, sizeof(header));
+    fwrite(header, sizeof(header), 1, f);
+}
+
+void netmd_write_wav_header(unsigned char format, uint32_t bytes, FILE *f)
+{
+    unsigned char header[60] = { 0 };
+    unsigned char *buf;
+    unsigned char maskedformat;
+    uint16_t bytespersecond;
+    uint16_t bytesperframe;
+    uint16_t jointstereo;
+
+    maskedformat = format & 0x06;
+    if (maskedformat == NETMD_DISKFORMAT_LP4) {
+        bytesperframe = 96;
+        jointstereo = 1;
+    }
+    else if (maskedformat == NETMD_DISKFORMAT_LP2) {
+        bytesperframe = 192;
+        jointstereo = 0;
+    }
+    bytespersecond = ((bytesperframe * 44100U) / 512U) & 0xffff;
+
+    buf = header;
+
+    /* RIFF header */
+    memcpy(buf, "RIFF", 4);
+    buf += 4;
+
+    netmd_copy_doubleword_to_buffer(&buf, bytes + 60, 1);
+    memcpy(buf, "WAVE", 4);
+    buf += 4;
+
+    /* fmt chunk - standard part */
+    memcpy(buf, "fmt ", 4);
+    buf += 4;
+    netmd_copy_doubleword_to_buffer(&buf, 32, 1);
+    netmd_copy_word_to_buffer(&buf, NETMD_RIFF_FORMAT_TAG_ATRAC3, 1);
+    netmd_copy_word_to_buffer(&buf, 2, 1);
+    netmd_copy_doubleword_to_buffer(&buf, 44100, 1);
+    netmd_copy_doubleword_to_buffer(&buf, bytespersecond, 1);
+    netmd_copy_word_to_buffer(&buf, (2U*bytesperframe) & 0xffff, 1);
+    netmd_copy_word_to_buffer(&buf, 0, 1);
+
+    /* fmt chunk - ATRAC extension */
+    netmd_copy_word_to_buffer(&buf, 14, 1);
+    netmd_copy_word_to_buffer(&buf, 1, 1);
+    netmd_copy_doubleword_to_buffer(&buf, bytesperframe, 1);
+    netmd_copy_word_to_buffer(&buf, jointstereo, 1);
+    netmd_copy_word_to_buffer(&buf, jointstereo, 1);
+    netmd_copy_word_to_buffer(&buf, 1, 1);
+    netmd_copy_word_to_buffer(&buf, 0, 1);
+
+    /* data */
+    memcpy(buf, "data", 4);
+    buf += 4;
+    netmd_copy_doubleword_to_buffer(&buf, bytes, 1);
+
+    netmd_log_hex(NETMD_LOG_DEBUG, header, sizeof(header));
+    fwrite(header, sizeof(header), 1, f);
+}
+
+netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
+                                    FILE* file)
+{
+    unsigned char cmdhdr[] = {0x00, 0x10, 0x01};
+    unsigned char cmd[sizeof(cmdhdr) + sizeof(track)] = { 0 };
+    unsigned char *buf;
+    unsigned char encoding;
+    unsigned char channel;
+    char name[257] = { 0 };
+    unsigned char codec;
+    uint32_t length;
+    uint16_t track_id;
+
+    netmd_response response;
+    netmd_error error;
+
+    buf = cmd;
+    memcpy(buf, cmdhdr, sizeof(cmdhdr));
+    buf += sizeof(cmdhdr);
+    netmd_copy_word_to_buffer(&buf, track, 0);
+
+    track_id = (track - 1U) & 0xffff;;
+    netmd_request_track_bitrate(dev, track_id, &encoding, &channel);
+
+    if (encoding == NETMD_ENCODING_SP) {
+        netmd_request_title(dev, track_id, name, sizeof(name) - 1);
+    }
+    else {
+    }
+
+    netmd_send_secure_msg(dev, 0x30, cmd, sizeof(cmd));
+    error = netmd_recv_secure_msg(dev, 0x30, &response, NETMD_STATUS_INTERIM);
+    netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
+    netmd_check_response_word(&response, track, &error);
+    codec = netmd_read(&response);
+    length = netmd_read_doubleword(&response);
+
+    if (encoding == NETMD_ENCODING_SP) {
+        netmd_write_aea_header(name, codec, channel, file);
+    }
+    else {
+        netmd_write_wav_header(codec, length, file);
+    }
+
+    if (error == NETMD_NO_ERROR) {
+        error = netmd_secure_real_recv_track(dev, length, file, 0x10000);
+    }
+
+    if (error == NETMD_NO_ERROR) {
+        error = netmd_recv_secure_msg(dev, 0x30, &response, NETMD_STATUS_ACCEPTED);
+        netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
+        netmd_read_response_bulk(&response, NULL, 2, &error);
+        netmd_check_response_word(&response, 0, &error);
     }
 
     return error;
