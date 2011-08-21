@@ -423,6 +423,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
     uint8_t g, group = 0, lastgroup = 0;
     unsigned char bitrate_id;
     unsigned char flags;
+    unsigned char channel;
     char *name, buffer[256];
     struct netmd_track time;
     struct netmd_pair const *trprot, *bitrate;
@@ -464,7 +465,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
 
         netmd_request_track_time(devh, i, &time);
         netmd_request_track_flags(devh, i, &flags);
-        netmd_request_track_bitrate(devh, i, &bitrate_id);
+        netmd_request_track_bitrate(devh, i, &bitrate_id, &channel);
 
         trprot = find_pair(flags, trprot_settings);
         bitrate = find_pair(bitrate_id, bitrates);

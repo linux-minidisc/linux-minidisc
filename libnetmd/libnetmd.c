@@ -125,55 +125,6 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
     return (int)title_size - 25;
 }
 
-int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint8_t track, unsigned char* data)
-{
-    int ret = 0;
-    int size = 0;
-    unsigned char request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x10,
-                               0x01, 0x00, 0xDD, 0x30, 0x80, 0x07,
-                               0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
-                               0x00};
-    unsigned char reply[255];
-
-    /* TODO: Check length of track */
-    request[8] = track & 0xff;
-    ret = netmd_exch_message(dev, request, 0x13, reply);
-    if(ret < 0)
-    {
-        fprintf(stderr, "bad ret code, returning early\n");
-        return 0;
-    }
-
-    size = ret;
-
-    *data = reply[size - 2];
-    return ret;
-}
-
-int netmd_request_track_flags(netmd_dev_handle*dev, const uint8_t track, unsigned char* data)
-{
-    int ret = 0;
-    int size = 0;
-    unsigned char request[] = {0x00, 0x18, 0x06, 0x01, 0x20, 0x10,
-                               0x01, 0x00, 0xdd, 0xff, 0x00, 0x00,
-                               0x01, 0x00, 0x08};
-    unsigned char reply[255];
-
-    /* TODO: Check length of track */
-    request[8] = (track & 0xff);
-    ret = netmd_exch_message(dev, request, 15, reply);
-    if(ret < 0)
-    {
-        fprintf(stderr, "bad ret code, returning early\n");
-        return 0;
-    }
-
-    size = ret;
-
-    *data = reply[size - 1];
-    return ret;
-}
-
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer)
 {
     int ret = 0;
@@ -202,44 +153,6 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
     buffer->track = track;
 
     return 1;
-}
-
-int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffer, const size_t size)
-{
-    int ret = -1;
-    size_t title_size = 0;
-    unsigned char title_request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x18,
-                                     0x02, 0x00, 0x00, 0x30, 0x00, 0xa,
-                                     0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
-                                     0x00};
-    unsigned char title[255];
-    unsigned char *buf;
-
-    buf = title_request + 7;
-    netmd_copy_word_to_buffer(&buf, track, 0);
-    ret = netmd_exch_message(dev, title_request, 0x13, title);
-    if(ret < 0)
-    {
-        fprintf(stderr, "bad ret code, returning early\n");
-        return -1;
-    }
-
-    title_size = (size_t)ret;
-
-    if(title_size == 0 || title_size == 0x13)
-        return -1; /* bail early somethings wrong or no track */
-
-    if(title_size > size)
-    {
-        printf("netmd_request_title: title too large for buffer\n");
-        return -1;
-    }
-
-    memset(buffer, 0, size);
-    memcpy(buffer, (title + 25), title_size - 25);
-    buffer[size] = 0;
-
-    return (int)title_size - 25;
 }
 
 int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
