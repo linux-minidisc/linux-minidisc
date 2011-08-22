@@ -397,6 +397,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
         memset(next->data, 0, next->length);
         next->iv = malloc(8);
         next->key = malloc(8);
+        next->next = NULL;
 
         /* linked list */
         if (last != NULL) {
