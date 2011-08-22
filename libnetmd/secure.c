@@ -110,7 +110,12 @@ netmd_error netmd_recv_secure_msg(netmd_dev_handle *dev, unsigned char cmd,
 
     netmd_check_response_bulk(response, secure_header, sizeof(secure_header), &error);
     netmd_check_response(response, cmd, &error);
-    netmd_check_response(response, 0x00, &error);
+    if (cmd != 0x12) {
+        netmd_check_response(response, 0x00, &error);
+    }
+    else {
+        netmd_check_response(response, 0x01, &error);
+    }
 
     return error;
 }
