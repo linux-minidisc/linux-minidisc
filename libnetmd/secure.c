@@ -505,7 +505,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     netmd_send_secure_msg(dev, 0x28, cmd, sizeof(cmd));
     error = netmd_recv_secure_msg(dev, 0x28, &response, NETMD_STATUS_INTERIM);
     netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
-    netmd_check_response_word(&response, 0xffffU, &error);
+    netmd_read_response_bulk(&response, NULL, 2, &error);
     netmd_check_response(&response, 0x00, &error);
 
     if (error == NETMD_NO_ERROR) {
