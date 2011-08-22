@@ -12,7 +12,7 @@ CFLAGS = -fshort-enums `libusb-config --cflags`
 CFLAGS += $(PEDANTIC)
 CFLAGS += -g
 
-LDFLAGS = `libusb-config --libs` -lssl
+LDFLAGS = `libusb-config --libs` `pkg-config --libs openssl`
 
 all: $(APP) $(LIB)
 
