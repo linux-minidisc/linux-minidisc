@@ -672,3 +672,21 @@ netmd_error netmd_secure_delete_track(netmd_dev_handle *dev, uint16_t track,
 
     return error;
 }
+
+netmd_error netmd_secure_set_track_protection(netmd_dev_handle *dev,
+                                              unsigned char mode)
+{
+    unsigned char cmdhdr[] = {0x00, 0x01, 0x00, 0x00};
+    unsigned char cmd[sizeof(cmdhdr) + sizeof(mode)];
+
+    netmd_response response;
+    netmd_error error;
+
+    memcpy(cmd, cmdhdr, sizeof(cmdhdr));
+    cmd[sizeof(cmdhdr)] = mode;
+
+    error = netmd_exch_secure_msg(dev, 0x2b, cmd, sizeof(cmd), &response);
+    netmd_check_response_bulk(&response, cmd, sizeof(cmd), &error);
+
+    return error;
+}
