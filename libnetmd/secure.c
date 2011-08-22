@@ -330,6 +330,7 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
     netmd_track_packets *p;
     unsigned char *packet, *buf;
     size_t packet_size;
+    int error;
 
     p = packets;
     while (p != NULL) {
@@ -345,13 +346,17 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
         memcpy(buf + 16, p->data, p->length);
 
         /* ... send it */
-        usb_bulk_write((usb_dev_handle*)dev, 2, (char*)packet, (int)packet_size, 1000);
+        error = usb_bulk_write((usb_dev_handle*)dev, 2, (char*)packet, (int)packet_size, 10000);
+        netmd_log(NETMD_LOG_DEBUG, "%d %d\n", packet_size, error);
 
         /* cleanup */
-        free(buf);
+        free(packet);
         buf = NULL;
 
-        p = p->next;
+        if (error >= 0) {
+            p = p->next;
+        }
+        break;
     }
 }
 
