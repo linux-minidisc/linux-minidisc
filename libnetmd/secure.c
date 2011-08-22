@@ -220,16 +220,15 @@ netmd_error netmd_secure_send_key_data(netmd_dev_handle *dev, netmd_ekb* ekb)
     size = 22 + ((unsigned int)chain_length*16) + 24;
 
     cmd = malloc(size);
-    netmd_build_send_key_data_command(cmd, (size - 8) & 0xffff, chain_length, ekb->depth,
+    netmd_build_send_key_data_command(cmd, (size - 6) & 0xffff, chain_length, ekb->depth,
                                       ekb->id, ekb->chain, ekb->signature);
 
     error = netmd_exch_secure_msg(dev, 0x12, cmd, size, &response);
     free(cmd);
 
-    netmd_check_response_word(&response, (size - 8) & 0xffff, &error);
+    netmd_check_response_word(&response, (size - 6) & 0xffff, &error);
     netmd_check_response_word(&response, 0, &error);
-    netmd_check_response_word(&response, (size - 8) & 0xffff, &error);
-    netmd_check_response_word(&response, 0, &error);
+    netmd_check_response_word(&response, (size - 6) & 0xffff, &error);
 
     return error;
 }
