@@ -33,7 +33,9 @@ static struct error_description const descriptions[] = {
     {NETMD_USB_ERROR, "Generic USB error"},
 
     {NETMD_RESPONSE_TO_SHORT, "Response from device is shorter than expected."},
-    {NETMD_RESPONSE_NOT_EXPECTED, "Response from device does not match with the expected result."}
+    {NETMD_RESPONSE_NOT_EXPECTED, "Response from device does not match with the expected result."},
+
+    {NETMD_DES_ERROR, "Error during des caluclation."}
 };
 
 static char const unknown_error[] = "Unknown Error";
