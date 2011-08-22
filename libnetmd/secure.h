@@ -189,6 +189,12 @@ netmd_error netmd_secure_get_track_uuid(netmd_dev_handle *dev, uint16_t track,
 netmd_error netmd_secure_delete_track(netmd_dev_handle *dev, uint16_t track,
                                       unsigned char *signature);
 
+netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
+                                  netmd_track_packets **packets,
+                                  size_t *packet_count,
+                                  unsigned char *key_encryption_key);
+
+void netmd_cleanup_packets(netmd_track_packets **packets);
 
 netmd_error netmd_secure_set_track_protection(netmd_dev_handle *dev,
                                               unsigned char mode);

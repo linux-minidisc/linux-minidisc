@@ -350,6 +350,125 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
     }
 }
 
+netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
+                                  netmd_track_packets **packets,
+                                  size_t *packet_count,
+                                  unsigned char *key_encryption_key)
+{
+    size_t position = 0;
+    size_t chunksize = 0xffffffffU;
+    netmd_track_packets *last = NULL;
+    netmd_track_packets *next = NULL;
+    uint64_t rand;
+    unsigned char *buf;
+    unsigned char *iv = NULL;
+    unsigned char key[8] = { 0 };
+    size_t des_position;
+    size_t des_chunksize;
+
+    netmd_error error = NETMD_NO_ERROR;
+    int des_error;
+
+    *packet_count = 0;
+    while (position < data_lenght) {
+        if ((data_lenght - position) < chunksize) {
+            /* limit chunksize for last packet */
+            chunksize = data_lenght - position;
+        }
+
+        if ((chunksize % 8) != 0) {
+            chunksize = chunksize + 8 - (chunksize % 8);
+        }
+
+        /* alloc memory */
+        next = malloc(sizeof(netmd_track_packets));
+        next->length = chunksize;
+        next->data = malloc(next->length);
+        memset(next->data, 0, next->length);
+        next->iv = malloc(8);
+        next->key = malloc(8);
+
+        /* linked list */
+        if (last != NULL) {
+            last->next = next;
+        }
+        else {
+            *packets = next;
+        }
+
+        /* generate key */
+        rand = (uint64_t)random();
+        buf = key;
+        netmd_copy_quadword_to_buffer(&buf, rand);
+        memcpy(next->key, key, sizeof(key));
+        des_error = ecb_crypt((char*)key_encryption_key, (char*)next->key, 8, DES_DECRYPT);
+        if (DES_FAILED(des_error)) {
+            error = NETMD_DES_ERROR;
+            break;
+        }
+
+        /* generate initial iv */
+        if (iv == NULL) {
+            iv = malloc(8);
+
+            rand = (uint64_t)random();
+            buf = iv;
+            netmd_copy_quadword_to_buffer(&buf, rand);
+        }
+        memcpy(next->iv, iv, 8);
+
+        /* crypt data and copy to packet */
+        memcpy(next->data, data + position, chunksize);
+        for (des_position = 0; des_position < chunksize; des_position += DES_MAXDATA) {
+            des_chunksize = DES_MAXDATA;
+            if ((des_chunksize + des_position) > chunksize) {
+                des_chunksize = chunksize - des_position;
+            }
+
+            des_error = cbc_crypt((char*)key, (char*)next->data + des_position, des_chunksize, DES_ENCRYPT, (char*)next->iv);
+
+            if (DES_FAILED(des_error)) {
+                error = NETMD_DES_ERROR;
+                break;
+            }
+        }
+
+        /* next packet */
+        position = position + chunksize;
+        (*packet_count)++;
+        last = next;
+
+        if (iv != NULL) {
+            free(iv);
+            iv = NULL;
+        }
+    }
+
+    if (iv != NULL) {
+        free(iv);
+        iv = NULL;
+    }
+
+    return error;
+}
+
+void netmd_cleanup_packets(netmd_track_packets **packets)
+{
+    netmd_track_packets *current = *packets;
+    netmd_track_packets *last;
+
+    while (current != NULL) {
+        last = current;
+        current = last->next;
+
+        free(last->data);
+        free(last->iv);
+        free(last->key);
+        free(last);
+        last = NULL;
+    }
+}
+
 netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
                                     netmd_wireformat wireformat,
                                     unsigned char discformat,
