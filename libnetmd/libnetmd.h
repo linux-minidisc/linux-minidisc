@@ -237,3 +237,6 @@ void netmd_clean_disc_info(minidisc* md);
    @param dev a handler to the usb device
 */
 /* void waitforsync(netmd_dev_handle* dev);*/
+
+int netmd_cache_toc(netmd_dev_handle* dev);
+int netmd_sync_toc(netmd_dev_handle* dev);

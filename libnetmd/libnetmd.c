@@ -1104,3 +1104,23 @@ void netmd_clean_disc_info(minidisc *md)
     free(md->groups);
     md->groups = NULL;
 }
+
+int netmd_cache_toc(netmd_dev_handle* dev)
+{
+    int ret = 0;
+    unsigned char request[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02, 0x03, 0x00};
+    unsigned char reply[255];
+
+    ret = netmd_exch_message(dev, request, sizeof(request), reply);
+    return ret;
+}
+
+int netmd_sync_toc(netmd_dev_handle* dev)
+{
+    int ret = 0;
+    unsigned char request[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02, 0x00, 0x00};
+    unsigned char reply[255];
+
+    ret = netmd_exch_message(dev, request, sizeof(request), reply);
+    return ret;
+}
