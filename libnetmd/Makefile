@@ -28,6 +28,6 @@ libnetmd.a: libnetmd.o secure.o playercontrol.o utils.o common.o log.o error.o t
 	$(AR) rcs $@ $^
 
 $(LIB): libnetmd.a
-	$(CC) $(LDFLAGS) -shared -Wl,-soname,$@ -o $@ $^
+	$(CC) $(LDFLAGS) -shared -Wl,-soname,$@ -o $@ -Wl,-whole-archive $^ -Wl,-no-whole-archive
 
 $(APP): netmd.o netmd_dev.o libnetmd.a
