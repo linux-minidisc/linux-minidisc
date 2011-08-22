@@ -532,6 +532,10 @@ int main(int argc, char* argv[])
             error = netmd_secure_commit_track(devh, track, sessionkey);
             puts(netmd_strerror(error));
 
+            /* forget key */
+            error = netmd_secure_session_key_forget(devh);
+            puts(netmd_strerror(error));
+
             /* leave session */
             error = netmd_secure_leave_session(devh);
             puts(netmd_strerror(error));
