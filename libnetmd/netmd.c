@@ -19,6 +19,9 @@
  */
 
 #include "libnetmd.h"
+#include <rpc/des_crypt.h>
+#include <openssl/des.h>
+#include "utils.h"
 
 void print_disc_info(netmd_dev_handle* devh, minidisc *md);
 void print_current_track_info(netmd_dev_handle* devh);
@@ -140,6 +143,25 @@ void print_time(const netmd_time *time)
     printf("%02d:%02d:%02d.%02d", time->hour, time->minute, time->second, time->frame);
 }
 
+void retailmac(unsigned char *rootkey, unsigned char *hostnonce,
+               unsigned char *devnonce, unsigned char *sessionkey)
+{
+    char iv[8] = { 0 };
+    DES_cblock key1 = { 0 };
+    DES_key_schedule des_key1;
+    DES_cblock key2 = { 0 };
+    DES_key_schedule des_key2;
+    DES_cblock iv2 = { 0 };
+
+    memcpy(key1, rootkey, sizeof(key1));
+    memcpy(key2, rootkey + sizeof(key1), sizeof(key2));
+    cbc_crypt((char*)key1, (char*)hostnonce, 8, DES_ENCRYPT, iv);
+
+    memcpy(&iv2, hostnonce, 8);
+    DES_set_key_checked(&key1, &des_key1);
+    DES_set_key_checked(&key2, &des_key2);
+    DES_ede2_cbc_encrypt(devnonce, sessionkey, 8, &des_key1, &des_key2, &iv2, DES_ENCRYPT);
+}
 
 int main(int argc, char* argv[])
 {
@@ -377,13 +399,140 @@ int main(int argc, char* argv[])
             netmd_secure_recv_track(devh, i & 0xffff, f);
             fclose(f);
         }
-        else if (strcmp("secure", argv[1]) == 0) {
-            /*cmdid = strtol(argv[2], NULL, 16);
-            track = 0;
-            if (argc > 3) {
-                track = strtol(argv[3], NULL, 10);
-                }*/
-            /*handle_secure_cmd(devh, cmdid, track);*/
+        else if (strcmp("send", argv[1]) == 0) {
+            netmd_error error;
+            netmd_ekb ekb;
+            unsigned char chain[] = {0x25, 0x45, 0x06, 0x4d, 0xea, 0xca,
+                                     0x14, 0xf9, 0x96, 0xbd, 0xc8, 0xa4,
+                                     0x06, 0xc2, 0x2b, 0x81, 0xfb, 0x60,
+                                     0xbd, 0xdd, 0x0d, 0xbc, 0xab, 0x84,
+                                     0x8a, 0x00, 0x5e, 0x03, 0x19, 0x4d,
+                                     0x3e, 0xda};
+            unsigned char signature[] = {0x8f, 0x2b, 0xc3, 0x52, 0xe8, 0x6c,
+                                         0x5e, 0xd3, 0x06, 0xdc, 0xae, 0x18,
+                                         0xd2, 0xf3, 0x8c, 0x7f, 0x89, 0xb5,
+                                         0xe1, 0x85, 0x55, 0xa1, 0x05, 0xea};
+            unsigned char rootkey[] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc,
+                                       0xde, 0xf0, 0x0f, 0xed, 0xcb, 0xa9,
+                                       0x87, 0x65, 0x43, 0x21};
+            netmd_keychain *keychain;
+            netmd_keychain *next;
+            size_t done;
+            unsigned char hostnonce[8] = { 0 };
+            unsigned char devnonce[8] = { 0 };
+            unsigned char sessionkey[8] = { 0 };
+            unsigned char *buf;
+            uint64_t rand;
+            unsigned char kek[] = { 0x14, 0xe3, 0x83, 0x4e, 0xe2, 0xd3, 0xcc, 0xa5 };
+            unsigned char contentid[] = { 0x01, 0x0F, 0x50, 0x00, 0x00, 0x04,
+                                          0x00, 0x00, 0x00, 0x48, 0xA2, 0x8D,
+                                          0x3E, 0x1A, 0x3B, 0x0C, 0x44, 0xAF,
+                                          0x2f, 0xa0 };
+            netmd_track_packets *packets = NULL;
+            size_t packet_count = 0;
+            struct stat stat_buf;
+            unsigned char *data;
+            size_t data_size;
+
+            uint16_t track;
+            unsigned char uuid[8] = { 0 };
+            unsigned char new_contentid[20] = { 0 };
+
+            error = netmd_secure_leave_session(devh);
+            puts(netmd_strerror(error));
+
+            error = netmd_secure_set_track_protection(devh, 0x01);
+            puts(netmd_strerror(error));
+
+            error = netmd_secure_enter_session(devh);
+            puts(netmd_strerror(error));
+
+            /* build ekb */
+            ekb.id = 0x26422642;
+            ekb.depth = 9;
+            ekb.signature = malloc(sizeof(signature));
+            memcpy(ekb.signature, signature, sizeof(signature));
+
+            /* build ekb key chain */
+            ekb.chain = NULL;
+            for (done = 0; done < sizeof(chain); done+=16U)
+            {
+                next = malloc(sizeof(netmd_keychain));
+                if (ekb.chain == NULL) {
+                    ekb.chain = next;
+                }
+                else {
+                    keychain->next = next;
+                }
+                next->next = NULL;
+
+                next->key = malloc(16);
+                memcpy(next->key, chain + done, 16);
+
+                keychain = next;
+            }
+
+            error = netmd_secure_send_key_data(devh, &ekb);
+            puts(netmd_strerror(error));
+
+            /* cleanup */
+            free(ekb.signature);
+            keychain = ekb.chain;
+            while (keychain != NULL) {
+                next = keychain->next;
+                free(keychain->key);
+                free(keychain);
+                keychain = next;
+            }
+
+            /* exchange nonces */
+            rand = (uint64_t)random();
+            buf = hostnonce;
+            netmd_copy_quadword_to_buffer(&buf, rand);
+            error = netmd_secure_session_key_exchange(devh, hostnonce, devnonce);
+            puts(netmd_strerror(error));
+
+            /* calculate session key */
+            retailmac(rootkey, hostnonce, devnonce, sessionkey);
+
+            error = netmd_secure_setup_download(devh, contentid, kek, sessionkey);
+            puts(netmd_strerror(error));
+
+            /* read source */
+            stat(argv[2], &stat_buf);
+            data_size = (size_t)stat_buf.st_size;
+            data = malloc(data_size);
+            f = fopen(argv[2], "r");
+            fseek(f, 60, SEEK_CUR);
+            fread(data, data_size - 60, 1, f);
+            fclose(f);
+            error = netmd_prepare_packets(data, data_size-60, &packets, &packet_count, kek);
+            puts(netmd_strerror(error));
+
+            /* send to device */
+            error = netmd_secure_send_track(devh, NETMD_WIREFORMAT_LP2,
+                                            NETMD_DISKFORMAT_LP2,
+                                            (data_size - 60) / 192, packets,
+                                            packet_count, sessionkey,
+                                            &track, uuid, new_contentid);
+            puts(netmd_strerror(error));
+
+            /* cleanup */
+            netmd_cleanup_packets(&packets);
+
+            /* set title */
+            netmd_log(NETMD_LOG_DEBUG, "New Track: %d\n", track);
+            netmd_cache_toc(devh);
+            netmd_set_title(devh, track, "test");
+            netmd_sync_toc(devh);
+
+            /* commit track */
+            error = netmd_secure_commit_track(devh, track, sessionkey);
+            puts(netmd_strerror(error));
+
+            /* leave session */
+            error = netmd_secure_leave_session(devh);
+            puts(netmd_strerror(error));
         }
         else if(strcmp("help", argv[1]) == 0)
         {
