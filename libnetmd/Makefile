@@ -8,7 +8,7 @@ PEDANTIC += -Werror
 #PEDANTIC += -Wmissing-prototypes -Wstrict-prototypes
 PEDANTIC += -Wwrite-strings
 
-CFLAGS = -fshort-enums `libusb-config --cflags`
+CFLAGS = -fshort-enums -fPIC `libusb-config --cflags`
 CFLAGS += $(PEDANTIC)
 CFLAGS += -g
 
