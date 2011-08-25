@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <openssl/des.h>
+#include <gcrypt.h>
 
 #include "libnetmd.h"
 #include "utils.h"
@@ -146,23 +146,25 @@ void print_time(const netmd_time *time)
 void retailmac(unsigned char *rootkey, unsigned char *hostnonce,
                unsigned char *devnonce, unsigned char *sessionkey)
 {
-    DES_cblock iv = { 0 };
-    DES_cblock iv2 = { 0 };
+    gcry_cipher_hd_t handle1;
+    gcry_cipher_hd_t handle2;
 
-    DES_cblock key1 = { 0 };
-    DES_cblock key2 = { 0 };
+    unsigned char des3_key[24] = { 0 };
+    unsigned char iv[8] = { 0 };
 
-    DES_key_schedule schedule1;
-    DES_key_schedule schedule2;
+    gcry_cipher_open(&handle1, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+    gcry_cipher_setkey(handle1, rootkey, 8);
+    gcry_cipher_encrypt(handle1, iv, 8, hostnonce, 8);
 
-    memcpy(key1, rootkey, sizeof(key1));
-    memcpy(key2, rootkey + sizeof(key1), sizeof(key2));
+    memcpy(des3_key, rootkey, 16);
+    memcpy(des3_key+16, rootkey, 8);
+    gcry_cipher_open(&handle2, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
+    gcry_cipher_setkey(handle2, des3_key, 24);
+    gcry_cipher_setiv(handle2, iv, 8);
+    gcry_cipher_encrypt(handle2, sessionkey, 8, devnonce, 8);
 
-    DES_set_key_checked(&key1, &schedule1);
-    DES_set_key_checked(&key2, &schedule2);
-
-    DES_ncbc_encrypt(hostnonce, iv2, 8, &schedule1, &iv, DES_ENCRYPT);
-    DES_ede2_cbc_encrypt(devnonce, sessionkey, 8, &schedule1, &schedule2, &iv2, DES_ENCRYPT);
+    gcry_cipher_close(handle1);
+    gcry_cipher_close(handle2);
 }
 
 int main(int argc, char* argv[])

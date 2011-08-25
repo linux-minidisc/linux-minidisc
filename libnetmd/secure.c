@@ -10,8 +10,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <usb.h>
-#include <rpc/des_crypt.h>
 #include <errno.h>
+#include <gcrypt.h>
 
 #include "secure.h"
 #include "const.h"
@@ -281,19 +281,21 @@ netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
     unsigned char cmdhdr[] = { 0x00, 0x00 };
     unsigned char data[32] = { 0x01, 0x01, 0x01, 0x01 /* ... */};
     unsigned char cmd[sizeof(cmdhdr) + sizeof(data)];
-    unsigned char iv[8] = { 0 };
 
-    int des_error;
+    unsigned char iv[8] = { 0 };
+    gcry_cipher_hd_t handle;
+
     netmd_response response;
     netmd_error error;
 
     memcpy(data + 4, contentid, 20);
     memcpy(data + 24, key_encryption_key, 8);
-    des_error = cbc_crypt((char*)sessionkey, (char*)data, sizeof(data),
-                          DES_ENCRYPT, (char*)iv);
-    if (DES_FAILED(des_error)) {
-        return NETMD_DES_ERROR;
-    }
+
+    gcry_cipher_open(&handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
+    gcry_cipher_setkey(handle, sessionkey, 8);
+    gcry_cipher_setiv(handle, iv, 8);
+    gcry_cipher_encrypt(handle, data, sizeof(data), NULL, 0);
+    gcry_cipher_close(handle);
 
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
     memcpy(cmd + sizeof(cmdhdr), data, 32);
@@ -360,6 +362,15 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
     }
 }
 
+uint64_t generate_64bit_random()
+{
+    uint64_t high, low;
+    high = ((uint64_t)random() & 0xffffffffU) << 32U;
+    low = ((uint64_t)random() & 0xffffffffU);
+
+    return high + low;
+}
+
 netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   netmd_track_packets **packets,
                                   size_t *packet_count,
@@ -370,14 +381,22 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
     uint64_t rand;
-    unsigned char *buf;
-    unsigned char *iv = NULL;
-    unsigned char key[8] = { 0 };
-    size_t des_position;
-    size_t des_chunksize;
+
+    gcry_cipher_hd_t key_handle;
+    gcry_cipher_hd_t data_handle;
+    unsigned char iv[8] = { 0 };
 
     netmd_error error = NETMD_NO_ERROR;
-    int des_error;
+
+
+    gcry_cipher_open(&key_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+    gcry_cipher_open(&data_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
+    gcry_cipher_setkey(key_handle, key_encryption_key, 8);
+
+
+    /* generate initial iv */
+    rand = generate_64bit_random();
+    memcpy(iv, &rand, sizeof(rand));
 
     *packet_count = 0;
     while (position < data_lenght) {
@@ -408,57 +427,24 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
         }
 
         /* generate key */
-        rand = (uint64_t)random();
-        buf = key;
-        netmd_copy_quadword_to_buffer(&buf, rand);
-        memcpy(next->key, key, sizeof(key));
-        des_error = ecb_crypt((char*)key_encryption_key, (char*)next->key, 8, DES_DECRYPT);
-        if (DES_FAILED(des_error)) {
-            error = NETMD_DES_ERROR;
-            break;
-        }
+        rand = generate_64bit_random();
+        gcry_cipher_decrypt(key_handle, next->key, 8, &rand, sizeof(rand));
 
-        /* generate initial iv */
-        if (iv == NULL) {
-            iv = malloc(8);
-
-            rand = (uint64_t)random();
-            buf = iv;
-            netmd_copy_quadword_to_buffer(&buf, rand);
-        }
+        /* crypt data */
         memcpy(next->iv, iv, 8);
-
-        /* crypt data and copy to packet */
-        memcpy(next->data, data + position, chunksize);
-        for (des_position = 0; des_position < chunksize; des_position += DES_MAXDATA) {
-            des_chunksize = DES_MAXDATA;
-            if ((des_chunksize + des_position) > chunksize) {
-                des_chunksize = chunksize - des_position;
-            }
-
-            des_error = cbc_crypt((char*)key, (char*)next->data + des_position, des_chunksize, DES_ENCRYPT, (char*)next->iv);
-
-            if (DES_FAILED(des_error)) {
-                error = NETMD_DES_ERROR;
-                break;
-            }
-        }
+        gcry_cipher_setiv(data_handle, iv, 8);
+        gcry_cipher_setkey(data_handle, &rand, sizeof(rand));
+        gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, chunksize);
+        memcpy(iv, data + position - 8, 8);
 
         /* next packet */
         position = position + chunksize;
         (*packet_count)++;
         last = next;
-
-        if (iv != NULL) {
-            free(iv);
-            iv = NULL;
-        }
     }
 
-    if (iv != NULL) {
-        free(iv);
-        iv = NULL;
-    }
+    gcry_cipher_close(key_handle);
+    gcry_cipher_close(data_handle);
 
     return error;
 }
@@ -498,9 +484,10 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
 
     netmd_response response;
     netmd_error error;
+
+    gcry_cipher_hd_t handle;
     unsigned char encryptedreply[32] = { 0 };
     unsigned char iv[8] = { 0 };
-    int des_error;
 
     memcpy(cmd, cmdhdr, sizeof(cmdhdr));
     buf = cmd + sizeof(cmdhdr);
@@ -532,12 +519,12 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     }
 
     if (error == NETMD_NO_ERROR) {
-        des_error = cbc_crypt((char*)sessionkey, (char*)encryptedreply,
-                              sizeof(encryptedreply), DES_DECRYPT, (char*)iv);
-        if (DES_FAILED(des_error)) {
-            return NETMD_DES_ERROR;
-        }
-
+        gcry_cipher_open(&handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
+        gcry_cipher_setiv(handle, iv, 8);
+        gcry_cipher_setkey(handle, sessionkey, 8);
+        gcry_cipher_decrypt(handle, encryptedreply, sizeof(encryptedreply), NULL, 0);
+        gcry_cipher_close(handle);
+        
         memcpy(uuid, encryptedreply, 8);
         memcpy(content_id, encryptedreply + 12, 20);
     }
@@ -730,27 +717,25 @@ netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
                                       unsigned char* sessionkey)
 {
     unsigned char cmdhdr[] = {0x00, 0x10, 0x01};
-    unsigned char hash[8] = { 0 };
-    unsigned char cmd[sizeof(cmdhdr) + sizeof(track) + sizeof(hash)];
+    unsigned char cmd[sizeof(cmdhdr) + sizeof(track) + 8];
     unsigned char *buf;
 
-    int des_error;
+    gcry_cipher_hd_t handle;
+    unsigned char hash[8] = { 0 };
+
     netmd_response response;
     netmd_error error;
-
-    des_error = ecb_crypt((char*)sessionkey, (char*)hash, sizeof(hash),
-                          DES_ENCRYPT);
-    if (DES_FAILED(des_error)) {
-        return NETMD_DES_ERROR;
-    }
 
     buf = cmd;
     memcpy(buf, cmdhdr, sizeof(cmdhdr));
     buf += sizeof(cmdhdr);
     netmd_copy_word_to_buffer(&buf, track, 0);
 
-    memcpy(buf, hash, sizeof(hash));
+    gcry_cipher_open(&handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+    gcry_cipher_setkey(handle, sessionkey, 8);
+    gcry_cipher_encrypt(handle, buf, sizeof(hash), hash, sizeof(hash));
     buf += sizeof(hash);
+    gcry_cipher_close(handle);
 
     error = netmd_exch_secure_msg(dev, 0x48, cmd, sizeof(cmd), &response);
     netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
