@@ -1,5 +1,5 @@
 /*
- *   himddump.c - list contents (tracks, holes), dump tracks and show diskid of a HiMD 
+ *   himdcli.c - list contents (tracks, holes), dump tracks and show diskid of a HiMD 
  */
 
 #include <stdio.h>
