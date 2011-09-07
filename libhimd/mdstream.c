@@ -510,7 +510,7 @@ void himd_mp3stream_close(struct himd_mp3stream * stream)
     himd_blockstream_close(&stream->stream);
 }
 
-#ifdef CONFIG_WITH_MCRYPT
+#ifdef CONFIG_WITH_GCRYPT
 #include <string.h>
 
 int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd_nonmp3stream * stream, struct himderrinfo * status)

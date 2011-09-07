@@ -4,9 +4,9 @@ CONFIG -= qt
 CONFIG += staticlib link_pkgconfig create_prl console debug_and_release_target
 DEFINES += G_DISABLE_DEPRECATED=1
 
-!without_mcrypt: {
-  LIBS += -lmcrypt
-  DEFINES += CONFIG_WITH_MCRYPT
+!without_gcrypt: {
+  LIBS += -lgcrypt
+  DEFINES += CONFIG_WITH_GCRYPT
 }
 else: !build_pass: message(You disabled mcrypt: No PCM and ATRAC transfer will be supported)
 

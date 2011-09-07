@@ -57,14 +57,14 @@ int himd_obtain_mp3key(struct himd * himd, int track, mp3key * key, struct himde
     return 0;
 }
 
-#ifdef CONFIG_WITH_MCRYPT
-#include "mcrypt.h"
+#ifdef CONFIG_WITH_GCRYPT
 #include "himd_private.h"
+#include <gcrypt.h>
 #include <string.h>
 
 struct cached_cipher {
     unsigned char key[8];
-    MCRYPT cipher;
+    gcry_cipher_hd_t cipher;
     int valid;
 };
 
@@ -74,43 +74,38 @@ struct descrypt_data {
     unsigned char masterkey[8];
 };
 
-static int cached_cipher_init(struct cached_cipher * cipher, char * destype)
+static gcry_error_t cached_cipher_init(struct cached_cipher * cipher, enum gcry_cipher_modes mode)
 {
-    cipher->cipher = mcrypt_module_open("des", NULL, destype, NULL);
-    if(!cipher->cipher)
-        return -1;
+    gcry_error_t err;
+    err = gcry_cipher_open(&cipher->cipher, GCRY_CIPHER_DES, mode, 0);
+    if (err != 0)
+        return err;
 
     cipher->valid = 0;
     return 0;
 }
 
 /* iv should be NULL for ECB mode */
-static int cached_cipher_prepare(struct cached_cipher * cipher,
+static gcry_error_t cached_cipher_prepare(struct cached_cipher * cipher,
                                  unsigned char * key, unsigned char * iv)
 {
-    int err;
+    gcry_error_t err;
 
     /* not yet initialized or new key */
     if(!cipher->valid ||
        memcmp(cipher->key, key, 8))
     {
-        if(cipher->valid)
-            mcrypt_generic_deinit(cipher->cipher);
-        cipher->valid = 0;
-
-        err = mcrypt_generic_init(cipher->cipher, key, 8, iv);
-        if(err < 0)
+        err = gcry_cipher_setkey(cipher->cipher, key, 8);
+        if(err != 0)
             return err;
 
         memcpy(cipher->key, key, 8);
         cipher->valid = 1;
     }
-    else if(iv)		/* update IV, works for CBC decryption */
+    if(iv)
     {
-        unsigned char dummy[8];
-        memcpy(dummy, iv, 8);
-        err = mdecrypt_generic(cipher->cipher, dummy, 8);
-        if(err < 0)
+        err = gcry_cipher_setiv(cipher->cipher, iv, 8);
+        if(err != 0)
             return err;
     }
     return 0;
@@ -118,9 +113,7 @@ static int cached_cipher_prepare(struct cached_cipher * cipher,
 
 static void cached_cipher_deinit(struct cached_cipher * cipher)
 {
-    if(cipher->valid)
-        mcrypt_generic_deinit(cipher->cipher);
-    mcrypt_module_close(cipher->cipher);
+    gcry_cipher_close(cipher->cipher);
 }
 
 static void xor_keys(unsigned char * out,
@@ -157,14 +150,14 @@ int descrypt_open(void ** dataptr, const unsigned char * trackkey,
         set_status_const(status, HIMD_ERROR_OUT_OF_MEMORY, _("Can't allocate crypt helper structure"));
         return -1;
     }
-    if(cached_cipher_init(&data->master, "ecb") < 0)
+    if(cached_cipher_init(&data->master, GCRY_CIPHER_MODE_ECB) != 0)
     {
         set_status_const(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't aquire DES ECB encryption"));
         return -1;
     }
 
     memcpy(data->masterkey, masterkey, 8);
-    if(cached_cipher_init(&data->block, "cbc") < 0)
+    if(cached_cipher_init(&data->block, GCRY_CIPHER_MODE_CBC) != 0)
     {
         set_status_const(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't aquire DES CBC encryption"));
         cached_cipher_deinit(&data->master);
@@ -181,31 +174,30 @@ int descrypt_decrypt(void * dataptr, unsigned char * block, size_t cryptlen,
     unsigned char finalfragkey[8];
     unsigned char mainkey[8];
     struct descrypt_data * data = dataptr;
-    int err;
+    gcry_error_t err;
 
     xor_keys(finalfragkey, data->masterkey, fragkey);
-    if((err = cached_cipher_prepare(&data->master, finalfragkey, NULL)) < 0)
+    if((err = cached_cipher_prepare(&data->master, finalfragkey, NULL)) != 0)
     {
-        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't setup track key: %s"), mcrypt_strerror(err));
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't setup track key: %s"), gcry_strerror(err));
         return -1;
     }
 
-    memcpy(mainkey, block+16, 8);
-    if((err = mcrypt_generic(data->master.cipher, mainkey, 8)) < 0)
+    if((err = gcry_cipher_encrypt(data->master.cipher, mainkey, 8, block+16, 8)) != 0)
     {
-        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't calc block key: %s"), mcrypt_strerror(err));
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't calc block key: %s"), gcry_strerror(err));
         return -1;
     }
 
-    if((err = cached_cipher_prepare(&data->block, mainkey, block + 24)) < 0)
+    if((err = cached_cipher_prepare(&data->block, mainkey, block + 24)) != 0)
     {
-        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't setup block key: %s"), mcrypt_strerror(err));
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't setup block key: %s"), gcry_strerror(err));
         return -1;
     }
 
-    if((err = mdecrypt_generic(data->block.cipher, block+32, cryptlen)) < 0)
+    if((err = gcry_cipher_decrypt(data->block.cipher, block+32, cryptlen, block+32, cryptlen)) != 0)
     {
-        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't decrypt: %s"), mcrypt_strerror(err));
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't decrypt: %s"), gcry_strerror(err));
         return -1;
     }
 
