@@ -32,7 +32,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#include <usb.h>
+#include <libusb.h>
 
 #include "const.h"
 #include "error.h"

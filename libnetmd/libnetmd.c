@@ -22,6 +22,8 @@
  *
  */
 
+#include <unistd.h>
+
 #include "libnetmd.h"
 #include "utils.h"
 
@@ -58,12 +60,12 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* array)
     return &unknown_pair;
 }
 
-static void waitforsync(usb_dev_handle* dev)
+static void waitforsync(libusb_device_handle* dev)
 {
-    char syncmsg[4];
+    unsigned char syncmsg[4];
     fprintf(stderr,"Waiting for Sync: \n");
     do {
-        usb_control_msg(dev, 0xc1, 0x01, 0, 0, syncmsg, 0x04, 5000);
+        libusb_control_transfer(dev, 0xc1, 0x01, 0, 0, syncmsg, 0x04, 5000);
     } while  (memcmp(syncmsg,"\0\0\0\0",4)!=0);
 
 }
@@ -881,6 +883,7 @@ int netmd_write_disc_header(netmd_dev_handle* devh, minidisc* md)
 int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 {
     int ret = 0;
+    int transferred = 0;
     int fd = open(szFile, O_RDONLY); /* File descriptor to omg file */
     unsigned char *data = malloc(4096); /* Buffer for reading the omg file */
     unsigned char *p = NULL; /* Pointer to index into data */
@@ -925,9 +928,9 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
     size_t data_size_i; /* the size of the data part, later it will be used to point out the last byte in file */
     unsigned int size;
     unsigned char* buf=NULL; /* A buffer for recieving file info */
-    usb_dev_handle	*dev;
+    libusb_device_handle *dev;
 
-    dev = (usb_dev_handle *)devh;
+    dev = (libusb_device_handle *)devh;
 
     if(fd < 0)
         return fd;
@@ -1034,7 +1037,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 
         netmd_log(NETMD_LOG_DEBUG, "Sending %d bytes to md\n", bytes_to_send);
         netmd_log_hex(NETMD_LOG_DEBUG, data, bytes_to_send);
-        ret = usb_bulk_write(dev,0x02, (char*)data, (int)bytes_to_send, 5000);
+        ret = libusb_bulk_transfer(dev, 0x02, data, (int)bytes_to_send, &transferred, 5000);
     } /* End while */
 
     if (ret<0) {
@@ -1046,7 +1049,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
     /******** End transfer wait for unit ready ********/
     fprintf(stderr,"Waiting for Done:\n");
     do {
-        usb_control_msg(dev, 0xc1, 0x01, 0, 0, (char*)size_request, 0x04, 5000);
+        libusb_control_transfer(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 5000);
     } while  (memcmp(size_request,"\0\0\0\0",4)==0);
 
     netmd_log(NETMD_LOG_DEBUG, "Recieving response: \n");
@@ -1057,7 +1060,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
         return -1;
     }
     buf = malloc(size);
-    usb_control_msg(dev, 0xc1, 0x81, 0, 0, (char*)buf, (int)size, 500);
+    libusb_control_transfer(dev, 0xc1, 0x81, 0, 0, buf, (int)size, 500);
     netmd_log_hex(NETMD_LOG_DEBUG, buf, size);
     free(buf);
 
@@ -1071,11 +1074,11 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 
 
     /********* End TOC Edit **********/
-    ret = usb_control_msg(dev, 0x41, 0x80, 0, 0, (char*)fintoc, 0x19, 800);
+    ret = libusb_control_transfer(dev, 0x41, 0x80, 0, 0, fintoc, 0x19, 800);
 
     fprintf(stderr,"Waiting for Done: \n");
     do {
-        usb_control_msg(dev, 0xc1, 0x01, 0, 0, (char*)size_request, 0x04, 5000);
+        libusb_control_transfer(dev, 0xc1, 0x01, 0, 0, size_request, 0x04, 5000);
     } while  (memcmp(size_request,"\0\0\0\0",4)==0);
 
     return ret;

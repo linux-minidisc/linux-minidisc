@@ -1,13 +1,13 @@
 #ifndef LIBNETMD_COMMON_H
 #define LIBNETMD_COMMON_H
 
-#include <usb.h>
+#include <libusb.h>
 
 /**
    Typedef that nearly all netmd_* functions use to identify the USB connection
    with the minidisc player.
 */
-typedef usb_dev_handle*	netmd_dev_handle;
+typedef libusb_device_handle *netmd_dev_handle;
 
 /**
   Function to exchange command/response buffer with minidisc player.

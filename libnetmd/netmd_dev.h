@@ -7,7 +7,7 @@
 typedef struct netmd_device {
     struct netmd_device *link;
     char name[32];
-    struct usb_device *usb_dev;
+    struct libusb_device *usb_dev;
 } netmd_device;
 
 /**
@@ -43,7 +43,7 @@ netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle);
   @param buf Buffer to hold the name.
   @param buffsize Available size in buf.
 */
-netmd_error netmd_get_devname(netmd_dev_handle* devh, char* buf, size_t buffsize);
+netmd_error netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, size_t buffsize);
 
 /**
   Closes the usb descriptors.

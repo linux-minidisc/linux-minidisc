@@ -1,5 +1,6 @@
 /* netmd_dev.c
  *      Copyright (C) 2004, Bertrik Sikken
+ *      Copyright (C) 2011, Adrian Glaubitz
  *
  * This file is part of libnetmd.
  *
@@ -21,10 +22,13 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #include "netmd_dev.h"
 #include "log.h"
 #include "const.h"
+
+static libusb_context *ctx = NULL;
 
 /*! list of known vendor/prod id's for NetMD devices */
 static struct netmd_devices const known_devices[] =
@@ -76,33 +80,28 @@ static struct netmd_devices const known_devices[] =
 
 netmd_error netmd_init(netmd_device **device_list)
 {
-    struct usb_bus *bus;
-    struct usb_device *dev;
     int count = 0;
+    ssize_t usb_device_count;
+    ssize_t i = 0;
     netmd_device *new_device;
+    libusb_device **list;
+    struct libusb_device_descriptor desc;
 
-    usb_init();
-
-    usb_find_busses();
-    usb_find_devices();
+    libusb_init(&ctx);
 
     *device_list = NULL;
-    for(bus = usb_get_busses(); bus; bus = bus->next)
-    {
-        for(dev = bus->devices; dev; dev = dev->next)
-        {
-            for(count = 0; (known_devices[count].idVendor != 0); count++)
-            {
-                if(dev->descriptor.idVendor == known_devices[count].idVendor
-                   && dev->descriptor.idProduct == known_devices[count].idProduct)
-                {
-                    new_device = malloc(sizeof(netmd_device));
-                    new_device->usb_dev = dev;
-                    new_device->link = *device_list;
-                    *device_list = new_device;
-                }
-            }
-        }
+
+    usb_device_count = libusb_get_device_list(NULL, &list);
+
+    for (i = 0; i < usb_device_count; i++) {
+      libusb_get_device_descriptor(list[i], &desc);
+      if(desc.idVendor == known_devices[count].idVendor &&
+	 desc.idProduct == known_devices[count].idProduct) {
+	new_device = malloc(sizeof(netmd_device));
+	new_device->usb_dev = list[i];
+	new_device->link = *device_list;
+	*device_list = new_device;
+      }
     }
 
     return NETMD_NO_ERROR;
@@ -112,10 +111,10 @@ netmd_error netmd_init(netmd_device **device_list)
 netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
 {
     int result;
-    usb_dev_handle *dh;
+    libusb_device_handle **dh = NULL;
 
-    dh = usb_open(dev->usb_dev);
-    result = usb_claim_interface(dh, 0);
+    libusb_open(dev->usb_dev, dh);
+    result = libusb_claim_interface(*dh, 0);
 
     if (result == 0) {
         *dev_handle = (netmd_dev_handle*)dh;
@@ -127,13 +126,13 @@ netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
     }
 }
 
-netmd_error netmd_get_devname(netmd_dev_handle* devh, char* buf, size_t buffsize)
+netmd_error netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, size_t buffsize)
 {
     int result;
 
-    result = usb_get_string_simple((usb_dev_handle *)devh, 2, buf, buffsize);
+    result = libusb_get_string_descriptor_ascii((libusb_device_handle *)devh, 2, buf, buffsize);
     if (result < 0) {
-        netmd_log(NETMD_LOG_ERROR, "usb_get_string_simple failed, %s (%d)\n", strerror(errno), errno);
+        netmd_log(NETMD_LOG_ERROR, "libusb_get_string_descriptor_asci failed, %s (%d)\n", strerror(errno), errno);
         buf[0] = 0;
         return NETMD_USB_ERROR;
     }
@@ -144,15 +143,13 @@ netmd_error netmd_get_devname(netmd_dev_handle* devh, char* buf, size_t buffsize
 netmd_error netmd_close(netmd_dev_handle* devh)
 {
     int result;
-    usb_dev_handle *dev;
+    libusb_device_handle *dev;
 
-    dev = (usb_dev_handle *)devh;
-    result = usb_release_interface(dev, 0);
-    if (result == 0) {
-        result = usb_close(dev);
-    }
-
-    if (result < 0) {
+    dev = (libusb_device_handle *)devh;
+    result = libusb_release_interface(dev, 0);
+    if (result == 0)
+      libusb_close(dev);
+    else{
         return NETMD_USB_ERROR;
     }
 
@@ -172,4 +169,6 @@ void netmd_clean(netmd_device **device_list)
     }
 
     *device_list = NULL;
+
+    libusb_exit(ctx);
 }
