@@ -1,5 +1,8 @@
-netmd
 documentation/html
 documentation/latex
 libnetmd.so.*
 libnetmd.a
+Makefile
+Makefile.Release
+Makefile.Debug
+*.prl
