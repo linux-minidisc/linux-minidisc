@@ -19,6 +19,7 @@
  */
 
 #include <gcrypt.h>
+#include <unistd.h>
 
 #include "libnetmd.h"
 #include "utils.h"

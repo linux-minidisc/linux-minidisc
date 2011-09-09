@@ -1,7 +1,7 @@
 TEMPLATE=app
 CONFIG  -= qt
 CONFIG  += console link_pkgconfig link_prl
-PKGCONFIG += glib-2.0 id3tag
+PKGCONFIG += glib-2.0 id3tag libusb-1.0
 INCLUDEPATH += ../libnetmd
 SOURCES += netmdcli.c
 
