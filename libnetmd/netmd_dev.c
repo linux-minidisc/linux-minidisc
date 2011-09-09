@@ -114,10 +114,10 @@ netmd_error netmd_init(netmd_device **device_list)
 netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
 {
     int result;
-    libusb_device_handle **dh = NULL;
+    libusb_device_handle *dh = NULL;
 
-    libusb_open(dev->usb_dev, dh);
-    result = libusb_claim_interface(*dh, 0);
+    libusb_open(dev->usb_dev, &dh);
+    result = libusb_claim_interface(dh, 0);
 
     if (result == 0) {
         *dev_handle = (netmd_dev_handle*)dh;
