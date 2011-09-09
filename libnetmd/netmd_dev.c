@@ -95,12 +95,15 @@ netmd_error netmd_init(netmd_device **device_list)
 
     for (i = 0; i < usb_device_count; i++) {
       libusb_get_device_descriptor(list[i], &desc);
-      if(desc.idVendor == known_devices[count].idVendor &&
-	 desc.idProduct == known_devices[count].idProduct) {
-	new_device = malloc(sizeof(netmd_device));
-	new_device->usb_dev = list[i];
-	new_device->link = *device_list;
-	*device_list = new_device;
+
+      for (count = 0; known_devices[count].idVendor != 0 && known_devices[count].idProduct != 0; count++) {
+	if(desc.idVendor == known_devices[count].idVendor &&
+	   desc.idProduct == known_devices[count].idProduct) {
+	  new_device = malloc(sizeof(netmd_device));
+	  new_device->usb_dev = list[i];
+	  new_device->link = *device_list;
+	  *device_list = new_device;
+	}
       }
     }
 
