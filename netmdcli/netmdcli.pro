@@ -11,3 +11,5 @@ unix:!macx {
 	target.path = /usr/bin
 	INSTALLS += target
 }
+
+mac:INCLUDEPATH += /opt/local/include
