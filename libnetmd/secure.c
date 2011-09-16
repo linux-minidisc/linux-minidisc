@@ -385,15 +385,6 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
     }
 }
 
-uint64_t generate_64bit_random()
-{
-    uint64_t high, low;
-    high = ((uint64_t)random() & 0xffffffffU) << 32U;
-    low = ((uint64_t)random() & 0xffffffffU);
-
-    return high + low;
-}
-
 netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   netmd_track_packets **packets,
                                   size_t *packet_count,
@@ -403,11 +394,11 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
     size_t chunksize = 0xffffffffU;
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
-    uint64_t rand;
 
     gcry_cipher_hd_t key_handle;
     gcry_cipher_hd_t data_handle;
     unsigned char iv[8] = { 0 };
+    unsigned char rand[8] = { 0 };
 
     netmd_error error = NETMD_NO_ERROR;
 
@@ -418,8 +409,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
 
 
     /* generate initial iv */
-    rand = generate_64bit_random();
-    memcpy(iv, &rand, sizeof(rand));
+    gcry_create_nonce(iv, sizeof(iv));
 
     *packet_count = 0;
     while (position < data_lenght) {
@@ -450,13 +440,13 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
         }
 
         /* generate key */
-        rand = generate_64bit_random();
-        gcry_cipher_decrypt(key_handle, next->key, 8, &rand, sizeof(rand));
+        gcry_randomize(rand, sizeof(rand), GCRY_STRONG_RANDOM);
+        gcry_cipher_decrypt(key_handle, next->key, 8, rand, sizeof(rand));
 
         /* crypt data */
         memcpy(next->iv, iv, 8);
         gcry_cipher_setiv(data_handle, iv, 8);
-        gcry_cipher_setkey(data_handle, &rand, sizeof(rand));
+        gcry_cipher_setkey(data_handle, rand, sizeof(rand));
         gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, chunksize);
         memcpy(iv, data + position - 8, 8);
 
@@ -577,7 +567,7 @@ netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length,
 
             netmd_log(NETMD_LOG_DEBUG, "%.1f%%\n", (double)done/(double)length * 100);
         }
-        else if (read != -ETIMEDOUT) {
+        else if (read != -LIBUSB_ERROR_TIMEOUT) {
             error = NETMD_USB_ERROR;
         }
     }

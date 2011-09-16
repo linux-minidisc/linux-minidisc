@@ -426,8 +426,6 @@ int main(int argc, char* argv[])
             unsigned char hostnonce[8] = { 0 };
             unsigned char devnonce[8] = { 0 };
             unsigned char sessionkey[8] = { 0 };
-            unsigned char *buf;
-            uint64_t rand;
             unsigned char kek[] = { 0x14, 0xe3, 0x83, 0x4e, 0xe2, 0xd3, 0xcc, 0xa5 };
             unsigned char contentid[] = { 0x01, 0x0F, 0x50, 0x00, 0x00, 0x04,
                                           0x00, 0x00, 0x00, 0x48, 0xA2, 0x8D,
@@ -491,9 +489,7 @@ int main(int argc, char* argv[])
             }
 
             /* exchange nonces */
-            rand = (uint64_t)random();
-            buf = hostnonce;
-            netmd_copy_quadword_to_buffer(&buf, rand);
+            gcry_create_nonce(hostnonce, sizeof(hostnonce));
             error = netmd_secure_session_key_exchange(devh, hostnonce, devnonce);
             puts(netmd_strerror(error));
 

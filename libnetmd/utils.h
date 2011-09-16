@@ -12,7 +12,10 @@ typedef struct {
         size_t position;
 } netmd_response;
 
-int min(int a,int b);
+#ifndef min
+    #define min(a,b) ((a)<(b)?(a):(b))
+#endif
+
 unsigned char proper_to_bcd_single(unsigned char value);
 unsigned char* proper_to_bcd(unsigned int value, unsigned char* target, size_t len);
 unsigned char bcd_to_proper_single(unsigned char value);

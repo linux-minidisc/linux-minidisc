@@ -26,15 +26,6 @@
 #include "utils.h"
 #include "log.h"
 
-inline int min(int a,int b)
-{
-    if (a < b) {
-        return a;
-    }
-
-    return b;
-}
-
 inline unsigned char proper_to_bcd_single(unsigned char value)
 {
     unsigned char high, low;

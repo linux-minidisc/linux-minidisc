@@ -34,6 +34,13 @@
 #define NETMD_RECV_TIMEOUT 1000
 #define NETMD_RECV_TRIES 30
 
+#ifdef WIN32
+    #include <windows.h>
+    #define msleep(x) Sleep(x)
+#else
+    #define msleep(x) usleep(1000*x)
+#endif
+
 /*
   polls to see if minidisc wants to send data
 
@@ -62,7 +69,7 @@ static int netmd_poll(libusb_device_handle *dev, unsigned char *buf, int tries)
         }
 
         if (i > 0) {
-            sleep(1);
+            msleep(1000);
         }
     }
 
