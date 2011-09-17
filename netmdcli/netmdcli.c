@@ -400,7 +400,7 @@ int main(int argc, char* argv[])
         }
         else if (strcmp("recv", argv[1]) == 0) {
             i = strtoul(argv[2], NULL, 10);
-            f = fopen(argv[3], "w");
+            f = fopen(argv[3], "wb");
             netmd_secure_recv_track(devh, i & 0xffff, f);
             fclose(f);
         }
@@ -503,7 +503,7 @@ int main(int argc, char* argv[])
             stat(argv[2], &stat_buf);
             data_size = (size_t)stat_buf.st_size;
             data = malloc(data_size);
-            f = fopen(argv[2], "r");
+            f = fopen(argv[2], "rb");
             fseek(f, 60, SEEK_CUR);
             fread(data, data_size - 60, 1, f);
             fclose(f);
