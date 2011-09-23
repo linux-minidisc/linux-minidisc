@@ -549,7 +549,7 @@ netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length,
 {
     uint32_t done = 0;
     unsigned char *data;
-    int32_t read;
+    int status;
     netmd_error error = NETMD_NO_ERROR;
     int transferred = 0;
 
@@ -559,15 +559,15 @@ netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length,
             chunksize = length - done;
         }
 
-        read = libusb_bulk_transfer((libusb_device_handle*)dev, 0x81, data, (int)chunksize, &transferred, 10000);
+        status = libusb_bulk_transfer((libusb_device_handle*)dev, 0x81, data, (int)chunksize, &transferred, 10000);
 
-        if (read >= 0) {
-            done += (uint32_t)read;
-            fwrite(data, (uint32_t)read, 1, file);
+        if (status >= 0) {
+            done += transferred;
+            fwrite(data, transferred, 1, file);
 
             netmd_log(NETMD_LOG_DEBUG, "%.1f%%\n", (double)done/(double)length * 100);
         }
-        else if (read != -LIBUSB_ERROR_TIMEOUT) {
+        else if (status != -LIBUSB_ERROR_TIMEOUT) {
             error = NETMD_USB_ERROR;
         }
     }
