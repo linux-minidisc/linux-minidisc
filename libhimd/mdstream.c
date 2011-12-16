@@ -191,7 +191,6 @@ int himd_writestream_open(struct himd * himd, struct himd_writestream * stream,
     stream->atdata = himd_open_file(himd, "ATDATA", HIMD_READ_WRITE);
     if(!stream->atdata)
 	{
-	    fprintf(stderr, "Invalid filehandle %d", stream->atdata);
 	    perror("DBG: cannot open ATDATA file for writing\n");
 	    return -1;
 	}

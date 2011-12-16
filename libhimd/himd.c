@@ -88,7 +88,7 @@ static int scanforatdata(GDir * dir)
 static int scanfortif(GDir * dir, int* oldnum, int *newnum)
 {
     const char * hmafile;
-    int found_blank=FALSE, found_unused=FALSE, found_used=FALSE;
+    int found_unused=FALSE, found_used=FALSE;
     int old_datanum, new_datanum;
 
     while((hmafile = g_dir_read_name(dir)) != NULL)
@@ -161,8 +161,8 @@ FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode
 
 int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 {
-    char indexfilename[13], atdatafilename[13];
-    gchar *unusedfile,*usedfile,*tempfile,*atdata;
+    char indexfilename[13];
+    gchar *unusedfile,*usedfile,*tempfile;
     gchar *filepath;
     GDir * dir;
     GError * error = NULL;
@@ -191,10 +191,6 @@ int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
     tempfile         = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
 					"TRKIDX.TMP",NULL);
 
-    // atdataXX.hma
-    sprintf(atdatafilename, himd->need_lowercase ? "atdata%02x.hma" : "ATDATA%02X.HMA", himd->datanum);
-    atdata            = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
-					 atdatafilename,NULL);
     if(!g_file_set_contents(unusedfile, (const char*)himd->tifdata, HIMD_TIFFILE_SIZE, &error))
 	{
 	    printf("Could not update unused TIFDATA file %s.\n", unusedfile);
