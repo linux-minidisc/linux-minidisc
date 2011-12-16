@@ -108,13 +108,8 @@ struct trackinfo {
     unsigned char mac[8];
     unsigned char contentid[20];
     int ekbnum;
-    struct tm recordingtime, starttime, endtime;
-    char Lt;
-    char Dest;
-    char Xcc;
-    char Ct;
-    char Cc;
-    char Cn;
+    struct tm recordingtime, licensestarttime, licenseendtime;
+    unsigned char lt, dest, xcc, ct, cc, cn;
 };
 
 /* a fragment in the audio file */

@@ -112,15 +112,15 @@ void himd_trackdump(struct himd * himd, int verbose)
                     strftime(rtime,sizeof rtime, "%x %X", &t.recordingtime);
                 else
                     strcpy(rtime, "?");
-                if(t.starttime.tm_mon != -1)
-                    strftime(stime,sizeof stime, "%x:%X", &t.starttime);
+                if(t.licensestarttime.tm_mon != -1)
+                    strftime(stime,sizeof stime, "%x %X", &t.licensestarttime);
                 else
-                    strcpy(stime, "?");
-                if(t.endtime.tm_mon != -1)
-                    strftime(etime,sizeof etime, "%x:%X", &t.endtime);
+                    strcpy(stime, "any time");
+                if(t.licenseendtime.tm_mon != -1)
+                    strftime(etime,sizeof etime, "%x %X", &t.licenseendtime);
                 else
-                    strcpy(etime, "?");
-                printf("     Recorded: %s, start: %s, end: %s\n", rtime, stime, etime);
+                    strcpy(etime, "any time");
+                printf("     Recorded: %s, licensed: %s-%s\n", rtime, stime, etime);
             }
         }
     }
@@ -678,15 +678,17 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 
     memset(&track.mac, 0, 8);
     memcpy(&track.contentid, cid, 20);
-    memset(&track.recordingtime, 0, sizeof(struct tm));
-    memset(&track.starttime,     0, sizeof(struct tm));
-    memset(&track.endtime,       0, sizeof(struct tm));
+    memset(&track.recordingtime,    0, sizeof(struct tm));
+    memset(&track.licensestarttime, 0, sizeof(struct tm));
+    memset(&track.licenseendtime,   0, sizeof(struct tm));
 
     /* set DRM stuff correctly for compatibility reasons */
-    track.Lt = 0x10;
-    track.Dest = 1;
-    track.Xcc = 1;
-    track.Cc = 0x40;
+    track.lt = 0x10;
+    track.dest = 1;
+    track.xcc = 1;
+    track.ct = 0;
+    track.cc = 0x40;
+    track.cn = 0;
 
     idx_track = himd_add_track_info(h, &track, &status);
     // END: Add track descriptor

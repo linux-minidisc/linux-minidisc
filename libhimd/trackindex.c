@@ -139,14 +139,16 @@ static void settrack(struct trackinfo *t, unsigned char * trackbuffer)
   setbeword16(trackbuffer+40, t->seconds);
 
   memcpy(trackbuffer+48,      t->contentid, 20);
-  dos_settime(trackbuffer+68, &t->starttime);
-  dos_settime(trackbuffer+72, &t->endtime);
 
   /* DRM stuff */
-  trackbuffer[42] = t->Lt;
-  trackbuffer[43] = t->Dest;
-  trackbuffer[76] = t->Xcc;
-  trackbuffer[78] = t->Cc;
+  dos_settime(trackbuffer+68, &t->licensestarttime);
+  dos_settime(trackbuffer+72, &t->licenseendtime);
+  trackbuffer[42] = t->lt;
+  trackbuffer[43] = t->dest;
+  trackbuffer[76] = t->xcc;
+  trackbuffer[77] = t->ct;
+  trackbuffer[78] = t->cc;
+  trackbuffer[79] = t->cn;
 }
 
 static void setfrag(struct fraginfo *f, unsigned char * fragbuffer)
@@ -203,9 +205,15 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     t->firstfrag = firstpart;
     t->tracknum = beword16(trackbuffer+38);
     t->seconds = beword16(trackbuffer+40);
+    t->lt = trackbuffer[42];
+    t->dest = trackbuffer[43];
     memcpy(t->contentid,trackbuffer+48,20);
-    get_dostime(&t->starttime,trackbuffer+68);
-    get_dostime(&t->endtime,trackbuffer+72);
+    get_dostime(&t->licensestarttime,trackbuffer+68);
+    get_dostime(&t->licenseendtime,trackbuffer+72);
+    t->xcc = trackbuffer[76];
+    t->ct = trackbuffer[77];
+    t->cc = trackbuffer[78];
+    t->cn = trackbuffer[79];
     return 0;
 }
 
