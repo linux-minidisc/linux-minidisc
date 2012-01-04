@@ -26,6 +26,7 @@
 #include <string.h>
 #include <glib.h>
 #include "himd.h"
+#include "himdll.h"
 
 #include "himd_private.h"
 
@@ -172,25 +173,18 @@ int himd_get_free_trackindex(struct himd * himd)
     return idx_freeslot;
 }
 
-int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t, struct himderrinfo * status)
+int himdll_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t, struct himderrinfo * status)
 {
     unsigned char * trackbuffer;
-    unsigned int firstpart;
 
+    (void)status;
     g_return_val_if_fail(himd != NULL, -1);
     g_return_val_if_fail(idx >= HIMD_FIRST_TRACK, -1);
     g_return_val_if_fail(idx <= HIMD_LAST_TRACK, -1);
     g_return_val_if_fail(t != NULL, -1);
 
     trackbuffer = get_track(himd, idx);
-    firstpart = beword16(trackbuffer+36);
 
-    if(firstpart == 0)
-    {
-        set_status_printf(status, HIMD_ERROR_NO_SUCH_TRACK,
-                          _("Track %d is not present on disc"), idx);
-        return -1;
-    }
     get_dostime(&t->recordingtime,trackbuffer+0);
     t->ekbnum = beword32(trackbuffer+4);
     t->title = beword16(trackbuffer+8);
@@ -202,7 +196,7 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     t->codec_id = trackbuffer[32];
     memcpy(t->codecinfo,trackbuffer+33,3);
     memcpy(t->codecinfo+3,trackbuffer+44,2);
-    t->firstfrag = firstpart;
+    t->firstfrag = beword16(trackbuffer+36);
     t->tracknum = beword16(trackbuffer+38);
     t->seconds = beword16(trackbuffer+40);
     t->lt = trackbuffer[42];
@@ -214,6 +208,20 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     t->ct = trackbuffer[77];
     t->cc = trackbuffer[78];
     t->cn = trackbuffer[79];
+    return 0;
+}
+
+int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * t, struct himderrinfo * status)
+{
+    if(himdll_get_track_info(himd, idx, t, status) < 0)
+        return -1;
+
+    if(t->firstfrag == 0)
+    {
+        set_status_printf(status, HIMD_ERROR_NO_SUCH_TRACK,
+                          _("Track %d is not present on disc"), idx);
+        return -1;
+    }
     return 0;
 }
 
