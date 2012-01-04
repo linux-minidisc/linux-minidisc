@@ -57,6 +57,18 @@ static int strlink(unsigned char * stringchunk)
     return beword16(stringchunk+14) & 0xFFF;
 }
 
+int himdll_strtype(struct himd *himd, unsigned int idx)
+{
+    g_return_val_if_fail(idx < 4096, -1);
+    return strtype(get_strchunk(himd, idx));
+}
+
+int himdll_strlink(struct himd *himd, unsigned int idx)
+{
+    g_return_val_if_fail(idx < 4096, -1);
+    return strlink(get_strchunk(himd, idx));
+}
+
 static void set_strlink(unsigned char * stringchunk, int link)
 {
     setbeword16(stringchunk+14, (beword16(stringchunk+14) & 0xF000) | link);
