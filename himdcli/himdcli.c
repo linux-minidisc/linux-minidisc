@@ -497,8 +497,8 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
             block_init(&bucket.block, bucket.nframes, bucket.totsize, iblock, cid);
 
 	    // Encrypt block
-	    int i=0;
-	    for(i=0;i < bucket.totsize; i++)
+	    unsigned i=0;
+	    for(i=0;i < (bucket.totsize & ~7U); i++)
 		bucket.block.audio_data[i] ^= key[i & 3];
 
 	    // Append block to ATDATA file
