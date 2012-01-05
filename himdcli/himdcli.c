@@ -378,9 +378,9 @@ void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar *
 
 void block_init(struct blockinfo * b, short int nframes, short int lendata, unsigned int serial_number, unsigned char * cid)
 {
-    strncpy((char*)&b->type, "SPMA", 4);
+    strncpy((char*)&b->type, "SMPA", 4);
     b->nframes       = nframes;
-    b->mcode         = 0;
+    b->mcode         = 3;
     b->lendata       = lendata;
     b->reserved1     = 0;
     b->serial_number = serial_number;
