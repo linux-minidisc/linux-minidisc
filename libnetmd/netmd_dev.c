@@ -91,7 +91,7 @@ netmd_error netmd_init(netmd_device **device_list)
 
     *device_list = NULL;
 
-    usb_device_count = libusb_get_device_list(NULL, &list);
+    usb_device_count = libusb_get_device_list(ctx, &list);
 
     for (i = 0; i < usb_device_count; i++) {
       libusb_get_device_descriptor(list[i], &desc);
