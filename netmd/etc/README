@@ -6,3 +6,8 @@ system and the netmd stuff.
   devices known as portable audio player. On recent distributions this will
   grant the user of the currently active session access to the device
   without being root.
+
+netmd.rules:
+  Place this file into /etc/udev/rules.d to add udev rules which will grant
+  user access to all known MiniDisc devices according to their USB device
+  IDs.
