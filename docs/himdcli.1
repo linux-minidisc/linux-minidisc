@@ -1,0 +1,49 @@
+\"                                      Hey, EMACS: -*- nroff -*-
+.TH HIMDCLI 1 "April 9, 2012"
+.SH NAME
+himdcli \- Command line interface for accessing HiMD Walkman
+.SH SYNOPSIS
+.B himdcli "\<HiMD path\>" "\<command\>"
+.SH DESCRIPTION
+\fBhimdcli\fP is a command line interface for accessing HiMD Walkman.
+.SH COMMANDS
+himdcli accepts the following commands:
+.TP
+.B strings
+Dumps all strings found in the tracklist file.
+.TP
+.B tracks
+Lists all tracks on disc.
+.TP
+.B tracks verbose
+Lists details of all tracks on disc.
+.TP
+.B discid
+Reads the disc id of the inserted medium.
+.TP
+.B holes
+Lists all holes on disc.
+.TP
+.B mp3key <TRK>
+Shows the MP3 encryption key for track #<TRK>.
+.TP
+.B dumptrack <TRK>
+Dumps track #<TRK>.
+.TP
+.B dumpmp3 <TRK>
+Dumps MP3 track #<TRK>.
+.TP
+.B dumpnonmp3 <TRK>
+Dumps non-MP3 track #<TRK>.
+.TP
+.B writemp3 <FILE>
+Writes the MP3 file <FILE> to disc.
+.PP
+When invoked without any arguments, himdcli outputs a short message with usage information.
+.SH SEE ALSO
+.BR netmdcli (1)
+.br
+.SH AUTHOR
+The linux-minidisc project - <https://wiki.physik.fu-berlin.de/linux-minidisc>.
+.PP
+This manual page was written by John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>.

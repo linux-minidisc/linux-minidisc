@@ -1,0 +1,39 @@
+\"                                      Hey, EMACS: -*- nroff -*-
+.TH NETMDCLI 1 "April 9, 2012"
+.SH NAME
+netmdcli \- Command line interface for accessing NetMD Walkman
+.SH SYNOPSIS
+.B netmdcli [options] <command>
+.SH DESCRIPTION
+\fBnetmdcli\fP is a command line interface for accessing NetMD Walkman.
+.SH OPTIONS
+netmdcli accepts the following options (GNU style):
+.TP
+.B \-t
+Increase log level to NETMD_LOG_ALL.
+.SH COMMANDS
+netmdcli accepts the following commands:
+.TP
+.B send
+Send track to a NetMD device.
+.TP
+.B recv
+Receive tracks from a NetMD device.
+.TP
+.B rename
+Rename tracks on a NetMD device.
+.TP
+.B move
+Move tracks on a NetMD device.
+.TP
+.B groupmove
+Move track groups on a NetMD device.
+.PP
+When invoked without any arguments, netmdcli outputs a short usage information.
+.SH SEE ALSO
+.BR himdcli (1)
+.br
+.SH AUTHOR
+The linux-minidisc project - <https://wiki.physik.fu-berlin.de/linux-minidisc>.
+.PP
+This manual page was written by John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>.
