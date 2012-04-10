@@ -142,10 +142,10 @@ static void settrack(struct trackinfo *t, unsigned char * trackbuffer)
 
   memcpy(trackbuffer+16, t->key, 8);
   memcpy(trackbuffer+24, t->mac, 8);
-  trackbuffer[32] = t->codec_id;
+  trackbuffer[32] = t->codec_info.codec_id;
 
-  memcpy(trackbuffer+33, t->codecinfo, 3);
-  memcpy(trackbuffer+44, t->codecinfo+3, 2);
+  memcpy(trackbuffer+33, t->codec_info.codecinfo, 3);
+  memcpy(trackbuffer+44, t->codec_info.codecinfo+3, 2);
 
   setbeword16(trackbuffer+36, t->firstfrag);
   setbeword16(trackbuffer+38, t->tracknum);
@@ -205,9 +205,9 @@ int himdll_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo
     t->trackinalbum = trackbuffer[14];
     memcpy(t->key, trackbuffer+16,8);
     memcpy(t->mac, trackbuffer+24,8);
-    t->codec_id = trackbuffer[32];
-    memcpy(t->codecinfo,trackbuffer+33,3);
-    memcpy(t->codecinfo+3,trackbuffer+44,2);
+    t->codec_info.codec_id = trackbuffer[32];
+    memcpy(t->codec_info.codecinfo,trackbuffer+33,3);
+    memcpy(t->codec_info.codecinfo+3,trackbuffer+44,2);
     t->firstfrag = beword16(trackbuffer+36);
     t->tracknum = beword16(trackbuffer+38);
     t->seconds = beword16(trackbuffer+40);
@@ -273,40 +273,6 @@ int himd_add_track_info(struct himd * himd, struct trackinfo * t, struct himderr
 }
 
 
-const char * himd_get_codec_name(const struct trackinfo * track)
-{
-    static char buffer[5];
-
-    g_return_val_if_fail(track != NULL, "(nullptr)");
-
-    if(track->codec_id == CODEC_LPCM)
-        return "LPCM";
-    if(track->codec_id == CODEC_ATRAC3)
-        return "AT3 ";
-    if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG && 
-         (track->codecinfo[0] & 3) == 0)
-        return "AT3+";
-    if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG)
-        return "MPEG";
-    sprintf(buffer,"%4d",track->codec_id);
-    return buffer;
-}
-
-unsigned int himd_trackinfo_framesize(const struct trackinfo * track)
-{
-    g_return_val_if_fail(track != NULL, 0);
-
-    if(track->codec_id == CODEC_LPCM)
-        return HIMD_LPCM_FRAMESIZE;
-    if(track->codec_id == CODEC_ATRAC3)
-        return 8 * track->codecinfo[2];
-    if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG &&
-         (track->codecinfo[0] & 3) == 0)
-        return 8 * (track->codecinfo[2] + 1);
-    /* MP3 tracks don't have a fixed frame size, other track types unknown */
-    return 0;
-}
-
 unsigned int himd_trackinfo_framesperblock(const struct trackinfo * track)
 {
     int framesize;
@@ -317,8 +283,8 @@ unsigned int himd_trackinfo_framesperblock(const struct trackinfo * track)
     if(!framesize)
         return TRACK_IS_MPEG;
 
-    if(track->codec_id == CODEC_LPCM)
-        return 0x3FC0 / HIMD_LPCM_FRAMESIZE;
+    if(sony_codecinfo_is_lpcm(&track->codec_info))
+        return 0x3FC0 / SONY_VIRTUAL_LPCM_FRAMESIZE;
     else
         return 0x3FBF / framesize;
 
@@ -332,8 +298,7 @@ int himd_track_uploadable(struct himd * himd, const struct trackinfo * track)
     g_return_val_if_fail(track != NULL, 0);
 
     /* MPEG has no serious encryption */
-    if(track->codec_id == CODEC_ATRAC3PLUS_OR_MPEG &&
-       (track->codecinfo[0] & 3) == 3)
+    if(sony_codecinfo_is_mpeg(&track->codec_info))
         return 1;
 
     /* Not the well-known RH1 key */

@@ -91,7 +91,8 @@ void himd_trackdump(struct himd * himd, int verbose)
                 if((blocks = himd_track_blocks(himd, &t, &status)) < 0)
                     fprintf(stderr, "Can't get block count for Track %d: %s\n", i, status.statusmsg);
                 else
-                    printf("     %5d Blocks per 16 KB\n", blocks);
+                    printf("     %5d Blocks of 16 KB each,  %dkbps\n",
+                                blocks, sony_codecinfo_kbps(&t.codec_info));
 
                 while(fnum != 0)
                 {
@@ -252,7 +253,7 @@ clean:
 int write_oma_header(FILE * f, const struct trackinfo * trkinfo)
 {
     char header[EA3_FORMAT_HEADER_SIZE];
-    make_ea3_format_header(header, trkinfo);
+    make_ea3_format_header(header, &trkinfo->codec_info);
 
     if(fwrite(header, sizeof header, 1, f) != 1)
     {
@@ -283,7 +284,7 @@ void himd_dumpnonmp3(struct himd * himd, int trknum)
         return;
     }
 
-    if(trkinfo.codec_id != CODEC_LPCM)
+    if(!sony_codecinfo_is_lpcm(&trkinfo.codec_info))
         filename = "stream.oma";
 
     strdumpf = fopen(filename,"wb");
@@ -299,7 +300,7 @@ void himd_dumpnonmp3(struct himd * himd, int trknum)
         fclose(strdumpf);
         return;
     }
-    if(trkinfo.codec_id != CODEC_LPCM &&
+    if(!sony_codecinfo_is_lpcm(&trkinfo.codec_info) &&
        write_oma_header(strdumpf, &trkinfo) < 0)
         return;
     while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
@@ -733,14 +734,14 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     track.tracknum     = 1;
     track.ekbnum       = 0;
     track.trackinalbum = 1;
-    track.codec_id     = CODEC_ATRAC3PLUS_OR_MPEG;
+    track.codec_info.codec_id = CODEC_ATRAC3PLUS_OR_MPEG;
     track.seconds      = duration.seconds;
-    memset(&track.codecinfo, 0, 5);
-    track.codecinfo[0] = 3;
 
-    track.codecinfo[2] = mp3codecinfo[0];
-    track.codecinfo[3] = mp3codecinfo[1];
-    track.codecinfo[4] = mp3codecinfo[2];
+    track.codec_info.codecinfo[0] = 3;
+    track.codec_info.codecinfo[1] = 0;
+    track.codec_info.codecinfo[2] = mp3codecinfo[0];
+    track.codec_info.codecinfo[3] = mp3codecinfo[1];
+    track.codec_info.codecinfo[4] = mp3codecinfo[2];
 
     memset(&track.mac, 0, 8);
     memcpy(&track.contentid, cid, 20);

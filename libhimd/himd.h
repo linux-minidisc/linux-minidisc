@@ -28,14 +28,11 @@
 
 #include <time.h>
 #include <stdio.h>
+#include "codecinfo.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define CODEC_ATRAC3 0x00
-#define CODEC_ATRAC3PLUS_OR_MPEG 0x01
-#define CODEC_LPCM 0x80
 
 #define HIMD_ENCODING_LATIN1 5
 #define HIMD_ENCODING_UTF16BE 0x84
@@ -56,10 +53,6 @@ extern "C" {
 
 #define HIMD_FIRST_STRING 1
 #define HIMD_LAST_STRING 4095
-
-#define HIMD_LPCM_FRAMESIZE 64
-#define HIMD_ATRAC3_SAMPLES_PER_FRAME 1024
-#define HIMD_ATRAC3P_SAMPLES_PER_FRAME 2048
 
 #define HIMD_TIFFILE_SIZE 327680
 #define HIMD_AUDIO_SIZE 0x3FC0
@@ -99,8 +92,7 @@ enum himd_rw_mode { HIMD_READ_ONLY, HIMD_READ_WRITE };
 struct trackinfo {
     int title, artist, album;
     int trackinalbum;
-    unsigned char codec_id;
-    unsigned char codecinfo[5];
+    struct sony_codecinfo codec_info;
     int firstfrag;	/* index into parts table */
     int tracknum;	/* always equal to own index in used tracks? */
     int seconds;
@@ -186,8 +178,8 @@ int himd_get_free_trackindex(struct himd * himd);
 int himd_add_track_info(struct himd * himd, struct trackinfo * track, struct himderrinfo * status);
 int himd_add_fragment_info(struct himd * himd, struct fraginfo * f, struct himderrinfo * status);
 
-const char * himd_get_codec_name(const struct trackinfo * t);
-unsigned int himd_trackinfo_framesize(const struct trackinfo * track);
+#define himd_get_codec_name(track) sony_codecinfo_codecname(&(track)->codec_info)
+#define himd_trackinfo_framesize(track) sony_codecinfo_bytesperframe(&(track)->codec_info)
 unsigned int himd_trackinfo_framesperblock(const struct trackinfo * track);
 
 typedef unsigned char mp3key[4];
@@ -205,8 +197,6 @@ struct himd_blockstream {
     unsigned int blockcount;
     unsigned int frames_per_block;
 };
-
-#define TRACK_IS_MPEG 0
 
 int himd_blockstream_open(struct himd * himd, unsigned int firstfrag, unsigned int frames_per_block, struct himd_blockstream * stream, struct himderrinfo * status);
 void himd_blockstream_close(struct himd_blockstream * stream);

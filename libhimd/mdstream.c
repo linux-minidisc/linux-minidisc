@@ -277,8 +277,7 @@ int himd_mp3stream_open(struct himd * himd, unsigned int trackno, struct himd_mp
 
     if(himd_get_track_info(himd, trackno, &trkinfo, status) < 0)
         return -1;
-    if(trkinfo.codec_id != CODEC_ATRAC3PLUS_OR_MPEG ||
-       (trkinfo.codecinfo[0] & 3) != 3)
+    if(!sony_codecinfo_is_mpeg(&trkinfo.codec_info))
     {
         set_status_printf(status, HIMD_ERROR_BAD_AUDIO_CODEC,
                           _("Track %d does not contain MPEG data"), trackno);
@@ -523,10 +522,9 @@ int himd_nonmp3stream_open(struct himd * himd, unsigned int trackno, struct himd
 
     if(himd_get_track_info(himd, trackno, &trkinfo, status) < 0)
         return -1;
-    if((trkinfo.codec_id != CODEC_LPCM) &&
-       (trkinfo.codec_id != CODEC_ATRAC3) &&
-       (trkinfo.codec_id != CODEC_ATRAC3PLUS_OR_MPEG ||
-                           (trkinfo.codecinfo[0] & 3) != 0))
+    if(!sony_codecinfo_is_lpcm(&trkinfo.codec_info) &&
+       !sony_codecinfo_is_at3(&trkinfo.codec_info) &&
+       !sony_codecinfo_is_at3p(&trkinfo.codec_info))
     {
         set_status_printf(status, HIMD_ERROR_BAD_AUDIO_CODEC,
                           _("Track %d does not contain PCM, ATRAC3 or ATRAC3+ data"), trackno);

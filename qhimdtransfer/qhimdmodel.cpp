@@ -105,7 +105,7 @@ QString QHiMDTrack::openNonMpegStream(struct himd_nonmp3stream * str) const
 QByteArray QHiMDTrack::makeEA3Header() const
 {
     char header[EA3_FORMAT_HEADER_SIZE];
-    make_ea3_format_header(header, &ti);
+    make_ea3_format_header(header, &ti.codec_info);
     return QByteArray(header,EA3_FORMAT_HEADER_SIZE);
 }
 
