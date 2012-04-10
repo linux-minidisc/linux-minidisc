@@ -558,7 +558,7 @@ int himd_add_string(struct himd * himd, char *string, int type, struct himderrin
     /* check that there are enough free slots. Start at slot 0 which
        is the head of the free list. */
     curidx = 0;
-    for(i = 0; i < nslots; i--)
+    for(i = 0; i < nslots; i++)
     {
         curtype = strtype(get_strchunk(himd, curidx));
         curidx = strlink(get_strchunk(himd, curidx));
