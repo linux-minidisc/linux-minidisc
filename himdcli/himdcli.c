@@ -421,7 +421,7 @@ void bucket_init(struct abucket * pbucket)
     pbucket->pbuf_end     = &pbucket->block.audio_data[HIMD_AUDIO_SIZE];
 }
 
-int bucket_append(struct abucket * pbucket, gchar * pframe, guint framelen)
+int bucket_append(struct abucket * pbucket, guchar * pframe, guint framelen)
 {
     g_assert(pbucket != NULL);
     g_assert(pframe != NULL);
@@ -463,9 +463,22 @@ int bucket_append(struct abucket * pbucket, gchar * pframe, guint framelen)
 //  Writes audio blocks at the end of the ATDATA container file. Audio blocks contains all frames (TODO: ID3 frames)
 //  in a obfuscated form using a 4 byte key.
 //
+
+#define HIMD_MP3_VAR_VERSION 0x40
+#define HIMD_MP3_VAR_LAYER   0x20
+#define HIMD_MP3_VAR_BITRATE 0x10
+#define HIMD_MP3_VAR_SRATE   0x08
+#define HIMD_MP3_VAR_CHMODE  0x04
+#define HIMD_MP3_VAR_PREEMPH 0x02
+
 gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stream, mp3key key,
-                   mad_timer_t *duration, gint *nblocks, gint *nframes, unsigned char * cid, struct himderrinfo * status)
+                   mad_timer_t *duration, gint *nblocks, gint *nframes, unsigned char * cid,
+                   unsigned char *mp3codecinfo, struct himderrinfo * status)
 {
+    guchar var_flags = 0x80;
+    unsigned mpegvers = 3, mpeglayer = 1, mpegbitrate = 9, mpegsamprate = 0, 
+             mpegchmode = 0, mpegpreemph = 0;
+    gboolean firsttime = TRUE;
     struct abucket bucket;
     struct mad_header header;
     mad_timer_t mad_timer;
@@ -486,10 +499,60 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 		break;
 	    }
 	}
-        gchar * pframe = (gpointer) stream->this_frame;
+        guchar * pframe = (gpointer) stream->this_frame;
 	gint framelen = (guint) (stream->next_frame - stream->this_frame);
+	/* "b" means "this Block" */
+        unsigned bmpegvers, bmpeglayer, bmpegbitrate, bmpegsamprate, 
+                 bmpegchmode, bmpegpreemph;
+        
+        bmpegvers =     (pframe[1] >> 3) & 0x03;
+        bmpeglayer =    (pframe[1] >> 1) & 0x03;
+        bmpegbitrate =  (pframe[2] >> 4) & 0x0F;
+        bmpegsamprate = (pframe[2] >> 2) & 0x03;
+        bmpegchmode =   (pframe[3] >> 6) & 0x03;
+        bmpegpreemph =  (pframe[3] >> 0) & 0x03;
 
 	mad_timer_add(&mad_timer, header.duration);
+
+	if(firsttime) {
+            bmpegvers =     mpegvers;
+            bmpeglayer =    mpeglayer;
+            bmpegbitrate =  mpegbitrate;
+            bmpegsamprate = mpegsamprate;
+            bmpegchmode =   mpegchmode;
+            bmpegpreemph =  mpegpreemph;
+	    firsttime = FALSE;
+	} else {
+	    if(bmpegvers != mpegvers) {
+	        var_flags |= HIMD_MP3_VAR_VERSION;
+	        mpegvers = MIN(mpegvers, bmpegvers); /* smaller num -> higher version */
+	    }
+	    if(bmpeglayer != mpeglayer) {
+	        var_flags |= HIMD_MP3_VAR_LAYER;
+	        mpeglayer = MIN(mpeglayer, bmpeglayer); /* smaller num -> higher layer */
+	    }
+	    if(bmpegbitrate != mpegbitrate) {
+	        /* TODO: check whether "free-form" streams need special handling */
+	        var_flags |= HIMD_MP3_VAR_BITRATE;
+	        mpegbitrate = MAX(mpegbitrate, bmpegbitrate);
+	    }
+	    if(bmpegsamprate != mpegsamprate) {
+	        var_flags |= HIMD_MP3_VAR_SRATE;
+	        /* "1" is highest (48), "0" is medium (44), "2" is lowest (32) */
+	        if(mpegsamprate != 1) {
+                    if(bmpegsamprate == 1)
+                        mpegsamprate = bmpegsamprate;
+                    else
+                        mpegsamprate = MIN(mpegsamprate, bmpegsamprate);
+                }
+	    }
+	    if(bmpegchmode != mpegchmode)
+	        /* TODO: find out how to choose "maximal" mode */
+                var_flags |= HIMD_MP3_VAR_CHMODE;
+            if(bmpegpreemph != mpegpreemph)
+                /* TODO: find out how to choose "maximal" preemphasis */
+                var_flags |= HIMD_MP3_VAR_PREEMPH;
+	}
 
 	// Append frames to block
 	gint nbytes_added = bucket_append(&bucket, pframe, framelen);
@@ -535,6 +598,10 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 	    duration->seconds = mad_timer.seconds;
 	}
 
+    mp3codecinfo[0] = var_flags;
+    mp3codecinfo[1] = (mpegvers << 6) | (mpeglayer << 4) | (mpegbitrate);
+    mp3codecinfo[2] = (mpegsamprate << 6) | (mpegchmode << 4) | (mpegpreemph << 2);
+
     // close write-stream to atdata file
     return iblock;
 }
@@ -551,6 +618,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     gchar * artist=NULL, * title=NULL, * album=NULL;
     int i;
     unsigned char cid[20] = {0x02, 0x03, 0x00, 0x00};
+    unsigned char mp3codecinfo[3];
 
     // Generate random content ID
     for(i = 4; i <=19; i++)
@@ -594,7 +662,7 @@ void himd_writemp3(struct himd  *h, const char *filepath)
 	    exit(1);
 	}
 
-    write_blocks(&stream, &write_stream, key, &duration, &nblocks, &nframes, cid, &status);
+    write_blocks(&stream, &write_stream, key, &duration, &nblocks, &nframes, cid, mp3codecinfo, &status);
 
     himd_writestream_close(&write_stream);
     // END: Write blocks to ATDATA
@@ -670,11 +738,9 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     memset(&track.codecinfo, 0, 5);
     track.codecinfo[0] = 3;
 
-    /* file dependent codec information, these values are for my test mp3 file only, */
-    /* values fetched from trkidx file by downloading the same mp3 file with SonicStage */
-    track.codecinfo[2] = 0xB0; /* mp3, stereo, 128kb/s@44k1Hz */
-    track.codecinfo[3] = 0xD9;
-    track.codecinfo[4] = 0x10;
+    track.codecinfo[2] = mp3codecinfo[0];
+    track.codecinfo[3] = mp3codecinfo[1];
+    track.codecinfo[4] = mp3codecinfo[2];
 
     memset(&track.mac, 0, 8);
     memcpy(&track.contentid, cid, 20);
