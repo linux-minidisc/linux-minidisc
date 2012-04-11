@@ -31,9 +31,6 @@
 
 #define G_LOG_DOMAIN "HiMD"
 #include <glib.h>
-#include <glib/gstdio.h>
-#include <glib/gprintf.h>
-#include <glib/gfileutils.h>
 #include "himd.h"
 
 #define _(x) (x)
