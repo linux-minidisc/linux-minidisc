@@ -9,10 +9,10 @@ himdcli \- Command line interface for accessing HiMD Walkman
 uses the libhimd library to read and write audio tracks from a HiMD filesystem
 which can be mounted directly from a physical HiMD Walkman or a previously
 created image file of a HiMD. The mount point of the HiMD filesystem must
-be provided as an argument to \fhimdcli\f together with the command to
+be provided as an argument to \fBhimdcli\fP together with the command to
 be performed.
-.TP
-Currently libhimd and therefore \fhimdcli\f implements full read access
+
+Currently libhimd and therefore \fBhimdcli\fP implements full read access
 for PCM, ATRAC-3+ and MP3 tracks as well as experimental write support
 for MP3 tracks (MP3 playback is supported by second and third generation
 of HiMD Walkman only). Since non-MP3 tracks are protected by Sony's DRM
@@ -21,17 +21,17 @@ not provided by the upstream authors. Without these keys, libhimd and
 thus \fhimdcli\f supports reading MP3 and tracks recorded with the
 MZ-M100/M200 and MZ-RH1 recorders only (these use a simpler encryption
 mechanism with a constant encryption key).
-.TP
-In addition to transfer capabilities, \fhimdcli\f provides some commands
-for debugging purposes. These include \fstrings\f to display all strings
-found in the track list file (TRKIDX##.HMA), \ftracks\f and \ftracks
-verbose\f to display (detailed technical) track information, \fdiscid\f
+
+In addition to transfer capabilities, \fBhimdcli\fP provides some commands
+for debugging purposes. These include \fBstrings\fP to display all strings
+found in the track list file (TRKIDX##.HMA), \fBtracks\fP and \fBtracks
+verbose\fP to display (detailed technical) track information, \fBdiscid\fP
 to display the disc id (comparable to the filesystem ID of FAT formatted
-volumes) which is used by the OpenMG encryption, \fmp3key\f to display
-the MP3 encryption key for a given MP3 track on disc as well as \fholes\f
+volumes) which is used by the OpenMG encryption, \fBmp3key\fP to display
+the MP3 encryption key for a given MP3 track on disc as well as \fBholes\fP
 to display the holes in a non-contiguous ATDATA##.HMA file (a container
 file where all tracks are stored on a HiMD filesystem).
-.TP
+
 .SH COMMANDS
 himdcli currently accepts the following commands:
 .TP
