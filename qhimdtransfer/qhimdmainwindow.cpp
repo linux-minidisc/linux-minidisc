@@ -237,6 +237,7 @@ void QHiMDMainWindow::init_local_browser()
     QStringList DownloadFileList;
     localmodel.setFilter(QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot);
     localmodel.setNameFilters(QStringList() << "*.mp3" << "*.wav" << "*.oma");
+    localmodel.setSelectableExtensions(trackmodel.downloadableFileExtensions());
     localmodel.setNameFilterDisables(false);
     localmodel.setReadOnly(false);
     localmodel.setRootPath("/");

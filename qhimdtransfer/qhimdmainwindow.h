@@ -4,7 +4,6 @@
 #include <QtGui/QMainWindow>
 #include <QtGui/QFileDialog>
 #include <QtCore/QSettings>
-#include <QtGui/QFileSystemModel>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
 #include "qhimduploaddialog.h"
@@ -40,7 +39,7 @@ private:
     QHiMDUploadDialog * uploadDialog;
     QHiMDDetection * detect;
     QHiMDTracksModel trackmodel;
-    QFileSystemModel localmodel;
+    QHiMDFileSystemModel localmodel;
     QSettings settings;
     QString dumpmp3(const QHiMDTrack & trk, QString file);
     QString dumpoma(const QHiMDTrack & trk, QString file);

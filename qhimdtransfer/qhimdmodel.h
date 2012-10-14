@@ -4,6 +4,8 @@
 #include <QtCore/QAbstractListModel>
 #include <QtCore/QTime>
 #include <QtCore/QList>
+#include <QtCore/QStringList>
+#include <QtGui/QFileSystemModel>
 #include "himd.h"
 
 #include "sony_oma.h"
@@ -50,6 +52,17 @@ public:
     void close();
     QHiMDTrack track(int trackidx) const;
     QHiMDTrackList tracks(const QModelIndexList & indices) const;
+    QStringList downloadableFileExtensions() const;
 };
+
+class QHiMDFileSystemModel : public QFileSystemModel {
+    Q_OBJECT
+
+    QStringList selectableExtensions;
+public:
+    virtual Qt::ItemFlags flags(const QModelIndex &index) const;
+    void setSelectableExtensions(QStringList extensions);
+};
+
 
 #endif
