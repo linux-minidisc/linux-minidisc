@@ -67,6 +67,7 @@ private slots:
     void himd_found(QString path);
     void himd_removed(QString path);
     void on_himd_devices_activated(QString device);
+    void on_download_button_clicked();
 
 signals:
     void himd_busy(QString path);

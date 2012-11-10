@@ -497,12 +497,19 @@ void QHiMDMainWindow::handle_himd_selection_change(const QItemSelection&, const 
 void QHiMDMainWindow::handle_local_selection_change(const QItemSelection&, const QItemSelection&)
 {
     QModelIndex index = ui->localScan->currentIndex();
+    bool download_possible = false;
 
     if(localmodel.fileInfo(index).isDir())
     {
         ui->updir->setText(localmodel.filePath(index));
         settings.setValue("lastUploadDirectory", localmodel.filePath(index));
     }
+
+    if(localmodel.fileInfo(index).isFile())
+        download_possible = trackmodel.is_open();
+
+    ui->action_Download->setEnabled(download_possible);
+    ui->download_button->setEnabled(download_possible);
 }
 
 void QHiMDMainWindow::himd_found(QString HiMDPath)
@@ -560,4 +567,9 @@ void QHiMDMainWindow::himd_removed(QString HiMDPath)
 void QHiMDMainWindow::on_himd_devices_activated(QString device)
 {
     open_himd_at(device);
+}
+
+void QHiMDMainWindow::on_download_button_clicked()
+{
+    /*download_of(localmodel.filePath(ui->localScan->currentIndex()));*/
 }
