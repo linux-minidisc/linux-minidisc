@@ -229,7 +229,7 @@ void QHiMDMainWindow::init_himd_browser()
     for(;i < trackmodel.columnCount(); i++)
         ui->TrackList->resizeColumnToContents(i);
     QObject::connect(ui->TrackList->selectionModel(), SIGNAL(selectionChanged (const QItemSelection &, const QItemSelection &)),
-                     this, SLOT(handle_selection_change(const QItemSelection&, const QItemSelection&)));
+                     this, SLOT(handle_himd_selection_change(const QItemSelection&, const QItemSelection&)));
 }
 
 void QHiMDMainWindow::init_local_browser()
@@ -249,6 +249,8 @@ void QHiMDMainWindow::init_local_browser()
     ui->localScan->hideColumn(2);
     ui->localScan->hideColumn(3);
     ui->localScan->setColumnWidth(0, 350);
+    QObject::connect(ui->localScan->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+                     this, SLOT(handle_local_selection_change(const QItemSelection&, const QItemSelection&)));
 }
 
 void QHiMDMainWindow::save_window_settings()
@@ -479,25 +481,28 @@ void QHiMDMainWindow::on_action_Connect_triggered()
     open_himd_at(HiMDDirectory);
 }
 
-void QHiMDMainWindow::on_localScan_clicked(QModelIndex index)
-{
-    if(localmodel.fileInfo(index).isDir())
-    {
-        ui->updir->setText(localmodel.filePath(index));
-        settings.setValue("lastUploadDirectory", localmodel.filePath(index));
-    }
-}
-
 void QHiMDMainWindow::on_upload_button_clicked()
 {
     upload_to(ui->updir->text());
 }
 
-void QHiMDMainWindow::handle_selection_change(const QItemSelection&, const QItemSelection&)
+void QHiMDMainWindow::handle_himd_selection_change(const QItemSelection&, const QItemSelection&)
 {
     bool nonempty = ui->TrackList->selectionModel()->selectedRows(0).length() != 0;
+
     ui->action_Upload->setEnabled(nonempty);
     ui->upload_button->setEnabled(nonempty);
+}
+
+void QHiMDMainWindow::handle_local_selection_change(const QItemSelection&, const QItemSelection&)
+{
+    QModelIndex index = ui->localScan->currentIndex();
+
+    if(localmodel.fileInfo(index).isDir())
+    {
+        ui->updir->setText(localmodel.filePath(index));
+        settings.setValue("lastUploadDirectory", localmodel.filePath(index));
+    }
 }
 
 void QHiMDMainWindow::himd_found(QString HiMDPath)
