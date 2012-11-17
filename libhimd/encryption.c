@@ -127,20 +127,17 @@ static void xor_keys(unsigned char * out,
 int descrypt_open(void ** dataptr, const unsigned char * trackkey, 
                   unsigned int ekbnum, struct himderrinfo * status)
 {
-    static const unsigned char zerokey[] = {0,0,0,0,0,0,0,0};
-    static const unsigned char masterkey[] = {0xf2,0x26,0x6c,0x64,0x64,0xc0,0xd6,0x5c};
+    /* gcrypt only supports three-key 3DES, so set key1 == key3 */
+    static const unsigned char ekb00010012root[] = {0xf5,0x1e,0xcb,0x2a,0x80,0x8f,0x15,0xfd,
+                                                    0x54,0x2e,0xf5,0x12,0x3b,0xcd,0xbc,0xa4,
+                                                    0xf5,0x1e,0xcb,0x2a,0x80,0x8f,0x15,0xfd};
+    gcry_cipher_hd_t rootcipher;
     struct descrypt_data * data;
+    int err;
 
     if(ekbnum != 0x00010012)
     {
         set_status_const(status, HIMD_ERROR_UNSUPPORTED_ENCRYPTION, _("EKB %08x unsupported"));
-        return -1;
-    }
-
-    if(memcmp(trackkey, zerokey, 8) != 0)
-    {
-        set_status_const(status, HIMD_ERROR_UNSUPPORTED_ENCRYPTION,
-                          _("Track uses strong encryption"));
         return -1;
     }
 
@@ -150,13 +147,31 @@ int descrypt_open(void ** dataptr, const unsigned char * trackkey,
         set_status_const(status, HIMD_ERROR_OUT_OF_MEMORY, _("Can't allocate crypt helper structure"));
         return -1;
     }
+    if(gcry_cipher_open(&rootcipher, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0) != 0)
+    {
+        set_status_const(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't aquire 3DES ECB encryption"));
+        return -1;
+    }
+    if((err = gcry_cipher_setkey(rootcipher, ekb00010012root, 24)) != 0)
+    {
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't init 3DES: %s"), gcry_strerror(err));
+        gcry_cipher_close(rootcipher);
+        return -1;
+    }
+    if((err = gcry_cipher_decrypt(rootcipher, data->masterkey, 8, trackkey, 8)) != 0)
+    {
+        set_status_printf(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't calc key encryption key: %s"), gcry_strerror(err));
+        gcry_cipher_close(rootcipher);
+        return -1;
+    }
+    gcry_cipher_close(rootcipher);
+
     if(cached_cipher_init(&data->master, GCRY_CIPHER_MODE_ECB) != 0)
     {
         set_status_const(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't aquire DES ECB encryption"));
         return -1;
     }
 
-    memcpy(data->masterkey, masterkey, 8);
     if(cached_cipher_init(&data->block, GCRY_CIPHER_MODE_CBC) != 0)
     {
         set_status_const(status, HIMD_ERROR_ENCRYPTION_FAILURE, _("Can't aquire DES CBC encryption"));

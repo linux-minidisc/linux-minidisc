@@ -301,9 +301,8 @@ int himd_track_uploadable(struct himd * himd, const struct trackinfo * track)
     if(sony_codecinfo_is_mpeg(&track->codec_info))
         return 1;
 
-    /* Not the well-known RH1 key */
-    if(memcmp(track->key,"\0\0\0\0\0\0\0",8) != 0 ||
-       track->ekbnum != 0x10012)
+    /* Not the well-known EKB */
+    if(track->ekbnum != 0x10012)
         return 0;
 
     return 1;
