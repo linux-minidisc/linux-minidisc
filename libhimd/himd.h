@@ -84,7 +84,8 @@ enum himdstatus { HIMD_OK,
                   HIMD_ERROR_BAD_DATA_FORMAT,
                   HIMD_ERROR_UNSUPPORTED_ENCRYPTION,
                   HIMD_ERROR_ENCRYPTION_FAILURE,
-                  HIMD_ERROR_OUT_OF_MEMORY };
+                  HIMD_ERROR_OUT_OF_MEMORY,
+                  HIMD_ERROR_NO_ID3_TAGS_FOUND };
 
 enum himd_rw_mode { HIMD_READ_ONLY, HIMD_READ_WRITE };
 
@@ -260,6 +261,9 @@ struct himd_holelist {
 
 int himd_find_holes(struct himd * himd, struct himd_holelist * holes, struct himderrinfo * status);
 
+/* mp3tools.c */
+
+int himd_get_songinfo(const char *filepath, char ** artist, char ** title, char **album, struct himderrinfo * status);
 
 #ifdef __cplusplus
 }

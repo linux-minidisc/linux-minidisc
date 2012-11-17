@@ -332,51 +332,6 @@ void himd_dumpholes(struct himd * h)
         printf("%d: %05u-%05u\n", i, holes.holes[i].firstblock, holes.holes[i].lastblock);
 }
 
-/*
- * gets artist, title and album info from an ID3 tag.
- * The output strings are to be free()d.
- */
-void get_songinfo(const char *filepath, gchar ** artist, gchar ** title, gchar **album)
-{
-    struct id3_file * file;
-    struct id3_frame const *frame;
-    struct id3_tag *tag;
-    union id3_field const *field;
-
-    file = id3_file_open(filepath, ID3_FILE_MODE_READONLY);
-
-    tag = id3_file_tag(file);
-    if(!tag)
-	{
-	    printf("no tags\n");
-	    id3_file_close(file);
-	    return;
-	}
-
-    frame = id3_tag_findframe (tag, ID3_FRAME_ARTIST, 0);
-    if(frame && (field = &frame->fields[1]) && 
-                 id3_field_getnstrings(field) > 0)
-        *artist = (gchar*) id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
-    else
-        *artist = NULL;
-
-    frame = id3_tag_findframe (tag, ID3_FRAME_TITLE, 0);
-    if(frame && (field = &frame->fields[1]) &&
-                 id3_field_getnstrings(field) > 0)
-        *title = (gchar*) id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
-    else
-        *title = NULL;
-
-    frame = id3_tag_findframe (tag, ID3_FRAME_ALBUM, 0);
-    if(frame && (field = &frame->fields[1]) &&
-                 id3_field_getnstrings(field) > 0)
-        *album = (gchar*) id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
-    else
-        *album = NULL;
-
-    id3_file_close(file);
-}
-
 void block_init(struct blockinfo * b, short int nframes, short int lendata, unsigned int serial_number, unsigned char * cid)
 {
     strncpy((char*)&b->type, "SMPA", 4);
@@ -626,7 +581,8 @@ void himd_writemp3(struct himd  *h, const char *filepath)
         cid[i] = g_random_int_range(0,0xFF);
 
     // Get track ID3 information
-    get_songinfo(filepath, &artist, &title, &album);
+    if(himd_get_songinfo(filepath, &artist, &title, &album, &status) < 0)
+        printf("no tags\n");
 
     // Load mp3 stream
     mp3file   = g_mapped_file_new(filepath, FALSE, NULL);
