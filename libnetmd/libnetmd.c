@@ -980,7 +980,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 
         fprintf(stderr,"pos: %d/%d; remain data: %d\n", file_pos, data_size_i, data_size_i-file_pos);
         if (file_pos >= data_size_i) {
-            fprintf(stderr,"Done transfering\n");
+            fprintf(stderr,"Done transferring.\n");
             free(data);
             break;
         }
