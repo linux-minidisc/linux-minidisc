@@ -7,7 +7,7 @@ SRCDIR="$( cd "$( dirname "$0" )" && pwd )"
 if [ -n "$GIT_VERSION" ] ; then
     echo $GIT_VERSION
 elif [ -f ${SRCDIR}/VERSION ] ; then
-    echo $(< ${SRCDIR}/VERSION)
+    echo "$(cat ${SRCDIR}/VERSION)"
 else
     echo "NO_VERSION"
 fi
