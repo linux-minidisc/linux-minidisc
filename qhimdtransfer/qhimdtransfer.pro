@@ -6,7 +6,7 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # determine version number from git
-VERSION = $$system(git describe --always --long)
+VERSION = $$system(sh ../get_version.sh)
 #    !isEmpty(VERSION){
 #      VERSION = 0.0.1-$${VERSION}
 #    }
