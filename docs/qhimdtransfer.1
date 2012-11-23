@@ -1,0 +1,44 @@
+\"                                      Hey, EMACS: -*- nroff -*-
+.TH QHIMDTRANSFER 1 "November 23, 2012"
+.SH NAME
+qhimdtransfer \- Transfer software for MiniDisc devices
+.SH SYNOPSIS
+.B qhimdtransfer
+.SH DESCRIPTION
+\fBqhimdtransfer\fP is a graphical user interface application for 
+accessing HiMD Walkman. It uses the libhimd library to read and write
+audio tracks from a HiMD filesystem which can be mounted directly from
+a physical HiMD Walkman or a previously created image file of a HiMD.
+By choosing "Connect" in the file menu, the mount point of the HiMD
+filesystem is located and the track listing is consequently loaded
+into the application into the track list viewer on the left-hand
+side.
+
+To upload a track (transfer it to the PC), select the tracks to be
+transferred in the track list window. Then choose the destination
+directory in the file browser on the right-hand side and click
+the onto the upload button (white arrow on red background). To
+download tracks to the device, select the tracks to be downloaded
+in the file browser and click onto the download button (white
+arrow on green background).
+
+Currently libhimd and therefore \fBqhimdtransfer\fP implements full read access
+for PCM, ATRAC-3+ and MP3 tracks as well as experimental write support
+for MP3 tracks (MP3 playback is supported by second and third generation
+of HiMD Walkman only). Non-MP3 tracks are protected by Sony's DRM
+software stack OpenMG, which require a sophisticated calculation of
+keys and access control lists. Writing of non-MP3 tracks is therefore
+currently not yet supported.
+
+Please note that some of the functions in the graphical user interface
+like deleting or renaming tracks or formatting the medium are not yet
+implemented, but work is currently in progress to achieve that.
+
+.SH SEE ALSO
+.IR netmdcli (1),
+.IR himdcli (1)
+.br
+.SH AUTHOR
+The linux-minidisc project - <https://wiki.physik.fu-berlin.de/linux-minidisc>.
+.PP
+This manual page was written by John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>.
