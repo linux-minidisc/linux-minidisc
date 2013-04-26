@@ -64,6 +64,7 @@ void QHiMDUploadDialog::init(int trackcount, int totalblocks)
     allfinished = 0;
     m_ui->AllPBar->setRange(0, allblocks);
     m_ui->AllPBar->reset();
+    canceled = false;
 
     scount = fcount = 0;
     m_ui->success_text->setText("");
