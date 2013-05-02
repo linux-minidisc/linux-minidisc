@@ -243,7 +243,9 @@ int main(int argc, char* argv[])
         if(strcmp("rename", argv[1]) == 0)
         {
             i = strtoul(argv[2], NULL, 10);
+            netmd_cache_toc(devh);
             netmd_set_title(devh, i & 0xffff, argv[3]);
+            netmd_sync_toc(devh);
         }
         else if(strcmp("move", argv[1]) == 0)
         {
