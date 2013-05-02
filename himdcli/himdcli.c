@@ -332,6 +332,8 @@ void himd_dumpholes(struct himd * h)
         printf("%d: %05u-%05u\n", i, holes.holes[i].firstblock, holes.holes[i].lastblock);
 }
 
+#ifdef CONFIG_WITH_MAD
+
 void block_init(struct blockinfo * b, short int nframes, short int lendata, unsigned int serial_number, unsigned char * cid)
 {
     strncpy((char*)&b->type, "SMPA", 4);
@@ -723,6 +725,8 @@ void himd_writemp3(struct himd  *h, const char *filepath)
     free(artist); free(album); free(title);
 }
 
+#endif
+
 int main(int argc, char ** argv)
 {
     int idx;
@@ -781,7 +785,11 @@ int main(int argc, char ** argv)
     }
     else if(strcmp(argv[2],"writemp3") == 0 && argc > 3)
     {
+#ifdef CONFIG_WITH_MAD
 	himd_writemp3(&h, argv[3]);
+#else
+	fputs("Compiled without libmad - no MP3 download support\n", stderr);
+#endif
     }
 
     himd_close(&h);

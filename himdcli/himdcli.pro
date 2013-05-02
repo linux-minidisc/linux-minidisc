@@ -11,3 +11,8 @@ unix:!macx {
 	target.path = /usr/bin
 	INSTALLS += target
 }
+
+!without_mad: {
+  LIBS += -lmad
+  DEFINES += CONFIG_WITH_MAD
+}
