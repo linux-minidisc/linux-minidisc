@@ -172,6 +172,12 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     unsigned char reply[255];
     unsigned char *buf;
     size_t size;
+    int oldsize;
+
+    /* the title update command wants to now how many bytes to replace */
+    oldsize = netmd_request_title(dev, track, reply, sizeof reply);
+    if(oldsize == -1)
+        oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
     size = strlen(buffer);
     title_request = malloc(sizeof(char) * (0x15 + size));
@@ -181,7 +187,7 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     buf = title_request + 7;
     netmd_copy_word_to_buffer(&buf, track, 0);
     title_request[16] = size & 0xff;
-    title_request[20] = size & 0xff;
+    title_request[20] = oldsize & 0xff;
 
     ret = netmd_exch_message(dev, title_request, 0x15 + size, reply);
     if(ret < 0)
