@@ -67,7 +67,7 @@ def DownloadHack(md_iface):
         None
     try:
         md_iface.disableNewTrackProtection(1)
-    except libnetmd.NetMDRejected:
+    except libnetmd.NetMDNotImplemented:
         print "Can't set device to non-protecting"
     trk = MDTrack()
     md_session = libnetmd.MDSession(md_iface, EKBopensource())
