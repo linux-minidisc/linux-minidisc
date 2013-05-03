@@ -272,7 +272,9 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("settitle", argv[1]) == 0)
         {
+            netmd_cache_toc(devh);
             netmd_set_disc_title(devh, argv[2], strlen(argv[2]));
+            netmd_sync_toc(devh);
         }
         else if(strcmp("group", argv[1]) == 0)
         {

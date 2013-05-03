@@ -473,13 +473,19 @@ int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length
                                  0x00, 0x50, 0x00, 0x00};
     unsigned char reply[256];
     int result;
+    int oldsize;
+
+    /* the title update command wants to now how many bytes to replace */
+    oldsize = request_disc_title(dev, reply, sizeof reply);
+    if(oldsize == -1)
+        oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
     request = malloc(21 + title_length);
     memset(request, 0, 21 + title_length);
 
     memcpy(request, write_req, 16);
     request[16] = title_length & 0xff;
-    request[20] = title_length & 0xff;
+    request[20] = oldsize & 0xff;
 
     p = request + 21;
     memcpy(p, title, title_length);
