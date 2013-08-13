@@ -25,6 +25,7 @@ public:
     QString album() const;
     QString codecname() const;
     QTime duration() const;
+    QDateTime recdate() const;
     bool copyprotected() const;
     int blockcount() const;
 

@@ -71,6 +71,24 @@ QTime QHiMDTrack::duration() const
         return t;
 }
 
+QDateTime QHiMDTrack::recdate() const
+{
+	QDate d;
+	QTime t;
+	QDateTime dt;
+	if (trackslot != 0) {
+		t.setHMS(ti.recordingtime.tm_hour,
+			ti.recordingtime.tm_min,
+			ti.recordingtime.tm_sec);
+		d.setDate(ti.recordingtime.tm_year+1900,
+			ti.recordingtime.tm_mon+1,
+			ti.recordingtime.tm_mday);
+		dt.setDate(d);
+		dt.setTime(t);
+	} else
+		return dt;
+}
+
 bool QHiMDTrack::copyprotected() const
 {
     if(trackslot != 0)
@@ -110,8 +128,8 @@ QByteArray QHiMDTrack::makeEA3Header() const
 }
 
 enum columnum {
-  ColId, ColTitle, ColArtist, ColAlbum, ColLength, ColCodec, ColUploadable,
-  LAST_columnnum = ColUploadable
+  ColId, ColTitle, ColArtist, ColAlbum, ColLength, ColCodec, ColUploadable, ColRecDate,
+  LAST_columnnum = ColRecDate
 };
 
 QVariant QHiMDTracksModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -138,6 +156,8 @@ QVariant QHiMDTracksModel::headerData(int section, Qt::Orientation orientation, 
                 /* Really use the header for the metric in these columns,
                    contents will be shorter */
                 return QAbstractListModel::headerData(section,orientation,role);
+			case ColRecDate:
+				return QSize(met.width("yyyy.MM.dd hh:mm:ss"), 0);
         }
     }
 
@@ -159,6 +179,8 @@ QVariant QHiMDTracksModel::headerData(int section, Qt::Orientation orientation, 
                 return tr("Format");
             case ColUploadable:
                 return tr("Uploadable");
+            case ColRecDate:
+                return tr("Recorded At");
         }
     }
     return QVariant();
@@ -202,6 +224,11 @@ QVariant QHiMDTracksModel::data(const QModelIndex & index, int role) const
                 return track.codecname();
             case ColUploadable:
                 return QVariant(); /* Displayed by checkbox */
+			case ColRecDate:
+			{
+				QDateTime dt = track.recdate();
+				return dt.toString("yyyy.MM.dd hh:mm:ss");
+			}
         }
     }
     return QVariant();
