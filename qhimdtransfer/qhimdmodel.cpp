@@ -64,11 +64,11 @@ QString QHiMDTrack::codecname() const
 
 QTime QHiMDTrack::duration() const
 {
-    QTime t;
+    QTime t(0,0,0);
     if(trackslot != 0)
         return t.addSecs(ti.seconds);
     else
-        return t;
+        return QTime();
 }
 
 QDateTime QHiMDTrack::recdate() const
