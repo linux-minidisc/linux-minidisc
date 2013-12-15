@@ -5,7 +5,7 @@
 #include <QtCore/QTime>
 #include <QtCore/QList>
 #include <QtCore/QStringList>
-#include <QtGui/QFileSystemModel>
+#include <QFileSystemModel>
 #include "himd.h"
 
 #include "sony_oma.h"

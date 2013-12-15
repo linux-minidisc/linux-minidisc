@@ -1,7 +1,7 @@
 #ifndef QHIMDUPLOADDIALOG_H
 #define QHIMDUPLOADDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 #include "qhimdmodel.h"
 
 namespace Ui {

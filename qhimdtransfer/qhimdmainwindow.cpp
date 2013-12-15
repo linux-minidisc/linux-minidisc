@@ -2,8 +2,8 @@
 #include "ui_qhimdmainwindow.h"
 #include "qhimdaboutdialog.h"
 #include "qhimduploaddialog.h"
-#include <QtGui/QMessageBox>
-#include <QtGui/QApplication>
+#include <QMessageBox>
+#include <QApplication>
 
 #include <QtCore/QDebug>
 
@@ -282,8 +282,8 @@ bool QHiMDMainWindow::autodetect_init()
 {
     int k;
 
-    k = QObject::connect(detect, SIGNAL(himd_found(QString)), this, SLOT(himd_found(QString)));
-    k += QObject::connect(detect, SIGNAL(himd_removed(QString)), this, SLOT(himd_removed(QString)));
+    k = (bool)QObject::connect(detect, SIGNAL(himd_found(QString)), this, SLOT(himd_found(QString)));
+    k += (bool)QObject::connect(detect, SIGNAL(himd_removed(QString)), this, SLOT(himd_removed(QString)));
 
     if(!k)
         return false;
@@ -300,7 +300,7 @@ void QHiMDMainWindow::open_himd_at(const QString & path)
     QMessageBox himdStatus;
     QString error;
 
-    error = trackmodel.open(path.toAscii());
+    error = trackmodel.open(path.toLatin1());
 
     if (!error.isNull()) {
         himdStatus.setText(tr("Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.\n") + error);

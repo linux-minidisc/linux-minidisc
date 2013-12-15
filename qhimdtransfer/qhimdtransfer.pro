@@ -5,6 +5,10 @@ TARGET = qhimdtransfer
 DEPENDPATH += .
 INCLUDEPATH += .
 
+# for Qt5 compatibility
+QT += gui
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
 # determine version number from git
 VERSION = $$system(sh ../get_version.sh)
 #    !isEmpty(VERSION){

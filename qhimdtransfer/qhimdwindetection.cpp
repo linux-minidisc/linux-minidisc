@@ -1,6 +1,6 @@
 #include <QtCore/QDebug>
 #include <QtCore/QList>
-#include <QtGui/QWidget>
+#include <QWidget>
 #include "qhimddetection.h"
 
 #define WINVER 0x0500
@@ -49,6 +49,7 @@ private:
     void remove_himd(HANDLE devhandle);
     HDEVNOTIFY register_mediaChange(HANDLE devhandle);
     void unregister_mediaChange(HDEVNOTIFY himd_change);
+    bool nativeEvent(const QByteArray & eventType, void * message, long *result);
     bool winEvent(MSG * msg, long * result);
 };
 
@@ -153,7 +154,7 @@ static bool is_himddevice(QString devID, QString & name)
     unsigned long buflen;
     QString recname, devicepath;
 
-    CM_Locate_DevNodeA(&devinst, devID.toAscii().data(), NULL);
+    CM_Locate_DevNodeA(&devinst, devID.toLatin1().data(), NULL);
     CM_Get_Parent(&devinstparent, devinst, NULL);
 
     if(devID.contains("RemovableMedia", Qt::CaseInsensitive))    // on Windows XP: get next parent device instance
@@ -201,7 +202,7 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name)
     STORAGE_DEVICE_NUMBER sdn;
     OFSTRUCT OFfile;
 
-    drv[4] = path.at(0).toAscii();
+    drv[4] = path.at(0).toLatin1();
 
     hdev = CreateFileA(drv, NULL , FILE_SHARE_READ, NULL,
                                            OPEN_EXISTING, 0, NULL);
@@ -223,7 +224,7 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name)
     new_device->path = path;
     new_device->recorder_name = name;
 
-    file[0] = path.at(0).toAscii();
+    file[0] = path.at(0).toLatin1();
     if(OpenFile(file, &OFfile, OF_EXIST) != HFILE_ERROR)
     {
         new_device->md_inserted = true;
@@ -301,7 +302,7 @@ HDEVNOTIFY QHiMDWinDetection::register_mediaChange(HANDLE devhandle)
     filter.dbch_handle = devhandle;
     filter.dbch_eventguid = my_GUID_IO_MEDIA_ARRIVAL;  // includes GUID_IO_MEDIA_REMOVAL notification
 
-    return RegisterDeviceNotification( this->winId(), &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
+    return RegisterDeviceNotification( (HWND)this->winId(), &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
 }
 
@@ -309,6 +310,14 @@ void QHiMDWinDetection::unregister_mediaChange(HDEVNOTIFY himd_change)
 {
     if(himd_change != NULL)
         UnregisterDeviceNotification(himd_change);
+}
+
+bool QHiMDWinDetection::nativeEvent(const QByteArray & eventType, void * message, long *result)
+{
+    if (eventType == "windows_generic_MSG")
+        return winEvent(reinterpret_cast<MSG*>(message), result);
+
+    return false;
 }
 
 bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
@@ -325,7 +334,7 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                     {
                         PDEV_BROADCAST_VOLUME pHdrv = (PDEV_BROADCAST_VOLUME)pHdr;
                         path = FindPath(pHdrv->dbcv_unitmask);
-                        devID = get_deviceID_from_driveletter(path.at(0).toAscii());
+                        devID = get_deviceID_from_driveletter(path.at(0).toLatin1());
                         if(!devID.isEmpty())
                         {
                             if(is_himddevice(devID, name))

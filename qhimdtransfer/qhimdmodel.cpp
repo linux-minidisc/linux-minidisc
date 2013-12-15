@@ -259,8 +259,9 @@ QString QHiMDTracksModel::open(const QString & path)
         return QString::fromUtf8(status.statusmsg);
     }
     close();
+    beginResetModel();
     himd = newhimd;
-    reset();	/* inform views that the model contents changed */
+    endResetModel();	/* inform views that the model contents changed */
     return QString();
 }
 
@@ -274,9 +275,10 @@ void QHiMDTracksModel::close()
     struct himd * oldhimd;
     if(!himd)
         return;
+    beginResetModel();
     oldhimd = himd;
     himd = NULL;
-    reset();	/* inform views that the model contents changed */
+    endResetModel();	/* inform views that the model contents changed */
     himd_close(oldhimd);
     delete oldhimd;
 }

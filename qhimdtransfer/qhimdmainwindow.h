@@ -1,8 +1,8 @@
 #ifndef QHIMDMAINWINDOW_H
 #define QHIMDMAINWINDOW_H
 
-#include <QtGui/QMainWindow>
-#include <QtGui/QFileDialog>
+#include <QMainWindow>
+#include <QFileDialog>
 #include <QtCore/QSettings>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"

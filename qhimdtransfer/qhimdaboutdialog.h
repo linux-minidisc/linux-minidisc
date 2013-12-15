@@ -1,7 +1,7 @@
 #ifndef QHIMDABOUTDIALOG_H
 #define QHIMDABOUTDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QDialog>
 
 namespace Ui {
     class QHiMDAboutDialog;
