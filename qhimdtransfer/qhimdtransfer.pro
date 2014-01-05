@@ -1,6 +1,7 @@
 TEMPLATE = app
 CONFIG += link_prl \
     link_pkgconfig
+PKGCONFIG += libusb-1.0
 TARGET = qhimdtransfer
 DEPENDPATH += .
 INCLUDEPATH += .
