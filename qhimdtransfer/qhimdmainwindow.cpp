@@ -132,6 +132,9 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
      }
 
     localmodel.setSelectableExtensions(current_device->downloadableFileExtensions());
+    QModelIndex curdir = localmodel.index(ui->updir->text());
+    ui->localScan->expand(curdir);
+    ui->localScan->setCurrentIndex(curdir);
     ui->DiscTitle->setText(current_device->discTitle());
     set_buttons_enable(1,0,0,1,1,1,1);
 }
