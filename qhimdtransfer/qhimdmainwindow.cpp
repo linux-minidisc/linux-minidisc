@@ -235,7 +235,7 @@ void QHiMDMainWindow::on_action_Connect_triggered()
     if(HiMDDirectory.isEmpty())
         return;
 
-    index = ui->himd_devices->findText("disc image");
+    index = ui->himd_devices->findText("disc image", Qt::MatchContains);
     ui->himd_devices->setCurrentIndex(index);   // index of disk image device
     dev = (QHiMDDevice *)ui->himd_devices->itemData(index).value<void *>();
     dev->setPath(HiMDDirectory);
