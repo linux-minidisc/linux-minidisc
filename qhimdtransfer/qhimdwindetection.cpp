@@ -3,8 +3,6 @@
 #include <QWidget>
 #include "qhimddetection.h"
 
-#define WINVER 0x0500
-
 #include <windows.h>
 #include <dbt.h>
 #include <setupapi.h>
@@ -12,16 +10,14 @@
 #include <ddk/ntddstor.h>   // needed for handling storage devices
 #include <ddk/cfgmgr32.h>   // needed for CM_Get_Child function
 
-struct win_himd_device : himd_device {
-                    HANDLE devhandle;
-                    HDEVNOTIFY himdChange;
-                    };
-
 static const GUID my_GUID_IO_MEDIA_ARRIVAL =
     {0xd07433c0, 0xa98e, 0x11d2, {0x91, 0x7a, 0x00, 0xa0, 0xc9, 0x06, 0x8f, 0xf3} };
 
 static const GUID my_GUID_IO_MEDIA_REMOVAL =
     {0xd07433c1, 0xa98e, 0x11d2, {0x91, 0x7a, 0x00, 0xa0, 0xc9, 0x06, 0x8f, 0xf3} };
+
+static const GUID my_GUID_DEVINTERFACE_USB_DEVICE =
+    {0xa5dcbf10, 0x6530, 0x11d2, {0x90, 0x1f, 0x00, 0xc0,0x4f, 0xb9, 0x51, 0xed} };
 
 static const int my_DBT_CUSTOMEVENT = 0x8006;
 
@@ -37,18 +33,19 @@ public:
     void scan_for_himd_devices();
     QHiMDWinDetection(QObject * parent = NULL);
     ~QHiMDWinDetection();
-    win_himd_device *find_by_path(QString path);
 
 private:
     HDEVNOTIFY hDevNotify;
-    win_himd_device *find_by_handle(HANDLE devhandle);
-    win_himd_device *win_dev_at(int idx);
+    HDEVNOTIFY listen_usbdev;
+    QMDDevice *find_by_handle(HANDLE devhandle);
     void add_himddevice(QString path, QString name);
-    void remove_himddevice(QString path);
+    virtual void remove_himddevice(QString path);
     void add_himd(HANDLE devhandle);
     void remove_himd(HANDLE devhandle);
     HDEVNOTIFY register_mediaChange(HANDLE devhandle);
     void unregister_mediaChange(HDEVNOTIFY himd_change);
+    HDEVNOTIFY register_usbDeviceNotification();
+    void unregister_usbDeviceNotification();
     bool nativeEvent(const QByteArray & eventType, void * message, long *result);
     bool winEvent(MSG * msg, long * result);
 };
@@ -64,12 +61,16 @@ QHiMDWinDetection::QHiMDWinDetection(QObject * parent)
 {
     // ask for Window ID to have Qt create the window.
     (void)winId();
+    // register for usb device notifications
+    if((listen_usbdev = register_usbDeviceNotification()) == NULL)
+        qDebug() << "cannot register usb device notifications" << endl;
 }
 
 QHiMDWinDetection::~QHiMDWinDetection()
 {
-    while (!device_list.isEmpty())
-        remove_himddevice(device_list.at(0)->path);
+    unregister_usbDeviceNotification();
+    clearDeviceList();
+    cleanup_netmd_list();
 }
 
 void QHiMDWinDetection::scan_for_himd_devices()
@@ -97,21 +98,17 @@ void QHiMDWinDetection::scan_for_himd_devices()
     return;
 }
 
-win_himd_device *QHiMDWinDetection::win_dev_at(int idx)
+QMDDevice *QHiMDWinDetection::find_by_handle(HANDLE devhandle)
 {
-    return static_cast<win_himd_device*>(device_list.at(idx));
-}
+    QMDDevice *mddev;
 
-win_himd_device *QHiMDWinDetection::find_by_path(QString path)
-{
-    return static_cast<win_himd_device*>(QHiMDDetection::find_by_path(path));
-}
-
-win_himd_device *QHiMDWinDetection::find_by_handle(HANDLE devhandle)
-{
-    for (int i = 0; i < device_list.size(); i++)
-        if(win_dev_at(i)->devhandle == devhandle)
-            return win_dev_at(i);
+    foreach(mddev, dlist)
+    {
+        if(mddev->deviceType() != HIMD_DEVICE)
+            continue;
+        if(mddev->deviceHandle() == devhandle)
+            return mddev;
+    }
 
     return NULL;
 }
@@ -192,13 +189,13 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name)
     if (find_by_path(path))
         return;
 
-    win_himd_device * new_device = new win_himd_device;
+    QHiMDDevice * new_device = new QHiMDDevice();
     int k;
     char drv[] = "\\\\.\\X:";
     QByteArray device = "\\\\.\\PHYSICALDRIVE";
     char file[] = "X:\\HI-MD.IND";
     DWORD retbytes;
-    HANDLE hdev;
+    HANDLE hdev, dev;
     STORAGE_DEVICE_NUMBER sdn;
     OFSTRUCT OFfile;
 
@@ -214,81 +211,84 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name)
     if(k != 0)
         device.append(QString::number(sdn.DeviceNumber));
 
-    new_device->devhandle = CreateFileA(device.data(), NULL , FILE_SHARE_READ, NULL,
+    dev = CreateFileA(device.data(), NULL , FILE_SHARE_READ, NULL,
                                            OPEN_EXISTING, 0, NULL);
-    if(new_device->devhandle == INVALID_HANDLE_VALUE)
+    if(dev == INVALID_HANDLE_VALUE)
         return;
 
-    new_device->himdChange = register_mediaChange(new_device->devhandle);
-    new_device->is_busy = false;
-    new_device->path = path;
-    new_device->recorder_name = name;
+    new_device->setDeviceHandle(dev);
+    new_device->registerMdChange(register_mediaChange(new_device->deviceHandle()));
+    new_device->setBusy(false);
+    new_device->setPath(path);
+    new_device->setName(name);
 
     file[0] = path.at(0).toLatin1();
     if(OpenFile(file, &OFfile, OF_EXIST) != HFILE_ERROR)
-    {
-        new_device->md_inserted = true;
-        emit himd_found(new_device->path);
-        qDebug() << "himd device at " + new_device->path + " added (" + new_device->recorder_name + ")";
-    }
+        new_device->setMdInserted(true);
     else
-    {
-        qDebug() << "himd device at " + new_device->path + " added (" + new_device->recorder_name + ")" + " ; without MD";
-        new_device->md_inserted = false;
-    }
+        new_device->setMdInserted(false);
 
-    device_list.append(new_device);
+    dlist.append(new_device);
+    emit deviceListChanged(dlist);
 
     return;
-
 }
 
 void QHiMDWinDetection::remove_himddevice(QString path)
 {
-    win_himd_device * dev = find_by_path(path);
+    int index = -1;
+    QHiMDDevice * dev = static_cast<QHiMDDevice *>(find_by_path(path));
+
     if (!dev)
         return;
 
-    unregister_mediaChange(dev->himdChange);
+    index = dlist.indexOf(dev);
 
-    if (dev->devhandle != NULL)
-        CloseHandle(dev->devhandle);
+    if(dev->isOpen())
+        dev->close();
 
-    emit himd_removed(dev->path);
+    if(dev->name() != "disc image")
+    {
+        if(dev->MdChange() != NULL)
+            unregister_mediaChange((HDEVNOTIFY)dev->MdChange());
+        if(dev->deviceHandle() != NULL)
+             CloseHandle(dev->deviceHandle());
+     }
 
-    qDebug() << "himd device at " + dev->path + " removed (" + dev->recorder_name + ")";
-
-    device_list.removeAll(dev);
     delete dev;
+    dev = NULL;
+
+    dlist.removeAt(index);
+
+    emit deviceListChanged(dlist);
 }
 
 void QHiMDWinDetection::add_himd(HANDLE devhandle)
 {
-    win_himd_device * dev = find_by_handle(devhandle);
+    QMDDevice * dev = find_by_handle(devhandle);
     if (!dev)
         return;
 
-    if(!dev->md_inserted)
-    {
-        dev->md_inserted = true;
-        emit himd_found(dev->path);
-        qDebug() << "himd device at " + dev->path + " : md inserted";
-    }
+    if(!dev->mdInserted())
+        dev->setMdInserted(true);
+
+    if(!dev->isOpen())
+        dev->open();
+
     return;
 }
 
 void QHiMDWinDetection::remove_himd(HANDLE devhandle)
 {
-    win_himd_device * dev = find_by_handle(devhandle);
+    QMDDevice * dev = find_by_handle(devhandle);
     if (!dev)
         return;
 
-    if(dev->md_inserted)
-    {
-        dev->md_inserted = false;
-        emit himd_removed(dev->path);
-        qDebug() << "himd device at " + dev->path + " :  md removed";
-    }
+    if(dev->isOpen())
+        dev->close();
+
+    dev->setMdInserted(false);
+
     return;
 }
 
@@ -310,6 +310,26 @@ void QHiMDWinDetection::unregister_mediaChange(HDEVNOTIFY himd_change)
 {
     if(himd_change != NULL)
         UnregisterDeviceNotification(himd_change);
+}
+
+HDEVNOTIFY QHiMDWinDetection::register_usbDeviceNotification()
+{
+    DEV_BROADCAST_DEVICEINTERFACE filter;
+
+    ZeroMemory(&filter, sizeof(filter));
+    filter.dbcc_size = sizeof(filter);
+    filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+    filter.dbcc_reserved = 0;
+    filter.dbcc_classguid = my_GUID_DEVINTERFACE_USB_DEVICE;
+
+    return RegisterDeviceNotification( (HWND)this->winId(), &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
+
+}
+
+void QHiMDWinDetection::unregister_usbDeviceNotification()
+{
+    if(listen_usbdev != NULL)
+       UnregisterDeviceNotification(listen_usbdev);
 }
 
 bool QHiMDWinDetection::nativeEvent(const QByteArray & eventType, void * message, long *result)
@@ -344,6 +364,17 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                             }
                         }
                     }
+                    else if(pHdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
+                    {
+                        PDEV_BROADCAST_DEVICEINTERFACE pDevInf = (PDEV_BROADCAST_DEVICEINTERFACE)pHdr;
+                        devID = QString::fromWCharArray(pDevInf->dbcc_name).toUpper();
+                        /* only handle netmd devices, himd devices will be handled by DBT_DEVTYP_VOLUME */
+                        if(identified(devID, name) && name.contains("NetMD)"))
+                        {
+                            qDebug() << name << " detected, rescanning netmd devices" << endl;
+                            rescan_netmd_devices();
+                        }
+                    }
                     break;
                 }
                 case DBT_DEVICEREMOVECOMPLETE :
@@ -355,6 +386,16 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                         qDebug() << "Message:DBT_DEVICEREMOVECOMPLETE for drive " + path;
                         remove_himddevice(path);
                     }
+                    else if(pHdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
+                    {
+                        PDEV_BROADCAST_DEVICEINTERFACE pDevInf = (PDEV_BROADCAST_DEVICEINTERFACE)pHdr;
+                        devID = QString::fromWCharArray(pDevInf->dbcc_name).toUpper();
+                        if(identified(devID, name) && name.contains("NetMD)"))
+                        {
+                            qDebug() << name << " removed, rescanning netmd devices" << endl;
+                            rescan_netmd_devices();
+                        }
+                    }
                     break;
                 }
                 case DBT_DEVICEQUERYREMOVE :
@@ -362,13 +403,13 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                     if(pHdr->dbch_devicetype & DBT_DEVTYP_HANDLE)
                     {
                         PDEV_BROADCAST_HANDLE pHdrh = (PDEV_BROADCAST_HANDLE)pHdr;
-                        win_himd_device *dev = find_by_handle(pHdrh->dbch_handle);
+                        QMDDevice *dev = find_by_handle(pHdrh->dbch_handle);
                         if(!dev)
                         {
                             qDebug() << "Message:DBT_DEVICEQUERYREMOVE for unknown device " << pHdrh->dbch_handle;
                             break;
                         }
-                        if(dev->is_busy)
+                        if(dev->isBusy())
                         {
                             *result = BROADCAST_QUERY_DENY;
                             qDebug() << "Message:DBT_DEVICEQUERYREMOVE for drive " + path + " denied: transfer in progress";
@@ -377,7 +418,24 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                         else
                         {
                             qDebug() << "Message:DBT_DEVICEQUERYREMOVE requested";
-                            remove_himddevice(dev->path);
+                            remove_himddevice(dev->path());
+                        }
+                    }
+                    else if(pHdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
+                    {
+                        PDEV_BROADCAST_DEVICEINTERFACE pDevInf = (PDEV_BROADCAST_DEVICEINTERFACE)pHdr;
+                        devID = QString::fromWCharArray(pDevInf->dbcc_name).toUpper();
+                        if(identified(devID, name) && name.contains("NetMD)"))
+                        {
+                            QMDDevice * dev = find_by_name(name);
+                            if(!dev)
+                                break;
+                            if(dev->isBusy())
+                            {
+                                *result = BROADCAST_QUERY_DENY;
+                                return true;
+                            }
+                            dev->close();
                         }
                     }
                     break;
