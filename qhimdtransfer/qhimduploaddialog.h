@@ -2,7 +2,7 @@
 #define QHIMDUPLOADDIALOG_H
 
 #include <QDialog>
-#include "qhimdmodel.h"
+#include "qmdtrack.h"
 
 namespace Ui {
     class QHiMDUploadDialog;
@@ -17,7 +17,7 @@ public:
     bool upload_canceled() { return canceled; }
 
     void init(int trackcount, int totalblocks);
-    void starttrack(const QHiMDTrack & trk, const QString & title);
+    void starttrack(const QMDTrack & trk, const QString & title);
     void blockTransferred();
     void trackFailed(const QString & errmsg);
     void trackSucceeded();

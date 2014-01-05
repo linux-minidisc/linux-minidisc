@@ -34,6 +34,14 @@ void QHiMDUploadDialog::finished()
     /* Prevent shrinking of the box when hiding the indicators */
     m_ui->current->setMinimumSize(m_ui->current->size());
     m_ui->TrkPBar->hide();
+    /* set AllPBar to 100% if it is not used during transfer,
+     * current netmd uploads doesn´t set the range correctly
+     */
+    if(m_ui->AllPBar->maximum() == 0)
+    {
+        m_ui->AllPBar->setMaximum(1);
+        m_ui->AllPBar->setValue(1);
+    }
     m_ui->curtrack_label->hide();
 
     m_ui->cancel_button->hide();
@@ -42,7 +50,7 @@ void QHiMDUploadDialog::finished()
     return;
 }
 
-void QHiMDUploadDialog::starttrack(const QHiMDTrack & trk, const QString & title)
+void QHiMDUploadDialog::starttrack(const QMDTrack & trk, const QString & title)
 {
     tracknum = trk.tracknum() + 1;
     m_ui->curtrack_label->setText(tr("current track: %1 - %2").arg(tracknum).arg(title));
