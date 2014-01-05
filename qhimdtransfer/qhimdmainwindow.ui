@@ -35,7 +35,7 @@
            </font>
           </property>
           <property name="text">
-           <string>HiMD path</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;minidisc device (path):&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -50,6 +50,20 @@
          <widget class="QComboBox" name="himd_devices"/>
         </item>
        </layout>
+      </item>
+      <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QLabel" name="disc_title_text">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;disc title:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="DiscTitle"/>
+       </item>
+      </layout>
       </item>
       <item>
        <widget class="QTreeView" name="TrackList">
@@ -174,7 +188,7 @@
      <x>0</x>
      <y>0</y>
      <width>784</width>
-     <height>18</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_Action">

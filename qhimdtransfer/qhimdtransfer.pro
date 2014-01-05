@@ -54,8 +54,10 @@ HEADERS += qhimdaboutdialog.h \
     qhimdformatdialog.h \
     qhimduploaddialog.h \
     qhimdmainwindow.h \
-    qhimdmodel.h \
-    qhimddetection.h
+    qhimddetection.h \
+    qmdmodel.h \
+    qmdtrack.h \
+    qmddevice.h
 FORMS += qhimdaboutdialog.ui \
     qhimdformatdialog.ui \
     qhimduploaddialog.ui \
@@ -65,8 +67,10 @@ SOURCES += main.cpp \
     qhimdformatdialog.cpp \
     qhimduploaddialog.cpp \
     qhimdmainwindow.cpp \
-    qhimdmodel.cpp \
-    qhimddetection.cpp
+    qhimddetection.cpp \
+    qmdmodel.cpp \
+    qmdtrack.cpp \
+    qmddevice.cpp
 win32:SOURCES += qhimdwindetection.cpp
 else:SOURCES += qhimddummydetection.cpp
 RESOURCES += icons.qrc
@@ -82,6 +86,7 @@ mac:ICON = qhimdtransfer.icns
 win32:TARGET = QHiMDTransfer
 mac:TARGET = QHiMDTransfer
 include(../libhimd/use_libhimd.pri)
+include(../libnetmd/use_libnetmd.prl)
 
 # Installing stuff
 translations.files = $$bracketAll(LANGUAGES, qhimdtransfer_,.qm)

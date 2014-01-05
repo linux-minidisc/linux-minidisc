@@ -1,212 +1,8 @@
 #include "qhimdmainwindow.h"
 #include "ui_qhimdmainwindow.h"
 #include "qhimdaboutdialog.h"
-#include "qhimduploaddialog.h"
 #include <QMessageBox>
 #include <QApplication>
-
-#include <QtCore/QDebug>
-
-
-QString QHiMDMainWindow::dumpmp3(const QHiMDTrack & trk, QString file)
-{
-    QString errmsg;
-    struct himd_mp3stream str;
-    struct himderrinfo status;
-    unsigned int len;
-    const unsigned char * data;
-    QFile f(file);
-
-    if(!f.open(QIODevice::ReadWrite))
-    {
-        return tr("Error opening file for MP3 output");
-    }
-    if(!(errmsg = trk.openMpegStream(&str)).isNull())
-    {
-        f.remove();
-        return tr("Error opening track: ") + errmsg;
-    }
-    while(himd_mp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
-    {
-        if(f.write((const char*)data,len) == -1)
-        {
-            errmsg = tr("Error writing audio data");
-            goto clean;
-        }
-        uploadDialog->blockTransferred();
-        QApplication::processEvents();
-        if(uploadDialog->upload_canceled())
-        {
-            errmsg = tr("upload aborted by the user");
-            goto clean;
-        }
-
-    }
-    if(status.status != HIMD_STATUS_AUDIO_EOF)
-        errmsg = tr("Error reading audio data: ") + status.statusmsg;
-
-clean:
-    f.close();
-    himd_mp3stream_close(&str);
-    if(!errmsg.isNull())
-        f.remove();
-    return errmsg;
-}
-
-static inline TagLib::String QStringToTagString(const QString & s)
-{
-    return TagLib::String(s.toUtf8().data(), TagLib::String::UTF8);
-}
-
-static void addid3tag(QString title, QString artist, QString album, QString file)
-{
-#ifdef Q_OS_WIN
-    TagLib::FileRef f(file.toStdWString().c_str());
-#else
-    TagLib::FileRef f(file.toUtf8().data());
-#endif
-    TagLib::Tag *t = f.tag();
-    t->setTitle(QStringToTagString(title));
-    t->setArtist(QStringToTagString(artist));
-    t->setAlbum(QStringToTagString(album));
-    t->setComment("*** imported from HiMD via QHiMDTransfer ***");
-    f.file()->save();
-}
-
-QString QHiMDMainWindow::dumpoma(const QHiMDTrack & track, QString file)
-{
-    QString errmsg;
-    struct himd_nonmp3stream str;
-    struct himderrinfo status;
-    unsigned int len;
-    const unsigned char * data;
-    QFile f(file);
-
-    if(!f.open(QIODevice::ReadWrite))
-        return tr("Error opening file for ATRAC output");
-
-    if(!(errmsg = track.openNonMpegStream(&str)).isNull())
-    {
-        f.remove();
-        return tr("Error opening track: ") + status.statusmsg;
-    }
-
-    if(f.write(track.makeEA3Header()) == -1)
-    {
-        errmsg = tr("Error writing header");
-        goto clean;
-    }
-    while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
-    {
-        if(f.write((const char*)data,len) == -1)
-        {
-            errmsg = tr("Error writing audio data");
-            goto clean;
-        }
-        uploadDialog->blockTransferred();
-        QApplication::processEvents();
-        if(uploadDialog->upload_canceled())
-        {
-            errmsg = QString("upload aborted by the user");
-            goto clean;
-        }
-    }
-    if(status.status != HIMD_STATUS_AUDIO_EOF)
-        errmsg = QString("Error reading audio data: ") + status.statusmsg;
-
-clean:
-    f.close();
-    himd_nonmp3stream_close(&str);
-
-    if(!errmsg.isNull())
-        f.remove();
-    return errmsg;
-}
-
-QString QHiMDMainWindow::dumppcm(const QHiMDTrack & track, QString file)
-{
-    struct himd_nonmp3stream str;
-    struct himderrinfo status;
-    unsigned int len, i;
-    int left, right;
-    int clipcount;
-    QString errmsg;
-    QFile f(file);
-    const unsigned char * data;
-    sox_format_t * out;
-    sox_sample_t soxbuf [HIMD_MAX_PCMFRAME_SAMPLES * 2];
-    sox_signalinfo_t signal_out;
-
-    signal_out.channels = 2;
-    signal_out.length = 0;
-    signal_out.precision = 16;
-    signal_out.rate = 44100;
-
-    if(!(out = sox_open_write(file.toUtf8(), &signal_out, NULL, NULL, NULL, NULL)))
-        return tr("Error opening file for WAV output");
-
-    if(!(errmsg = track.openNonMpegStream(&str)).isNull())
-    {
-        f.remove();
-        return tr("Error opening track: ") + status.statusmsg;
-    }
-
-    while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
-    {
-
-      for(i = 0; i < len/4; i++) {
-
-        left = data[i*4]*256+data[i*4+1];
-        right = data[i*4+2]*256+data[i*4+3];
-        if (left > 0x8000) left -= 0x10000;
-        if (right > 0x8000) right -= 0x10000;
-
-        soxbuf[i*2] = SOX_SIGNED_16BIT_TO_SAMPLE(left, clipcount);
-        soxbuf[i*2+1] = SOX_SIGNED_16BIT_TO_SAMPLE(right, clipcount);
-        (void)clipcount; /* suppess "is unused" warning */
-      }
-
-      if (sox_write(out, soxbuf, len/2) != len/2)
-      {
-            errmsg = tr("Error writing audio data");
-            goto clean;
-      }
-      uploadDialog->blockTransferred();
-      QApplication::processEvents();
-      if(uploadDialog->upload_canceled())
-      {
-            errmsg = QString("upload aborted by the user");
-            goto clean;
-      }
-    }
-    if(status.status != HIMD_STATUS_AUDIO_EOF)
-        errmsg = QString("Error reading audio data: ") + status.statusmsg;
-
-clean:
-    sox_close(out);
-    himd_nonmp3stream_close(&str);
-
-    if(!errmsg.isNull())
-        f.remove();
-    return errmsg;
-}
-
-void QHiMDMainWindow::checkfile(QString UploadDirectory, QString &filename, QString extension)
-{
-    QFile f;
-    QString newname;
-    int i = 2;
-
-    f.setFileName(UploadDirectory + "/" + filename + extension);
-    while(f.exists())
-    {
-        newname = filename + " (" + QString::number(i) + ")";
-        f.setFileName(UploadDirectory + "/" + newname + extension);
-        i++;
-    }
-    if(!newname.isEmpty())
-        filename = newname;
-}
 
 void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit)
 {
@@ -221,23 +17,29 @@ void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool uploa
     ui->download_button->setEnabled(download);
 }
 
-void QHiMDMainWindow::init_himd_browser()
+void QHiMDMainWindow::init_himd_browser(QMDTracksModel * model)
 {
-    int i = 0;
+    int i, width;
+    QString browser = current_device->deviceType() == NETMD_DEVICE ? "netmd_browser" : "himd_browser";
+    ui->TrackList->setModel(model);
 
-    ui->TrackList->setModel(&trackmodel);
-    for(;i < trackmodel.columnCount(); i++)
-        ui->TrackList->resizeColumnToContents(i);
     QObject::connect(ui->TrackList->selectionModel(), SIGNAL(selectionChanged (const QItemSelection &, const QItemSelection &)),
                      this, SLOT(handle_himd_selection_change(const QItemSelection&, const QItemSelection&)));
+
+    // read saved column width for this model
+    for(i = 0; i < ui->TrackList->model()->columnCount(); i++)
+    {
+        width = settings.value(browser + QString::number(i), 0).toInt();
+        if(width != 0)
+            ui->TrackList->setColumnWidth(i, width);
+    }
 }
 
 void QHiMDMainWindow::init_local_browser()
 {
     QStringList DownloadFileList;
     localmodel.setFilter(QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot);
-    localmodel.setNameFilters(QStringList() << "*.mp3" << "*.wav" << "*.oma");
-    localmodel.setSelectableExtensions(trackmodel.downloadableFileExtensions());
+    localmodel.setNameFilters(QStringList() << "*.mp3" << "*.wav" << "*.oma" << "*.aea");
     localmodel.setNameFilterDisables(false);
     localmodel.setReadOnly(false);
     localmodel.setRootPath("/");
@@ -255,130 +57,93 @@ void QHiMDMainWindow::init_local_browser()
 
 void QHiMDMainWindow::save_window_settings()
 {
-    int i = 0;
-
     settings.setValue("geometry", QMainWindow::saveGeometry());
     settings.setValue("windowState", QMainWindow::saveState());
-    for(;i < trackmodel.columnCount(); i++)
-        settings.setValue("himd_browser" + QString::number(i), ui->TrackList->columnWidth(i));
 }
 
 void QHiMDMainWindow::read_window_settings()
 {
-    int i = 0;
-    int width;
-
     QMainWindow::restoreGeometry(settings.value("geometry").toByteArray());
     QMainWindow::restoreState(settings.value("windowState").toByteArray());
-    for(; i < trackmodel.columnCount(); i++)
-    {
-        width = settings.value("himd_browser" + QString::number(i), 0).toInt();
-        if(width != 0)
-            ui->TrackList->setColumnWidth(i, width);
-    }
 }
 
 bool QHiMDMainWindow::autodetect_init()
 {
-    int k;
-
-    k = (bool)QObject::connect(detect, SIGNAL(himd_found(QString)), this, SLOT(himd_found(QString)));
-    k += (bool)QObject::connect(detect, SIGNAL(himd_removed(QString)), this, SLOT(himd_removed(QString)));
-
-    if(!k)
+    if(!QObject::connect(detect, SIGNAL(deviceListChanged(QMDDevicePtrList)), this, SLOT(device_list_changed(QMDDevicePtrList))))
         return false;
 
-    QObject::connect(this, SIGNAL(himd_busy(QString)), detect, SLOT(himd_busy(QString)));
-    QObject::connect(this, SIGNAL(himd_idle(QString)), detect, SLOT(himd_idle(QString)));
-
-    detect->scan_for_himd_devices();
+    detect->scan_for_minidisc_devices();
     return true;
 }
 
-void QHiMDMainWindow::open_himd_at(const QString & path)
+void QHiMDMainWindow::setCurrentDevice(QMDDevice *dev)
 {
-    QMessageBox himdStatus;
+    current_device = dev;
+    QObject::connect(current_device, SIGNAL(closed()), this, SLOT(current_device_closed()));
+
+    if(current_device->deviceType() == NETMD_DEVICE)
+        init_himd_browser(&ntmodel);
+
+    else if(current_device->deviceType() == HIMD_DEVICE)
+        init_himd_browser(&htmodel);
+}
+
+void QHiMDMainWindow::open_device(QMDDevice * dev)
+{
+    QMessageBox mdStatus;
     QString error;
+    QMDTracksModel * mod;
 
-    error = trackmodel.open(path.toLatin1());
+    int index = ui->himd_devices->currentIndex();  // remember current index of devices combo box, will be resetted by current_device_closed() function
 
-    if (!error.isNull()) {
-        himdStatus.setText(tr("Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.\n") + error);
-        himdStatus.exec();
-        set_buttons_enable(1,0,0,0,0,0,1);
+    if (!dev)
+    {
+        current_device_closed();
+        ui->himd_devices->setCurrentIndex(0);
         return;
     }
 
-    ui->himdpath->setText(path);
-    settings.setValue("lastHiMDDirectory", path);
+    if(current_device)
+    {
+        current_device_closed();
+        ui->himd_devices->setCurrentIndex(index);  // set correct device index in the combo box
+    }
 
-    himd_device * dev = detect->find_by_path(path);
-    if(dev)
-        ui->statusBar->showMessage(dev->recorder_name);
-    else
-        ui->statusBar->clearMessage();
+    if(dev->deviceType() == HIMD_DEVICE && dev->path().isEmpty())
+    {
+        mdStatus.setText(tr("Error opening himd device/disc image , no device path given\nPlease use connect button to set the path to the himd device/disc image"));
+        mdStatus.exec();
+        set_buttons_enable(1,0,0,0,0,0,1);
+        ui->himd_devices->setCurrentIndex(0);
+        return;
+    }
 
+    setCurrentDevice(dev);
+    mod = (QMDTracksModel *)ui->TrackList->model();
+    error = mod->open(dev);
+
+    if (!error.isEmpty())
+    {
+        mdStatus.setText(tr("Error opening minidisc device (") + current_device->name() + "):\n" + error);
+        mdStatus.exec();
+        set_buttons_enable(1,0,0,0,0,0,1);
+        ui->himd_devices->setCurrentIndex(0);
+        return;
+     }
+
+    localmodel.setSelectableExtensions(mod->downloadableFileExtensions());
+    ui->DiscTitle->setText(current_device->discTitle());
     set_buttons_enable(1,0,0,1,1,1,1);
 }
 
 void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
 {
-    emit himd_busy(ui->himdpath->text());
+    QMDTrackIndexList tlist;
 
-    QHiMDTrackList tracks = trackmodel.tracks(ui->TrackList->selectionModel()->selectedRows(0));
+    foreach(QModelIndex index, ui->TrackList->selectionModel()->selectedRows(0))
+        tlist.append(index.row());
 
-    int allblocks = 0;
-    for(int i = 0;i < tracks.length(); i++)
-        allblocks += tracks[i].blockcount();
-
-    uploadDialog->init(tracks.length(), allblocks);
-
-    for(int i = 0;i < tracks.length(); i++)
-    {
-        QString filename, errmsg;
-        QString title = tracks[i].title();
-        if(title.isNull())
-            filename = tr("Track %1").arg(tracks[i].tracknum()+1);
-        else
-            filename = tracks[i].artist() + " - " + title;
-
-        uploadDialog->starttrack(tracks[i], filename);
-        if (!tracks[i].copyprotected())
-        {
-            QString codec = tracks[i].codecname();
-            if (codec == "MPEG")
-            {
-                checkfile(UploadDirectory, filename, ".mp3");
-                errmsg = dumpmp3 (tracks[i], UploadDirectory + "/" + filename + ".mp3");
-                if(errmsg.isNull())
-                    addid3tag (tracks[i].title(),tracks[i].artist(),tracks[i].album(), UploadDirectory+ "/" +filename + ".mp3");
-            }
-            else if (codec == "LPCM")
-            {
-                checkfile(UploadDirectory, filename, ".wav");
-                errmsg = dumppcm (tracks[i], UploadDirectory + "/" + filename + ".wav");
-            }
-            else if (codec == "AT3+" || codec == "AT3 ")
-            {
-                checkfile(UploadDirectory, filename, ".oma");
-                errmsg = dumpoma (tracks[i], UploadDirectory + "/" + filename + ".oma");
-            }
-        }
-        else
-            errmsg = tr("upload disabled because of DRM encryption");
-
-        if(errmsg.isNull())
-            uploadDialog->trackSucceeded();
-        else
-            uploadDialog->trackFailed(errmsg);
-
-        QApplication::processEvents();
-        if(uploadDialog->upload_canceled())
-            break;
-    }
-    uploadDialog->finished();
-
-    emit himd_idle(ui->himdpath->text());
+    current_device->batchUpload(tlist, UploadDirectory);
 }
 
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
@@ -386,22 +151,24 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
 {
     aboutDialog = new QHiMDAboutDialog;
     formatDialog = new QHiMDFormatDialog;
-    uploadDialog = new QHiMDUploadDialog;
+    current_device = NULL;
     detect = createDetection(this);
     ui->setupUi(this);
     ui->updir->setText(settings.value("lastUploadDirectory",
                                          QDir::homePath()).toString());
     set_buttons_enable(1,0,0,0,0,0,1);
-    init_himd_browser();
     init_local_browser();
     read_window_settings();
-    ui->himd_devices->hide();
+    ui->himdpath->hide();   // not needed, replaced by combo box
     if(!autodetect_init())
         ui->statusBar->showMessage(" autodetection disabled", 10000);
 }
 
 QHiMDMainWindow::~QHiMDMainWindow()
 {
+    if(current_device && current_device->isOpen())
+        current_device->close();
+
     save_window_settings();
     delete ui;
 }
@@ -454,8 +221,9 @@ void QHiMDMainWindow::on_action_Format_triggered()
 void QHiMDMainWindow::on_action_Connect_triggered()
 {
     int index;
+    QHiMDDevice *dev;
     QString HiMDDirectory;
-    HiMDDirectory = settings.value("lastHiMDDirectory", QDir::rootPath()).toString();
+    HiMDDirectory = settings.value("lastImageDirectory", QDir::rootPath()).toString();
     HiMDDirectory = QFileDialog::getExistingDirectory(this,
                                                  tr("Select directory of HiMD Medium"),
                                                  HiMDDirectory,
@@ -464,21 +232,13 @@ void QHiMDMainWindow::on_action_Connect_triggered()
     if(HiMDDirectory.isEmpty())
         return;
 
-    index = ui->himd_devices->findText(HiMDDirectory);
-    if(index == -1)
-    {
-        ui->himd_devices->addItem(HiMDDirectory);
-        index = ui->himd_devices->findText(HiMDDirectory);
-    }
-    ui->himd_devices->setCurrentIndex(index);
+    index = ui->himd_devices->findText("disc image");
+    ui->himd_devices->setCurrentIndex(index);   // index of disk image device
+    dev = (QHiMDDevice *)ui->himd_devices->itemData(index).value<void *>();
+    dev->setPath(HiMDDirectory);
+    ui->himd_devices->setItemText(index, QString((dev->name() + " at " + dev->path() )));
 
-    if(ui->himd_devices->isHidden())
-    {
-        ui->himd_devices->show();
-        ui->himdpath->hide();
-    }
-
-    open_himd_at(HiMDDirectory);
+    open_device(dev);
 }
 
 void QHiMDMainWindow::on_upload_button_clicked()
@@ -506,67 +266,79 @@ void QHiMDMainWindow::handle_local_selection_change(const QItemSelection&, const
     }
 
     if(localmodel.fileInfo(index).isFile())
-        download_possible = trackmodel.is_open();
+        download_possible = current_device && current_device->isOpen();
 
     ui->action_Download->setEnabled(download_possible);
     ui->download_button->setEnabled(download_possible);
 }
 
-void QHiMDMainWindow::himd_found(QString HiMDPath)
+void QHiMDMainWindow::device_list_changed(QMDDevicePtrList dplist)
 {
-    int index;
+    QString device;
+    QMDDevice * dev;
 
-    if(HiMDPath.isEmpty())
-        return;
+    /* close current device if it is removed from device list, just to be sure, should be handled by closed() signal */
+    if(current_device && current_device->isOpen() && !dplist.contains(current_device))
+        current_device_closed();
 
-    index = ui->himd_devices->findText(HiMDPath);
-    if(index == -1)
-        ui->himd_devices->addItem(HiMDPath);
+    ui->himd_devices->clear();
+    // add dummy entry for <disconnected>
+    ui->himd_devices->addItem("<disconnected>");
 
-    if(ui->himd_devices->isHidden())
+    foreach(dev, dplist)
     {
-        ui->himd_devices->show();
-        ui->himdpath->hide();
+        device = QString(dev->deviceType() == NETMD_DEVICE ? dev->name() : dev->name() + " at " + dev->path() );
+        ui->himd_devices->addItem(device, qVariantFromValue((void *)dev));
     }
 
-    if(!trackmodel.is_open())
+    if(current_device)
+        ui->himd_devices->setCurrentIndex(dplist.indexOf(current_device) + 1);
+    else
     {
-        index = ui->himd_devices->findText(HiMDPath);
-        ui->himd_devices->setCurrentIndex(index);
-        open_himd_at(HiMDPath);
-    }
-
-}
-
-void QHiMDMainWindow::himd_removed(QString HiMDPath)
-{
-    int index;
-
-    if(HiMDPath.isEmpty())
-        return;
-    if (ui->himdpath->text() == HiMDPath)
-    {
-        ui->himdpath->setText(tr("(disconnected)"));
-        ui->statusBar->clearMessage();
-        trackmodel.close();
-    }
-
-    index = ui->himd_devices->findText(HiMDPath);
-    if(index != -1)
-    {
-        ui->himd_devices->removeItem(index);
-    }
-
-    if(ui->himd_devices->count() == 0)
-    {
-        ui->himd_devices->hide();
-        ui->himdpath->show();
+        if(dplist.count() > 1)   // open first autodetected device
+        {
+            ui->himd_devices->setCurrentIndex(2);
+            open_device(dplist.at(1));
+        }
     }
 }
 
 void QHiMDMainWindow::on_himd_devices_activated(QString device)
 {
-    open_himd_at(device);
+    QMDDevice * dev;
+    int index = ui->himd_devices->findText(device);
+
+    if (index == 0)  // disconnected
+    {
+        current_device_closed();
+        return;
+    }
+
+    dev = (QMDDevice *)ui->himd_devices->itemData(index).value<void *>();
+    open_device(dev);
+}
+
+void QHiMDMainWindow::current_device_closed()
+{
+    int i;
+
+    if(!current_device)
+        return;
+
+    QString browser = current_device->deviceType() == NETMD_DEVICE ? "netmd_browser" : "himd_browser";
+    QMDTracksModel * mod = (QMDTracksModel *)ui->TrackList->model();
+
+    QObject::disconnect(current_device, SIGNAL(closed()), this, SLOT(current_device_closed()));
+
+    // save column width for this model first
+    for(i = 0;i < mod->columnCount(); i++)
+        settings.setValue(browser + QString::number(i), ui->TrackList->columnWidth(i));
+
+    mod->close();
+    current_device = NULL;
+    ui->DiscTitle->setText(QString());
+    ui->himd_devices->setCurrentIndex(0);
+    set_buttons_enable(1,0,0,0,0,0,1);
 }
 
 void QHiMDMainWindow::on_download_button_clicked()

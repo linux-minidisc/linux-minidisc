@@ -6,14 +6,8 @@
 #include <QtCore/QSettings>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
-#include "qhimduploaddialog.h"
 #include "qhimddetection.h"
-#include "qhimdmodel.h"
-#include "../libhimd/himd.h"
-#include <tlist.h>
-#include <fileref.h>
-#include <tfile.h>
-#include <tag.h>
+#include "qmdmodel.h"
 
 extern "C" {
 #include <sox.h>
@@ -36,22 +30,20 @@ private:
     Ui::QHiMDMainWindowClass *ui;
     QHiMDAboutDialog * aboutDialog;
     QHiMDFormatDialog * formatDialog;
-    QHiMDUploadDialog * uploadDialog;
     QHiMDDetection * detect;
-    QHiMDTracksModel trackmodel;
+    QNetMDTracksModel ntmodel;
+    QHiMDTracksModel htmodel;
     QHiMDFileSystemModel localmodel;
     QSettings settings;
-    QString dumpmp3(const QHiMDTrack & trk, QString file);
-    QString dumpoma(const QHiMDTrack & trk, QString file);
-    QString dumppcm(const QHiMDTrack & trk, QString file);
-    void checkfile(QString UploadDirectory, QString &filename, QString extension);
+    QMDDevice * current_device;
     void set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit);
-    void init_himd_browser();
+    void init_himd_browser(QMDTracksModel *model);
     void init_local_browser();
     void save_window_settings();
     void read_window_settings();
     bool autodetect_init();
-    void open_himd_at(const QString & path);
+    void setCurrentDevice(QMDDevice * dev);
+    void open_device(QMDDevice * dev);
     void upload_to(const QString & path);
 
 private slots:
@@ -64,14 +56,10 @@ private slots:
     void on_upload_button_clicked();
     void handle_himd_selection_change(const QItemSelection&, const QItemSelection&);
     void handle_local_selection_change(const QItemSelection&, const QItemSelection&);
-    void himd_found(QString path);
-    void himd_removed(QString path);
+    void device_list_changed(QMDDevicePtrList dplist);
     void on_himd_devices_activated(QString device);
+    void current_device_closed();
     void on_download_button_clicked();
-
-signals:
-    void himd_busy(QString path);
-    void himd_idle(QString path);
 };
 
 #endif // QHIMDMAINWINDOW_H
