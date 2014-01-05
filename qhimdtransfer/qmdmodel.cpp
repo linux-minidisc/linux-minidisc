@@ -158,26 +158,6 @@ void QNetMDTracksModel::close()
     endResetModel();	/* inform views that the model contents changed */
 }
 
-QNetMDTrack QNetMDTracksModel::track(int trkidx) const
-{
-    return ndev->netmdTrack(trkidx);
-}
-
-QNetMDTrackList QNetMDTracksModel::tracks(const QModelIndexList & modelindices) const
-{
-    QNetMDTrackList tracks;
-    QModelIndex index;
-
-    foreach(index, modelindices)
-        tracks.append(ndev->netmdTrack(index.row()));
-    return tracks;
-}
-
-QStringList QNetMDTracksModel::downloadableFileExtensions() const
-{
-        return ndev->downloadableFileExtensions();
-}
-
 
 /* himd tracks model */
 
@@ -332,26 +312,6 @@ void QHiMDTracksModel::close()
     hdev = NULL;
 
     endResetModel();	/* inform views that the model contents changed */
-}
-
-QHiMDTrack QHiMDTracksModel::track(int trknum) const
-{
-    return hdev->himdTrack(trknum);
-}
-
-QHiMDTrackList QHiMDTracksModel::tracks(const QModelIndexList & modelindices) const
-{
-    QHiMDTrackList tracks;
-    QModelIndex index;
-
-    foreach(index, modelindices)
-        tracks.append(hdev->himdTrack(index.row()));
-    return tracks;
-}
-
-QStringList QHiMDTracksModel::downloadableFileExtensions() const
-{
-        return hdev->downloadableFileExtensions();
 }
 
 

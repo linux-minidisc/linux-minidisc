@@ -131,7 +131,7 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
         return;
      }
 
-    localmodel.setSelectableExtensions(mod->downloadableFileExtensions());
+    localmodel.setSelectableExtensions(current_device->downloadableFileExtensions());
     ui->DiscTitle->setText(current_device->discTitle());
     set_buttons_enable(1,0,0,1,1,1,1);
 }

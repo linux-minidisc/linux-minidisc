@@ -23,7 +23,6 @@ public:
     virtual QString open(QMDDevice *device = NULL) {return tr("no known device type specified");}
     virtual bool is_open() {return false;}
     virtual void close() {}
-    QStringList downloadableFileExtensions() const {return QStringList();}
 };
 
 class QNetMDTracksModel : public QMDTracksModel {
@@ -42,9 +41,6 @@ public:
     QString open(QMDDevice *device);	/* returns null if OK, error message otherwise */
     virtual bool is_open();
     void close();
-    QNetMDTrack track(int trkidx) const;
-    virtual QNetMDTrackList tracks(const QModelIndexList & indices) const;  // should be QMDTrackList later
-    QStringList downloadableFileExtensions() const;
 };
 
 class QHiMDTracksModel : public QMDTracksModel {
@@ -62,9 +58,6 @@ public:
     virtual QString open(QMDDevice *device);	/* returns null if OK, error message otherwise */
     virtual bool is_open();
     virtual void close();
-    virtual QHiMDTrack track(int trackidx) const;
-    virtual QHiMDTrackList tracks(const QModelIndexList & indices) const;  // should be QMDTrackList later
-    QStringList downloadableFileExtensions() const;
 };
 
 class QHiMDFileSystemModel : public QFileSystemModel {
