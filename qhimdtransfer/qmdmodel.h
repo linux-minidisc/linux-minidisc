@@ -1,10 +1,10 @@
 #ifndef QMDMODEL_H
 #define QMDMODEL_H
 
-#include <QtCore/QAbstractListModel>
+#include <QAbstractListModel>
 
-#include <QtCore/QList>
-#include <QtCore/QStringList>
+#include <QList>
+#include <QStringList>
 #include <QFileSystemModel>
 #include <qmddevice.h>
 

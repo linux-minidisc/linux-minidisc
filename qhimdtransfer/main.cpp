@@ -1,6 +1,6 @@
 #include <QApplication>
-#include <QtCore/QTranslator>
-#include <QtCore/QLocale>
+#include <QTranslator>
+#include <QLocale>
 #include "qhimdmainwindow.h"
 
 /* stolen from Qt Creator */

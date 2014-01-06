@@ -1,4 +1,4 @@
-#include <QtCore/QDebug>
+#include <QDebug>
 #include "qhimddetection.h"
 
 void QHiMDDetection::clearDeviceList()

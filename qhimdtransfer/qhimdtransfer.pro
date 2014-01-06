@@ -7,7 +7,7 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # for Qt5 compatibility
-QT += gui
+QT += gui core
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 # determine version number from git

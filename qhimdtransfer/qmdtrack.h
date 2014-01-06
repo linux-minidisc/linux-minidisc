@@ -1,7 +1,7 @@
 #ifndef QMDTRACK_H
 #define QMDTRACK_H
 
-#include <QtCore/QTime>
+#include <QTime>
 #include "himd.h"
 #include "sony_oma.h"
 

@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QFileDialog>
-#include <QtCore/QSettings>
+#include <QSettings>
 #include "qhimdaboutdialog.h"
 #include "qhimdformatdialog.h"
 #include "qhimddetection.h"

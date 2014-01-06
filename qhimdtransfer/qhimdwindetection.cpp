@@ -1,5 +1,5 @@
-#include <QtCore/QDebug>
-#include <QtCore/QList>
+#include <QDebug>
+#include <QList>
 #include <QWidget>
 #include "qhimddetection.h"
 
