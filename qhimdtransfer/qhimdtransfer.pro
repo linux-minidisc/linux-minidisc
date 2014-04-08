@@ -46,7 +46,8 @@ LANGUAGES = de \
     es \
     nl \
     cs \
-    uk
+    uk \
+    br
 TRANSLATIONS = $$bracketAll(LANGUAGES, qhimdtransfer_,.ts)
 include(translate.pri)
 
