@@ -165,7 +165,7 @@ int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
     gchar *filepath;
     GDir * dir;
     GError * error = NULL;
-    status = status;
+    (void)status;
 
     filepath = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI", NULL);
     dir      = g_dir_open(filepath,0,&error);
