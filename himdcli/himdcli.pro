@@ -16,3 +16,7 @@ unix:!macx {
   LIBS += -lmad
   DEFINES += CONFIG_WITH_MAD
 }
+
+macx {
+  CONFIG -= app_bundle
+}
