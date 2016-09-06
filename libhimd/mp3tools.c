@@ -25,6 +25,7 @@
 
 #include <id3tag.h>
 #include "himd.h"
+#include "himd_private.h"
 
 /*
  * gets artist, title and album info from an ID3 tag.
