@@ -599,11 +599,15 @@ void QHiMDDevice::upload(unsigned int trackidx, QString path)
     QString filename, errmsg;
     QHiMDTrack track = himdTrack(trackidx);
     QString title = track.title();
+    QString artist = track.artist();
 
-    if(title.isNull())
+    if(title.isEmpty()) {
         filename = tr("Track %1").arg(track.tracknum()+1);
-    else
-        filename = track.artist() + " - " + title;
+    } else if (artist.isEmpty()) {
+        filename = title;
+    } else {
+        filename = artist + " - " + title;
+    }
 
     uploadDialog.starttrack(track, filename);
     if (!track.copyprotected())
