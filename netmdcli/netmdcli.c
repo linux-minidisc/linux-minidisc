@@ -125,7 +125,7 @@ static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
         szBuf[1] = *pszRaw++;
         szBuf[2] = '\0';
         if (sscanf(szBuf, "%02X", &data) != 1) {
-            printf("Error: invalid character at byte %d ('%s')\n", cmdlen, szBuf);
+            printf("Error: invalid character at byte %zu ('%s')\n", cmdlen, szBuf);
             return;
         }
         cmd[cmdlen++] = data & 0xff;
