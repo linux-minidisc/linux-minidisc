@@ -175,7 +175,7 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     int oldsize;
 
     /* the title update command wants to now how many bytes to replace */
-    oldsize = netmd_request_title(dev, track, reply, sizeof reply);
+    oldsize = netmd_request_title(dev, track, (char *)reply, sizeof(reply));
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
@@ -476,7 +476,7 @@ int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length
     int oldsize;
 
     /* the title update command wants to now how many bytes to replace */
-    oldsize = request_disc_title(dev, reply, sizeof reply);
+    oldsize = request_disc_title(dev, (char *)reply, sizeof(reply));
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
