@@ -1,0 +1,3 @@
+[submodule "third-party/sparkle"]
+	path = third-party/sparkle
+	url = git@github.com:sparkle-project/Sparkle.git
