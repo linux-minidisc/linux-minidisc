@@ -130,11 +130,11 @@ netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
     }
 }
 
-netmd_error netmd_get_devname(netmd_dev_handle* devh, unsigned char* buf, size_t buffsize)
+netmd_error netmd_get_devname(netmd_dev_handle* devh, char *buf, size_t buffsize)
 {
     int result;
 
-    result = libusb_get_string_descriptor_ascii((libusb_device_handle *)devh, 2, buf, buffsize);
+    result = libusb_get_string_descriptor_ascii((libusb_device_handle *)devh, 2, (unsigned char *)buf, buffsize);
     if (result < 0) {
         netmd_log(NETMD_LOG_ERROR, "libusb_get_string_descriptor_asci failed, %s (%d)\n", strerror(errno), errno);
         buf[0] = 0;
