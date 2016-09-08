@@ -10,10 +10,10 @@ sox 14.2 (for the GUI)
 BUILDING
 
 This project uses the qmake build system to cooperate with the Qt Creator
-IDE. To compile in Qt Creator, just open himd.pro. To compile at the
+IDE. To compile in Qt Creator, just open md.pro. To compile at the
 command line, run
 
-  qmake -r
+  qmake
   make
 
 Depending on the default configuration of your system, you will find
@@ -24,9 +24,9 @@ To disable the optional features, the following keywords are recognized
 in the CONFIG variable:
   without_mad -> disables MP3 support (you wont need mad)
   without_mcrypt -> disables PCM support (you wont need libmcrypt)
-  wihtout_gui -> disable qhimdtransfer (you wont need Qt and sox)
+  without_gui -> disable qhimdtransfer (you wont need Qt and sox)
 
 So, the minimal configuration is built by using
 
-  qmake -r CONFIG+=without_mad CONFIG+=without_mcrypt CONFIG+=without_gui
+  qmake CONFIG+=without_mad CONFIG+=without_mcrypt CONFIG+=without_gui
 
