@@ -48,12 +48,11 @@ public:
     virtual void * deviceHandle();
     virtual void registerMdChange(void * regMdChange);
     virtual void * MdChange();
-    virtual QMDTrack track(unsigned int trkindex) {return QMDTrack();}
     virtual int trackCount() {return trk_count;}
     virtual QStringList downloadableFileExtensions() const;
     virtual void checkfile(QString UploadDirectory, QString &filename, QString extension);
-    virtual void batchUpload(QMDTrackIndexList tlist, QString path) {}
-    virtual void upload(unsigned int trackidx, QString path) {}
+    virtual void batchUpload(QMDTrackIndexList tlist, QString path) = 0;
+    virtual void upload(unsigned int trackidx, QString path) = 0;
 
 signals:
     void opened();
