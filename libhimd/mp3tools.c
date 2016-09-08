@@ -25,6 +25,12 @@
 
 #include <id3tag.h>
 #include "himd.h"
+#include "himd_private.h"
+
+static inline char *dup_id3_first_string(union id3_field const *field)
+{
+    return (char *)id3_ucs4_utf8duplicate(id3_field_getstrings(field, 0));
+}
 
 /*
  * gets artist, title and album info from an ID3 tag.
@@ -51,21 +57,21 @@ int himd_get_songinfo(const char *filepath, char ** artist, char ** title, char 
     frame = id3_tag_findframe (tag, ID3_FRAME_ARTIST, 0);
     if(frame && (field = &frame->fields[1]) &&
                  id3_field_getnstrings(field) > 0)
-        *artist = id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
+        *artist = dup_id3_first_string(field);
     else
         *artist = NULL;
 
     frame = id3_tag_findframe (tag, ID3_FRAME_TITLE, 0);
     if(frame && (field = &frame->fields[1]) &&
                  id3_field_getnstrings(field) > 0)
-        *title = id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
+        *title = dup_id3_first_string(field);
     else
         *title = NULL;
 
     frame = id3_tag_findframe (tag, ID3_FRAME_ALBUM, 0);
     if(frame && (field = &frame->fields[1]) &&
                  id3_field_getnstrings(field) > 0)
-        *album = id3_ucs4_utf8duplicate(id3_field_getstrings(field,0));
+        *album = dup_id3_first_string(field);
     else
         *album = NULL;
 
