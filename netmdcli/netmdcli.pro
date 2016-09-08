@@ -13,3 +13,7 @@ unix:!macx {
 }
 
 mac:INCLUDEPATH += /opt/local/include
+
+macx {
+  CONFIG -= app_bundle
+}
