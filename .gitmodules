@@ -1,3 +1,6 @@
 [submodule "third-party/sparkle"]
 	path = third-party/sparkle
 	url = git@github.com:sparkle-project/Sparkle.git
+[submodule "third-party/winsparkle"]
+	path = third-party/winsparkle
+	url = git@github.com:vslavik/winsparkle.git
