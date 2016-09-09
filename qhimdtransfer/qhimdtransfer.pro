@@ -1,8 +1,13 @@
 TEMPLATE = app
-CONFIG += link_prl \
-    link_pkgconfig
-PKGCONFIG += libusb-1.0
-TARGET = qhimdtransfer
+CONFIG += link_prl link_pkgconfig
+
+# Mixed case target name for operating systems on which this is convention
+win32|mac {
+    TARGET = QHiMDTransfer
+} else {
+    TARGET = qhimdtransfer
+}
+
 DEPENDPATH += .
 INCLUDEPATH += .
 
@@ -11,22 +16,16 @@ QT += gui core
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 # determine version number from git
-VERSION = $$system(sh ../get_version.sh)
-#    !isEmpty(VERSION){
-#      VERSION = 0.0.1-$${VERSION}
-#    }
-
+VERSION = $$system(sh ../build/get_version.sh)
 VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
 # determine build date (Using QMAKE_HOST here to account for cross-compilation case)
-
 equals(QMAKE_HOST.os,Windows) {
     BUILDDATE = $$system(date /T)
 } else {
     BUILDDATE = $$system(date +%a\\ %m\\/%d\\/%Y)
 }
-
 BDATESTR = '\\"$${BUILDDATE}\\"'  # place quotes around the build date string
 DEFINES += BDATE=\"$${BDATESTR}\" # create a BDATE macro containing the build date string
 
@@ -87,9 +86,8 @@ win32 {
 }
 
 RESOURCES += icons.qrc
-PKGCONFIG += taglib
-win32:LIBS += -lsetupapi \
-    -lcfgmgr32
+
+win32:LIBS += -lsetupapi -lcfgmgr32
 
 SOURCES += wavefilewriter.cpp
 HEADERS += wavefilewriter.h
@@ -97,22 +95,19 @@ HEADERS += wavefilewriter.h
 win32:RC_FILE = qhimdtransfer.rc
 mac:ICON = qhimdtransfer.icns
 
-# Mixed case version of the target name for operating systems on which
-# this is convention.
-win32:TARGET = QHiMDTransfer
-mac:TARGET = QHiMDTransfer
-include(../libhimd/use_libhimd.pri)
-include(../libnetmd/use_libnetmd.prl)
-
 # Installing stuff
 translations.files = $$bracketAll(LANGUAGES, qhimdtransfer_,.qm)
-unix: { 
+unix {
     INSTALLS += translations
     HACK = $$system(lrelease $$TRANSLATIONS)
     macx:translations.path = QHiMDTransfer.app/Contents/Resources/translations
     !macx:translations.path = /usr/share/qhimdtransfer/translations
 }
-unix:!macx { 
-    target.path = /usr/bin
-    INSTALLS += target
-}
+
+include(../libhimd/use_libhimd.pri)
+include(../libnetmd/use_libnetmd.prl)
+include(../build/libglib.pri)
+include(../build/libusb.pri)
+include(../build/libtaglib.pri)
+include(../build/installunix.pri)
+include(../build/common.pri)
