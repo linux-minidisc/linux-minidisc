@@ -77,8 +77,15 @@ SOURCES += main.cpp \
     qmdmodel.cpp \
     qmdtrack.cpp \
     qmddevice.cpp
-win32:SOURCES += qhimdwindetection.cpp
-else:SOURCES += qhimddummydetection.cpp
+
+win32 {
+  SOURCES += qhimdwindetection.cpp
+} else:mac {
+  SOURCES += qhimdmacdetection.cpp
+} else {
+  SOURCES += qhimddummydetection.cpp
+}
+
 RESOURCES += icons.qrc
 PKGCONFIG += taglib
 win32:LIBS += -lsetupapi \
