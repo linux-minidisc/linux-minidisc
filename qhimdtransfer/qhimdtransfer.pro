@@ -76,8 +76,7 @@ SOURCES += main.cpp \
 win32:SOURCES += qhimdwindetection.cpp
 else:SOURCES += qhimddummydetection.cpp
 RESOURCES += icons.qrc
-PKGCONFIG += sox \
-    taglib
+PKGCONFIG += sox
 win32:LIBS += -lsetupapi \
     -lcfgmgr32
 win32:RC_FILE = qhimdtransfer.rc
