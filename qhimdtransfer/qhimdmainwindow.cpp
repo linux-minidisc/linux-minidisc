@@ -111,10 +111,8 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
 
     if(dev->deviceType() == HIMD_DEVICE && dev->path().isEmpty())
     {
-        mdStatus.setText(tr("Error opening himd device/disc image , no device path given\nPlease use connect button to set the path to the himd device/disc image"));
-        mdStatus.exec();
-        set_buttons_enable(1,0,0,0,0,0,1);
         ui->himd_devices->setCurrentIndex(0);
+        on_action_Connect_triggered();
         return;
     }
 
