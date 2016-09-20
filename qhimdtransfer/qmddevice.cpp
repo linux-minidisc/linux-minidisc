@@ -2,10 +2,6 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QFile>
-#include <tlist.h>
-#include <fileref.h>
-#include <tfile.h>
-#include <tag.h>
 
 extern "C" {
 #include <sox.h>
@@ -456,24 +452,36 @@ clean:
     return errmsg;
 }
 
-static inline TagLib::String QStringToTagString(const QString & s)
-{
-    return TagLib::String(s.toUtf8().data(), TagLib::String::UTF8);
-}
+// https://en.wikipedia.org/wiki/ID3#ID3v1
+struct ID3v1 {
+    char tag[3]; // "TAG"
+    char title[30];
+    char artist[30];
+    char album[30];
+    char year[4];
+    char comment[28];
+    char zero; // must be zero if track number is used
+    uint8_t track_number;
+    uint8_t genre; // 255 for undefined
+};
 
 static void addid3tag(QString title, QString artist, QString album, QString file)
 {
-#ifdef Q_OS_WIN
-    TagLib::FileRef f(file.toStdWString().c_str());
-#else
-    TagLib::FileRef f(file.toUtf8().data());
-#endif
-    TagLib::Tag *t = f.tag();
-    t->setTitle(QStringToTagString(title));
-    t->setArtist(QStringToTagString(artist));
-    t->setAlbum(QStringToTagString(album));
-    t->setComment("*** imported from HiMD via QHiMDTransfer ***");
-    f.file()->save();
+    QFile fp(file);
+    if (fp.open(QIODevice::Append)) {
+        ID3v1 tag;
+        strncpy(tag.tag, "TAG", sizeof(tag.tag));
+        strncpy(tag.title, title.toLatin1().data(), sizeof(tag.title));
+        strncpy(tag.artist, artist.toLatin1().data(), sizeof(tag.artist));
+        strncpy(tag.album, album.toLatin1().data(), sizeof(tag.album));
+        memset(tag.year, 0, sizeof(tag.year));
+        memset(tag.comment, 0, sizeof(tag.comment));
+        tag.zero = 0;
+        tag.track_number = 0;
+        tag.genre = 255;
+        fp.write((char *)&tag, sizeof(tag));
+        fp.close();
+    }
 }
 
 QString QHiMDDevice::dumpoma(const QHiMDTrack &track, QString file)
