@@ -19,9 +19,13 @@ VERSION = $$system(sh ../get_version.sh)
 VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
 DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
-# determine build date
-unix:BUILDDATE = $$system(date +%a\\ %m\\/%d\\/%Y)
-win32:BUILDDATE = $$system(date /T)
+# determine build date (Using QMAKE_HOST here to account for cross-compilation case)
+
+equals(QMAKE_HOST.os,Windows) {
+    BUILDDATE = $$system(date /T)
+} else {
+    BUILDDATE = $$system(date +%a\\ %m\\/%d\\/%Y)
+}
 
 BDATESTR = '\\"$${BUILDDATE}\\"'  # place quotes around the build date string
 DEFINES += BDATE=\"$${BDATESTR}\" # create a BDATE macro containing the build date string
