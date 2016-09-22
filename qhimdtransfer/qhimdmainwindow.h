@@ -9,10 +9,6 @@
 #include "qhimddetection.h"
 #include "qmdmodel.h"
 
-extern "C" {
-#include <sox.h>
-}
-
 namespace Ui
 {
     class QHiMDMainWindowClass;

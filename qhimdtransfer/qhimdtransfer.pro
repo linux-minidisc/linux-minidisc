@@ -80,10 +80,13 @@ SOURCES += main.cpp \
 win32:SOURCES += qhimdwindetection.cpp
 else:SOURCES += qhimddummydetection.cpp
 RESOURCES += icons.qrc
-PKGCONFIG += sox \
-    taglib
+PKGCONFIG += taglib
 win32:LIBS += -lsetupapi \
     -lcfgmgr32
+
+SOURCES += wavefilewriter.cpp
+HEADERS += wavefilewriter.h
+
 win32:RC_FILE = qhimdtransfer.rc
 mac:ICON = qhimdtransfer.icns
 
