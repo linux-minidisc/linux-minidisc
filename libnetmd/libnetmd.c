@@ -175,7 +175,7 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     int oldsize;
 
     /* the title update command wants to now how many bytes to replace */
-    oldsize = netmd_request_title(dev, track, reply, sizeof reply);
+    oldsize = netmd_request_title(dev, track, (char *)reply, sizeof(reply));
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
@@ -476,7 +476,7 @@ int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length
     int oldsize;
 
     /* the title update command wants to now how many bytes to replace */
-    oldsize = request_disc_title(dev, reply, sizeof reply);
+    oldsize = request_disc_title(dev, (char *)reply, sizeof(reply));
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
@@ -956,7 +956,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
     read(fd,data,4);
     data_size_i = (size_t)(data[3] + (data[2] << 8) + (data[1] << 16) + (data[0] << 24));
 
-    fprintf(stderr,"Size of data: %d\n",data_size_i);
+    fprintf(stderr,"Size of data: %lu\n", (unsigned long)data_size_i);
     size = (data_size_i/0x3f18)*8+data_size_i+8;           /* plus number of data headers */
     fprintf(stderr,"Size of data w/ headers: %d\n",size);
 
@@ -990,7 +990,9 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 
         file_pos = (size_t)lseek(fd,0,SEEK_CUR); /* Gets the position in file, might be a nicer way of doing this */
 
-        fprintf(stderr,"pos: %d/%d; remain data: %d\n", file_pos, data_size_i, data_size_i-file_pos);
+        fprintf(stderr,"pos: %lu/%lu; remain data: %ld\n",
+                (unsigned long)file_pos, (unsigned long)data_size_i,
+                (signed long)(data_size_i - file_pos));
         if (file_pos >= data_size_i) {
             fprintf(stderr,"Done transferring.\n");
             free(data);
@@ -1007,9 +1009,9 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
         if (__distance_to_header !=0) __distance_to_header = 0x3f10 - __distance_to_header;
         bytes_to_send = __chunk_size;
 
-        fprintf(stderr,"Chunksize: %d\n",__chunk_size);
-        fprintf(stderr,"distance_to_header: %d\n",__distance_to_header);
-        fprintf(stderr,"Bytes left: %d\n",__bytes_left);
+        fprintf(stderr,"Chunksize: %lu\n", (unsigned long)__chunk_size);
+        fprintf(stderr,"distance_to_header: %lu\n", (unsigned long)__distance_to_header);
+        fprintf(stderr,"Bytes left: %lu\n", (unsigned long)__bytes_left);
 
         if (__distance_to_header <= 0x1000) {   	     /* every 0x3f10 the header should be inserted, with an appropiate key.*/
             fprintf(stderr,"Inserting header\n");
@@ -1031,7 +1033,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
                 __bytes_left = 0x3f00;
             }
 
-            fprintf (stderr, "bytes left in chunk: %d\n",__bytes_left);
+            fprintf (stderr, "bytes left in chunk: %lu\n", (unsigned long)__bytes_left);
             p[6] = (__bytes_left >> 8) & 0xff;      /* Inserts the higher 8 bytes of the length */
             p[7] = __bytes_left & 0xff;     /* Inserts the lower 8 bytes of the length */
             __chunk_size -= 0x10;          /* Update chunk size (for inserted header */
