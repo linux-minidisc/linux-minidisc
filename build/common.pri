@@ -1,0 +1,4 @@
+# http://stackoverflow.com/a/17578151/1047040
+QMAKE_CXXFLAGS += $$(CXXFLAGS)
+QMAKE_CFLAGS += $$(CFLAGS)
+QMAKE_LFLAGS += $$(LDFLAGS)

@@ -1,22 +1,14 @@
-TEMPLATE=app
-CONFIG  -= qt
-CONFIG  += console link_pkgconfig link_prl
-PKGCONFIG += glib-2.0 id3tag
-INCLUDEPATH += ../libhimd
+TEMPLATE = app
+
+CONFIG -= qt app_bundle
+CONFIG += console link_pkgconfig link_prl
+
 SOURCES += himdcli.c
 
 include(../libhimd/use_libhimd.pri)
-
-unix:!macx {
-	target.path = /usr/bin
-	INSTALLS += target
-}
-
-!without_mad: {
-  LIBS += -lmad
-  DEFINES += CONFIG_WITH_MAD
-}
-
-macx {
-  CONFIG -= app_bundle
-}
+include(../build/libid3tag.pri)
+include(../build/libmad.pri)
+include(../build/libz.pri)
+include(../build/libglib.pri)
+include(../build/installunix.pri)
+include(../build/common.pri)

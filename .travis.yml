@@ -1,0 +1,41 @@
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      language: cpp
+      compiler: clang
+      env: BUILD_TYPE=linux-native-clang
+    - os: linux
+      dist: trusty
+      sudo: required
+      language: cpp
+      compiler: gcc
+      env: BUILD_TYPE=linux-native-gcc
+    - os: linux
+      dist: trusty
+      sudo: required
+      language: cpp
+      compiler: gcc
+      env: BUILD_TYPE=linux-cross-mingw64 CONFIGURE_COMMAND="sh build/cross_wrapper_mingw.sh qmake" COMPILE_COMMAND="sh build/cross_wrapper_mingw.sh make"
+    - os: linux
+      dist: trusty
+      sudo: required
+      language: cpp
+      compiler: gcc
+      env: BUILD_TYPE=linux-cross-mingw32 CONFIGURE_COMMAND="sh build/cross_wrapper_mingw.sh qmake" COMPILE_COMMAND="sh build/cross_wrapper_mingw.sh make"
+    - os: osx
+      osx_image: xcode7.2
+      language: cpp
+      compiler: clang
+      env: BUILD_TYPE=osx-native-clang
+
+before_install:
+  - sh build/install_dependencies.sh
+
+install:
+  - git submodule update --init --recursive
+
+script:
+  - ${CONFIGURE_COMMAND:-qmake}
+  - ${COMPILE_COMMAND:-make}
