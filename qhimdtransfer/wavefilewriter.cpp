@@ -126,7 +126,7 @@ updateU32LESizeField(QFile &file, size_t offset, uint32_t new_value)
     }
 
     // The "remaining" size is calculated from after the value (subtract offset + value size)
-    new_value = qToLittleEndian(new_value - (offset + sizeof(new_value)));
+    new_value = qToLittleEndian(uint32_t(new_value - (offset + sizeof(new_value))));
     if ((size_t)file.write((char *)&new_value, sizeof(new_value)) != sizeof(new_value)) {
         qWarning() << "Could not update field in file";
         return false;
