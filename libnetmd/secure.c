@@ -370,8 +370,8 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
         memcpy(buf + 8, p->iv, 8);
         memcpy(buf + 16, p->data, p->length);
 
-        /* ... send it */
-        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 10000);
+        /* ... send it, timeout increased for larger files*/
+        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 80000);
         netmd_log(NETMD_LOG_DEBUG, "%d %d\n", packet_size, error);
 
         /* cleanup */
@@ -387,11 +387,12 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
 
 netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   netmd_track_packets **packets,
-                                  size_t *packet_count,
-                                  unsigned char *key_encryption_key)
+                                  size_t *packet_count, size_t *frames,
+                                  unsigned char *key_encryption_key, netmd_wireformat format)
 {
     size_t position = 0;
     size_t chunksize = 0xffffffffU;
+    size_t frame_size = netmd_get_frame_size(format);
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
 
@@ -418,8 +419,10 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
             chunksize = data_lenght - position;
         }
 
-        if ((chunksize % 8) != 0) {
-            chunksize = chunksize + 8 - (chunksize % 8);
+        /* do not truncate frames, transfer data size will be calculated by number of frames in netmd_secure_send_track(),
+           alternatively change totalbytes calculation in netmd_secure_send_track() */
+        if ((chunksize % frame_size) != 0) {
+            chunksize = chunksize + frame_size - (chunksize % frame_size);
         }
 
         /* alloc memory */
@@ -458,6 +461,8 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
 
     gcry_cipher_close(key_handle);
     gcry_cipher_close(data_handle);
+
+    *frames = position/frame_size;
 
     return error;
 }

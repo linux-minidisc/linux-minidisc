@@ -191,8 +191,8 @@ netmd_error netmd_secure_delete_track(netmd_dev_handle *dev, uint16_t track,
 
 netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   netmd_track_packets **packets,
-                                  size_t *packet_count,
-                                  unsigned char *key_encryption_key);
+                                  size_t *packet_count, size_t *frames,
+                                  unsigned char *key_encryption_key, netmd_wireformat format);
 
 void netmd_cleanup_packets(netmd_track_packets **packets);
 
