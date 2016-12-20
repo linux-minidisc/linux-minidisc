@@ -627,6 +627,10 @@ void netmd_write_wav_header(unsigned char format, uint32_t bytes, FILE *f)
     else if (maskedformat == NETMD_DISKFORMAT_LP2) {
         bytesperframe = 192;
         jointstereo = 0;
+    } else {
+        netmd_log(NETMD_LOG_ERROR, "unknown disk format (format=%#02x, maskedformat=%#02x) in %s\n",
+                  format, maskedformat, __func__);
+        return;
     }
     bytespersecond = ((bytesperframe * 44100U) / 512U) & 0xffff;
 

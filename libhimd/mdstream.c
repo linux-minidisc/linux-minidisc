@@ -250,8 +250,8 @@ int himd_writestream_write(struct himd_writestream * stream, struct blockinfo * 
     unsigned char data[HIMD_BLOCKINFO_SIZE];
     g_return_val_if_fail(stream != NULL, -1);
     g_return_val_if_fail(audioblock != NULL, -1);
-    status = status;
-    stream = stream;
+
+    (void)status;
 
     // serialize the block descriptor
     setblock(audioblock, data);

@@ -5,10 +5,10 @@
 
 #include <windows.h>
 #include <dbt.h>
-#include <setupapi.h>
 #include <initguid.h>       // needed to handle GUIDs
-#include <ddk/ntddstor.h>   // needed for handling storage devices
-#include <ddk/cfgmgr32.h>   // needed for CM_Get_Child function
+
+#include <ntddstor.h>   // needed for handling storage devices
+#include <cfgmgr32.h>   // needed for CM_Get_Child function
 
 static const GUID my_GUID_IO_MEDIA_ARRIVAL =
     {0xd07433c0, 0xa98e, 0x11d2, {0x91, 0x7a, 0x00, 0xa0, 0xc9, 0x06, 0x8f, 0xf3} };

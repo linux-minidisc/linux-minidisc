@@ -2,14 +2,12 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QFile>
+#include "wavefilewriter.h"
+
 #include <tlist.h>
 #include <fileref.h>
 #include <tfile.h>
 #include <tag.h>
-
-extern "C" {
-#include <sox.h>
-}
 
 /* common device members */
 QMDDevice::QMDDevice() : dev_type(NO_DEVICE)
@@ -530,67 +528,46 @@ QString QHiMDDevice::dumppcm(const QHiMDTrack &track, QString file)
 {
     struct himd_nonmp3stream str;
     struct himderrinfo status;
-    unsigned int len, i;
-    int left, right;
-    int clipcount;
+    unsigned int len;
     QString errmsg;
-    QFile f(file);
     const unsigned char * data;
-    sox_format_t * out;
-    sox_sample_t soxbuf [HIMD_MAX_PCMFRAME_SAMPLES * 2];
-    sox_signalinfo_t signal_out;
-
-    signal_out.channels = 2;
-    signal_out.length = 0;
-    signal_out.precision = 16;
-    signal_out.rate = 44100;
-
-    if(!(out = sox_open_write(file.toUtf8(), &signal_out, NULL, NULL, NULL, NULL)))
-        return tr("Error opening file for WAV output");
+    WaveFileWriter waveFile;
 
     if(!(errmsg = track.openNonMpegStream(&str)).isNull())
     {
-        f.remove();
         return tr("Error opening track: ") + status.statusmsg;
     }
 
-    while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
-    {
+    if (!waveFile.open(file, 44100, 16, 2)) {
+        return tr("Error opening file for WAV output");
+    }
 
-      for(i = 0; i < len/4; i++) {
-
-        left = data[i*4]*256+data[i*4+1];
-        right = data[i*4+2]*256+data[i*4+3];
-        if (left > 0x8000) left -= 0x10000;
-        if (right > 0x8000) right -= 0x10000;
-
-        soxbuf[i*2] = SOX_SIGNED_16BIT_TO_SAMPLE(left, clipcount);
-        soxbuf[i*2+1] = SOX_SIGNED_16BIT_TO_SAMPLE(right, clipcount);
-        (void)clipcount; /* suppess "is unused" warning */
-      }
-
-      if (sox_write(out, soxbuf, len/2) != len/2)
-      {
+    while (himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0) {
+        if (!waveFile.write_signed_big_endian(reinterpret_cast<const int16_t *>(data), len / 2)) {
             errmsg = tr("Error writing audio data");
             goto clean;
-      }
-      uploadDialog.blockTransferred();
-      QApplication::processEvents();
-      if(uploadDialog.upload_canceled())
-      {
+        }
+
+        uploadDialog.blockTransferred();
+        QApplication::processEvents();
+        if (uploadDialog.upload_canceled()) {
             errmsg = QString("upload aborted by the user");
             goto clean;
-      }
+        }
     }
-    if(status.status != HIMD_STATUS_AUDIO_EOF)
+
+    if (status.status != HIMD_STATUS_AUDIO_EOF) {
         errmsg = QString("Error reading audio data: ") + status.statusmsg;
+    }
 
 clean:
-    sox_close(out);
+    waveFile.close();
     himd_nonmp3stream_close(&str);
 
-    if(!errmsg.isNull())
-        f.remove();
+    if (!errmsg.isNull()) {
+        QFile(file).remove();
+    }
+
     return errmsg;
 }
 
@@ -599,11 +576,15 @@ void QHiMDDevice::upload(unsigned int trackidx, QString path)
     QString filename, errmsg;
     QHiMDTrack track = himdTrack(trackidx);
     QString title = track.title();
+    QString artist = track.artist();
 
-    if(title.isNull())
+    if(title.isEmpty()) {
         filename = tr("Track %1").arg(track.tracknum()+1);
-    else
-        filename = track.artist() + " - " + title;
+    } else if (artist.isEmpty()) {
+        filename = title;
+    } else {
+        filename = artist + " - " + title;
+    }
 
     uploadDialog.starttrack(track, filename);
     if (!track.copyprotected())

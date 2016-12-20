@@ -245,7 +245,7 @@ int himd_add_track_info(struct himd * himd, struct trackinfo * t, struct himderr
     unsigned char * trackbuffer;
     unsigned char * play_order_table = himd->tifdata+0x100;
 
-    status = status;
+    (void)status;
 
     g_return_val_if_fail(himd != NULL, -1);
     g_return_val_if_fail(t != NULL, -1);
@@ -352,7 +352,8 @@ int himd_add_fragment_info(struct himd * himd, struct fraginfo * f, struct himde
     int idx_freefrag;
     unsigned char * linkbuffer;
     unsigned char * fragbuffer;
-    status = status;
+
+    (void)status;
 
     g_return_val_if_fail(himd != NULL, -1);
     g_return_val_if_fail(f != NULL, -1);
