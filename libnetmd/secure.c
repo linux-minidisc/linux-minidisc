@@ -557,7 +557,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     }
 
     time(&endtime);
-    netmd_log(NETMD_LOG_VERBOSE, "transfer of %d bytes finished at : %s", totalbytes, asctime(localtime(&endtime)));
+    netmd_log(NETMD_LOG_VERBOSE, "transfer of %d bytes finished at : %s", totalbytes, ctime(&endtime));
     netmd_log(NETMD_LOG_VERBOSE, "time consumption : %u seconds\n", endtime - starttime);
 
     return error;
