@@ -173,7 +173,7 @@ void retailmac(unsigned char *rootkey, unsigned char *hostnonce,
 
 static inline unsigned int leword32(const unsigned char * c)
 {
-    return c[3]*16777216+c[2]*65536+c[1]*256+c[0];
+    return (c[3] << 24) + (c[2] << 16) + (c[1] << 8) + c[0];
 }
 
 static inline unsigned int leword16(const unsigned char * c)

@@ -150,8 +150,6 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
         return 0;
     }
 
-    size = ret;
-
     buffer->minute = bcd_to_proper(time_request + 28, 1) & 0xff;
     buffer->second = bcd_to_proper(time_request + 29, 1) & 0xff;
     buffer->tenth = bcd_to_proper(time_request + 30, 1) & 0xff;
