@@ -106,7 +106,6 @@ unix {
 
 include(../libhimd/use_libhimd.pri)
 include(../libnetmd/use_libnetmd.prl)
-include(../build/libglib.pri)
 include(../build/libusb.pri)
 include(../build/libtaglib.pri)
 include(../build/installunix.pri)

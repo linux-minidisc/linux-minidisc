@@ -5,6 +5,5 @@ SOURCES += netmdcli.c
 
 include(../libnetmd/use_libnetmd.prl)
 include(../build/libusb.pri)
-include(../build/libglib.pri)
 include(../build/installunix.pri)
 include(../build/common.pri)
