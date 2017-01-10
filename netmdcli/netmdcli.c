@@ -542,7 +542,7 @@ int main(int argc, char* argv[])
 
                     /* open audio file */
                     if(file_valid) {
-                        if((data = (unsigned char *)malloc(data_size)) == NULL) {
+                        if((data = (unsigned char *)malloc(data_size+2048)) == NULL) {      // reserve additional mem for padding if needed
                             file_valid = 0;
                             netmd_log(NETMD_LOG_ERROR, "error allocating memory for file input\n" );
                         }
@@ -557,6 +557,7 @@ int main(int argc, char* argv[])
 
                     /* copy file to buffer */
                     if(file_valid) {
+                        memset(data, 0, data_size+2048);
                         if((fread(data, data_size, 1, f)) < 1) {
                             netmd_log(NETMD_LOG_ERROR, "cannot read audio file\n" );
                             file_valid = 0;

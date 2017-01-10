@@ -376,7 +376,7 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
 
         /* ... send it */
         error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, usb_timeout);
-        netmd_log(NETMD_LOG_DEBUG, "%d %d\n", packet_size, error);
+        netmd_log(NETMD_LOG_VERBOSE, "%d of %d bytes transferred, libusb error code: %d\n", transferred, packet_size, error);
 
         /* cleanup */
         free(packet);
@@ -521,6 +521,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     netmd_copy_doubleword_to_buffer(&buf, frames, 0);
 
     totalbytes = netmd_get_frame_size(wireformat) * frames + packet_count * 24U;
+    netmd_log(NETMD_LOG_VERBOSE, "total transfer size : %d bytes\n", totalbytes);
     netmd_copy_doubleword_to_buffer(&buf, totalbytes, 0);
 
     /* log time consumption for debugging/analysing usb timeout value */
