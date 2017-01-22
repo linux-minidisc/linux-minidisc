@@ -517,6 +517,7 @@ int main(int argc, char* argv[])
                                                   0x2f, 0xa0 };
                     netmd_track_packets *packets = NULL;
                     size_t packet_count = 0;
+                    size_t packet_length = 0;
                     struct stat stat_buf;
                     unsigned char *data = NULL;
                     size_t data_size;
@@ -664,16 +665,16 @@ int main(int argc, char* argv[])
                         }
 
                         /* number of frames will be calculated by netmd_prepare_packets() depending on the wire format and channels */
-                        error = netmd_prepare_packets(audio_data, audio_data_size, &packets, &packet_count, &frames, channels, kek, wireformat);
+                        error = netmd_prepare_packets(audio_data, audio_data_size, &packets, &packet_count, &frames, channels, &packet_length, kek, wireformat);
                         netmd_log(NETMD_LOG_VERBOSE, "netmd_prepare_packets : %s\n", netmd_strerror(error));
 
                         /* send to device */
                         error = netmd_secure_send_track(devh, wireformat,
                                                         discformat,
                                                         frames, packets,
-                                                        packet_count, sessionkey,
+                                                        packet_length, sessionkey,
                                                         &track, uuid, new_contentid);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_send_key_data : %s\n", netmd_strerror(error));
+                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_send_track : %s\n", netmd_strerror(error));
 
                         /* cleanup */
                         netmd_cleanup_packets(&packets);
