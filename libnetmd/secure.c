@@ -417,7 +417,6 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
     unsigned char key[8] = { 0 };
 
     netmd_error error = NETMD_NO_ERROR;
-    int first_packet = 1;
 
     if(channels == NETMD_CHANNELS_MONO)
         frame_size /= 2;
@@ -487,7 +486,6 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
         position = position + chunksize;
         (*packet_count)++;
         last = next;
-        first_packet = 0;
         netmd_log(NETMD_LOG_VERBOSE, "generating packet %d : %d bytes\n", *packet_count, chunksize);
     }
 
@@ -532,7 +530,6 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     unsigned char cmd[sizeof(cmdhdr) + 13];
     unsigned char *buf;
     size_t totalbytes;
-    time_t starttime, endtime;
 
     netmd_response response;
     netmd_error error;
