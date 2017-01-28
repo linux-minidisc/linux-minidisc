@@ -2,3 +2,9 @@
 QMAKE_CXXFLAGS += $$(CXXFLAGS)
 QMAKE_CFLAGS += $$(CFLAGS)
 QMAKE_LFLAGS += $$(LDFLAGS)
+
+macx {
+  # Dependencies from Homebrew are put here
+  INCLUDEPATH += /usr/local/include
+  LIBS += -L/usr/local/lib
+}
