@@ -81,6 +81,9 @@ win32 {
   SOURCES += qhimdwindetection.cpp
 } else:mac {
   SOURCES += qhimdmacdetection.cpp
+} else:unix {
+  SOURCES += qhimdunixdetection.cpp
+  QT += dbus
 } else {
   SOURCES += qhimddummydetection.cpp
 }

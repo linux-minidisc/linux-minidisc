@@ -1,6 +1,11 @@
 #include <QDebug>
 #include "qhimddetection.h"
 
+QString QHiMDDetection::mountpoint(QMDDevice *dev)
+{
+    return dev->path();
+}
+
 void QHiMDDetection::clearDeviceList()
 {
     QMDDevice * mddev;

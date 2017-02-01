@@ -1,0 +1,116 @@
+## Rules file for Minidisc devices
+## based on source: https://usb-ids.gowdy.us/read/UD/054c
+## last changed: 2013-12-28
+
+# send message through session bus (needs qdbus to be installed), already running qhimdtransfer application will recieve this
+# also needs minidisc_notify.sh to be installed in /etc/udev
+
+# check himd devices
+# Sony MZ-NH1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="017f", GOTO="notify"
+# Sony MZ-NH3D
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0181", GOTO="notify"
+# Sony MZ-NH900
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0183", GOTO="notify"
+# Sony MZ-NH700
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0185", GOTO="notify"
+# Sony MZ-NH600
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0187", GOTO="notify"
+# Sony LAM-3
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="018a", GOTO="notify"
+# Sony MZ-DH10P
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="01ea", GOTO="notify"
+# Sony MZ-RH10
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="021a", GOTO="notify"
+# Sony MZ-RH910
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="021c", GOTO="notify"
+# Sony CMT-AH10
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="022d", GOTO="notify"
+# Sony DS-HMD1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="023d", GOTO="notify"
+# Sony MZ-RH1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0287", GOTO="notify"
+
+# check himd devices in netmd mode
+# Sony MZ-NH1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="017e", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-NH3D
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0180", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-NH900
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0182", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-NH700/800
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0184", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-NH600/600D
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0186", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-DH10P
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="01e9", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-RH10
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0219", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-RH910
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="021b", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony CMT-AH10
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="022c", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony DS-HMD1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="023c", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-RH1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0286", MODE="0664", GROUP="plugdev", GOTO="notify"
+
+# check netmd devices
+# Aiwa AM-NX1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0113", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Aiwa AM-NX9
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="014c", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sharp IM-MT880H/MT899H
+ATTRS{idVendor}=="04dd", ATTRS{idProduct}=="7202", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sharp IM-DR400/DR410
+ATTRS{idVendor}=="04dd", ATTRS{idProduct}=="9013", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sharp IM-DR420/DR80/DR580 - Kenwood DMC-S9NET
+ATTRS{idVendor}=="04dd", ATTRS{idProduct}=="9014", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD (unknown model)
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0036", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD MZ-N1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0075", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD (unknown model)
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="007c", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD LAM-1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0080", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD MDS-JE780/JB980
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0081", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-N505
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0084", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD MZ-S1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0085", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD MZ-N707
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0086", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-N10
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="00c6", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD MZ-N910
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="00c7", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD MZ-N710/NF810/NE810
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="00c8", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD MZ-N510/NF610
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="00c9", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-N410/NF520D
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="00ca", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD MZ-NE810/NE910/DN430
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="00eb", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD LAM-10
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0101", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony MZ-N920
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0188", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD LAM-3
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="018a", MODE="0664", GROUP="plugdev", GOTO="notify"
+# Sony NetMD CMT-AH10
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="021d", MODE="0664", GROUP="plugdev", GOTO="notify"
+
+# send all "remove" messages, some usb device specific remove messages does not contain idVendor/idProduct,
+# corresponding device will be checked by qhimdtransfer
+ACTION=="remove", RUN+="/etc/udev/minidisc_notify.sh"
+
+# end here if device is not a minidisc device
+GOTO="minidisc_end"
+
+LABEL="notify"
+RUN+="/etc/udev/minidisc_notify.sh"
+
+LABEL="minidisc_end"

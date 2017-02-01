@@ -1,0 +1,10 @@
+This directory contains files that might help interoperation between your
+system and the netmd/himd stuff.
+
+60-minidisc.rules:
+  Place this file into /etc/udev/rules.d to add udev rules which will grant
+  user access to all known MiniDisc devices according to their USB device
+  IDs.
+
+minidisc_notify.sh:
+  Place this file into /etc/udev to add minidisc autodetection feature for qhimdtransfer.
