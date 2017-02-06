@@ -86,7 +86,8 @@ case "$BUILD_TYPE" in
         ;;
     osx-native-*)
         brew update
-        brew install --force qt4 mad libid3tag libtag glib libusb libusb-compat libgcrypt
+        brew install --force qt5 mad libid3tag libtag glib libusb libusb-compat libgcrypt
+        brew link --force qt5
         ;;
     *)
         echo "Unset/unknown \$BUILD_TYPE: $BUILD_TYPE"
