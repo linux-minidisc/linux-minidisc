@@ -2,9 +2,12 @@
 #define QHIMDDETECTION_H
 
 #include <QObject>
+#include <QThread>
+#include <QTimer>
 #include <QList>
 #include <QString>
 #include <qmddevice.h>
+#include "libusb.h"
 
 // known vendor IDs
 #define SONY 0x054c
@@ -71,6 +74,27 @@ const char * identify_usb_device(int vid, int pid);
 
 typedef QList<QMDDevice *> QMDDevicePtrList;
 
+// polling object for libusb hotplug events
+class QLibusbPoller : public QThread {
+    Q_OBJECT
+    Q_DISABLE_COPY(QLibusbPoller)
+
+protected:
+    QTimer t;
+    libusb_context *lct;
+    virtual void run();
+protected slots:
+    void poll();
+public:
+    QLibusbPoller(QObject *parent = 0, libusb_context *ctx = 0);
+    virtual ~QLibusbPoller();
+    void idle();
+    void continue_polling();
+    /* provide static sleep function */
+    static void sleep(unsigned long secs) {QThread::sleep(secs);}
+};
+
+
 class QHiMDDetection : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY(QHiMDDetection)
@@ -78,18 +102,24 @@ class QHiMDDetection : public QObject {
 protected:
     QMDDevicePtrList dlist;
     netmd_device * dev_list;
+    libusb_hotplug_callback_handle cb_handle;
+    QLibusbPoller * poller;
+    libusb_context * ctx;
 public:
     explicit QHiMDDetection(QObject *parent = 0);
     virtual ~QHiMDDetection();
+    bool start_hotplug();
     virtual void clearDeviceList();
     virtual void cleanup_netmd_list();
     void rescan_netmd_devices();
     void scan_for_minidisc_devices();
     virtual void scan_for_himd_devices(){}
-    virtual void remove_himddevice(QString path);
+    virtual void add_himddevice(QString path, QString name, QString serial) {}
+    virtual void remove_himddevice(QString path, QString name);
     void scan_for_netmd_devices();
     QMDDevice *find_by_path(QString path);
     QMDDevice *find_by_name(QString name);
+    virtual QString mountpoint(QMDDevice *dev);
 
 signals:
     void deviceListChanged(QMDDevicePtrList list);

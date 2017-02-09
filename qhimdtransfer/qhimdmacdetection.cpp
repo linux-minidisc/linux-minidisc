@@ -11,8 +11,8 @@ public:
 
     void scan_for_himd_devices();
 
-private:
-    void add_himddevice(QString path, QString name);
+public:
+    virtual void add_himddevice(QString path, QString name, QString serial);
 };
 
 
@@ -43,9 +43,15 @@ void QHiMDMacDetection::scan_for_himd_devices()
     }
 }
 
-void QHiMDMacDetection::add_himddevice(QString path, QString name)
+void QHiMDMacDetection::add_himddevice(QString path, QString name, QString serial)
 {
     QMDDevice *device;
+
+    if(path.isEmpty()) {
+        /* path not provided by libusb hotplug events
+         * TODO: find path for the corresponding device */
+        return;
+    }
     foreach (device, dlist) {
         if (device->path() == path) {
             // Device is already added -- skip duplicate

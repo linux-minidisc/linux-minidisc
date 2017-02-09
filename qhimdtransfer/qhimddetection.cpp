@@ -1,6 +1,94 @@
 #include <QDebug>
 #include "qhimddetection.h"
 
+/* callback function for libusb hotplug events, void *user_data is a pointer to the running QHiMDDetection object */
+static int hotplug_cb(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data)
+{
+    static libusb_device_handle *handle = NULL;
+    struct libusb_device_descriptor desc;
+    QString name;
+    unsigned char serial[13];
+    int rc = 0;
+    QHiMDDetection * detect = static_cast<QHiMDDetection *>(user_data);
+
+    memset(serial, 0, 13);
+    libusb_get_device_descriptor(dev, &desc);
+    name = QString(identify_usb_device(desc.idVendor, desc.idProduct));
+
+    // return if usb device is not a minidisc device
+    if(name.isEmpty())
+        return 0;
+
+    // handle netmd devices, reenumerate netmd device list
+    if(name.contains("NetMD")) {
+        if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED || event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+            qDebug() << QString("qhimddetection : hotplug event for %1 detected, rescan netmd devices").arg(name);
+            detect->rescan_netmd_devices();
+        }
+        return 0;
+    }
+
+    // handle himd devices, use platform dependent code
+    if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+        rc = libusb_open(dev, &handle);
+        if (rc != LIBUSB_SUCCESS)
+            return 0;
+
+        libusb_get_string_descriptor_ascii(handle, desc.iSerialNumber, serial, 13);
+        qDebug() << QString("qhimddetection : hotplug event for %1 detected, serial no. %2").arg(name).arg(QString((const char *)serial));
+        libusb_close(handle);
+
+        // wait some time (linux: let udev and udisks2 finish processing)
+        QLibusbPoller::sleep(4);
+        detect->add_himddevice(QString(), name, QString((const char *)serial));
+    }
+     else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+        qDebug() << QString("qhimddetection : hotplug event for %1 detected. device removed").arg(name);
+        detect->remove_himddevice(QString(), name);
+    }
+    return 0;
+}
+
+QLibusbPoller::QLibusbPoller(QObject *parent, libusb_context *ctx) : QThread(parent), lct(ctx)
+{
+}
+
+QLibusbPoller::~QLibusbPoller()
+{
+    t.stop();
+    wait();
+}
+
+void QLibusbPoller::run()
+{
+    connect( &t, SIGNAL( timeout() ), this, SLOT( poll() ) );
+    t.start( 1000 );
+    exec();
+}
+
+void QLibusbPoller::poll()
+{
+    // use non-blocking libusb routine
+    struct timeval tv = { 0 , 0 };
+    libusb_handle_events_timeout_completed(lct, &tv, NULL);
+}
+
+void QLibusbPoller::idle()
+{
+    t.stop();
+}
+
+void QLibusbPoller::continue_polling()
+{
+    t.start( 1000 );
+}
+
+
+QString QHiMDDetection::mountpoint(QMDDevice *dev)
+{
+    return dev->path();
+}
+
 void QHiMDDetection::clearDeviceList()
 {
     QMDDevice * mddev;
@@ -22,7 +110,7 @@ void QHiMDDetection::clearDeviceList()
         }
         else if(mddev->deviceType() == HIMD_DEVICE)
         {
-            remove_himddevice(mddev->path());  // uses platform dependent function if available
+            remove_himddevice(mddev->path(), mddev->name());  // uses platform dependent function if available
             continue;
         }
     }
@@ -32,6 +120,7 @@ void QHiMDDetection::clearDeviceList()
     emit deviceListChanged(dlist);
 }
 
+
 QHiMDDetection::QHiMDDetection(QObject *parent) :
     QObject(parent)
 {
@@ -39,8 +128,41 @@ QHiMDDetection::QHiMDDetection(QObject *parent) :
 
 QHiMDDetection::~QHiMDDetection()
 {
+    poller->idle();
+    poller->quit();
+    delete poller;
+    libusb_hotplug_deregister_callback(ctx, cb_handle);
+    libusb_exit(ctx);
     clearDeviceList();
     cleanup_netmd_list();
+}
+
+bool QHiMDDetection::start_hotplug()
+{
+    int reg_hotplug;
+
+    libusb_init(&ctx);
+
+    if(!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
+        qDebug() << tr("usb hotplug events not supported, autodetection disabled");
+        return false;
+    }
+
+    reg_hotplug = libusb_hotplug_register_callback(ctx,
+                                          (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+                                          (libusb_hotplug_flag)0,
+                                          LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY,
+                                          LIBUSB_HOTPLUG_MATCH_ANY, hotplug_cb, (void *)this,
+                                          &cb_handle);
+    if (reg_hotplug != LIBUSB_SUCCESS) {
+        qDebug() << tr("Error creating usb hotplug callback, autodetection disabled");
+        return false;
+    }
+
+    poller = new QLibusbPoller(this, ctx);
+    poller->start();
+
+    return true;
 }
 
 void QHiMDDetection::cleanup_netmd_list()
@@ -82,7 +204,7 @@ void QHiMDDetection::scan_for_minidisc_devices()
 {
     /* create device entry for disc images first */
     QHiMDDevice * mddev = new QHiMDDevice();
-    mddev->setMdInserted(true);
+    mddev->setMdInserted(false);
     mddev->setName("disc image");
     dlist.append(mddev);
     emit deviceListChanged(dlist);
@@ -91,12 +213,32 @@ void QHiMDDetection::scan_for_minidisc_devices()
     scan_for_netmd_devices();
 }
 
-void QHiMDDetection::remove_himddevice(QString path)
+void QHiMDDetection::remove_himddevice(QString path, QString name)
 {
-    QHiMDDevice * dev = static_cast<QHiMDDevice *>(find_by_path(path));
-    int i = dlist.indexOf(find_by_path(path));
+    /* try to find device by name if path is not set, libusb hotplug event does not provide a path */
+    QMDDevice * d = NULL;
+    QHiMDDevice * dev = NULL;
+    int i = path.isEmpty() ? dlist.indexOf(find_by_name(name)) : dlist.indexOf(find_by_path(path));
+    int himd_count = 0;
 
-    if(i < 0)
+    if(i >= 0)
+        dev = static_cast<QHiMDDevice *>(dlist.at(i));
+
+    /* remove himd device if device cannot be found (name or path not set correctly) but
+     * only one real himd device is stored in the device list */
+    if(!dev) {
+        foreach(d, dlist) {
+            if(d->deviceType() == HIMD_DEVICE && !d->name().contains("disc image")) {
+                himd_count++;
+                i = dlist.indexOf(d);
+            }
+        }
+        if(himd_count != 1)
+            return;
+        dev = static_cast<QHiMDDevice *>(dlist.at(i));
+    }
+
+    if(!dev)
         return;
 
     if(dev->isOpen())
@@ -105,6 +247,7 @@ void QHiMDDetection::remove_himddevice(QString path)
     dev = NULL;
 
     dlist.removeAt(i);
+    emit deviceListChanged(dlist);
 }
 
 void QHiMDDetection::scan_for_netmd_devices()
