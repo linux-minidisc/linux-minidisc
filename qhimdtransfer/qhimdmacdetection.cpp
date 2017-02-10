@@ -38,7 +38,7 @@ void QHiMDMacDetection::scan_for_himd_devices()
     foreach (path, QDir(BASE_DIR).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
         QString fullPath = BASE_DIR + path;
         if (QFile(fullPath + "/HI-MD.IND").exists()) {
-            add_himddevice(fullPath, path);
+            add_himddevice(fullPath, path, QString());
         }
     }
 }

@@ -79,7 +79,7 @@ void QHiMDWinDetection::scan_for_himd_devices()
                 if(!devID.isEmpty() && !devID.contains("Floppy", Qt::CaseInsensitive))
                 {
                     if(is_himddevice(devID, name))
-                        add_himddevice(QString(drive[0]) + ":/", name);
+                        add_himddevice(QString(drive[0]) + ":/", name, QString());
                 }
             }
         }
@@ -340,7 +340,7 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                             if(is_himddevice(devID, name))
                             {
                                 qDebug() << "Message:DBT_DEVICEARRIVAL for drive " + path;
-                                add_himddevice(path, name);
+                                add_himddevice(path, name, QString());
                             }
                         }
                     }
@@ -353,7 +353,7 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                         PDEV_BROADCAST_VOLUME pHdrv = (PDEV_BROADCAST_VOLUME)pHdr;
                         path = FindPath(pHdrv->dbcv_unitmask);
                         qDebug() << "Message:DBT_DEVICEREMOVECOMPLETE for drive " + path;
-                        remove_himddevice(path);
+                        remove_himddevice(path, QString());
                     }
                     break;
                 }
@@ -377,7 +377,7 @@ bool QHiMDWinDetection::winEvent(MSG * msg, long * result)
                         else
                         {
                             qDebug() << "Message:DBT_DEVICEQUERYREMOVE requested";
-                            remove_himddevice(dev->path());
+                            remove_himddevice(dev->path(), QString());
                         }
                     }
                     break;
