@@ -558,7 +558,7 @@ int main(int argc, char* argv[])
 
                     /* copy file to buffer */
                     if(file_valid) {
-                        memset(data, 0, data_size+2048);
+                        memset(data, 0, data_size+8);
                         if((fread(data, data_size, 1, f)) < 1) {
                             netmd_log(NETMD_LOG_ERROR, "cannot read audio file\n" );
                             file_valid = 0;
