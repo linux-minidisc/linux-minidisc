@@ -2,7 +2,7 @@
 #include "qhimddetection.h"
 
 /* callback function for libusb hotplug events, void *user_data is a pointer to the running QHiMDDetection object */
-static int hotplug_cb(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data)
+static int LIBUSB_CALL hotplug_cb(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data)
 {
     static libusb_device_handle *handle = NULL;
     struct libusb_device_descriptor desc;
