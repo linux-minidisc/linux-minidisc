@@ -191,7 +191,7 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name, libusb_device
     QByteArray device = "\\\\.\\PHYSICALDRIVE";
     char file[] = "X:\\HI-MD.IND";
     DWORD retbytes;
-    HANDLE hdev, dev;
+    HANDLE hdev, ddev;
     STORAGE_DEVICE_NUMBER sdn;
     OFSTRUCT OFfile;
 
@@ -207,12 +207,12 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name, libusb_device
     if(k != 0)
         device.append(QString::number(sdn.DeviceNumber));
 
-    dev = CreateFileA(device.data(), NULL , FILE_SHARE_READ, NULL,
+    ddev = CreateFileA(device.data(), NULL , FILE_SHARE_READ, NULL,
                                            OPEN_EXISTING, 0, NULL);
-    if(dev == INVALID_HANDLE_VALUE)
+    if(ddev == INVALID_HANDLE_VALUE)
         return;
 
-    new_device->setDeviceHandle(dev);
+    new_device->setDeviceHandle(ddev);
     new_device->registerMdChange(register_mediaChange(new_device->deviceHandle()));
     new_device->setBusy(false);
     new_device->setPath(path);
