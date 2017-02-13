@@ -30,6 +30,14 @@ QHiMDMacDetection::QHiMDMacDetection(QObject * parent)
 
 QHiMDMacDetection::~QHiMDMacDetection()
 {
+     poller->idle();
+     poller->quit();
+     delete poller;
+     libusb_hotplug_deregister_callback(ctx, cb_handle);
+     libusb_exit(ctx);
+     clearDeviceList();
+     if(!ctx)
+         netmd_clean(&dev_list);
 }
 
 void QHiMDMacDetection::scan_for_himd_devices()
