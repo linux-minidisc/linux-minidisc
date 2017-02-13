@@ -29,6 +29,7 @@ protected:
     void * devhandle;
     void * mdChange;
     QHiMDUploadDialog uploadDialog;
+    libusb_device * ldev;
 public:
     explicit QMDDevice();
     virtual ~QMDDevice();
@@ -51,6 +52,8 @@ public:
     virtual void * deviceHandle();
     virtual void registerMdChange(void * regMdChange);
     virtual void * MdChange();
+    virtual void setLibusbDevice(libusb_device * dev);
+    virtual libusb_device * libusbDevice();
     virtual int trackCount() {return trk_count;}
     virtual QStringList downloadableFileExtensions() const;
     virtual void checkfile(QString UploadDirectory, QString &filename, QString extension);
@@ -73,6 +76,7 @@ public:
     explicit QNetMDDevice();
     virtual ~QNetMDDevice();
     virtual void setUsbDevice(netmd_device * dev);
+    virtual netmd_device * usbDevice() {return netmd;}
     virtual QString open();
     virtual void close();
     virtual QString discTitle();

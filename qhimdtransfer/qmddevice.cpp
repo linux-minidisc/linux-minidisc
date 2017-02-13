@@ -17,6 +17,7 @@ QMDDevice::QMDDevice() : dev_type(NO_DEVICE)
 QMDDevice::~QMDDevice()
 {
     close();
+    ldev = NULL;
 }
 
 enum device_type QMDDevice::deviceType()
@@ -94,6 +95,17 @@ void * QMDDevice::MdChange()
 {
     return mdChange;
 }
+
+void QMDDevice::setLibusbDevice(libusb_device * dev)
+{
+    ldev = dev;
+}
+
+libusb_device *QMDDevice::libusbDevice()
+{
+    return ldev;
+}
+
 
 QStringList QMDDevice::downloadableFileExtensions() const
 {

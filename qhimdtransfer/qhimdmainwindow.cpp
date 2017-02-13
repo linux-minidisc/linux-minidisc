@@ -72,8 +72,8 @@ bool QHiMDMainWindow::autodetect_init()
     if(!QObject::connect(detect, SIGNAL(deviceListChanged(QMDDevicePtrList)), this, SLOT(device_list_changed(QMDDevicePtrList))))
         return false;
 
-    detect->start_hotplug();
-    detect->scan_for_minidisc_devices();
+    if(!detect->start_hotplug())
+        detect->scan_for_minidisc_devices();
     return true;
 }
 

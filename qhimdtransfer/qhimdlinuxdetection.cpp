@@ -33,7 +33,7 @@ private:
     bool check_serial(QString udisk_drive_path, QString serial);
     QString deviceFile_from_serial(QString serial);
     QMDDevice *find_by_deviceFile(QString file);
-    virtual void add_himddevice(QString path, QString name, QString serial);
+    virtual void add_himddevice(QString path, QString name, libusb_device * dev);
 };
 
 /* force qmake to run moc on this .cpp file */
@@ -123,6 +123,8 @@ QHiMDLinuxDetection::QHiMDLinuxDetection(QObject *parent)
 {
     if(!dbus_sys.isConnected())
         qDebug() << tr("dbus error, cannot connect to system bus");
+    ctx = NULL;
+    dev_list = NULL;
 }
 
 QVariant QHiMDLinuxDetection::get_property(QString udiskPath, QString property, QString interface)
@@ -289,6 +291,10 @@ void QHiMDLinuxDetection::scan_for_himd_devices()
     QString name, path;
     bool validDrive = true;
 
+    /* skip enumeration if using libusb hotplug events */
+    if(ctx)
+        return;
+
     while(validDrive) {
         if(!(validDrive = udisks_drive_path(drive, path))) {
                 break;
@@ -297,7 +303,7 @@ void QHiMDLinuxDetection::scan_for_himd_devices()
         if(!path.isEmpty()) {
             if(drive_is_himd(path, name)) {
                 qDebug() << tr("qhimddetection: himd device %1 detected at %2").arg(name).arg(QString("/dev/sd").append(drive));
-                add_himddevice(QString("/dev/sd").append(drive), name, QString());
+                add_himddevice(QString("/dev/sd").append(drive), name, NULL);
             }
         }
         ++drive;
@@ -316,26 +322,44 @@ QMDDevice *QHiMDLinuxDetection::find_by_deviceFile(QString file)
     return NULL;
 }
 
-void QHiMDLinuxDetection::add_himddevice(QString path, QString name, QString serial)
+void QHiMDLinuxDetection::add_himddevice(QString path, QString name, libusb_device * dev)
 {
     QString mp;
+    QHiMDDevice * new_device;
+    struct libusb_device_descriptor desc;
+    libusb_device_handle * h = NULL;
+    unsigned char serial[13];
+    int rc = 0;
 
-    if(path.isEmpty()) {
-        if(serial.isEmpty())
+    if(path.isEmpty() && !dev)
             return;
-        /* try to find device file from serial */
-        path = deviceFile_from_serial(serial);
-        if(path.isEmpty())
-            return;
-    }
 
     /* return if device already exists in the device list */
+    if(dev && find_by_libusbDevice(dev))
+        return;
+
+     /* try to find device file from serial if path is not set (using libusb hotplug events) */
+    if(path.isEmpty()) {
+        libusb_get_device_descriptor(dev, &desc);
+        rc = libusb_open(dev, &h);
+        if(rc != LIBUSB_SUCCESS)
+            return;
+        memset(serial, 0, 13);
+        libusb_get_string_descriptor_ascii(h, desc.iSerialNumber, serial, 13);
+        libusb_close(h);
+        path = deviceFile_from_serial(QString((const char *)serial));
+            if(path.isEmpty())
+                return;
+    }
+
+    /* return if device by path already exists in the device list */
     if (find_by_deviceFile(path))
         return;
 
-    QHiMDDevice * new_device = new QHiMDDevice();
+    new_device = new QHiMDDevice();
 
     new_device->setDeviceFile(path);
+    new_device->setLibusbDevice(dev);
     new_device->setName(name);
     new_device->setBusy(false);
     mp = mountpoint(new_device);

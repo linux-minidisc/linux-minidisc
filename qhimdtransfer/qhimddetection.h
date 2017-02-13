@@ -110,16 +110,21 @@ public:
     virtual ~QHiMDDetection();
     bool start_hotplug();
     virtual void clearDeviceList();
-    virtual void cleanup_netmd_list();
     void rescan_netmd_devices();
     void scan_for_minidisc_devices();
-    virtual void scan_for_himd_devices(){}
-    virtual void add_himddevice(QString path, QString name, QString serial) {}
-    virtual void remove_himddevice(QString path, QString name);
+    virtual void scan_for_himd_devices() {}      // platform dependent
+    virtual void add_hotplug_device(libusb_device * dev);
+    virtual void remove_hotplug_device(libusb_device * dev);
     void scan_for_netmd_devices();
     QMDDevice *find_by_path(QString path);
     QMDDevice *find_by_name(QString name);
+    QMDDevice *find_by_libusbDevice(libusb_device * dev);
     virtual QString mountpoint(QMDDevice *dev);
+private:
+    virtual void add_himddevice(QString path, QString name, libusb_device * dev) {}
+    virtual void remove_himddevice(QString path, libusb_device * dev = NULL);
+    void add_netmddevice(libusb_device * dev, QString name);
+    void remove_netmddevice(libusb_device * dev);
 
 signals:
     void deviceListChanged(QMDDevicePtrList list);
