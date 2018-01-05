@@ -1,4 +1,5 @@
-/* netmd.c
+/* netmdcli.c
+ *      Copyright (C) 2017 René Rebe
  *      Copyright (C) 2002, 2003 Marc Britten
  *
  * This file is part of libnetmd.
@@ -27,6 +28,7 @@
 void print_disc_info(netmd_dev_handle* devh, minidisc *md);
 void print_current_track_info(netmd_dev_handle* devh);
 void print_syntax();
+int check_args(int n, int i, const char* text);
 void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 
 /* Max line length we support in M3U files... should match MD TOC max */
@@ -322,6 +324,7 @@ int main(int argc, char* argv[])
     {
         if(strcmp("rename", argv[1]) == 0)
         {
+            if (!check_args(argc, 3, "rename")) return -1;
             i = strtoul(argv[2], NULL, 10);
             netmd_cache_toc(devh);
             netmd_set_title(devh, i & 0xffff, argv[3]);
@@ -329,18 +332,21 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("move", argv[1]) == 0)
         {
+            if (!check_args(argc, 3, "move")) return -1;
             i = strtoul(argv[2], NULL, 10);
             j = strtoul(argv[3], NULL, 10);
             netmd_move_track(devh, i & 0xffff, j & 0xffff);
         }
         else if(strcmp("groupmove", argv[1]) == 0)
         {
+            if (!check_args(argc, 3, "groupmove")) return -1;
             i = strtoul(argv[2], NULL, 10);
             j = strtoul(argv[3], NULL, 10);
             netmd_move_group(devh, md, j & 0xffff, i & 0xffff);
         }
         else if(strcmp("write", argv[1]) == 0)
         {
+            if (!check_args(argc, 2, "write")) return -1;
             if(netmd_write_track(devh, argv[2]) < 0)
             {
                 fprintf(stderr, "Error writing track %i\n", errno);
@@ -348,16 +354,19 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("newgroup", argv[1]) == 0)
         {
+            if (!check_args(argc, 2, "newgroup")) return -1;
             netmd_create_group(devh, md, argv[2]);
         }
         else if(strcmp("settitle", argv[1]) == 0)
         {
+            if (!check_args(argc, 2, "settitle")) return -1;
             netmd_cache_toc(devh);
             netmd_set_disc_title(devh, argv[2], strlen(argv[2]));
             netmd_sync_toc(devh);
         }
         else if(strcmp("group", argv[1]) == 0)
         {
+            if (!check_args(argc, 3, "group")) return -1;
             i = strtoul(argv[2], NULL, 10);
             j = strtoul(argv[3], NULL, 10);
             if(!netmd_put_track_in_group(devh, md, i & 0xffff, j & 0xffff))
@@ -367,6 +376,7 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("retitle", argv[1]) == 0)
         {
+            if (!check_args(argc, 3, "retitle")) return -1;
             i = strtoul(argv[2], NULL, 10);
             netmd_set_group_title(devh, md, i, argv[3]);
         }
@@ -408,6 +418,7 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("settime", argv[1]) == 0)
         {
+            if (!check_args(argc, 4, "settime")) return -1;
             track = strtoul(argv[2], (char **) NULL, 10) & 0xffff;
             if (argc > 6)
             {
@@ -435,15 +446,18 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("m3uimport", argv[1]) == 0)
         {
+            if (!check_args(argc, 2, "m3uimport")) return -1;
             import_m3u_playlist(devh, argv[2]);
         }
         else if(strcmp("delete", argv[1]) == 0)
         {
+            if (!check_args(argc, 2, "delete")) return -1;
             i = strtoul(argv[2], NULL, 10);
             netmd_delete_track(devh, i & 0xffff);
         }
         else if(strcmp("deletegroup", argv[1]) == 0)
         {
+            if (!check_args(argc, 2, "deletegroup")) return -1;
             i = strtoul(argv[2], NULL, 10);
             netmd_delete_group(devh, md, i & 0xffff);
         }
@@ -451,6 +465,7 @@ int main(int argc, char* argv[])
             print_current_track_info(devh);
         }
         else if (strcmp("raw", argv[1]) == 0) {
+            if (!check_args(argc, 2, "raw")) return -1;
             send_raw_message(devh, argv[2]);
         }
         else if (strcmp("setplaymode", argv[1]) == 0) {
@@ -483,12 +498,14 @@ int main(int argc, char* argv[])
             printf("\n");
         }
         else if (strcmp("recv", argv[1]) == 0) {
+            if (!check_args(argc, 3, "recv")) return -1;
             i = strtoul(argv[2], NULL, 10);
             f = fopen(argv[3], "wb");
             netmd_secure_recv_track(devh, i & 0xffff, f);
             fclose(f);
         }
         else if (strcmp("send", argv[1]) == 0) {
+            if (!check_args(argc, 2, "send")) return -1;
             netmd_error error;
                     netmd_ekb ekb;
                     unsigned char chain[] = {0x25, 0x45, 0x06, 0x4d, 0xea, 0xca,
@@ -964,4 +981,13 @@ void print_syntax()
     puts("  0x23 = get hash id for track #");
     puts("  0x40 = secure delete track #");
     puts("help - print this stuff");
+}
+
+int check_args(int n, int i, const char* text)
+{
+    /* n is the original argc, incl. program name */
+    if (n > i)
+        return 1;
+    fprintf(stderr, "Error: %s requires at least %d arguments\n", text, i);
+    return 0;
 }
