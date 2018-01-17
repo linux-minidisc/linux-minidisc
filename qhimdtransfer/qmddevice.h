@@ -21,6 +21,7 @@ class QMDDevice : public QObject {
     bool is_busy;
 protected:
     QString device_path;
+    QString device_file;
     enum device_type dev_type;
     bool is_open;
     unsigned int trk_count;
@@ -28,6 +29,7 @@ protected:
     void * devhandle;
     void * mdChange;
     QHiMDUploadDialog uploadDialog;
+    libusb_device * ldev;
 public:
     explicit QMDDevice();
     virtual ~QMDDevice();
@@ -36,6 +38,8 @@ public:
     virtual QString path();
     virtual void setName(QString name);
     virtual QString name();
+    virtual void setDeviceFile(QString devfile);
+    virtual QString deviceFile();
     virtual void setBusy(bool busy);
     virtual bool isBusy();
     virtual QString open() {return QString();}
@@ -48,6 +52,8 @@ public:
     virtual void * deviceHandle();
     virtual void registerMdChange(void * regMdChange);
     virtual void * MdChange();
+    virtual void setLibusbDevice(libusb_device * dev);
+    virtual libusb_device * libusbDevice();
     virtual int trackCount() {return trk_count;}
     virtual QStringList downloadableFileExtensions() const;
     virtual void checkfile(QString UploadDirectory, QString &filename, QString extension);
@@ -70,6 +76,7 @@ public:
     explicit QNetMDDevice();
     virtual ~QNetMDDevice();
     virtual void setUsbDevice(netmd_device * dev);
+    virtual netmd_device * usbDevice() {return netmd;}
     virtual QString open();
     virtual void close();
     virtual QString discTitle();

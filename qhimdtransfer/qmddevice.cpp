@@ -17,6 +17,7 @@ QMDDevice::QMDDevice() : dev_type(NO_DEVICE)
 QMDDevice::~QMDDevice()
 {
     close();
+    ldev = NULL;
 }
 
 enum device_type QMDDevice::deviceType()
@@ -27,6 +28,7 @@ enum device_type QMDDevice::deviceType()
 void QMDDevice::setPath(QString path)
 {
     device_path = path;
+    md_inserted = !path.isEmpty();
 }
 
 QString QMDDevice::path()
@@ -42,6 +44,16 @@ void QMDDevice::setName(QString name)
 QString QMDDevice::name()
 {
     return recorder_name;
+}
+
+void QMDDevice::setDeviceFile(QString devfile)
+{
+    device_file = devfile;
+}
+
+QString QMDDevice::deviceFile()
+{
+    return device_file;
 }
 
 void QMDDevice::setBusy(bool busy)
@@ -83,6 +95,17 @@ void * QMDDevice::MdChange()
 {
     return mdChange;
 }
+
+void QMDDevice::setLibusbDevice(libusb_device * dev)
+{
+    ldev = dev;
+}
+
+libusb_device *QMDDevice::libusbDevice()
+{
+    return ldev;
+}
+
 
 QStringList QMDDevice::downloadableFileExtensions() const
 {

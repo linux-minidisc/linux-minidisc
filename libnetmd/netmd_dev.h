@@ -23,8 +23,9 @@ struct netmd_devices {
   supported devices.
 
   @param device_list Linked list of netmd_device_t structures to fill.
+  @param libusb_context of a running instance of libusb
 */
-netmd_error netmd_init(netmd_device **device_list);
+netmd_error netmd_init(netmd_device **device_list, libusb_context * hctx);
 
 /**
   Opens a NetMD device.
