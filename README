@@ -5,6 +5,7 @@ PREREQUISITES
   mad (for MP3 transfer, can be disabled)
   libgcrypt (for PCM transfer, can be disabled)
   Qt (for the GUI)
+  pkg-config (if on OSX/MacOS)
 
 BUILDING
 
