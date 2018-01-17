@@ -87,39 +87,38 @@ static int scanforatdata(GDir * dir)
 static int scanfortif(GDir * dir, int* oldnum, int *newnum)
 {
     const char * hmafile;
-    int found_unused=FALSE, found_used=FALSE;
+    int found_unused=-1, found_used=-1;
     int old_datanum, new_datanum;
 
     while((hmafile = g_dir_read_name(dir)) != NULL)
     {
 	// Look for old version
-	if(!found_unused)
-	    {
-		if(g_ascii_strncasecmp(hmafile,"_rkidx0",7) == 0 &&
-		   strlen(hmafile) == 12 &&
-		   isxdigit(hmafile[7]) &&
-		   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
-		    {
-			sscanf(hmafile+7,"%x",&old_datanum);
-			*oldnum = old_datanum;
-			found_unused = TRUE;
-		    }
+	if(g_ascii_strncasecmp(hmafile,"_rkidx0",7) == 0 &&
+	   strlen(hmafile) == 12 &&
+	   isxdigit(hmafile[7]) &&
+	   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
+	{
+	    sscanf(hmafile+7,"%x",&old_datanum);
+	    if (old_datanum > found_unused) {
+		*oldnum = old_datanum;
+		found_unused = old_datanum;
 	    }
+	}
 	// Look for current version
-	if(!found_used)
-	    {
-		if(g_ascii_strncasecmp(hmafile,"trkidx0",7) == 0 &&
-		   strlen(hmafile) == 12 &&
-		   isxdigit(hmafile[7]) &&
-		   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
-		    {
-			sscanf(hmafile+7,"%x",&new_datanum);
-			*newnum = new_datanum;
-			found_used = TRUE;
-		    }
+	if(g_ascii_strncasecmp(hmafile,"trkidx0",7) == 0 &&
+	   strlen(hmafile) == 12 &&
+	   isxdigit(hmafile[7]) &&
+	   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
+	{
+	    sscanf(hmafile+7,"%x",&new_datanum);
+	    if (new_datanum > found_used) {
+		*newnum = new_datanum;
+		found_used = new_datanum;
 	    }
+	}
     }
-    return (FALSE || found_unused || found_used);
+
+    return (FALSE || found_unused >= 0 || found_used >= 0);
 }
 
 static void nong_inplace_ascii_down(gchar * string)
