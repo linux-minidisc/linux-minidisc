@@ -484,8 +484,9 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
         gcry_cipher_setiv(data_handle, iv, 8);
         gcry_cipher_setkey(data_handle, rand, sizeof(rand));
         gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, packet_data_length);
-        /* set last encrypted block as iv for the next packet */
-        memcpy(iv, data + position + packet_data_length - 8, 8);
+        /* use last encrypted block as iv for the next packet so we keep
+         * on Cipher Block Chaining */
+        memcpy(iv, next->data + chunksize - 8, 8);
 
         /* next packet */
         position = position + chunksize;
