@@ -409,7 +409,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
      * Large sizes cause instability in some players especially with ATRAC3 files. */
     size_t chunksize, packet_data_length, first_chunk = 0x00100000U;
     size_t frame_size = netmd_get_frame_size(format);
-    int padding = 0;
+    int padding = 0, frame_padding = 0;
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
 
@@ -456,11 +456,12 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
             }
             /* do not truncate if last frame is incomplete, include padding bytes for DES encryption in size calculation */
             if((data_lenght % frame_size) != 0 || padding != 0) {
-                padding = frame_size - (data_lenght % frame_size) - padding;
-                if(padding < 0)
-                    padding += frame_size;
+                frame_padding = frame_size - (data_lenght % frame_size) - padding;
+                if(frame_padding < 0)
+                    frame_padding += frame_size;
             }
-            chunksize = packet_data_length + padding;
+            chunksize = packet_data_length + frame_padding;
+            netmd_log(NETMD_LOG_VERBOSE, "last packet: packet_data_length=%d, padding=%d, frame_padding=%d, chunksize=%d\n", packet_data_length, padding, frame_padding, chunksize);
         }
 
         /* alloc memory */
