@@ -413,9 +413,13 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
 
     gcry_cipher_hd_t key_handle;
     gcry_cipher_hd_t data_handle;
-    unsigned char iv[8] = { 0 };
-    unsigned char rand[8] = { 0 };
-    unsigned char key[8] = { 0 };
+
+    /* We have no use for "security" (= DRM) so just use constant key/IV.
+     * Apparently the device doesn't like if the decrypted key is all-zero,
+     * but anything else goes. */
+    unsigned char iv[8] = { 0, 0, 0, 0, 0, 0, 0 ,0 };
+    unsigned char raw_key[8] = { 1, 1, 1, 1, 1, 1, 1, 1 }; /* data encryption key */
+    unsigned char key[8] = { 0 }; /* data encryption key wrapped with session key */
 
     netmd_error error = NETMD_NO_ERROR;
 
@@ -426,12 +430,8 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
     gcry_cipher_open(&data_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
     gcry_cipher_setkey(key_handle, key_encryption_key, 8);
 
-    /* generate initial iv */
-    gcry_create_nonce(iv, sizeof(iv));
-
     /* generate key, use same key for all packets*/
-    gcry_randomize(rand, sizeof(rand), GCRY_STRONG_RANDOM);
-    gcry_cipher_decrypt(key_handle, key, 8, rand, sizeof(rand));
+    gcry_cipher_decrypt(key_handle, key, 8, raw_key, sizeof(raw_key));
 
     *packet_count = 0;
     while (position < data_lenght) {
@@ -442,7 +442,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
         else
            chunksize = first_chunk - 24U;
 
-       packet_data_length = chunksize;
+        packet_data_length = chunksize;
 
         if ((data_lenght - position) < chunksize) {                  // last packet
             packet_data_length = data_lenght - position;             // do not encrypt padding bytes
