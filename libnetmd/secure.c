@@ -405,7 +405,9 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   unsigned char *key_encryption_key, netmd_wireformat format)
 {
     size_t position = 0;
-    size_t chunksize, packet_data_length, first_chunk = 0x00800000U;     // limit chunksize to multiple of 16384 bytes (incl. 24 byte header data for first packet)
+    /* Limit chunksize to multiple of 16384 bytes (incl. 24 byte header data for first packet).
+     * Large sizes cause instability in some players especially with ATRAC3 files. */
+    size_t chunksize, packet_data_length, first_chunk = 0x00100000U;
     size_t frame_size = netmd_get_frame_size(format);
     int padding = 0;
     netmd_track_packets *last = NULL;
