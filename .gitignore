@@ -1,6 +1,7 @@
 *~
 *.o
 *.app
+*.swp
 *.xcodeproj
 Info.plist
 Makefile*
