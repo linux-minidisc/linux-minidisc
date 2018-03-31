@@ -38,7 +38,7 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
    = 52 (RIFF/WAVE header Atrac LP) + 8 ("data" + length) + 92 (1 frame LP4) */
 #define MIN_WAV_LENGTH 152
 
-/*
+#if 0
 static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
 {
     unsigned int player_id;
@@ -83,7 +83,7 @@ static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
         }
         break;*/
 /*case 0x28: TODO*/
-        /*case 0x40:
+    case 0x40:
         if (netmd_secure_cmd_40(devh, track, hash8) > 0) {
             fprintf(stdout, "Signature of deleted track %d =\n", track);
             print_hex(hash8, sizeof(hash8));
@@ -107,7 +107,7 @@ static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
         break;
     }
 }
-*/
+#endif
 
 static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
 {
@@ -346,6 +346,7 @@ int main(int argc, char* argv[])
         }
         else if(strcmp("write", argv[1]) == 0)
         {
+            // Probably non-functional for most use cases
             if (!check_args(argc, 2, "write")) return -1;
             if(netmd_write_track(devh, argv[2]) < 0)
             {
@@ -943,7 +944,6 @@ void print_syntax()
     puts("move #1 #2 - make track #1 track #2");
     puts("groupmove #1 #2 - make group #1 start at track #2 !BUGGY!");
     puts("deletegroup #1 - delete a group, but not the tracks in it");
-    puts("write <string> - write omg file to netmd unit !DOES NOT WORK!");
     puts("group #1 #2 - Stick track #1 into group #2");
     puts("retitle #1 <string> - rename group number #1 to <string>");
     puts("play #1 - play track #");
@@ -955,7 +955,7 @@ void print_syntax()
     puts("pause - pause the unit");
     puts("stop - stop the unit");
     puts("delete #1 - delete track");
-    puts("m3uimport - import playlist - and title current disc using it.");
+    puts("m3uimport - import song and disc title from a playlist");
     puts("send #1 - send wav audio file #1 to the device");
     puts("          #1 supported files: 16 bit pcm (stere or mono) @44100Hz or");
     puts("          Atrac LP2/LP4 stored in a wav container");
@@ -965,6 +965,7 @@ void print_syntax()
     puts("settitle <string> - manually set the complete disc title (with group information)");
     puts("settime <track> [<hour>] <minute> <second> [<frame>] - seeks to the given timestamp");
     puts("      (if three values are given, they are minute, second and frame)");
+#if 0  // relevant code at top of file is commented out; leaving this in as reference
     puts("secure #1 #2 - execute secure command #1 on track #2 (where applicable)");
     puts("  --- general ---");
     puts("  0x80 = start secure session");
@@ -980,6 +981,7 @@ void print_syntax()
     puts("  --- check-in ---");
     puts("  0x23 = get hash id for track #");
     puts("  0x40 = secure delete track #");
+#endif
     puts("help - print this stuff");
 }
 
