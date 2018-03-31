@@ -456,7 +456,24 @@ int main(int argc, char* argv[])
         {
             if (!check_args(argc, 2, "delete")) return -1;
             i = strtoul(argv[2], NULL, 10);
-            netmd_delete_track(devh, i & 0xffff);
+            if (argc > 3)
+                j = strtoul(argv[3], NULL, 10);
+            else
+                j = i;
+
+            if (j < i || j >= 0xffff || i >= 0xffff) {
+                netmd_log(NETMD_LOG_ERROR, "delete: invalid track number\n");
+                exit_code = 1;
+            }
+            else {
+                netmd_cache_toc(devh);
+                for (long unsigned int track = j; track >= i; track--) {
+                    netmd_log(NETMD_LOG_VERBOSE, "delete: removing track %d\n", track);
+
+                    netmd_delete_track(devh, track & 0xffff);
+                }
+                netmd_sync_toc(devh);
+            }
         }
         else if(strcmp("deletegroup", argv[1]) == 0)
         {
@@ -992,7 +1009,7 @@ void print_syntax()
     puts("restart - restarts current track");
     puts("pause - pause the unit");
     puts("stop - stop the unit");
-    puts("delete #1 - delete track");
+    puts("delete #1 [#2] - delete track (or tracks in range #1-#2 if #2 given)");
     puts("m3uimport - import song and disc title from a playlist");
     puts("send #1 [#2] - send WAV format audio file #1 to the device and set title to #2 (optional)");
     puts("          #1 supported files: 16 bit pcm (stereo or mono) @44100Hz or");
