@@ -699,20 +699,41 @@ int main(int argc, char* argv[])
                         free(data);
                         audio_data = NULL;
 
-                        /* set title, use either user-specified title or filename */
-                        if (argc > 3)
-                            strncpy(title, argv[3], sizeof(title) - 1);
-                        else
-                            strncpy(title, argv[2], sizeof(title) - 1);
+                        if (error == NETMD_NO_ERROR) {
+                            char *titlep = title;
 
-                        netmd_log(NETMD_LOG_VERBOSE, "New Track: %d\n", track);
-                        netmd_cache_toc(devh);
-                        netmd_set_title(devh, track, title);
-                        netmd_sync_toc(devh);
+                            /* set title, use either user-specified title or filename */
+                            if (argc > 3)
+                                strncpy(title, argv[3], sizeof(title) - 1);
+                            else {
+                                strncpy(title, argv[2], sizeof(title) - 1);
 
-                        /* commit track */
-                        error = netmd_secure_commit_track(devh, track, sessionkey);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_commit_track : %s\n", netmd_strerror(error));
+                                /* eliminate file extension */
+                                char *ext_dot = strrchr(title, '.');
+                                if (ext_dot != NULL)
+                                    *ext_dot = '\0';
+
+                                /* eliminate path */
+                                char *title_slash = strrchr(title, '/');
+                                if (title_slash != NULL)
+                                    titlep = title_slash + 1;
+                            }
+
+                            netmd_log(NETMD_LOG_VERBOSE, "New Track: %d\n", track);
+                            netmd_cache_toc(devh);
+                            netmd_set_title(devh, track, titlep);
+                            netmd_sync_toc(devh);
+
+                            /* commit track */
+                            error = netmd_secure_commit_track(devh, track, sessionkey);
+                            if (error == NETMD_NO_ERROR)
+                                netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_commit_track : %s\n", netmd_strerror(error));
+                            else
+                                netmd_log(NETMD_LOG_ERROR, "netmd_secure_commit_track failed : %s\n", netmd_strerror(error));
+                        }
+                        else {
+                            netmd_log(NETMD_LOG_ERROR, "netmd_secure_send_track failed : %s\n", netmd_strerror(error));
+                        }
 
                         /* forget key */
                         error = netmd_secure_session_key_forget(devh);
