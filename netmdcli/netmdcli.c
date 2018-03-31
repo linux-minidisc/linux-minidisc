@@ -699,8 +699,12 @@ int main(int argc, char* argv[])
                         free(data);
                         audio_data = NULL;
 
-                        /* set title, use filename */
-                        memcpy(title, argv[2], strlen(argv[2])-4);
+                        /* set title, use either user-specified title or filename */
+                        if (argc > 3)
+                            strncpy(title, argv[3], sizeof(title) - 1);
+                        else
+                            strncpy(title, argv[2], sizeof(title) - 1);
+
                         netmd_log(NETMD_LOG_VERBOSE, "New Track: %d\n", track);
                         netmd_cache_toc(devh);
                         netmd_set_title(devh, track, title);
@@ -956,15 +960,17 @@ void print_syntax()
     puts("stop - stop the unit");
     puts("delete #1 - delete track");
     puts("m3uimport - import song and disc title from a playlist");
-    puts("send #1 - send wav audio file #1 to the device");
-    puts("          #1 supported files: 16 bit pcm (stere or mono) @44100Hz or");
-    puts("          Atrac LP2/LP4 stored in a wav container");
+    puts("send #1 [#2] - send WAV format audio file #1 to the device and set title to #2 (optional)");
+    puts("          #1 supported files: 16 bit pcm (stereo or mono) @44100Hz or");
+    puts("             Atrac LP2/LP4 stored in a wav container");
+    puts("          #2 Track title (default: file name)");
     puts("raw - send raw command (hex)");
     puts("setplaymode (single, repeat, shuffle) - set play mode");
     puts("newgroup <string> - create a new group named <string>");
     puts("settitle <string> - manually set the complete disc title (with group information)");
     puts("settime <track> [<hour>] <minute> <second> [<frame>] - seeks to the given timestamp");
     puts("      (if three values are given, they are minute, second and frame)");
+    puts("capacity - shows current minidisc capacity (used, available)");
 #if 0  // relevant code at top of file is commented out; leaving this in as reference
     puts("secure #1 #2 - execute secure command #1 on track #2 (where applicable)");
     puts("  --- general ---");
