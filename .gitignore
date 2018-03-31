@@ -3,7 +3,12 @@
 *.app
 *.swp
 *.xcodeproj
+*.sln
+*.vcxproj*
+/.vs
 Info.plist
 Makefile*
 *.user
 qtc-gdbmacros
+/bin
+/obj
