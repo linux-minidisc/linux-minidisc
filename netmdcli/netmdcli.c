@@ -30,6 +30,7 @@ void print_current_track_info(netmd_dev_handle* devh);
 void print_syntax();
 int check_args(int n, int i, const char* text);
 void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
+netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char *in_title);
 
 /* Max line length we support in M3U files... should match MD TOC max */
 #define M3U_LINE_MAX	128
@@ -260,16 +261,17 @@ int main(int argc, char* argv[])
     netmd_time time;
     netmd_error error;
     FILE *f;
+    int exit_code = 0;
 
     error = netmd_init(&device_list, NULL);
     if (error != NETMD_NO_ERROR) {
         printf("Error initializing netmd\n%s\n", netmd_strerror(error));
-        return -1;
+        return 1;
     }
 
     if (device_list == NULL) {
         puts("Found no NetMD device(s).");
-        return -1;
+        return 1;
     }
 
     /* pick first available device */
@@ -279,14 +281,14 @@ int main(int argc, char* argv[])
     if(error != NETMD_NO_ERROR)
     {
         printf("Error opening netmd\n%s\n", netmd_strerror(error));
-        return -1;
+        return 1;
     }
 
     error = netmd_get_devname(devh, name, 16);
     if (error != NETMD_NO_ERROR)
     {
         printf("Could not get device name\n%s\n", netmd_strerror(error));
-        return -1;
+        return 1;
     }
     printf("%s\n", name);
 
@@ -507,244 +509,13 @@ int main(int argc, char* argv[])
         }
         else if (strcmp("send", argv[1]) == 0) {
             if (!check_args(argc, 2, "send")) return -1;
-            netmd_error error;
-                    netmd_ekb ekb;
-                    unsigned char chain[] = {0x25, 0x45, 0x06, 0x4d, 0xea, 0xca,
-                                             0x14, 0xf9, 0x96, 0xbd, 0xc8, 0xa4,
-                                             0x06, 0xc2, 0x2b, 0x81, 0x49, 0xba,
-                                             0xf0, 0xdf, 0x26, 0x9d, 0xb7, 0x1d,
-                                             0x49, 0xba, 0xf0, 0xdf, 0x26, 0x9d,
-                                             0xb7, 0x1d};
-                    unsigned char signature[] = {0xe8, 0xef, 0x73, 0x45, 0x8d, 0x5b,
-                                                 0x8b, 0xf8, 0xe8, 0xef, 0x73, 0x45,
-                                                 0x8d, 0x5b, 0x8b, 0xf8, 0x38, 0x5b,
-                                                 0x49, 0x36, 0x7b, 0x42, 0x0c, 0x58};
-                    unsigned char rootkey[] = {0x13, 0x37, 0x13, 0x37, 0x13, 0x37,
-                                               0x13, 0x37, 0x13, 0x37, 0x13, 0x37,
-                                               0x13, 0x37, 0x13, 0x37};
-                    netmd_keychain *keychain;
-                    netmd_keychain *next;
-                    size_t done;
-                    unsigned char hostnonce[8] = { 0 };
-                    unsigned char devnonce[8] = { 0 };
-                    unsigned char sessionkey[8] = { 0 };
-                    unsigned char kek[] = { 0x14, 0xe3, 0x83, 0x4e, 0xe2, 0xd3, 0xcc, 0xa5 };
-                    unsigned char contentid[] = { 0x01, 0x0F, 0x50, 0x00, 0x00, 0x04,
-                                                  0x00, 0x00, 0x00, 0x48, 0xA2, 0x8D,
-                                                  0x3E, 0x1A, 0x3B, 0x0C, 0x44, 0xAF,
-                                                  0x2f, 0xa0 };
-                    netmd_track_packets *packets = NULL;
-                    size_t packet_count = 0;
-                    size_t packet_length = 0;
-                    struct stat stat_buf;
-                    unsigned char *data = NULL;
-                    size_t data_size;
 
-                    uint16_t track;
-                    unsigned char uuid[8] = { 0 };
-                    unsigned char new_contentid[20] = { 0 };
-                    char title[256] = {0};
+            const char *filename = argv[2];
+            char *title = NULL;
+            if (argc > 3)
+                title = argv[3];
 
-                    size_t headersize, channels;
-                    unsigned int frames;
-                    size_t data_position, audio_data_position, audio_data_size, i;
-                    int need_conversion = 1, file_valid = 0;
-                    unsigned char * audio_data;
-                    netmd_wireformat wireformat;
-                    unsigned char discformat;
-
-                    /* read source */
-                    stat(argv[2], &stat_buf);
-                    if((data_size = (size_t)stat_buf.st_size) < MIN_WAV_LENGTH)
-                        netmd_log(NETMD_LOG_ERROR, "audio file too small (corrupt or not supported)\n");
-                    else
-                        file_valid = 1;
-                    netmd_log(NETMD_LOG_VERBOSE, "audio file size : %d bytes\n", data_size );
-
-                    /* open audio file */
-                    if(file_valid) {
-                        if((data = (unsigned char *)malloc(data_size+2048)) == NULL) {      // reserve additional mem for padding if needed
-                            file_valid = 0;
-                            netmd_log(NETMD_LOG_ERROR, "error allocating memory for file input\n" );
-                        }
-                        else {
-                            if(!(f = fopen(argv[2], "rb"))) {
-                                netmd_log(NETMD_LOG_ERROR, "cannot open audio file\n" );
-                                file_valid = 0;
-                                free(data);
-                            }
-                        }
-                    }
-
-                    /* copy file to buffer */
-                    if(file_valid) {
-                        memset(data, 0, data_size+8);
-                        if((fread(data, data_size, 1, f)) < 1) {
-                            netmd_log(NETMD_LOG_ERROR, "cannot read audio file\n" );
-                            file_valid = 0;
-                            free(data);
-                        }
-                        fclose(f);
-                    }
-
-                    /* check contents */
-                    if(file_valid) {
-                        file_valid = audio_supported(data, &wireformat, &discformat, &need_conversion, &channels, &headersize );
-                        if(!file_valid) {
-                            netmd_log(NETMD_LOG_ERROR, "audio file unknown or not supported\n" );
-                            free(data);
-                        }
-                        else {
-                            netmd_log(NETMD_LOG_VERBOSE, "supported audio file detected\n");
-                            if((data_position = wav_data_position(data, headersize, data_size)) == 0) {
-                                netmd_log(NETMD_LOG_VERBOSE, "cannot locate audio data in file\n" );
-                                free(data);
-                                file_valid = 0;
-                            }
-                            else {
-                                netmd_log(NETMD_LOG_VERBOSE, "data chunk position at %d\n", data_position);
-                                audio_data_position = data_position+8;
-                                audio_data = data+audio_data_position;
-                                audio_data_size = leword32(data+(data_position+4));
-                                netmd_log(NETMD_LOG_VERBOSE, "audio data size read from file :           %d bytes\n", audio_data_size);
-                                netmd_log(NETMD_LOG_VERBOSE, "audio data size calculated from file size: %d bytes\n", data_size - audio_data_position);
-
-                            }
-                        }
-                    }
-
-                    if(file_valid)
-                    {
-                        error = netmd_secure_leave_session(devh);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(error));
-
-                        error = netmd_secure_set_track_protection(devh, 0x01);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_set_track_protection : %s\n", netmd_strerror(error));
-
-                        error = netmd_secure_enter_session(devh);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_enter_session : %s\n", netmd_strerror(error));
-
-                        /* build ekb */
-                        ekb.id = 0x26422642;
-                        ekb.depth = 9;
-                        ekb.signature = malloc(sizeof(signature));
-                        memcpy(ekb.signature, signature, sizeof(signature));
-
-                        /* build ekb key chain */
-                        ekb.chain = NULL;
-                        for (done = 0; done < sizeof(chain); done+=16U)
-                        {
-                            next = malloc(sizeof(netmd_keychain));
-                            if (ekb.chain == NULL) {
-                                ekb.chain = next;
-                            }
-                            else {
-                                keychain->next = next;
-                                }
-                            next->next = NULL;
-
-                            next->key = malloc(16);
-                            memcpy(next->key, chain + done, 16);
-
-                            keychain = next;
-                        }
-
-                        error = netmd_secure_send_key_data(devh, &ekb);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_send_key_data : %s\n", netmd_strerror(error));
-
-                        /* cleanup */
-                        free(ekb.signature);
-                        keychain = ekb.chain;
-                        while (keychain != NULL) {
-                            next = keychain->next;
-                            free(keychain->key);
-                            free(keychain);
-                            keychain = next;
-                        }
-
-                        /* exchange nonces */
-                        gcry_create_nonce(hostnonce, sizeof(hostnonce));
-                        error = netmd_secure_session_key_exchange(devh, hostnonce, devnonce);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_session_key_exchange : %s\n", netmd_strerror(error));
-
-                        /* calculate session key */
-                        retailmac(rootkey, hostnonce, devnonce, sessionkey);
-
-                        error = netmd_secure_setup_download(devh, contentid, kek, sessionkey);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_setup_download : %s\n", netmd_strerror(error));
-
-                        /* conversion (byte swapping) for pcm raw data from wav file if needed */
-                        if(need_conversion)
-                        {
-                            for(i = 0; i < audio_data_size; i+=2)
-                            {
-                                unsigned char first = audio_data[i];
-                                audio_data[i] = audio_data[i+1];
-                                audio_data[i+1] = first;
-                            }
-                        }
-
-                        /* number of frames will be calculated by netmd_prepare_packets() depending on the wire format and channels */
-                        error = netmd_prepare_packets(audio_data, audio_data_size, &packets, &packet_count, &frames, channels, &packet_length, kek, wireformat);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_prepare_packets : %s\n", netmd_strerror(error));
-
-                        /* send to device */
-                        error = netmd_secure_send_track(devh, wireformat,
-                                                        discformat,
-                                                        frames, packets,
-                                                        packet_length, sessionkey,
-                                                        &track, uuid, new_contentid);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_send_track : %s\n", netmd_strerror(error));
-
-                        /* cleanup */
-                        netmd_cleanup_packets(&packets);
-                        free(data);
-                        audio_data = NULL;
-
-                        if (error == NETMD_NO_ERROR) {
-                            char *titlep = title;
-
-                            /* set title, use either user-specified title or filename */
-                            if (argc > 3)
-                                strncpy(title, argv[3], sizeof(title) - 1);
-                            else {
-                                strncpy(title, argv[2], sizeof(title) - 1);
-
-                                /* eliminate file extension */
-                                char *ext_dot = strrchr(title, '.');
-                                if (ext_dot != NULL)
-                                    *ext_dot = '\0';
-
-                                /* eliminate path */
-                                char *title_slash = strrchr(title, '/');
-                                if (title_slash != NULL)
-                                    titlep = title_slash + 1;
-                            }
-
-                            netmd_log(NETMD_LOG_VERBOSE, "New Track: %d\n", track);
-                            netmd_cache_toc(devh);
-                            netmd_set_title(devh, track, titlep);
-                            netmd_sync_toc(devh);
-
-                            /* commit track */
-                            error = netmd_secure_commit_track(devh, track, sessionkey);
-                            if (error == NETMD_NO_ERROR)
-                                netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_commit_track : %s\n", netmd_strerror(error));
-                            else
-                                netmd_log(NETMD_LOG_ERROR, "netmd_secure_commit_track failed : %s\n", netmd_strerror(error));
-                        }
-                        else {
-                            netmd_log(NETMD_LOG_ERROR, "netmd_secure_send_track failed : %s\n", netmd_strerror(error));
-                        }
-
-                        /* forget key */
-                        error = netmd_secure_session_key_forget(devh);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_session_key_forget : %s\n", netmd_strerror(error));
-
-                        /* leave session */
-                        error = netmd_secure_leave_session(devh);
-                        netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(error));
-                    }
+            exit_code = send_track(devh, filename, title) == NETMD_NO_ERROR ? 0 : 1;
         }
         else if(strcmp("help", argv[1]) == 0)
         {
@@ -752,8 +523,8 @@ int main(int argc, char* argv[])
         }
         else
         {
-            print_disc_info(devh, md);
-            print_syntax();
+            netmd_log(NETMD_LOG_ERROR, "Unknown command '%s'; use 'help' for list of commands\n", argv[1]);
+            exit_code = 1;
         }
     }
     else
@@ -763,7 +534,7 @@ int main(int argc, char* argv[])
     netmd_close(devh);
     netmd_clean(&device_list);
 
-    return 0;
+    return exit_code;
 }
 
 void print_current_track_info(netmd_dev_handle* devh)
@@ -958,6 +729,246 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
     }
 }
 
+netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char *in_title)
+{
+    netmd_error error;
+    netmd_ekb ekb;
+    unsigned char chain[] = { 0x25, 0x45, 0x06, 0x4d, 0xea, 0xca,
+        0x14, 0xf9, 0x96, 0xbd, 0xc8, 0xa4,
+        0x06, 0xc2, 0x2b, 0x81, 0x49, 0xba,
+        0xf0, 0xdf, 0x26, 0x9d, 0xb7, 0x1d,
+        0x49, 0xba, 0xf0, 0xdf, 0x26, 0x9d,
+        0xb7, 0x1d };
+    unsigned char signature[] = { 0xe8, 0xef, 0x73, 0x45, 0x8d, 0x5b,
+        0x8b, 0xf8, 0xe8, 0xef, 0x73, 0x45,
+        0x8d, 0x5b, 0x8b, 0xf8, 0x38, 0x5b,
+        0x49, 0x36, 0x7b, 0x42, 0x0c, 0x58 };
+    unsigned char rootkey[] = { 0x13, 0x37, 0x13, 0x37, 0x13, 0x37,
+        0x13, 0x37, 0x13, 0x37, 0x13, 0x37,
+        0x13, 0x37, 0x13, 0x37 };
+    netmd_keychain *keychain;
+    netmd_keychain *next;
+    size_t done;
+    unsigned char hostnonce[8] = { 0 };
+    unsigned char devnonce[8] = { 0 };
+    unsigned char sessionkey[8] = { 0 };
+    unsigned char kek[] = { 0x14, 0xe3, 0x83, 0x4e, 0xe2, 0xd3, 0xcc, 0xa5 };
+    unsigned char contentid[] = { 0x01, 0x0F, 0x50, 0x00, 0x00, 0x04,
+        0x00, 0x00, 0x00, 0x48, 0xA2, 0x8D,
+        0x3E, 0x1A, 0x3B, 0x0C, 0x44, 0xAF,
+        0x2f, 0xa0 };
+    netmd_track_packets *packets = NULL;
+    size_t packet_count = 0;
+    size_t packet_length = 0;
+    struct stat stat_buf;
+    unsigned char *data = NULL;
+    size_t data_size;
+    FILE *f;
+
+    uint16_t track;
+    unsigned char uuid[8] = { 0 };
+    unsigned char new_contentid[20] = { 0 };
+    char title[256] = { 0 };
+
+    size_t headersize, channels;
+    unsigned int frames;
+    size_t data_position, audio_data_position, audio_data_size, i;
+    int need_conversion = 1/*, file_valid = 0*/;
+    unsigned char * audio_data;
+    netmd_wireformat wireformat;
+    unsigned char discformat;
+
+    /* read source */
+    stat(filename, &stat_buf);
+    if ((data_size = (size_t)stat_buf.st_size) < MIN_WAV_LENGTH) {
+        netmd_log(NETMD_LOG_ERROR, "audio file too small (corrupt or not supported)\n");
+        return NETMD_ERROR;
+    }
+
+    netmd_log(NETMD_LOG_VERBOSE, "audio file size : %d bytes\n", data_size);
+
+    /* open audio file */
+    if ((data = (unsigned char *)malloc(data_size + 2048)) == NULL) {      // reserve additional mem for padding if needed
+        netmd_log(NETMD_LOG_ERROR, "error allocating memory for file input\n");
+        return NETMD_ERROR;
+    }
+    else {
+        if (!(f = fopen(filename, "rb"))) {
+            netmd_log(NETMD_LOG_ERROR, "cannot open audio file\n");
+            free(data);
+
+            return NETMD_ERROR;
+        }
+    }
+
+    /* copy file to buffer */
+    memset(data, 0, data_size + 8);
+    if ((fread(data, data_size, 1, f)) < 1) {
+        netmd_log(NETMD_LOG_ERROR, "cannot read audio file\n");
+        free(data);
+
+        return NETMD_ERROR;
+    }
+    fclose(f);
+
+    /* check contents */
+    if (!audio_supported(data, &wireformat, &discformat, &need_conversion, &channels, &headersize)) {
+        netmd_log(NETMD_LOG_ERROR, "audio file unknown or not supported\n");
+        free(data);
+
+        return NETMD_ERROR;
+    }
+    else {
+        netmd_log(NETMD_LOG_VERBOSE, "supported audio file detected\n");
+        if ((data_position = wav_data_position(data, headersize, data_size)) == 0) {
+            netmd_log(NETMD_LOG_VERBOSE, "cannot locate audio data in file\n");
+            free(data);
+            
+            return NETMD_ERROR;
+        }
+        else {
+            netmd_log(NETMD_LOG_VERBOSE, "data chunk position at %d\n", data_position);
+            audio_data_position = data_position + 8;
+            audio_data = data + audio_data_position;
+            audio_data_size = leword32(data + (data_position + 4));
+            netmd_log(NETMD_LOG_VERBOSE, "audio data size read from file :           %d bytes\n", audio_data_size);
+            netmd_log(NETMD_LOG_VERBOSE, "audio data size calculated from file size: %d bytes\n", data_size - audio_data_position);
+
+        }
+    }
+
+    error = netmd_secure_leave_session(devh);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(error));
+
+    error = netmd_secure_set_track_protection(devh, 0x01);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_set_track_protection : %s\n", netmd_strerror(error));
+
+    error = netmd_secure_enter_session(devh);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_enter_session : %s\n", netmd_strerror(error));
+
+    /* build ekb */
+    ekb.id = 0x26422642;
+    ekb.depth = 9;
+    ekb.signature = malloc(sizeof(signature));
+    memcpy(ekb.signature, signature, sizeof(signature));
+
+    /* build ekb key chain */
+    ekb.chain = NULL;
+    for (done = 0; done < sizeof(chain); done += 16U)
+    {
+        next = malloc(sizeof(netmd_keychain));
+        if (ekb.chain == NULL) {
+            ekb.chain = next;
+        }
+        else {
+            keychain->next = next;
+        }
+        next->next = NULL;
+
+        next->key = malloc(16);
+        memcpy(next->key, chain + done, 16);
+
+        keychain = next;
+    }
+
+    error = netmd_secure_send_key_data(devh, &ekb);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_send_key_data : %s\n", netmd_strerror(error));
+
+    /* cleanup */
+    free(ekb.signature);
+    keychain = ekb.chain;
+    while (keychain != NULL) {
+        next = keychain->next;
+        free(keychain->key);
+        free(keychain);
+        keychain = next;
+    }
+
+    /* exchange nonces */
+    gcry_create_nonce(hostnonce, sizeof(hostnonce));
+    error = netmd_secure_session_key_exchange(devh, hostnonce, devnonce);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_session_key_exchange : %s\n", netmd_strerror(error));
+
+    /* calculate session key */
+    retailmac(rootkey, hostnonce, devnonce, sessionkey);
+
+    error = netmd_secure_setup_download(devh, contentid, kek, sessionkey);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_setup_download : %s\n", netmd_strerror(error));
+
+    /* conversion (byte swapping) for pcm raw data from wav file if needed */
+    if (need_conversion)
+    {
+        for (i = 0; i < audio_data_size; i += 2)
+        {
+            unsigned char first = audio_data[i];
+            audio_data[i] = audio_data[i + 1];
+            audio_data[i + 1] = first;
+        }
+    }
+
+    /* number of frames will be calculated by netmd_prepare_packets() depending on the wire format and channels */
+    error = netmd_prepare_packets(audio_data, audio_data_size, &packets, &packet_count, &frames, channels, &packet_length, kek, wireformat);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_prepare_packets : %s\n", netmd_strerror(error));
+
+    /* send to device */
+    error = netmd_secure_send_track(devh, wireformat,
+        discformat,
+        frames, packets,
+        packet_length, sessionkey,
+        &track, uuid, new_contentid);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_send_track : %s\n", netmd_strerror(error));
+
+    /* cleanup */
+    netmd_cleanup_packets(&packets);
+    free(data);
+    audio_data = NULL;
+
+    if (error == NETMD_NO_ERROR) {
+        char *titlep = title;
+
+        /* set title, use either user-specified title or filename */
+        if (in_title != NULL)
+            strncpy(title, in_title, sizeof(title) - 1);
+        else {
+            strncpy(title, filename, sizeof(title) - 1);
+
+            /* eliminate file extension */
+            char *ext_dot = strrchr(title, '.');
+            if (ext_dot != NULL)
+                *ext_dot = '\0';
+
+            /* eliminate path */
+            char *title_slash = strrchr(title, '/');
+            if (title_slash != NULL)
+                titlep = title_slash + 1;
+        }
+
+        netmd_log(NETMD_LOG_VERBOSE, "New Track: %d\n", track);
+        netmd_cache_toc(devh);
+        netmd_set_title(devh, track, titlep);
+        netmd_sync_toc(devh);
+
+        /* commit track */
+        error = netmd_secure_commit_track(devh, track, sessionkey);
+        if (error == NETMD_NO_ERROR)
+            netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_commit_track : %s\n", netmd_strerror(error));
+        else
+            netmd_log(NETMD_LOG_ERROR, "netmd_secure_commit_track failed : %s\n", netmd_strerror(error));
+    }
+    else {
+        netmd_log(NETMD_LOG_ERROR, "netmd_secure_send_track failed : %s\n", netmd_strerror(error));
+    }
+
+    /* forget key */
+    netmd_error cleanup_error = netmd_secure_session_key_forget(devh);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_session_key_forget : %s\n", netmd_strerror(cleanup_error));
+
+    /* leave session */
+    cleanup_error = netmd_secure_leave_session(devh);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(cleanup_error));
+
+    return error; /* return error code from the "business logic" */
+}
 
 void print_syntax()
 {
