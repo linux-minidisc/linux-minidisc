@@ -401,7 +401,7 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
 
 netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
                                   netmd_track_packets **packets,
-                                  size_t *packet_count, size_t *frames, size_t channels, size_t *packet_length,
+                                  size_t *packet_count, unsigned int *frames, size_t channels, size_t *packet_length,
                                   unsigned char *key_encryption_key, netmd_wireformat format)
 {
     size_t position = 0;
@@ -498,7 +498,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
     gcry_cipher_close(key_handle);
     gcry_cipher_close(data_handle);
 
-    *frames = position/frame_size;
+    *frames = (unsigned int) (position/frame_size);
     *packet_length = position;
 
     return error;
@@ -554,7 +554,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
 
     totalbytes = netmd_get_frame_size(wireformat) * frames + 24U;
     netmd_log(NETMD_LOG_VERBOSE, "total transfer size : %d bytes, %d frames of %d bytes\n", totalbytes, frames, netmd_get_frame_size(wireformat));
-    netmd_copy_doubleword_to_buffer(&buf, totalbytes, 0);
+    netmd_copy_doubleword_to_buffer(&buf, (uint32_t) totalbytes, 0);
 
     netmd_send_secure_msg(dev, 0x28, cmd, sizeof(cmd));
     error = netmd_recv_secure_msg(dev, 0x28, &response, NETMD_STATUS_INTERIM);
@@ -590,11 +590,10 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
 
 netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length, FILE *file, size_t chunksize)
 {
-    uint32_t done = 0;
+    uint32_t done = 0, transferred = 0;
     unsigned char *data;
     int status;
     netmd_error error = NETMD_NO_ERROR;
-    int transferred = 0;
 
     data = malloc(chunksize);
     while (done < length) {
@@ -606,7 +605,7 @@ netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length,
 
         if (status >= 0) {
             done += transferred;
-            fwrite(data, transferred, 1, file);
+            fwrite(data, (size_t) transferred, 1, file);
 
             netmd_log(NETMD_LOG_DEBUG, "%.1f%%\n", (double)done/(double)length * 100);
         }

@@ -175,17 +175,17 @@ void retailmac(unsigned char *rootkey, unsigned char *hostnonce,
 
 static inline unsigned int leword32(const unsigned char * c)
 {
-    return (c[3] << 24) + (c[2] << 16) + (c[1] << 8) + c[0];
+    return (unsigned int)((c[3] << 24U) + (c[2] << 16U) + (c[1] << 8U) + c[0]);
 }
 
 static inline unsigned int leword16(const unsigned char * c)
 {
-    return c[1]*256+c[0];
+    return c[1]*256U+c[0];
 }
 
-static int wav_data_position(const unsigned char * data, size_t offset, size_t len)
+static size_t wav_data_position(const unsigned char * data, size_t offset, size_t len)
 {
-    int pos = -1, i = offset;
+    size_t i = offset, pos = 0;
 
     while (i < len - 4) {
         if(strncmp("data", data+i, 4) == 0) {
@@ -194,8 +194,8 @@ static int wav_data_position(const unsigned char * data, size_t offset, size_t l
         }
         i += 2;
     }
-    return pos;
 
+    return pos;
 }
 
 static int audio_supported(const unsigned char * file, netmd_wireformat * wireformat, unsigned char * diskformat, int * conversion, size_t * channels, size_t * headersize)
@@ -252,8 +252,8 @@ int main(int argc, char* argv[])
     netmd_dev_handle* devh;
     minidisc my_minidisc, *md = &my_minidisc;
     netmd_device *device_list, *netmd;
-    unsigned int i = 0;
-    unsigned int j = 0;
+    long unsigned int i = 0;
+    long unsigned int j = 0;
     char name[16];
     uint16_t track, playmode;
     int c;
@@ -379,7 +379,7 @@ int main(int argc, char* argv[])
         {
             if (!check_args(argc, 3, "retitle")) return -1;
             i = strtoul(argv[2], NULL, 10);
-            netmd_set_group_title(devh, md, i, argv[3]);
+            netmd_set_group_title(devh, md, (unsigned int) i, argv[3]);
         }
         else if(strcmp("play", argv[1]) == 0)
         {
@@ -545,8 +545,10 @@ int main(int argc, char* argv[])
                     unsigned char new_contentid[20] = { 0 };
                     char title[256] = {0};
 
-                    size_t frames, headersize, channels;
-                    int data_position, audio_data_position, audio_data_size, i, need_conversion = 1, file_valid = 0;
+                    size_t headersize, channels;
+                    unsigned int frames;
+                    size_t data_position, audio_data_position, audio_data_size, i;
+                    int need_conversion = 1, file_valid = 0;
                     unsigned char * audio_data;
                     netmd_wireformat wireformat;
                     unsigned char discformat;
@@ -594,7 +596,7 @@ int main(int argc, char* argv[])
                         }
                         else {
                             netmd_log(NETMD_LOG_VERBOSE, "supported audio file detected\n");
-                            if((data_position = wav_data_position(data, headersize, data_size)) < 0) {
+                            if((data_position = wav_data_position(data, headersize, data_size)) == 0) {
                                 netmd_log(NETMD_LOG_VERBOSE, "cannot locate audio data in file\n" );
                                 free(data);
                                 file_valid = 0;
