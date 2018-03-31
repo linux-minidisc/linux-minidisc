@@ -888,7 +888,8 @@ int netmd_write_disc_header(netmd_dev_handle* devh, minidisc* md)
     return ret;
 }
 
-
+/* Warning: for most purposes you will probably want to use the send
+ * functions in secure.c instead. */
 int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 {
     int ret = 0;

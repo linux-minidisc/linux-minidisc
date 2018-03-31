@@ -838,7 +838,7 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
     else {
         netmd_log(NETMD_LOG_VERBOSE, "supported audio file detected\n");
         if ((data_position = wav_data_position(data, headersize, data_size)) == 0) {
-            netmd_log(NETMD_LOG_VERBOSE, "cannot locate audio data in file\n");
+            netmd_log(NETMD_LOG_ERROR, "cannot locate audio data in file\n");
             free(data);
             
             return NETMD_ERROR;
