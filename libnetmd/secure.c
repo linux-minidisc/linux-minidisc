@@ -399,7 +399,7 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
     }
 }
 
-netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
+netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
                                   netmd_track_packets **packets,
                                   size_t *packet_count, size_t *frames, size_t channels, size_t *packet_length,
                                   unsigned char *key_encryption_key, netmd_wireformat format)
@@ -409,7 +409,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
      * Large sizes cause instability in some players especially with ATRAC3 files. */
     size_t chunksize, packet_data_length, first_chunk = 0x00100000U;
     size_t frame_size = netmd_get_frame_size(format);
-    int padding = 0, frame_padding = 0;
+    size_t frame_padding = 0;
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
 
@@ -437,9 +437,9 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
     gcry_cipher_decrypt(key_handle, key, 8, raw_key, sizeof(raw_key));
 
     *packet_count = 0;
-    while (position < data_lenght) {
+    while (position < data_length) {
 
-         // decrease chunksize by 24 (length, iv and key) for 1st packet
+         /* Decrease chunksize by 24 (length, iv and key) for 1st packet to keep packet size constant. */
         if ((*packet_count) > 0)
             chunksize = first_chunk;
         else
@@ -447,21 +447,19 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
 
         packet_data_length = chunksize;
 
-        if ((data_lenght - position) < chunksize) {                  // last packet
-            packet_data_length = data_lenght - position;             // do not encrypt padding bytes
-            /* adjust size for DES encryption, should not happen if input file is not corrupt, ensure buffer for input file is large enough */
-            if((packet_data_length % 8) != 0) {
-                padding = 8 - (packet_data_length % 8);
-                packet_data_length += padding;
-            }
-            /* do not truncate if last frame is incomplete, include padding bytes for DES encryption in size calculation */
-            if((data_lenght % frame_size) != 0 || padding != 0) {
-                frame_padding = frame_size - (data_lenght % frame_size) - padding;
-                if(frame_padding < 0)
-                    frame_padding += frame_size;
-            }
+        if ((data_length - position) < chunksize) { /* last packet */
+            packet_data_length = data_length - position;
+
+            /* If input data is not an even multiple of the frame size, pad to frame size.
+             * Since all frame sizes are divisible by 8, cipher padding is a non-issue.
+             * Under rare circumstances the padding may lead to the last packet being slightly
+             * larger than first_chunk; this should not matter. */
+            if((data_length % frame_size) != 0)
+                frame_padding = frame_size - (data_length % frame_size);
+
             chunksize = packet_data_length + frame_padding;
-            netmd_log(NETMD_LOG_VERBOSE, "last packet: packet_data_length=%d, padding=%d, frame_padding=%d, chunksize=%d\n", packet_data_length, padding, frame_padding, chunksize);
+            netmd_log(NETMD_LOG_VERBOSE, "last packet: packet_data_length=%d + frame_padding=%d = chunksize=%d\n",
+                packet_data_length, frame_padding, chunksize);
         }
 
         /* alloc memory */
@@ -485,7 +483,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
         memcpy(next->iv, iv, 8);
         memcpy(next->key, key, 8);
         gcry_cipher_setiv(data_handle, iv, 8);
-        gcry_cipher_setkey(data_handle, rand, sizeof(rand));
+        gcry_cipher_setkey(data_handle, raw_key, sizeof(raw_key));
         gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, packet_data_length);
         /* use last encrypted block as iv for the next packet so we keep
          * on Cipher Block Chaining */
