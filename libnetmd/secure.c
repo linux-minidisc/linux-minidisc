@@ -450,7 +450,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
             packet_data_length = data_length - position;
 
             /* If input data is not an even multiple of the frame size, pad to frame size.
-             * Since all frame sizes are divisible by 8, cipher padding is a non-issue. 
+             * Since all frame sizes are divisible by 8, cipher padding is a non-issue.
              * Under rare circumstances the padding may lead to the last packet being slightly
              * larger than first_chunk; this should not matter. */
             if((data_length % frame_size) != 0)
@@ -482,7 +482,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
         memcpy(next->iv, iv, 8);
         memcpy(next->key, key, 8);
         gcry_cipher_setiv(data_handle, iv, 8);
-        gcry_cipher_setkey(data_handle, rand, sizeof(rand));
+        gcry_cipher_setkey(data_handle, raw_key, sizeof(raw_key));
         gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, packet_data_length);
         /* use last encrypted block as iv for the next packet so we keep
          * on Cipher Block Chaining */
