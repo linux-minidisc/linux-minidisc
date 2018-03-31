@@ -416,11 +416,11 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
     gcry_cipher_hd_t key_handle;
     gcry_cipher_hd_t data_handle;
 
-    /* We have no use for "security" (= DRM) so just use constant key/IV.
-     * Apparently the device doesn't like if the decrypted key is all-zero,
-     * but anything else goes. */
+    /* We have no use for "security" (= DRM) so just use constant IV.
+     * However, the key has to be randomized, because the device apparently checks
+     * during track commit that the same key is not re-used during a single session. */
     unsigned char iv[8] = { 0, 0, 0, 0, 0, 0, 0 ,0 };
-    unsigned char raw_key[8] = { 1, 1, 1, 1, 1, 1, 1, 1 }; /* data encryption key */
+    unsigned char raw_key[8] = { 0 }; /* data encryption key */
     unsigned char key[8] = { 0 }; /* data encryption key wrapped with session key */
 
     netmd_error error = NETMD_NO_ERROR;
@@ -432,7 +432,8 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
     gcry_cipher_open(&data_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
     gcry_cipher_setkey(key_handle, key_encryption_key, 8);
 
-    /* generate key, use same key for all packets*/
+    /* generate key, use same key for all packets */
+    gcry_randomize(raw_key, sizeof(raw_key), GCRY_STRONG_RANDOM);
     gcry_cipher_decrypt(key_handle, key, 8, raw_key, sizeof(raw_key));
 
     *packet_count = 0;
