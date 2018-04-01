@@ -989,7 +989,7 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
 
 void print_syntax()
 {
-    puts("\nNetMD test suite.");
+    puts("\nNetMD command line tool");
     puts("Usage: netmd [options] command args");
     puts("Options:");
     puts("      -v show debug messages");
@@ -1011,10 +1011,10 @@ void print_syntax()
     puts("stop - stop the unit");
     puts("delete #1 [#2] - delete track (or tracks in range #1-#2 if #2 given)");
     puts("m3uimport - import song and disc title from a playlist");
-    puts("send #1 [#2] - send WAV format audio file #1 to the device and set title to #2 (optional)");
-    puts("          #1 supported files: 16 bit pcm (stereo or mono) @44100Hz or");
-    puts("             Atrac LP2/LP4 stored in a wav container");
-    puts("          #2 Track title (default: file name)");
+    puts("send <file> [<string>] - send WAV format audio file to the device and set title to <string> (optional)");
+    puts("      Supported file formats: 16 bit pcm (stereo or mono) @44100Hz or");
+    puts("         Atrac LP2/LP4 data stored in a WAV container.");
+    puts("      Title defaults to file name if not specified.");
     puts("raw - send raw command (hex)");
     puts("setplaymode (single, repeat, shuffle) - set play mode");
     puts("newgroup <string> - create a new group named <string>");
