@@ -467,10 +467,10 @@ int main(int argc, char* argv[])
             }
             else {
                 netmd_cache_toc(devh);
-                for (long unsigned int track = j; track >= i; track--) {
+                for (int track = (int) j; track >= i && track >= 0; track--) {
                     netmd_log(NETMD_LOG_VERBOSE, "delete: removing track %d\n", track);
 
-                    netmd_delete_track(devh, track & 0xffff);
+                    netmd_delete_track(devh, ((uint16_t) track) & 0xffff);
                 }
                 netmd_sync_toc(devh);
             }
