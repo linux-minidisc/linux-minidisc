@@ -263,6 +263,39 @@ int main(int argc, char* argv[])
     FILE *f;
     int exit_code = 0;
 
+    /* by default, log only errors */
+    netmd_set_log_level(NETMD_LOG_ERROR);
+
+    /* parse options */
+    while (1) {
+        c = getopt(argc, argv, "tv");
+        if (c == -1) {
+            break;
+        }
+        switch (c) {
+        case 't':
+            netmd_set_log_level(NETMD_LOG_ALL);
+            break;
+        case 'v':
+            netmd_set_log_level(NETMD_LOG_VERBOSE);
+            break;
+        default:
+            fprintf(stderr, "Unknown option '%c'\n", c);
+            break;
+        }
+    }
+
+    /* update argv and argc after parsing options */
+    argv = &argv[optind - 1];
+    argc -= (optind - 1);
+
+    /* don't require device init to show help */
+    if (argc > 1 && strcmp("help", argv[1]) == 0)
+    {
+        print_syntax();
+        return 0;
+    }
+
     error = netmd_init(&device_list, NULL);
     if (error != NETMD_NO_ERROR) {
         printf("Error initializing netmd\n%s\n", netmd_strerror(error));
@@ -294,32 +327,6 @@ int main(int argc, char* argv[])
 
     netmd_initialize_disc_info(devh, md);
     printf("Disc Title: %s\n\n", md->groups[0].name);
-
-    /* by default, log only errors */
-    netmd_set_log_level(NETMD_LOG_ERROR);
-
-    /* parse options */
-    while (1) {
-        c = getopt(argc, argv, "tv");
-        if (c == -1) {
-            break;
-        }
-        switch (c) {
-        case 't':
-            netmd_set_log_level(NETMD_LOG_ALL);
-            break;
-        case 'v':
-            netmd_set_log_level(NETMD_LOG_VERBOSE);
-            break;
-        default:
-            fprintf(stderr, "Unknown option '%c'\n", c);
-            break;
-        }
-    }
-
-    /* update argv and argc after parsing options */
-    argv = &argv[optind - 1];
-    argc -= (optind - 1);
 
     /* parse commands */
     if(argc > 1)
@@ -467,10 +474,10 @@ int main(int argc, char* argv[])
             }
             else {
                 netmd_cache_toc(devh);
-                for (long unsigned int track = j; track >= i; track--) {
+                for (int track = (int) j; track >= i && track >= 0; track--) {
                     netmd_log(NETMD_LOG_VERBOSE, "delete: removing track %d\n", track);
 
-                    netmd_delete_track(devh, track & 0xffff);
+                    netmd_delete_track(devh, ((uint16_t) track) & 0xffff);
                 }
                 netmd_sync_toc(devh);
             }
@@ -533,10 +540,6 @@ int main(int argc, char* argv[])
                 title = argv[3];
 
             exit_code = send_track(devh, filename, title) == NETMD_NO_ERROR ? 0 : 1;
-        }
-        else if(strcmp("help", argv[1]) == 0)
-        {
-            print_syntax();
         }
         else
         {
@@ -989,11 +992,11 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
 
 void print_syntax()
 {
-    puts("\nNetMD test suite.");
-    puts("Usage: netmd [options] command args");
+    puts("\nNetMD command line tool");
+    puts("Usage: netmd [options] command args\n");
     puts("Options:");
     puts("      -v show debug messages");
-    puts("      -t enable tracing of USB command and response data");
+    puts("      -t enable tracing of USB command and response data\n");
     puts("Commands:");
     puts("rename # <string> - rename track # to <string> track numbers are off by one (ie track 1 is 0)");
     puts("move #1 #2 - make track #1 track #2");
@@ -1010,11 +1013,11 @@ void print_syntax()
     puts("pause - pause the unit");
     puts("stop - stop the unit");
     puts("delete #1 [#2] - delete track (or tracks in range #1-#2 if #2 given)");
-    puts("m3uimport - import song and disc title from a playlist");
-    puts("send #1 [#2] - send WAV format audio file #1 to the device and set title to #2 (optional)");
-    puts("          #1 supported files: 16 bit pcm (stereo or mono) @44100Hz or");
-    puts("             Atrac LP2/LP4 stored in a wav container");
-    puts("          #2 Track title (default: file name)");
+    puts("m3uimport <file> - import song and disc title from a playlist");
+    puts("send <file> [<string>] - send WAV format audio file to the device and set title to <string> (optional)");
+    puts("      Supported file formats: 16 bit pcm (stereo or mono) @44100Hz or");
+    puts("         Atrac LP2/LP4 data stored in a WAV container.");
+    puts("      Title defaults to file name if not specified.");
     puts("raw - send raw command (hex)");
     puts("setplaymode (single, repeat, shuffle) - set play mode");
     puts("newgroup <string> - create a new group named <string>");
@@ -1039,7 +1042,7 @@ void print_syntax()
     puts("  0x23 = get hash id for track #");
     puts("  0x40 = secure delete track #");
 #endif
-    puts("help - print this stuff");
+    puts("help - show this message\n");
 }
 
 int check_args(int n, int i, const char* text)
