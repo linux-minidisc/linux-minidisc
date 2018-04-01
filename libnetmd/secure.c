@@ -354,10 +354,11 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
 {
     netmd_track_packets *p;
     unsigned char *packet, *buf;
-    size_t packet_size;
+    size_t packet_size, total_transferred = 0, display_length = full_length + 24;
     int error;
     int transferred = 0;
     int first_packet = 1;
+    time_t start_time = time(NULL), duration;
 
     p = packets;
     while (p != NULL) {
@@ -383,7 +384,14 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
 
         /* ... send it */
         error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 80000);
-        netmd_log(NETMD_LOG_VERBOSE, "%d of %d bytes transferred, libusb error code: %d\n", transferred, packet_size, error);
+        total_transferred += (size_t) transferred;
+
+        if (error != LIBUSB_SUCCESS)
+            netmd_log(NETMD_LOG_ERROR, "USB transfer error after %zu of %zu total bytes (%d of %d bytes in packet): %s\n",
+                total_transferred, display_length, transferred, packet_size, libusb_strerror(error));
+        else
+            netmd_log(NETMD_LOG_VERBOSE, "%zu of %zu bytes (%zu%%) transferred (%d of %d bytes in packet)\n", 
+                total_transferred, display_length, (total_transferred * 100 / display_length), transferred, packet_size);
 
         /* cleanup */
         free(packet);
@@ -397,6 +405,12 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
             break;
         }
     }
+
+    /* report statistics on successful transfer */
+    duration = time(NULL) - start_time;
+    if (error >= 0 && duration > 0)
+        netmd_log(NETMD_LOG_VERBOSE, "netmd_transfer_song_packets : transfer took %d seconds (%d kB/sec)\n",
+            duration, (display_length / (size_t)duration / 1024));
 }
 
 netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
