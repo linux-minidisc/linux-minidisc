@@ -435,6 +435,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
     /* generate key, use same key for all packets */
     gcry_randomize(raw_key, sizeof(raw_key), GCRY_STRONG_RANDOM);
     gcry_cipher_decrypt(key_handle, key, 8, raw_key, sizeof(raw_key));
+    gcry_cipher_setkey(data_handle, raw_key, sizeof(raw_key));
 
     *packet_count = 0;
     while (position < data_length) {
@@ -483,8 +484,18 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
         memcpy(next->iv, iv, 8);
         memcpy(next->key, key, 8);
         gcry_cipher_setiv(data_handle, iv, 8);
-        gcry_cipher_setkey(data_handle, raw_key, sizeof(raw_key));
-        gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, packet_data_length);
+
+        if (chunksize > packet_data_length) {
+            /* If last frame is padded, copy plaintext to chunk buffer and encrypt in place.
+             * This avoids calling gcry_cipher_encrypt() with outsize > insize, which leads
+             * to noise at end of track. */
+            memcpy(next->data, data + position, packet_data_length);
+            gcry_cipher_encrypt(data_handle, next->data, chunksize, NULL, 0);
+        }
+        else {
+            gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, packet_data_length);
+        }
+
         /* use last encrypted block as iv for the next packet so we keep
          * on Cipher Block Chaining */
         memcpy(iv, next->data + chunksize - 8, 8);
