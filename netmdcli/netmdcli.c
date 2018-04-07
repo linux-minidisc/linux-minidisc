@@ -478,6 +478,7 @@ int main(int argc, char* argv[])
                     netmd_log(NETMD_LOG_VERBOSE, "delete: removing track %d\n", track);
 
                     netmd_delete_track(devh, ((uint16_t) track) & 0xffff);
+                    netmd_wait_for_sync(devh);
                 }
                 netmd_sync_toc(devh);
             }
@@ -967,6 +968,7 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
         netmd_cache_toc(devh);
         netmd_set_title(devh, track, titlep);
         netmd_sync_toc(devh);
+        netmd_wait_for_sync(devh);
 
         /* commit track */
         error = netmd_secure_commit_track(devh, track, sessionkey);
