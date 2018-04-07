@@ -27,6 +27,8 @@
 #include "libnetmd.h"
 #include "utils.h"
 
+#define MAX_SYNC_WAITS 5
+
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
 /*! Bertrik: the original interpretation of these numbers as codecs appears incorrect.
   These values look like track protection values instead */
@@ -60,14 +62,26 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* array)
     return &unknown_pair;
 }
 
-static void waitforsync(libusb_device_handle* dev)
+int netmd_wait_for_sync(netmd_dev_handle* devh)
 {
     unsigned char syncmsg[4];
-    fprintf(stderr,"Waiting for Sync: \n");
-    do {
-        libusb_control_transfer(dev, 0xc1, 0x01, 0, 0, syncmsg, 0x04, 5000);
-    } while  (memcmp(syncmsg,"\0\0\0\0",4)!=0);
+    int tries = MAX_SYNC_WAITS;
+    libusb_device_handle *dev;
 
+    dev = (libusb_device_handle *)devh;
+
+    do {
+        if (tries != MAX_SYNC_WAITS)
+            usleep(100 * 1000); // 100ms
+
+        libusb_control_transfer(dev, 0xc1, 0x01, 0, 0, syncmsg, 0x04, 5000);
+        tries -= 1;
+    } while  (memcmp(syncmsg,"\0\0\0\0",4)!=0 && tries);
+
+    if (tries != (MAX_SYNC_WAITS - 1))  // only log if actually waited
+        netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: waited for sync, %d tries remained\n", tries);
+
+    return (tries > 0);
 }
 
 static unsigned char* sendcommand(netmd_dev_handle* devh, unsigned char* str, const size_t len, unsigned char* response, int rlen)
@@ -187,14 +201,14 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     title_request[20] = oldsize & 0xff;
 
     ret = netmd_exch_message(dev, title_request, 0x15 + size, reply);
+    free(title_request);
+
     if(ret < 0)
     {
-        fprintf(stderr, "bad ret code, returning early\n");
+        netmd_log(NETMD_LOG_WARNING, "netmd_set_title: exchange failed, ret=%d\n", ret);
         return 0;
-    }
-
-    free(title_request);
-    return 1;
+    } else
+        return 1;
 }
 
 int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t finish)
@@ -973,7 +987,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
     lseek(fd, 90, SEEK_SET);  /* seek to 8 bytes before leading 8 00's */
     data_size_i += 90;        /* data_size_i will now contain position of last byte to be send */
 
-    waitforsync(dev);   /* Wait for 00 00 00 00 from unit.. */
+    netmd_wait_for_sync(devh);   /* Wait for 00 00 00 00 from unit.. */
 
 
     /********** Send data ***********/

@@ -239,8 +239,9 @@ void netmd_clean_disc_info(minidisc* md);
    Wait for syncronisation signal from minidisc
 
    @param dev a handler to the usb device
+   @return 1 if success, 0 otherwise
 */
-/* void waitforsync(netmd_dev_handle* dev);*/
+int netmd_wait_for_sync(netmd_dev_handle* dev);
 
 int netmd_cache_toc(netmd_dev_handle* dev);
 int netmd_sync_toc(netmd_dev_handle* dev);
