@@ -25,11 +25,11 @@ see below if you want to try your luck anyway).
 Building the project excluding some of the HiMD parts requires `qmake`, `glib`, `libgcrypt`
 and `libusb`. On a recent Ubuntu, the following installs the required dependencies:
 
-    apt-get install libgcrypt20-dev libglib2.0-dev libusb-1.0-0-dev qt4-qmake
+    apt-get install libgcrypt20-dev libglib2.0-dev libusb-1.0-0-dev qt4-qmake libid3tag0-dev libmad0-dev
 
 To set up the Makefiles, run
 
-    qmake CONFIG+=without_mad CONFIG+=without_gui
+    qmake -qt=qt4 CONFIG+=without_mad CONFIG+=without_gui
 
 Next, run `make` and everything relevant should get built.
 
