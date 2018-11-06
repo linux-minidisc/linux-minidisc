@@ -87,39 +87,33 @@ static int scanforatdata(GDir * dir)
 static int scanfortif(GDir * dir, int* oldnum, int *newnum)
 {
     const char * hmafile;
-    int found_unused=FALSE, found_used=FALSE;
-    int old_datanum, new_datanum;
+
+    GRegex *trkidx_hma = g_regex_new("^[t_]rkidx([0-9a-f]{2})\\.hma$", G_REGEX_CASELESS, 0, NULL);
 
     while((hmafile = g_dir_read_name(dir)) != NULL)
     {
-	// Look for old version
-	if(!found_unused)
-	    {
-		if(g_ascii_strncasecmp(hmafile,"_rkidx0",7) == 0 &&
-		   strlen(hmafile) == 12 &&
-		   isxdigit(hmafile[7]) &&
-		   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
-		    {
-			sscanf(hmafile+7,"%x",&old_datanum);
-			*oldnum = old_datanum;
-			found_unused = TRUE;
-		    }
-	    }
-	// Look for current version
-	if(!found_used)
-	    {
-		if(g_ascii_strncasecmp(hmafile,"trkidx0",7) == 0 &&
-		   strlen(hmafile) == 12 &&
-		   isxdigit(hmafile[7]) &&
-		   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
-		    {
-			sscanf(hmafile+7,"%x",&new_datanum);
-			*newnum = new_datanum;
-			found_used = TRUE;
-		    }
-	    }
+        GMatchInfo *info = NULL;
+        if (g_regex_match(trkidx_hma, hmafile, 0, &info)) {
+            int value = (int)g_ascii_strtoll(g_match_info_fetch(info, 1), NULL, 16);
+
+            if (hmafile[0] == '_') {
+                // old version
+                if (value > *oldnum) {
+                    *oldnum = value;
+                }
+            } else {
+                // new version
+                if (value > *newnum) {
+                    *newnum = value;
+                }
+            }
+        }
+        g_match_info_free(info);
     }
-    return (FALSE || found_unused || found_used);
+
+    g_regex_unref(trkidx_hma);
+
+    return (*oldnum >= 0 || *newnum >= 0);
 }
 
 static void nong_inplace_ascii_down(gchar * string)
@@ -169,7 +163,7 @@ int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 
     filepath = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI", NULL);
     dir      = g_dir_open(filepath,0,&error);
-    int oldnum=0, newnum=0;
+    int oldnum=-1, newnum=-1;
 
     if(scanfortif(dir, &oldnum, &newnum))
 	{
