@@ -87,6 +87,7 @@ static int scanforatdata(GDir * dir)
 static int scanfortif(GDir * dir, int* oldnum, int *newnum)
 {
     const char * hmafile;
+    gboolean found_something = FALSE;
 
     GRegex *trkidx_hma = g_regex_new("^[t_]rkidx([0-9a-f]{2})\\.hma$", G_REGEX_CASELESS, 0, NULL);
 
@@ -100,11 +101,13 @@ static int scanfortif(GDir * dir, int* oldnum, int *newnum)
                 // old version
                 if (value > *oldnum) {
                     *oldnum = value;
+                    found_something = TRUE;
                 }
             } else {
                 // new version
                 if (value > *newnum) {
                     *newnum = value;
+                    found_something = TRUE;
                 }
             }
         }
@@ -113,7 +116,7 @@ static int scanfortif(GDir * dir, int* oldnum, int *newnum)
 
     g_regex_unref(trkidx_hma);
 
-    return (*oldnum >= 0 || *newnum >= 0);
+    return found_something;
 }
 
 static void nong_inplace_ascii_down(gchar * string)
@@ -154,7 +157,6 @@ FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode
 
 int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 {
-    char indexfilename[13];
     gchar *unusedfile,*usedfile,*tempfile;
     gchar *filepath;
     GDir * dir;
@@ -163,16 +165,19 @@ int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 
     filepath = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI", NULL);
     dir      = g_dir_open(filepath,0,&error);
-    int oldnum=-1, newnum=-1;
+    int oldnum=0, newnum=0;
 
     if(scanfortif(dir, &oldnum, &newnum))
 	{
-	    sprintf(indexfilename, himd->need_lowercase ? "_rkidx%02x.hma" : "_RKIDX%02X.HMA", oldnum);
+	    char *indexfilename = g_strdup_printf(himd->need_lowercase ? "_rkidx%02x.hma" : "_RKIDX%02X.HMA", oldnum);
 	    unusedfile = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
 					  indexfilename,NULL);
-	    sprintf(indexfilename, himd->need_lowercase ? "trkidx%02x.hma" : "TRKIDX%02X.HMA", newnum);
+	    g_free(indexfilename);
+
+	    indexfilename = g_strdup_printf(himd->need_lowercase ? "trkidx%02x.hma" : "TRKIDX%02X.HMA", newnum);
 	    usedfile = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
 					indexfilename,NULL);
+	    g_free(indexfilename);
 	}
     else
 	{
