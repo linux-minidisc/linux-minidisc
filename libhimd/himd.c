@@ -157,7 +157,7 @@ FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode
 
 int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 {
-    gchar *unusedfile,*usedfile,*tempfile;
+    gchar *unusedfile=NULL,*usedfile=NULL,*tempfile=NULL;
     gchar *filepath;
     GDir * dir;
     GError * error = NULL;
@@ -214,6 +214,9 @@ int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 	    printf("Could not rename %s to %s\n", tempfile, usedfile);
 	}
 
+    g_free(tempfile);
+    g_free(unusedfile);
+    g_free(usedfile);
     g_free(filepath);
     g_dir_close(dir);
 
