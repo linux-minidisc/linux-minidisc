@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QFile>
 #include "wavefilewriter.h"
+#include "himd.h"
 
 #include <tlist.h>
 #include <fileref.h>
@@ -347,6 +348,13 @@ void QNetMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
     setBusy(false);
 }
 
+bool QNetMDDevice::download(const QString &filename)
+{
+    Q_UNUSED(filename);
+    // TODO: Implement support for downloading data to NetMD device
+    return false;
+}
+
 /* himd device members */
 
 QHiMDDevice::QHiMDDevice()
@@ -638,4 +646,9 @@ void QHiMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
 
     uploadDialog.finished();
     setBusy(false);
+}
+
+bool QHiMDDevice::download(const QString &filename)
+{
+    return (himd_writemp3(himd, filename.toUtf8().data()) == 0);
 }
