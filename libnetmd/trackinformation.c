@@ -113,15 +113,18 @@ int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffe
     if(title_size == 0 || title_size == 0x13)
         return -1; /* bail early somethings wrong or no track */
 
-    if(title_size > size)
+    int title_response_header_size = 25;
+    const char *title_text = title + title_response_header_size;
+    size_t required_size = title_size - title_response_header_size;
+
+    if (required_size > size - 1)
     {
         printf("netmd_request_title: title too large for buffer\n");
         return -1;
     }
 
     memset(buffer, 0, size);
-    memcpy(buffer, (title + 25), title_size - 25);
-    buffer[size] = 0;
+    memcpy(buffer, title_text, required_size);
 
-    return (int)title_size - 25;
+    return required_size;
 }
