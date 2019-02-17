@@ -86,7 +86,7 @@ case "$BUILD_TYPE" in
         ;;
     osx-native-*)
         brew update
-        for pkg in qt5 mad libid3tag libtag glib libusb libusb-compat libgcrypt; do
+        for pkg in pkg-config qt5 mad libid3tag libtag glib libusb libusb-compat libgcrypt; do
             # 2018-11-07: Fix issues related to already-existing packages
             brew install --force $pkg || brew upgrade $pkg
         done
