@@ -323,10 +323,13 @@ int main(int argc, char* argv[])
         printf("Could not get device name\n%s\n", netmd_strerror(error));
         return 1;
     }
-    printf("%s\n", name);
-
+    printf("{\n");
+    printf("  \"raw\": \"");
     netmd_initialize_disc_info(devh, md);
-    printf("Disc Title: %s\n\n", md->groups[0].name);
+    printf("\",\n");
+    //printf("{ device: %s, title: %s }\n", name, md->groups[0].name);
+    printf("  \"device\": \"%s\",\n", name);
+    printf("  \"title\": \"%s\",\n", md->groups[0].name);
 
     /* parse commands */
     if(argc > 1)
@@ -589,14 +592,32 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
     struct netmd_pair const *trprot, *bitrate;
 
     trprot = bitrate = 0;
+    
+    netmd_disc_capacity capacity;
+    netmd_get_disc_capacity(devh, &capacity);
 
+    printf("  \"recordedTime\": \"");
+    print_time(&capacity.recorded);
+    printf("\",\n  \"totalTime\": \"");
+    print_time(&capacity.total);
+    printf("\",\n  \"availableTime\": \"");
+    print_time(&capacity.available);
+    printf("\",\n");
+            
+    printf("  \"tracks\":\n");
+    printf("    [\n");
     for(i = 0; size >= 0; i++)
     {
         size = netmd_request_title(devh, i, buffer, 256);
 
-        if(size < 0)
+        if(size <= 0)
         {
             break;
+        }
+        
+        if(i > 0)
+        {
+          printf(",\n");
         }
 
         /* Figure out which group this track is in */
@@ -614,13 +635,13 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
             lastgroup = group;
             if( group )			/* Group 0 is 'no group' */
             {
-                printf("Group: %s\n", md->groups[group].name);
+                //printf("Group: %s\n", md->groups[group].name);
             }
         }
         /* Indent tracks which are in a group */
         if( group )
         {
-            printf("  ");
+            //printf("  ");
         }
 
         netmd_request_track_time(devh, i, &time);
@@ -631,20 +652,25 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
         bitrate = find_pair(bitrate_id, bitrates);
 
         /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
-        if( strncmp( buffer, "LP:", 3 ))
-        {
+        //if( strncmp( buffer, "LP:", 3 ))
+        //{
             name = buffer;
-        }
-        else
-        {
-            name = buffer + 3;
-        }
+        //}
+        //else
+        //{
+        //    name = buffer + 3;
+        //}
 
-        printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
+        /*printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
                i, trprot->name, bitrate->name, time.minute,
-               time.second, time.tenth, name);
+               time.second, time.tenth, name);*/
+        printf("      { \"no\": %2i, \"protect\": \"%-6s\", \"bitrate\": \"%6s\", \"time\": \"%02i:%02i:%02i\", \"name\": \"%s\" }", 
+                        i, trprot->name, bitrate->name, time.minute, time.second, time.tenth, name);
     }
-
+    printf("\n    ]\n");
+    printf("}\n");
+    exit(0);
+    
     /* XXX - This needs a rethink with the above method */
     /* groups may not have tracks, print the rest. */
     printf("\n--Empty Groups--\n");

@@ -332,7 +332,7 @@ int netmd_initialize_disc_info(netmd_dev_handle* devh, minidisc* md)
     memset(md->groups, 0, sizeof(struct netmd_group) * md->group_count);
 
     disc_size = request_disc_title(devh, disc, 256);
-    printf("Raw title: %s \n", disc);
+    printf("Raw title: %s", disc);
 
     if(disc_size > 0)
     {
