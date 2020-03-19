@@ -19,7 +19,7 @@
 #define LAM_3_HIMD 0x018b
 #define MZ_DH10P_HIMD 0x01ea
 #define MZ_RH10_HIMD 0x021a
-#define MZ_RH910_HIMD 0x021c
+#define MZ_RH910_HIMD 0x021c       // or MZ-M10
 #define CMT_AH10_HIMD 0x022d
 #define DS_HMD1_HIMD 0x023d
 #define MZ_RH1_HIMD 0x0287
@@ -56,7 +56,7 @@
 #define LAM_3 0x18a
 #define MZ_DH10P 0x1e9
 #define MZ_RH10 0x219
-#define MZ_RH910 0x21b
+#define MZ_RH910 0x21b             // or MZ-M10
 #define CMT_AH10_A 0x21d
 #define CMT_AH10_B 0x22c
 #define DS_HMD1 0x23c

@@ -64,7 +64,7 @@ static struct netmd_devices const known_devices[] =
     {0x54c, 0x18a}, /* Sony LAM-3 */
     {0x54c, 0x1e9}, /* Sony MZ-DH10P */
     {0x54c, 0x219}, /* Sony MZ-RH10 */
-    {0x54c, 0x21b}, /* Sony MZ-RH910 */
+    {0x54c, 0x21b}, /* Sony MZ-RH910/M10 */
     {0x54c, 0x21d}, /* Sony CMT-AH10 */
     {0x54c, 0x22c}, /* Sony CMT-AH10 */
     {0x54c, 0x23c}, /* Sony DS-HMD1 */
