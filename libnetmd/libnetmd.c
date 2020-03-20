@@ -23,6 +23,7 @@
  */
 
 #include <unistd.h>
+#include <glib.h>
 
 #include "libnetmd.h"
 #include "utils.h"
@@ -98,12 +99,13 @@ static unsigned char* sendcommand(netmd_dev_handle* devh, unsigned char* str, co
 static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
 {
     int ret = -1;
-    size_t title_size = 0;
+    size_t title_response_size = 0;
     unsigned char title_request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x18,
                                      0x01, 0x00, 0x00, 0x30, 0x00, 0xa,
                                      0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
                                      0x00};
     unsigned char title[255];
+    GError * err = NULL;
 
     ret = netmd_exch_message(dev, title_request, 0x13, title);
     if(ret < 0)
@@ -112,23 +114,36 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
         return 0;
     }
 
-    title_size = (size_t)ret;
+    title_response_size = (size_t)ret;
 
-    if(title_size == 0 || title_size == 0x13)
+    if(title_response_size == 0 || title_response_size == 0x13)
         return -1; /* bail early somethings wrong */
 
-    if((title_size - 25) >= size)
+    int title_response_header_size = 25;
+    const char *title_text = title + title_response_header_size;
+    size_t encoded_title_size = title_response_size - title_response_header_size;
+
+    char * decoded_title_text;
+    decoded_title_text = g_convert(title_text, encoded_title_size, "UTF-8", "SHIFT_JIS", NULL, NULL, &err);
+
+    if(err)
     {
-        printf("request_disc_title: title too large for buffer\n");
-    }
-    else
-    {
-        memset(buffer, 0, size);
-        memcpy(buffer, (title + 25), title_size - 25);
-        buffer[title_size - 25] = 0;
+        printf("request_disc_title: title couldn't be converted from SHIFT_JIS to UTF-8: %s", err->message);
+        return -1;
     }
 
-    return (int)title_size - 25;
+    size_t decoded_title_size = strlen(decoded_title_text);
+
+    if(decoded_title_size >= size)
+    {
+        printf("request_disc_title: title too large for buffer\n");
+        return -1;
+    }
+
+    memset(buffer, 0, size);
+    memcpy(buffer, decoded_title_text, decoded_title_size);
+
+    return title_response_size;
 }
 
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer)
