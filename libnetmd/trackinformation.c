@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <glib.h>
 
 #include "trackinformation.h"
 #include "utils.h"
@@ -91,13 +92,14 @@ int netmd_request_track_flags(netmd_dev_handle*dev, const uint16_t track, unsign
 int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffer, const size_t size)
 {
     int ret = -1;
-    size_t title_size = 0;
+    size_t title_response_size = 0;
     unsigned char title_request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x18,
                                      0x02, 0x00, 0x00, 0x30, 0x00, 0xa,
                                      0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
                                      0x00};
     unsigned char title[255];
     unsigned char *buf;
+    GError * err = NULL;
 
     buf = title_request + 7;
     netmd_copy_word_to_buffer(&buf, track, 0);
@@ -108,23 +110,34 @@ int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffe
         return -1;
     }
 
-    title_size = (size_t)ret;
+    title_response_size = (size_t)ret;
 
-    if(title_size == 0 || title_size == 0x13)
+    if(title_response_size == 0 || title_response_size == 0x13)
         return -1; /* bail early somethings wrong or no track */
 
     int title_response_header_size = 25;
     const char *title_text = title + title_response_header_size;
-    size_t required_size = title_size - title_response_header_size;
+    size_t encoded_title_size = title_response_size - title_response_header_size;
 
-    if (required_size > size - 1)
+    char * decoded_title_text;
+    decoded_title_text = g_convert(title_text, encoded_title_size, "UTF-8", "SHIFT_JIS", NULL, NULL, &err);
+
+    if(err)
+    {
+        printf("netmd_request_title: title couldn't be converted from SHIFT_JIS to UTF-8: %s", err->message);
+        return -1;
+    }
+
+    size_t decoded_title_size = strlen(decoded_title_text);
+
+    if (decoded_title_size > size - 1)
     {
         printf("netmd_request_title: title too large for buffer\n");
         return -1;
     }
 
     memset(buffer, 0, size);
-    memcpy(buffer, title_text, required_size);
+    memcpy(buffer, decoded_title_text, decoded_title_size);
 
-    return required_size;
+    return decoded_title_size;
 }

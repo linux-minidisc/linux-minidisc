@@ -9,4 +9,5 @@ SOURCES += common.c error.c libnetmd.c log.c netmd_dev.c playercontrol.c secure.
 
 include(../build/libgcrypt.pri)
 include(../build/libusb.pri)
+include(../build/libglib.pri)
 include(../build/common.pri)
