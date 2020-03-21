@@ -54,9 +54,12 @@ To set up the Makefiles, run
 
     qmake-qt4 CONFIG=without_mad CONFIG+=without_gui
 
+Next, run `make` and everything relevant should get built.
+
 Follow the same instructions as Ubuntu for the `udev` rules, however the `plugdev` group will need to be added first:
 
     groupadd plugdev
+    usermod -aG plugdev [username]
 
 ### MacOS
 Building on MacOS should also work. You will need to have `pkg-config` installed.
@@ -105,9 +108,9 @@ If you care about upload support, there is some support in the code for it, but
 it probably needs work.
 
 ## Troubleshooting
-*Minidisc player keeps disconnecting on Linux* or, *Minidisc player spins up, says `PC->->MD`, and then resets*
+***Minidisc player keeps disconnecting on Linux* or, *Minidisc player spins up, says `PC->->MD`, and then resets***
 
-This is likely due to having the library for `libmtp` library intalled.
+This is likely due to having the `libmtp` library installed.
 Some programs pull this in as a dependency to be able to open MTP media players, e.g.
 VLC Media Player.
 
