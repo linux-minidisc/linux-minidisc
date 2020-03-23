@@ -38,36 +38,36 @@ def listMD(md, show_uuids):
             * 512 + time_tuple[3]
 
     flags = reprDiscFlags(md_iface.getDiscFlags())
-    print 'Disk (%s) %s %s' % (
+    print('Disk (%s) %s %s' % (
         ', '.join(flags), md_iface.getDiscTitle(),
-        md_iface.getDiscTitle(True).decode('shift_jis_2004'))
+        md_iface.getDiscTitle(True).decode('shift_jis_2004')))
     disc_used, disc_total, disc_left = md_iface.getDiscCapacity()
     disc_total = timeToFrames(disc_total)
     disc_left = timeToFrames(disc_left)
-    print 'Time used: %02i:%02i:%02i+%03i (%.02f%%)' % (
+    print('Time used: %02i:%02i:%02i+%03i (%.02f%%)' % (
         disc_used[0], disc_used[1], disc_used[2], disc_used[3],
-        (disc_total - disc_left) / float(disc_total) * 100)
+        (disc_total - disc_left) / float(disc_total) * 100))
     track_count = md_iface.getTrackCount()
-    print '%i tracks' % (track_count, )
+    print('%i tracks' % (track_count, ))
     for group, (group_name, track_list) in enumerate(
         md_iface.getTrackGroupList()):
         if group_name is None:
             prefix = ''
         else:
             prefix = '  '
-            print 'Group %r' % (group_name or group + 1, )
+            print('Group %r' % (group_name or group + 1, ))
         for track, real_track in enumerate(track_list):
             hour, minute, second, sample = md_iface.getTrackLength(real_track)
             codec, channel_count = md_iface.getTrackEncoding(real_track)
             flags = md_iface.getTrackFlags(real_track)
-            print '%s%03i: %02i:%02i:%02i+%03i %s %s %s %s %s' % (prefix,
+            print('%s%03i: %02i:%02i:%02i+%03i %s %s %s %s %s' % (prefix,
                 track, hour, minute, second, sample, codec_name_dict[codec],
                 channel_count_dict[channel_count], flag_dict[flags],
                 md_iface.getTrackTitle(real_track).decode('shift_jis_2004'),
-                md_iface.getTrackTitle(real_track, True).decode('shift_jis_2004'))
+                md_iface.getTrackTitle(real_track, True).decode('shift_jis_2004')))
             if show_uuids:
                 uuid = md_iface.getTrackUUID(real_track)
-                print '%s UUID:' % prefix, ''.join(["%02x"%ord(i) for i in uuid])
+                print('%s UUID:' % prefix, ''.join(["%02x"%ord(i) for i in uuid]))
 
 if __name__ == '__main__':
     from optparse import OptionParser
