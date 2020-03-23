@@ -148,7 +148,7 @@ class NetMD(object):
         reply = self.usb_handle.controlRead(libusb1.LIBUSB_TYPE_VENDOR | \
                                             libusb1.LIBUSB_RECIPIENT_INTERFACE,
                                             0x01, 0, 0, 4)
-        return ord(reply[2])
+        return reply[2]
 
     def sendCommand(self, command):
         """
@@ -327,12 +327,12 @@ class NetMDInterface(object):
             query = [STATUS_SPECIFIC_INQUIRY, ] + query
         else:
             query = [STATUS_CONTROL, ] + query
-        binquery = ''.join(chr(x) for x in query)
+        binquery = bytes(query)
         self.net_md.sendCommand(binquery)
 
     def readReply(self):
         result = self.net_md.readReply()
-        status = ord(result[0])
+        status = result[0]
         if status == STATUS_NOT_IMPLEMENTED:
             raise NetMDNotImplemented('Not implemented')
         elif status == STATUS_REJECTED:
@@ -395,7 +395,7 @@ class NetMDInterface(object):
         escaped = False
         input_stack = list(query)
         def pop():
-            return ord(input_stack.pop(0))
+            return input_stack.pop(0)
         for char in format:
             if escaped:
                 escaped = False
@@ -410,7 +410,7 @@ class NetMDInterface(object):
                 # String ('s' is 0-terminated, 'x' is not)
                 elif char in ('s', 'x'):
                     length = pop() << 8 | pop()
-                    value = ''.join(input_stack[:length])
+                    value = bytes(input_stack[:length])
                     input_stack = input_stack[length:]
                     if char == 's':
                         append(value[:-1])
@@ -639,8 +639,8 @@ class NetMDInterface(object):
         data = self.scanQuery(reply, '1806 02101001 %?%? %?%? 1000 00%?0000 ' \
                               '%x')[0]
         assert len(data) == 6, len(data)
-        assert data[:5] == '\x00\x10\x00\x02\x00', data[:5]
-        return ord(data[5])
+        assert data[:5] == b'\x00\x10\x00\x02\x00', data[:5]
+        return data[5]
 
     def _getDiscTitle(self, wchar=False):
         # XXX: long title support untested.
