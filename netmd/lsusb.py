@@ -22,9 +22,9 @@ def main():
     context = usb1.LibUSBContext()
     for device in context.getDeviceList():
         if test(device):
-            print device
+            print(device)
             if verbose:
-                print device.reprConfigurations()
+                print(device.reprConfigurations())
 
 if __name__ == '__main__':
     main()

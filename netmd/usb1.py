@@ -23,7 +23,7 @@ import libusb1
 from ctypes import byref, create_string_buffer, c_int, sizeof, POINTER, \
     create_unicode_buffer, c_wchar, cast, c_uint16, c_ubyte, string_at, \
     addressof, c_void_p, cdll
-from cStringIO import StringIO
+from io import StringIO
 import sys
 from ctypes.util import find_library
 
@@ -67,7 +67,7 @@ DEFAULT_ASYNC_TRANSFER_ERROR_CALLBACK = lambda x: False
 
 def create_binary_buffer(string_or_len):
     # Prevent ctypes from adding a trailing null char.
-    if isinstance(string_or_len, basestring):
+    if isinstance(string_or_len, str):
         result = create_string_buffer(string_or_len, len(string_or_len))
     else:
         result = create_string_buffer(string_or_len)
@@ -142,7 +142,7 @@ class USBTransfer(object):
                 # reference to transfer, so a segfault might happen anyway.
                 # Should we warn user ? How ?
                 self.cancel()
-            except self.__USBError, exception:
+            except self.__USBError as exception:
                 if exception.value == self.__LIBUSB_ERROR_NOT_FOUND:
                     # Transfer was not submitted, we can free it.
                     self.__libusb_free_transfer(self.__transfer)
@@ -192,7 +192,7 @@ class USBTransfer(object):
         """
         if self.__submitted:
             raise ValueError('Cannot alter a submitted transfer')
-        if isinstance(buffer_or_len, basestring):
+        if isinstance(buffer_or_len, str):
             length = len(buffer_or_len)
             string_buffer = create_binary_buffer(
                 ' ' * libusb1.LIBUSB_CONTROL_SETUP_SIZE + buffer_or_len)
@@ -290,7 +290,7 @@ class USBTransfer(object):
         if iso_transfer_length_list is None:
             iso_length = buffer_length / num_iso_packets
             iso_transfer_length_list = [iso_length for _ in
-                xrange(num_iso_packets)]
+                range(num_iso_packets)]
         configured_iso_packets = len(iso_transfer_length_list)
         if configured_iso_packets > num_iso_packets:
             raise ValueError('Too many ISO transfer lengths (%i), there are '
@@ -758,7 +758,7 @@ class USBDeviceHandle(object):
         langid_list = cast(descriptor_string, POINTER(c_uint16))
         result = []
         append = result.append
-        for offset in xrange(1, length / 2):
+        for offset in range(1, length / 2):
             append(libusb1.libusb_le16_to_cpu(langid_list[offset]))
         return result
 
@@ -955,7 +955,7 @@ class USBDevice(object):
         # Fetch all configuration descriptors
         self.__configuration_descriptor_list = []
         append = self.__configuration_descriptor_list.append
-        for configuration_id in xrange(device_descriptor.bNumConfigurations):
+        for configuration_id in range(device_descriptor.bNumConfigurations):
             config = libusb1.libusb_config_descriptor_p()
             result = libusb1.libusb_get_config_descriptor(device_p,
                 configuration_id, byref(config))
@@ -991,27 +991,27 @@ class USBDevice(object):
         """
         out = StringIO()
         for config in self.__configuration_descriptor_list:
-            print >> out, 'Configuration %i: %s' % (config.bConfigurationValue,
-                self._getASCIIStringDescriptor(config.iConfiguration))
-            print >> out, '  Max Power: %i mA' % (config.MaxPower * 2, )
+            print('Configuration %i: %s' % (config.bConfigurationValue,
+                self._getASCIIStringDescriptor(config.iConfiguration)), file=out)
+            print('  Max Power: %i mA' % (config.MaxPower * 2, ), file=out)
             # TODO: bmAttributes dump
-            for interface_num in xrange(config.bNumInterfaces):
+            for interface_num in range(config.bNumInterfaces):
                 interface = config.interface[interface_num]
-                print >> out, '  Interface %i' % (interface_num, )
-                for alt_setting_num in xrange(interface.num_altsetting):
+                print('  Interface %i' % (interface_num, ), file=out)
+                for alt_setting_num in range(interface.num_altsetting):
                     altsetting = interface.altsetting[alt_setting_num]
-                    print >> out, '    Alt Setting %i: %s' % (alt_setting_num,
-                        self._getASCIIStringDescriptor(altsetting.iInterface))
-                    print >> out, '      Class: %02x Subclass: %02x' % \
+                    print('    Alt Setting %i: %s' % (alt_setting_num,
+                        self._getASCIIStringDescriptor(altsetting.iInterface)), file=out)
+                    print('      Class: %02x Subclass: %02x' % \
                         (altsetting.bInterfaceClass,
-                         altsetting.bInterfaceSubClass)
-                    print >> out, '      Protocol: %02x' % \
-                        (altsetting.bInterfaceProtocol, )
-                    for endpoint_num in xrange(altsetting.bNumEndpoints):
+                         altsetting.bInterfaceSubClass), file=out)
+                    print('      Protocol: %02x' % \
+                        (altsetting.bInterfaceProtocol, ), file=out)
+                    for endpoint_num in range(altsetting.bNumEndpoints):
                         endpoint = altsetting.endpoint[endpoint_num]
-                        print >> out, '      Endpoint %i' % (endpoint_num, )
-                        print >> out, '        Address: %02x' % \
-                            (endpoint.bEndpointAddress, )
+                        print('      Endpoint %i' % (endpoint_num, ), file=out)
+                        print('        Address: %02x' % \
+                            (endpoint.bEndpointAddress, ), file=out)
                         attribute_list = []
                         transfer_type = endpoint.bmAttributes & \
                             libusb1.LIBUSB_TRANSFER_TYPE_MASK
@@ -1028,16 +1028,16 @@ class USBDevice(object):
                                 (endpoint.bmAttributes & \
                                  libusb1.LIBUSB_ISO_USAGE_TYPE_MASK) >> 4
                             ))
-                        print >> out, '        Attributes: %s' % \
-                            (', '.join(attribute_list), )
-                        print >> out, '        Max Packet Size: %i' % \
-                            (endpoint.wMaxPacketSize, )
-                        print >> out, '        Interval: %i' % \
-                            (endpoint.bInterval, )
-                        print >> out, '        Refresh: %i' % \
-                            (endpoint.bRefresh, )
-                        print >> out, '        Sync Address: %02x' % \
-                            (endpoint.bSynchAddress, )
+                        print('        Attributes: %s' % \
+                            (', '.join(attribute_list), ), file=out)
+                        print('        Max Packet Size: %i' % \
+                            (endpoint.wMaxPacketSize, ), file=out)
+                        print('        Interval: %i' % \
+                            (endpoint.bInterval, ), file=out)
+                        print('        Refresh: %i' % \
+                            (endpoint.bRefresh, ), file=out)
+                        print('        Sync Address: %02x' % \
+                            (endpoint.bSynchAddress, ), file=out)
         return out.getvalue()
 
     def getBusNumber(self):

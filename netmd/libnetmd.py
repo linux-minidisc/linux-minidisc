@@ -1,5 +1,5 @@
 import libusb1
-from cStringIO import StringIO
+from io import StringIO
 from time import sleep
 from struct import pack
 try:
@@ -12,7 +12,7 @@ import array
 import random
 
 def dump(data):
-    if isinstance(data, basestring):
+    if isinstance(data, str):
         result = ' '.join(['%02x' % (ord(x), ) for x in data])
     else:
         result = repr(data)
@@ -20,8 +20,8 @@ def dump(data):
 
 class defaultUploadEvents:
     def progress(self, current):
-        print 'Done: %x/%x (%.02f%%)' % (current, self.total,
-                                         current/float(self.total) * 100)
+        print('Done: %x/%x (%.02f%%)' % (current, self.total,
+                                         current/float(self.total) * 100))
     def trackinfo(self, frames, bytes, format):
         self.total = bytes;
 
@@ -148,7 +148,7 @@ class NetMD(object):
         reply = self.usb_handle.controlRead(libusb1.LIBUSB_TYPE_VENDOR | \
                                             libusb1.LIBUSB_RECIPIENT_INTERFACE,
                                             0x01, 0, 0, 4)
-        return ord(reply[2])
+        return reply[2]
 
     def sendCommand(self, command):
         """
@@ -187,7 +187,7 @@ class NetMD(object):
         self.readBulkToFile(length, result)
         return result.getvalue()
 
-    def readBulkToFile(self, length, outfile, chunk_size=0x10000, callback=lambda(a):None):
+    def readBulkToFile(self, length, outfile, chunk_size=0x10000, callback=lambda a:None):
         """
           Read bulk data from device, and write it to a file.
           length (int)
@@ -327,12 +327,12 @@ class NetMDInterface(object):
             query = [STATUS_SPECIFIC_INQUIRY, ] + query
         else:
             query = [STATUS_CONTROL, ] + query
-        binquery = ''.join(chr(x) for x in query)
+        binquery = bytes(query)
         self.net_md.sendCommand(binquery)
 
     def readReply(self):
         result = self.net_md.readReply()
-        status = ord(result[0])
+        status = result[0]
         if status == STATUS_NOT_IMPLEMENTED:
             raise NetMDNotImplemented('Not implemented')
         elif status == STATUS_REJECTED:
@@ -357,7 +357,7 @@ class NetMDInterface(object):
                 escaped = False
                 value = arg_stack.pop(0)
                 if char in _FORMAT_TYPE_LEN_DICT:
-                    for byte in xrange(_FORMAT_TYPE_LEN_DICT[char] - 1, -1, -1):
+                    for byte in range(_FORMAT_TYPE_LEN_DICT[char] - 1, -1, -1):
                         append((value >> (byte * 8)) & 0xff)
                 # String ('s' is 0-terminated, 'x' is not)
                 elif char in ('s', 'x'):
@@ -395,7 +395,7 @@ class NetMDInterface(object):
         escaped = False
         input_stack = list(query)
         def pop():
-            return ord(input_stack.pop(0))
+            return input_stack.pop(0)
         for char in format:
             if escaped:
                 escaped = False
@@ -404,13 +404,13 @@ class NetMDInterface(object):
                     continue
                 if char in _FORMAT_TYPE_LEN_DICT:
                     value = 0
-                    for byte in xrange(_FORMAT_TYPE_LEN_DICT[char] - 1, -1, -1):
+                    for byte in range(_FORMAT_TYPE_LEN_DICT[char] - 1, -1, -1):
                         value |= (pop() << (byte * 8))
                     append(value)
                 # String ('s' is 0-terminated, 'x' is not)
                 elif char in ('s', 'x'):
                     length = pop() << 8 | pop()
-                    value = ''.join(input_stack[:length])
+                    value = bytes(input_stack[:length])
                     input_stack = input_stack[length:]
                     if char == 's':
                         append(value[:-1])
@@ -639,8 +639,8 @@ class NetMDInterface(object):
         data = self.scanQuery(reply, '1806 02101001 %?%? %?%? 1000 00%?0000 ' \
                               '%x')[0]
         assert len(data) == 6, len(data)
-        assert data[:5] == '\x00\x10\x00\x02\x00', data[:5]
-        return ord(data[5])
+        assert data[:5] == b'\x00\x10\x00\x02\x00', data[:5]
+        return data[5]
 
     def _getDiscTitle(self, wchar=False):
         # XXX: long title support untested.
@@ -719,7 +719,7 @@ class NetMDInterface(object):
                 track_min, track_max, track_count)
             track_list = []
             track_append = track_list.append
-            for track in xrange(track_min - 1, track_max):
+            for track in range(track_min - 1, track_max):
                 if track in track_dict:
                     raise ValueError('Track %i is in 2 groups: %r[%i] & '
                          '%r[%i]' % (track, track_dict[track][0],
@@ -727,7 +727,7 @@ class NetMDInterface(object):
                 track_dict[track] = group_name, group_index
                 track_append(track)
             append((group_name, track_list))
-        track_list = [x for x in xrange(track_count) if x not in track_dict]
+        track_list = [x for x in range(track_count) if x not in track_dict]
         if len(track_list):
             append((None, track_list))
         return result
@@ -890,7 +890,7 @@ class NetMDInterface(object):
                                     '%b %b %b 0005 %w %b %b %b 0005 %w %b ' \
                                     '%b %b')
         result = []
-        for offset in xrange(3):
+        for offset in range(3):
             offset *= 4
             result.append([
                 BCD2int(raw_result[offset + 0]),

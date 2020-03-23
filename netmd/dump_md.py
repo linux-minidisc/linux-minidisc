@@ -26,12 +26,12 @@ def getTrackList(md_iface, track_range):
             max_track = track_count - 1
         assert max_track < track_count
         assert min_track < track_count
-        track_list = xrange(min_track, max_track + 1)
+        track_list = range(min_track, max_track + 1)
     elif isinstance(track_range, int):
         assert track_range < track_count
         track_list = [track_range]
     else:
-        track_list = xrange(track_count)
+        track_list = range(track_count)
     for track in track_list:
         hour, minute, second, sample = md_iface.getTrackLength(track)
         codec, channel_count = md_iface.getTrackEncoding(track)
@@ -56,7 +56,7 @@ def MDDump(md_iface, ext, track_range, disk_title_override=None):
         directory = '.'
     else:
         directory = disc_title;
-    print 'Storing in ', directory
+    print('Storing in ', directory)
     if not os.path.exists(directory):
         os.mkdir(directory)
     for track, (hour, minute, second, sample), channels, title in \
@@ -64,17 +64,17 @@ def MDDump(md_iface, ext, track_range, disk_title_override=None):
 
         duration = '%02i:%02i:%02i.%03i' % (hour, minute, second, sample/.512)
         filename = '%02i - %s.%s' % (track + 1, title, ext)
-        print 'Recording', filename, '(', duration, ')'
+        print('Recording', filename, '(', duration, ')')
         md_iface.gotoTrack(track)
         # Attemp to reduce the MD play delay by...
-        print 'Waiting for MD...'
+        print('Waiting for MD...')
         # ...starting to play (some devices start their seek at this
         # time, others already at gotoTrack)...
         md_iface.play()
         # ... wait until playing really begins ... (waits until the second
         # second of audio playing)
         while md_iface.getPosition()[0:4] != [track, 0, 0, 1]:
-            print md_iface.getPosition()
+            print(md_iface.getPosition())
             sleep(0.25)
         # ... pause and go back to track beginning.
         md_iface.pause()
@@ -97,10 +97,10 @@ def MDDump(md_iface, ext, track_range, disk_title_override=None):
         while md_iface.getPosition()[0] == track:
             sleep(1)
         md_iface.pause()
-        print 'Done, waiting for sox to return...'
+        print('Done, waiting for sox to return...')
         pid.wait()
     # TODO: generate playlists based on groups defined on the MD
-    print 'Finished.'
+    print('Finished.')
 
 if __name__ == '__main__':
     from optparse import OptionParser

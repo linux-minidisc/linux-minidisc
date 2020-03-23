@@ -29,12 +29,12 @@ def getTrackList(md_iface, track_range):
             max_track = track_count - 1
         assert max_track < track_count
         assert min_track < track_count
-        track_list = xrange(min_track, max_track + 1)
+        track_list = range(min_track, max_track + 1)
     elif isinstance(track_range, int):
         assert track_range < track_count
         track_list = [track_range]
     else:
-        track_list = xrange(track_count)
+        track_list = range(track_count)
     for track in track_list:
         flags = md_iface.getTrackFlags(track)
         codec, channel_count = md_iface.getTrackEncoding(track)
@@ -73,8 +73,8 @@ class aeaUploadEvents(libnetmd.defaultUploadEvents):
         maskedformat = format & 0x06;
         if not ((maskedformat == libnetmd.DISKFORMAT_SP_STEREO and self.channels == 2) or \
                 (maskedformat == libnetmd.DISKFORMAT_SP_MONO   and self.channels == 1)):
-            raise ValueError, 'Unexpected format byte %02x for %d channels' % \
-                                 (format, self.channels)
+            raise ValueError('Unexpected format byte %02x for %d channels' % \
+                                 (format, self.channels))
         self.stream.write(formatAeaHeader(name = self.name, soundgroups=frames, channels=self.channels))
         libnetmd.defaultUploadEvents.trackinfo(self, frames, bytes, format)
 
@@ -88,7 +88,7 @@ def formatWavHeader(format, bytes):
         bytesperframe = 192
         jointstereo = 0
     else:
-        raise ValueError, 'unexpected format byte %02x' % format
+        raise ValueError('unexpected format byte %02x' % format)
     bytespersecond = bytesperframe * 44100 / 512
     return pack("<4sI4s"     # "RIFF" header
                 "4sIHHIIHH"  # "fmt " chunk - standard part
@@ -110,7 +110,7 @@ class wavUploadEvents(libnetmd.defaultUploadEvents):
         self.stream = stream
     
     def trackinfo(self, frames, bytes, format):
-        print 'Format byte', format
+        print('Format byte', format)
         # RIFF header
         self.stream.write(formatWavHeader(format, bytes))
         libnetmd.defaultUploadEvents.trackinfo(self, frames, bytes, format)
@@ -124,7 +124,7 @@ def MDDump(md_iface, track_range):
         directory = '.'
     else:
         directory = ''.join(c for c in disc_title if c in valid_chars);
-    print 'Storing in', directory
+    print('Storing in', directory)
     if not os.path.exists(directory):
         os.mkdir(directory)
     for track, codec, channels, title in \
@@ -135,7 +135,7 @@ def MDDump(md_iface, track_range):
         else:
             extension = 'wav'
         filename = '%s/%02i - %s.%s' % (directory, track + 1, ''.join(c for c in title if c in valid_chars), extension)
-        print 'Uploading', filename
+        print('Uploading', filename)
         aeafile = open(filename,"wb")
         if codec == libnetmd.ENCODING_SP:
             md_iface.saveTrackToStream(track, aeafile,events=aeaUploadEvents(aeafile, channels, title))
@@ -143,7 +143,7 @@ def MDDump(md_iface, track_range):
             md_iface.saveTrackToStream(track, aeafile,events=wavUploadEvents(aeafile))
 
     # TODO: generate playlists based on groups defined on the MD
-    print 'Finished.'
+    print('Finished.')
 
 if __name__ == '__main__':
     from optparse import OptionParser
