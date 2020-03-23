@@ -119,12 +119,11 @@ int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffe
     const char *title_text = title + title_response_header_size;
     size_t encoded_title_size = title_response_size - title_response_header_size;
 
-    char * decoded_title_text;
-    decoded_title_text = g_convert(title_text, encoded_title_size, "UTF-8", "JIS_X0201", NULL, NULL, &err);
+    char * decoded_title_text = g_convert(title_text, encoded_title_size, "UTF-8", "JIS_X0201", NULL, NULL, &err);
 
     if(err)
     {
-        printf("netmd_request_title: title couldn't be converted from JIS_X0201 to UTF-8: %s", err->message);
+        printf("netmd_request_title: title couldn't be converted from JIS_X0201 to UTF-8: %s\n", err->message);
         return -1;
     }
 
@@ -138,6 +137,7 @@ int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffe
 
     memset(buffer, 0, size);
     memcpy(buffer, decoded_title_text, decoded_title_size);
+    g_free(decoded_title_text);
 
     return decoded_title_size;
 }
