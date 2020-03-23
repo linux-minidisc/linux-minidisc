@@ -120,11 +120,11 @@ int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffe
     size_t encoded_title_size = title_response_size - title_response_header_size;
 
     char * decoded_title_text;
-    decoded_title_text = g_convert(title_text, encoded_title_size, "UTF-8", "SHIFT_JIS", NULL, NULL, &err);
+    decoded_title_text = g_convert(title_text, encoded_title_size, "UTF-8", "JIS_X0201", NULL, NULL, &err);
 
     if(err)
     {
-        printf("netmd_request_title: title couldn't be converted from SHIFT_JIS to UTF-8: %s", err->message);
+        printf("netmd_request_title: title couldn't be converted from JIS_X0201 to UTF-8: %s", err->message);
         return -1;
     }
 
