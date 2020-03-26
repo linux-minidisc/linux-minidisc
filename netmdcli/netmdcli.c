@@ -20,10 +20,13 @@
  */
 
 #include <gcrypt.h>
+#include <json.h>
 #include <unistd.h>
 
 #include "libnetmd.h"
 #include "utils.h"
+
+static json_object *json;
 
 void print_disc_info(netmd_dev_handle* devh, minidisc *md);
 void print_current_track_info(netmd_dev_handle* devh);
@@ -143,6 +146,13 @@ static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
         printf("Error: netmd_exch_message failed with %d\n", rsplen);
         return;
     }
+}
+
+struct json_object* json_time(const netmd_time *time)
+{
+    char buffer[12];
+    sprintf(buffer, "%02d:%02d:%02d.%02d", time->hour, time->minute, time->second, time->frame);
+    return json_object_new_string(buffer);
 }
 
 void print_time(const netmd_time *time)
@@ -323,13 +333,13 @@ int main(int argc, char* argv[])
         printf("Could not get device name\n%s\n", netmd_strerror(error));
         return 1;
     }
-    printf("{\n");
-    printf("  \"raw\": \"");
+
     netmd_initialize_disc_info(devh, md);
-    printf("\",\n");
-    //printf("{ device: %s, title: %s }\n", name, md->groups[0].name);
-    printf("  \"device\": \"%s\",\n", name);
-    printf("  \"title\": \"%s\",\n", md->groups[0].name);
+
+    // Construct JSON object
+    json = json_object_new_object();
+    json_object_object_add(json, "device",  json_object_new_string(name));
+    json_object_object_add(json, "title",   json_object_new_string(md->groups[0].name));
 
     /* parse commands */
     if(argc > 1)
@@ -596,16 +606,11 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
     netmd_disc_capacity capacity;
     netmd_get_disc_capacity(devh, &capacity);
 
-    printf("  \"recordedTime\": \"");
-    print_time(&capacity.recorded);
-    printf("\",\n  \"totalTime\": \"");
-    print_time(&capacity.total);
-    printf("\",\n  \"availableTime\": \"");
-    print_time(&capacity.available);
-    printf("\",\n");
-            
-    printf("  \"tracks\":\n");
-    printf("    [\n");
+    json_object_object_add(json, "recordedTime", json_time(&capacity.recorded));
+    json_object_object_add(json, "totalTime", json_time(&capacity.total));
+    json_object_object_add(json, "availableTime", json_time(&capacity.available));
+    json_object* tracks = json_object_new_array();
+
     for(i = 0; size >= 0; i++)
     {
         size = netmd_request_title(devh, i, buffer, 256);
@@ -613,11 +618,6 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
         if(size < 0)
         {
             break;
-        }
-        
-        if(i > 0)
-        {
-          printf(",\n");
         }
 
         /* Figure out which group this track is in */
@@ -664,11 +664,27 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
         /*printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
                i, trprot->name, bitrate->name, time.minute,
                time.second, time.tenth, name);*/
-        printf("      { \"no\": %2i, \"protect\": \"%-6s\", \"bitrate\": \"%6s\", \"time\": \"%02i:%02i:%02i\", \"name\": \"%s\" }", 
-                        i, trprot->name, bitrate->name, time.minute, time.second, time.tenth, name);
+
+        // Format track time
+        char time_buf[9];
+        sprintf(time_buf, "%02i:%02i:%02i", time.minute, time.second, time.tenth);
+
+        // Create JSON track object and add to array
+        json_object* track = json_object_new_object();
+        json_object_object_add(track, "no",         json_object_new_int(i));
+        json_object_object_add(track, "protect",    json_object_new_string(trprot->name));
+        json_object_object_add(track, "bitrate",    json_object_new_string(bitrate->name));
+        json_object_object_add(track, "time",       json_object_new_string(time_buf));
+        json_object_object_add(track, "name",       json_object_new_string(name));
+        json_object_array_add(tracks, track);
     }
-    printf("\n    ]\n");
-    printf("}\n");
+
+    json_object_object_add(json, "tracks", tracks);
+    printf(json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
+
+    // Clean up JSON object
+    json_object_put(json);
+
     exit(0);
     
     /* XXX - This needs a rethink with the above method */
