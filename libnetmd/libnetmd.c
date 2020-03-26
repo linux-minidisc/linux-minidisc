@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <glib.h>
 
+#include "kataconv.h"
 #include "libnetmd.h"
 #include "utils.h"
 
@@ -130,6 +131,8 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
         printf("request_disc_title: title couldn't be converted from JIS_X0201 to UTF-8: %s\n", err->message);
         return -1;
     }
+
+    kata_half_to_full((uint8_t*)decoded_title_text);
 
     size_t decoded_title_size = strlen(decoded_title_text);
 
