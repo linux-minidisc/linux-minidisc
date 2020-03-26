@@ -56,6 +56,7 @@ KNOWN_USB_ID_SET = frozenset([
     (0x054c, 0x022c), # Sony CMT-AH10 (stereo set with integrated MD)
     (0x054c, 0x023c), # Sony DS-HMD1 (device without analog music rec/playback)
     (0x054c, 0x0286), # Sony MZ-RH1
+    (0x054c, 0x0287), # Sony MZ-RH1
 ])
 
 def iterdevices(usb_context, bus=None, device_address=None):

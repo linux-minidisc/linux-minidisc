@@ -36,6 +36,7 @@ ATTRS{idVendor}=="054c", ATTRS{idProduct}=="023c", MODE="0664", GROUP="plugdev"
 
 # Sony MZ-RH1
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0286", MODE="0664", GROUP="plugdev"
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0287", MODE="0664", GROUP="plugdev"
 
 
 ## NetMD
