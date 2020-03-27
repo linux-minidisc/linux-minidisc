@@ -23,7 +23,10 @@ see below if you want to try your luck anyway).
 ## Building
 
 Building the project excluding some of the HiMD parts requires `qmake`, `glib`, `libgcrypt`
-and `libusb`. On a recent Ubuntu, the following installs the required dependencies:
+and `libusb`.
+
+### Ubuntu
+On a recent Ubuntu, the following installs the required dependencies:
 
     apt-get install libgcrypt20-dev libglib2.0-dev libusb-1.0-0-dev qt4-qmake libid3tag0-dev libmad0-dev
 
@@ -40,8 +43,25 @@ to the NetMD device:
     sudo cp netmd/etc/netmd.rules /etc/udev/rules.d/99-netmd.rules
     sudo udevadm control -R
 
-Also add your own user to the `plugdev` group if not yet added.
+Also, add your own user to the `plugdev` group if not yet added.
 
+### Fedora
+On a recent Fedora, the following installs the required dependencies:
+
+    dnf install libgcrypt-devel glib2-devel libusb-devel qt-devel ibid3tag-devel libmad-devel
+    
+To set up the Makefiles, run
+
+    qmake-qt4 CONFIG=without_mad CONFIG+=without_gui
+
+Next, run `make` and everything relevant should get built.
+
+Follow the same instructions as Ubuntu for the `udev` rules, however the `plugdev` group will need to be added first:
+
+    groupadd plugdev
+    usermod -aG plugdev [username]
+
+### MacOS
 Building on MacOS should also work. You will need to have `pkg-config` installed.
 
 ## Usage
@@ -86,6 +106,24 @@ outputs. The `netmd/dump_md.py` script may be helpful in the latter case.
 
 If you care about upload support, there is some support in the code for it, but
 it probably needs work.
+
+## Troubleshooting
+***Minidisc player keeps disconnecting on Linux* or, *Minidisc player spins up, says `PC->->MD`, and then resets***
+
+This is likely due to having the `libmtp` library installed.
+Some programs pull this in as a dependency to be able to open MTP media players, e.g.
+VLC Media Player.
+
+This library includes a `udev` rule that falls back to probing the device if it's
+not matched in it's hardware DB. This probing program may cause the USB connection
+of the Minidisc player to reset, thus cycling the connection.
+
+Workarounds include uninstalling the library, creating a custom rule to work around the probe,
+or comment it out from `/lib/udev/rules.d/69-libmpt.rules`:
+
+    # Autoprobe vendor-specific, communication and PTP devices
+    #ENV{ID_MTP_DEVICE}!="1", ENV{MTP_NO_PROBE}!="1", ENV{COLOR_MEASUREMENT...
+
 
 ## Things that would be nice to have
 
