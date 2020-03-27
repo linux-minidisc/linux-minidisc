@@ -610,7 +610,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
     {
         size = netmd_request_title(devh, i, buffer, 256);
 
-        if(size <= 0)
+        if(size < 0)
         {
             break;
         }
