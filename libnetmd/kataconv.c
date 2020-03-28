@@ -21,7 +21,7 @@
  *
  */
 
-#include <stdint.h>
+#include "kataconv.h"
 
 struct tail {
     uint8_t a;
