@@ -129,8 +129,10 @@ QString QNetMDTracksModel::open(QMDDevice * device)
         ret = ndev->open();
     }
 
-    if(!ret.isEmpty())
+    if(!ret.isEmpty()) {
         close();
+        return ret;
+    }
 
     /* fetch track info for all tracks first, getting track info inside data() function is very slow */
     for(; i < ndev->trackCount(); i++)
