@@ -200,6 +200,8 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
 
     size = strlen(buffer);
 
+    kata_full_to_half((uint8_t*)buffer);
+
     char * encoded_title_text = g_convert(buffer, size, "JIS_X0201", "UTF-8", NULL, NULL, &err);
 
     if(err)
@@ -510,6 +512,8 @@ int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length
     oldsize = request_disc_title(dev, (char *)reply, sizeof(reply));
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
+
+    kata_full_to_half((uint8_t*)title);
 
     char * encoded_title_text = g_convert(title, title_length, "JIS_X0201", "UTF-8", NULL, NULL, &err);
 
