@@ -126,9 +126,8 @@ static int request_disc_title_raw(netmd_dev_handle* dev, char* buffer, size_t si
     if(title_response_size == 0 || title_response_size == 0x13)
         return -1; /* bail early somethings wrong */
 
-    int title_response_header_size = 25;
-    const char *title_text = title + title_response_header_size;
-    size_t title_size = title_response_size - title_response_header_size;
+    const char *title_text = title + NETMD_TITLE_RESPONSE_HEADER_SIZE;
+    size_t title_size = title_response_size - NETMD_TITLE_RESPONSE_HEADER_SIZE;
 
     if(title_size >= size)
     {
@@ -145,6 +144,7 @@ static int request_disc_title_raw(netmd_dev_handle* dev, char* buffer, size_t si
 static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
 {
     int ret = -1;
+    size_t title_response_size = 0;
     size_t title_text_size = 0;
     char title[255];
     GError * err = NULL;
@@ -156,7 +156,11 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
         return 0;
     }
 
-    title_text_size = (size_t)ret;
+    title_response_size = (size_t)ret;
+
+    // NOTE: request_disc_title returns the length of the entire response,
+    // header intact, not just the title string itself.
+    title_text_size = title_response_size - NETMD_TITLE_RESPONSE_HEADER_SIZE;
 
     char * decoded_title_text;
 
@@ -168,7 +172,11 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
             return 0;
         }
 
-        title_text_size = (size_t)ret;
+        title_response_size = (size_t)ret;
+
+        // NOTE: request_disc_title returns the length of the entire response,
+        // header intact, not just the title string itself.
+        title_text_size = title_response_size - NETMD_TITLE_RESPONSE_HEADER_SIZE;
 
         // convert the Shift JIS disc title to UTF-8
         decoded_title_text = g_convert(title, title_text_size, "UTF-8", "SHIFT_JIS", NULL, NULL, &err);
@@ -203,7 +211,7 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
     memcpy(buffer, decoded_title_text, decoded_title_size);
     g_free(decoded_title_text);
 
-    return title_text_size;
+    return title_response_size;
 }
 
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer)

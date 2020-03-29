@@ -28,6 +28,7 @@
 
 #include "kataconv.h"
 #include "trackinformation.h"
+#include "const.h"
 #include "utils.h"
 #include "log.h"
 
@@ -122,9 +123,8 @@ int netmd_request_title_raw(netmd_dev_handle* dev, const uint16_t track, char* b
     if(title_response_size == 0 || title_response_size == 0x13)
         return -1; /* bail early somethings wrong or no track */
 
-    int title_response_header_size = 25;
-    const char *title_text = title + title_response_header_size;
-    size_t title_size = title_response_size - title_response_header_size;
+    const char *title_text = title + NETMD_TITLE_RESPONSE_HEADER_SIZE;
+    size_t title_size = title_response_size - NETMD_TITLE_RESPONSE_HEADER_SIZE;
 
     if (title_size > size - 1)
     {

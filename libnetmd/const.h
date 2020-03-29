@@ -83,4 +83,9 @@
 
 #define NETMD_RIFF_FORMAT_TAG_ATRAC3 0x270
 
+/**
+   NetMD disc and track title responses' header size
+ */
+#define NETMD_TITLE_RESPONSE_HEADER_SIZE 25
+
 #endif
