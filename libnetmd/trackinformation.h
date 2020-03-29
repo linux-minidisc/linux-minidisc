@@ -29,7 +29,7 @@ int netmd_request_track_flags(netmd_dev_handle* dev, const uint16_t track, unsig
    Get the title for a specific track.
 
    Titles retrieved using this function are converted to
-   UTF-8 or your convenience.
+   UTF-8 for your convenience.
 
    @param dev pointer to device returned by netmd_open
    @param track Zero based index of track your requesting.
