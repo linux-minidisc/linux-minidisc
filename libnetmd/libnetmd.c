@@ -109,7 +109,7 @@ static int request_disc_title_raw(netmd_dev_handle* dev, char* buffer, size_t si
     }
 
     unsigned char title_request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x18,
-                                     0x01, encoding, 0x00, 0x30, 0x00, 0x0a,
+                                     0x01, 0x00, encoding, 0x30, 0x00, 0x0a,
                                      0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
                                      0x00};
     unsigned char title[255];
