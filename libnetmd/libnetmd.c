@@ -162,7 +162,7 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
 
     // if the narrow title is zero-length, request the wide (Shift JIS) disc title
     if (title_text_size == 0) {
-        ret = request_disc_title_raw(dev, title, size, false);
+        ret = request_disc_title_raw(dev, title, size, true);
         if(ret < 0)
         {
             return 0;
