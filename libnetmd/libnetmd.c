@@ -236,40 +236,35 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
     return 1;
 }
 
-int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+int netmd_set_title_raw(netmd_dev_handle* dev, const uint16_t track, const char* const buffer, bool wide_chars)
 {
     int ret = 1;
+
+    unsigned char encoding = 0x02;
+    if (wide_chars) {
+        encoding = 0x03;
+    }
+
     unsigned char *title_request = NULL;
     unsigned char title_header[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
-                                    0x02, 0x00, 0x00, 0x30, 0x00, 0x0a,
+                                    encoding, 0x00, 0x00, 0x30, 0x00, 0x0a,
                                     0x00, 0x50, 0x00, 0x00, 0x0a, 0x00,
                                     0x00, 0x00, 0x0d};
     unsigned char reply[255];
     unsigned char *buf;
     size_t size;
     int oldsize;
-    GError * err = NULL;
 
     /* the title update command wants to now how many bytes to replace */
-    oldsize = netmd_request_title(dev, track, (char *)reply, sizeof(reply));
+    oldsize = netmd_request_title_raw(dev, track, (char *)reply, sizeof(reply), wide_chars);
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
     size = strlen(buffer);
 
-    kata_full_to_half((uint8_t*)buffer);
-
-    char * encoded_title_text = g_convert(buffer, size, "JIS_X0201", "UTF-8", NULL, NULL, &err);
-
-    if(err)
-    {
-        printf("netmd_set_title: title couldn't be converted from UTF-8 to JIS_X0201: %s\n", err->message);
-        return -1;
-    }
-
     title_request = malloc(sizeof(char) * (0x15 + size));
     memcpy(title_request, title_header, 0x15);
-    memcpy((title_request + 0x15), encoded_title_text, size);
+    memcpy((title_request + 0x15), buffer, size);
 
     buf = title_request + 7;
     netmd_copy_word_to_buffer(&buf, track, 0);
@@ -277,12 +272,55 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     title_request[20] = oldsize & 0xff;
 
     ret = netmd_exch_message(dev, title_request, 0x15 + size, reply);
-    g_free(encoded_title_text);
     free(title_request);
 
     if(ret < 0)
     {
         fprintf(stderr, "bad ret code, returning early\n");
+        return 0;
+    }
+
+    return 1;
+}
+
+int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+{
+    int ret = 1;
+    size_t size;
+    bool wide_chars = false;
+
+    size = strlen(buffer);
+
+    // make a copy of the title to try turning into JIS X0201
+    char * halfwidth_converted_title_text[255];
+    strncpy((char *)halfwidth_converted_title_text, buffer, size);
+    kata_full_to_half((uint8_t*)halfwidth_converted_title_text);
+
+    GError * jis_x0201_err = NULL;
+    char * encoded_title_text = g_convert((const char*)halfwidth_converted_title_text, size, "JIS_X0201", "UTF-8", NULL, NULL, &jis_x0201_err);
+
+    // if we can't turn it into JIS X0201, let's try Shift JIS instead
+    if(jis_x0201_err)
+    {
+        GError * shift_jis_err = NULL;
+        encoded_title_text = g_convert(buffer, size, "SHIFT_JIS", "UTF-8", NULL, NULL, &shift_jis_err);
+
+        // if it can't be encoded as JIS X0201 or Shift JIS, it won't work on a standard MiniDisc!
+        if(shift_jis_err)
+        {
+            printf("netmd_set_title: title couldn't be converted from UTF-8 to JIS_X0201: '%s' or SHIFT_JIS: '%s'\n", jis_x0201_err->message, shift_jis_err->message);
+            return -1;
+        }
+
+        // Shift JIS goes in the "wide" title field
+        wide_chars = true;
+    }
+
+    ret = netmd_set_title_raw(dev, track, encoded_title_text, wide_chars);
+    g_free(encoded_title_text);
+
+    if(ret < 0)
+    {
         return 0;
     }
 
