@@ -665,8 +665,6 @@ int netmd_set_disc_title_raw(netmd_dev_handle* dev, char* title, size_t title_le
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
-    printf("netmd_set_disc_title_raw: oldsize = %d\n", oldsize);
-
     request = malloc(21 + title_length);
     memset(request, 0, 21 + title_length);
 
