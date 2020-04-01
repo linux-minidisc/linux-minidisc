@@ -109,12 +109,43 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
    Titles set using this function are converted from
    UTF-8 for your convenience.
 
+   Note that this function will automatically choose the
+   most appropriate title field to use, and clear the other.
+   For specific control over the wide and narrow title fields,
+   please use netmd_set_title_narrow and netmd_set_title_wide.
+
    @param dev pointer to device returned by netmd_open
    @param track Zero based index of track your requesting.
    @param buffer buffer to hold the name.
    @return returns 0 for fail 1 for success.
 */
 int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer);
+
+/**
+   Sets narrow (JIS X0201) title for the specified track.
+
+   Titles set using this function are converted from
+   UTF-8 for your convenience.
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param buffer buffer to hold the name.
+   @return returns -1 if text couldn't be converted, 0 for failure, and 1 for success.
+*/
+int netmd_set_title_narrow(netmd_dev_handle* dev, const uint16_t track, const char* const buffer);
+
+/**
+   Sets wide (Shift JIS) title for the specified track.
+
+   Titles set using this function are converted from
+   UTF-8 for your convenience.
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param buffer buffer to hold the name.
+   @return returns -1 if text couldn't be converted, 0 for failure, and 1 for success.
+*/
+int netmd_set_title_wide(netmd_dev_handle* dev, const uint16_t track, const char* const buffer);
 
 /**
    Sets raw title for the specified track.

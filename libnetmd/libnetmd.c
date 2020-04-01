@@ -291,43 +291,87 @@ int netmd_set_title_raw(netmd_dev_handle* dev, const uint16_t track, const char*
     return 1;
 }
 
-int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+int netmd_set_title_narrow(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
 {
     int ret = 1;
-    size_t size;
-    bool wide_chars = false;
-
-    size = strlen(buffer);
+    size_t size = strlen(buffer);
+    GError * err = NULL;
 
     // make a copy of the title to try turning into JIS X0201
     char * halfwidth_converted_title_text[255];
     strncpy((char *)halfwidth_converted_title_text, buffer, size);
     kata_full_to_half((uint8_t*)halfwidth_converted_title_text);
 
-    GError * jis_x0201_err = NULL;
-    char * encoded_title_text = g_convert((const char*)halfwidth_converted_title_text, size, "JIS_X0201", "UTF-8", NULL, NULL, &jis_x0201_err);
+    char * encoded_title_text = g_convert((const char*)halfwidth_converted_title_text, size, "JIS_X0201", "UTF-8", NULL, NULL, &err);
 
-    // if we can't turn it into JIS X0201, let's try Shift JIS instead
-    if(jis_x0201_err)
+    if(err)
     {
-        GError * shift_jis_err = NULL;
-        encoded_title_text = g_convert(buffer, size, "SHIFT_JIS", "UTF-8", NULL, NULL, &shift_jis_err);
-
-        // if it can't be encoded as JIS X0201 or Shift JIS, it won't work on a standard MiniDisc!
-        if(shift_jis_err)
-        {
-            printf("netmd_set_title: title couldn't be converted from UTF-8 to JIS_X0201: '%s' or SHIFT_JIS: '%s'\n", jis_x0201_err->message, shift_jis_err->message);
-            return -1;
-        }
-
-        // Shift JIS goes in the "wide" title field
-        wide_chars = true;
+        printf("netmd_set_title_narrow: title couldn't be converted from UTF-8 to JIS_X0201: '%s'\n", err->message);
+        return -1;
     }
 
-    ret = netmd_set_title_raw(dev, track, encoded_title_text, wide_chars);
+    ret = netmd_set_title_raw(dev, track, encoded_title_text, false);
     g_free(encoded_title_text);
 
-    if(ret < 0)
+    if(ret < 1)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int netmd_set_title_wide(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+{
+    int ret = 1;
+    size_t size = strlen(buffer);
+    GError * err = NULL;
+
+    char * encoded_title_text  = g_convert(buffer, size, "SHIFT_JIS", "UTF-8", NULL, NULL, &err);
+
+    if(err)
+    {
+        printf("netmd_set_title_wide: title couldn't be converted from UTF-8 to SHIFT_JIS: '%s'\n", err->message);
+        return -1;
+    }
+
+    ret = netmd_set_title_raw(dev, track, encoded_title_text, true);
+    g_free(encoded_title_text);
+
+    if(ret < 1)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+{
+    int ret = 1;
+    int ret_secondary = 1;
+    const char * blank_title = "";
+
+    // first, try setting the narrow title
+    ret = netmd_set_title_narrow(dev, track, buffer);
+
+    // if we're successful, blank out the wide title
+    if (ret == 1) {
+        ret_secondary = netmd_set_title_wide(dev, track, blank_title);
+    }
+    // if we can't set the narrow title, try wide
+    else if(ret == -1)
+    {
+        ret = netmd_set_title_wide(dev, track, buffer);
+
+        // if that works, blank out the narrow title
+        if (ret == 1) {
+            ret_secondary = netmd_set_title_narrow(dev, track, blank_title);
+        }
+    }
+
+    // finally, massage the main return code
+    if(ret < 1)
     {
         return 0;
     }
