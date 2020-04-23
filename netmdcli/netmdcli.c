@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
     netmd_error error;
     FILE *f;
 
-    error = netmd_init(&device_list);
+    error = netmd_init(&device_list, NULL);
     if (error != NETMD_NO_ERROR) {
         printf("Error initializing netmd\n%s\n", netmd_strerror(error));
         return -1;

@@ -78,7 +78,7 @@ static struct netmd_devices const known_devices[] =
 };
 
 
-netmd_error netmd_init(netmd_device **device_list)
+netmd_error netmd_init(netmd_device **device_list, libusb_context *hctx)
 {
     int count = 0;
     ssize_t usb_device_count;
@@ -86,6 +86,13 @@ netmd_error netmd_init(netmd_device **device_list)
     netmd_device *new_device;
     libusb_device **list;
     struct libusb_device_descriptor desc;
+
+    /* skip device enumeration when using libusb hotplug feature
+     * use libusb_context of running libusb instance from hotplug initialisation */
+    if(hctx) {
+        ctx = hctx;
+        return NETMD_USE_HOTPLUG;
+    }
 
     libusb_init(&ctx);
 
