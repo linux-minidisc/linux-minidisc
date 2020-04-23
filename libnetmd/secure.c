@@ -349,30 +349,41 @@ size_t netmd_get_frame_size(netmd_wireformat wireformat)
 }
 
 void netmd_transfer_song_packets(netmd_dev_handle *dev,
-                                 netmd_track_packets *packets)
+                                 netmd_track_packets *packets,
+                                 size_t full_length)
 {
     netmd_track_packets *p;
     unsigned char *packet, *buf;
     size_t packet_size;
     int error;
     int transferred = 0;
+    int first_packet = 1;
 
     p = packets;
     while (p != NULL) {
         /* length + key + iv + data */
-        packet_size = 8 + 8 + 8 + p->length;
+        if(first_packet)                                     // length, key and iv in first packet only
+            packet_size = 8 + 8 + 8 + p->length;
+        else
+            packet_size = p->length;
+
         packet = malloc(packet_size);
         buf = packet;
 
         /* build packet... */
-        netmd_copy_quadword_to_buffer(&buf, p->length);
-        memcpy(buf, p->key, 8);
-        memcpy(buf + 8, p->iv, 8);
-        memcpy(buf + 16, p->data, p->length);
+        if(first_packet) {                                   // lenght, key and iv in first packet only
+            netmd_copy_quadword_to_buffer(&buf, full_length);
+            memcpy(buf, p->key, 8);
+            memcpy(buf + 8, p->iv, 8);
+            memcpy(buf + 16, p->data, p->length);
+        }
+        else {
+            memcpy(buf, p->data, p->length);
+        }
 
         /* ... send it */
-        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 10000);
-        netmd_log(NETMD_LOG_DEBUG, "%d %d\n", packet_size, error);
+        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 80000);
+        netmd_log(NETMD_LOG_VERBOSE, "%d of %d bytes transferred, libusb error code: %d\n", transferred, packet_size, error);
 
         /* cleanup */
         free(packet);
@@ -380,18 +391,23 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
 
         if (error >= 0) {
             p = p->next;
+            first_packet = 0;
         }
-        break;
+        else {
+            break;
+        }
     }
 }
 
 netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   netmd_track_packets **packets,
-                                  size_t *packet_count,
-                                  unsigned char *key_encryption_key)
+                                  size_t *packet_count, size_t *frames, size_t channels, size_t *packet_length,
+                                  unsigned char *key_encryption_key, netmd_wireformat format)
 {
     size_t position = 0;
-    size_t chunksize = 0xffffffffU;
+    size_t chunksize, packet_data_length, first_chunk = 0x00800000U;     // limit chunksize to multiple of 16384 bytes (incl. 24 byte header data for first packet)
+    size_t frame_size = netmd_get_frame_size(format);
+    int padding = 0;
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
 
@@ -399,27 +415,49 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
     gcry_cipher_hd_t data_handle;
     unsigned char iv[8] = { 0 };
     unsigned char rand[8] = { 0 };
+    unsigned char key[8] = { 0 };
 
     netmd_error error = NETMD_NO_ERROR;
 
+    if(channels == NETMD_CHANNELS_MONO)
+        frame_size /= 2;
 
     gcry_cipher_open(&key_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
     gcry_cipher_open(&data_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
     gcry_cipher_setkey(key_handle, key_encryption_key, 8);
 
-
     /* generate initial iv */
     gcry_create_nonce(iv, sizeof(iv));
 
+    /* generate key, use same key for all packets*/
+    gcry_randomize(rand, sizeof(rand), GCRY_STRONG_RANDOM);
+    gcry_cipher_decrypt(key_handle, key, 8, rand, sizeof(rand));
+
     *packet_count = 0;
     while (position < data_lenght) {
-        if ((data_lenght - position) < chunksize) {
-            /* limit chunksize for last packet */
-            chunksize = data_lenght - position;
-        }
 
-        if ((chunksize % 8) != 0) {
-            chunksize = chunksize + 8 - (chunksize % 8);
+         // decrease chunksize by 24 (length, iv and key) for 1st packet
+        if ((*packet_count) > 0)
+            chunksize = first_chunk;
+        else
+           chunksize = first_chunk - 24U;
+
+       packet_data_length = chunksize;
+
+        if ((data_lenght - position) < chunksize) {                  // last packet
+            packet_data_length = data_lenght - position;             // do not encrypt padding bytes
+            /* adjust size for DES encryption, should not happen if input file is not corrupt, ensure buffer for input file is large enough */
+            if((packet_data_length % 8) != 0) {
+                padding = 8 - (packet_data_length % 8);
+                packet_data_length += padding;
+            }
+            /* do not truncate if last frame is incomplete, include padding bytes for DES encryption in size calculation */
+            if((data_lenght % frame_size) != 0 || padding != 0) {
+                padding = frame_size - (data_lenght % frame_size) - padding;
+                if(padding < 0)
+                    padding += frame_size;
+            }
+            chunksize = packet_data_length + padding;
         }
 
         /* alloc memory */
@@ -439,25 +477,27 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
             *packets = next;
         }
 
-        /* generate key */
-        gcry_randomize(rand, sizeof(rand), GCRY_STRONG_RANDOM);
-        gcry_cipher_decrypt(key_handle, next->key, 8, rand, sizeof(rand));
-
         /* crypt data */
         memcpy(next->iv, iv, 8);
+        memcpy(next->key, key, 8);
         gcry_cipher_setiv(data_handle, iv, 8);
         gcry_cipher_setkey(data_handle, rand, sizeof(rand));
-        gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, chunksize);
-        memcpy(iv, data + position - 8, 8);
+        gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, packet_data_length);
+        /* set last encrypted block as iv for the next packet */
+        memcpy(iv, data + position + packet_data_length - 8, 8);
 
         /* next packet */
         position = position + chunksize;
         (*packet_count)++;
         last = next;
+        netmd_log(NETMD_LOG_VERBOSE, "generating packet %d : %d bytes\n", *packet_count, chunksize);
     }
 
     gcry_cipher_close(key_handle);
     gcry_cipher_close(data_handle);
+
+    *frames = position/frame_size;
+    *packet_length = position;
 
     return error;
 }
@@ -484,7 +524,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
                                     unsigned char discformat,
                                     unsigned int frames,
                                     netmd_track_packets *packets,
-                                    size_t packet_count,
+                                    size_t packet_length,
                                     unsigned char *sessionkey,
 
                                     uint16_t *track, unsigned char *uuid,
@@ -510,7 +550,8 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     *(buf++) = discformat & 0xffU;
     netmd_copy_doubleword_to_buffer(&buf, frames, 0);
 
-    totalbytes = netmd_get_frame_size(wireformat) * frames + packet_count * 24U;
+    totalbytes = netmd_get_frame_size(wireformat) * frames + 24U;
+    netmd_log(NETMD_LOG_VERBOSE, "total transfer size : %d bytes, %d frames of %d bytes\n", totalbytes, frames, netmd_get_frame_size(wireformat));
     netmd_copy_doubleword_to_buffer(&buf, totalbytes, 0);
 
     netmd_send_secure_msg(dev, 0x28, cmd, sizeof(cmd));
@@ -520,7 +561,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     netmd_check_response(&response, 0x00, &error);
 
     if (error == NETMD_NO_ERROR) {
-        netmd_transfer_song_packets(dev, packets);
+        netmd_transfer_song_packets(dev, packets, packet_length);
 
         error = netmd_recv_secure_msg(dev, 0x28, &response, NETMD_STATUS_ACCEPTED);
         netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);

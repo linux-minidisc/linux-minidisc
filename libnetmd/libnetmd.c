@@ -134,7 +134,6 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer)
 {
     int ret = 0;
-    int size = 0;
     unsigned char request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x10,
                                0x01, 0x00, 0x01, 0x30, 0x00, 0x01,
                                0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
@@ -150,8 +149,6 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
         fprintf(stderr, "bad ret code, returning early\n");
         return 0;
     }
-
-    size = ret;
 
     buffer->minute = bcd_to_proper(time_request + 28, 1) & 0xff;
     buffer->second = bcd_to_proper(time_request + 29, 1) & 0xff;
