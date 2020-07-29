@@ -353,7 +353,7 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
 {
     netmd_track_packets *p;
     unsigned char *packet, *buf;
-    size_t packet_size;
+    size_t packet_size, usb_timeout;
     int error;
     int transferred = 0;
 
@@ -370,9 +370,13 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
         memcpy(buf + 8, p->iv, 8);
         memcpy(buf + 16, p->data, p->length);
 
+        /* set usb timeout according to the packet size, ~ 3 - 3,5 sec/1MB */
+        usb_timeout = packet_size/300;
+        netmd_log(NETMD_LOG_VERBOSE, "setting usb timeout : %d seconds\n", usb_timeout/1000);
+
         /* ... send it */
-        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 10000);
-        netmd_log(NETMD_LOG_DEBUG, "%d %d\n", packet_size, error);
+        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, usb_timeout);
+        netmd_log(NETMD_LOG_VERBOSE, "%d of %d bytes transferred, libusb error code: %d\n", transferred, packet_size, error);
 
         /* cleanup */
         free(packet);
@@ -494,6 +498,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     unsigned char cmd[sizeof(cmdhdr) + 13];
     unsigned char *buf;
     size_t totalbytes;
+    time_t starttime, endtime;
 
     netmd_response response;
     netmd_error error;
@@ -511,7 +516,12 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     netmd_copy_doubleword_to_buffer(&buf, frames, 0);
 
     totalbytes = netmd_get_frame_size(wireformat) * frames + packet_count * 24U;
+    netmd_log(NETMD_LOG_VERBOSE, "total transfer size : %d bytes\n", totalbytes);
     netmd_copy_doubleword_to_buffer(&buf, totalbytes, 0);
+
+    /* log time consumption for debugging/analysing usb timeout value */
+    time(&starttime);
+    netmd_log(NETMD_LOG_VERBOSE, "starting transfer of %d bytes at : %s", totalbytes, ctime(&starttime));
 
     netmd_send_secure_msg(dev, 0x28, cmd, sizeof(cmd));
     error = netmd_recv_secure_msg(dev, 0x28, &response, NETMD_STATUS_INTERIM);
@@ -541,6 +551,10 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
         memcpy(uuid, encryptedreply, 8);
         memcpy(content_id, encryptedreply + 12, 20);
     }
+
+    time(&endtime);
+    netmd_log(NETMD_LOG_VERBOSE, "transfer of %d bytes finished at : %s", totalbytes, ctime(&endtime));
+    netmd_log(NETMD_LOG_VERBOSE, "time consumption : %u seconds\n", endtime - starttime);
 
     return error;
 }

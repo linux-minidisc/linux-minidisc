@@ -15,6 +15,9 @@ typedef enum {
         /** warning messages */
         NETMD_LOG_WARNING,
 
+        /** debug messages */
+        NETMD_LOG_VERBOSE,
+
         /** messages to display */
         NETMD_LOG_DEBUG,
 
