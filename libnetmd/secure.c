@@ -382,7 +382,7 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
         }
 
         /* ... send it */
-        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 50000);
+        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 80000);
         netmd_log(NETMD_LOG_VERBOSE, "%d of %d bytes transferred, libusb error code: %d\n", transferred, packet_size, error);
 
         /* cleanup */
@@ -405,8 +405,9 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   unsigned char *key_encryption_key, netmd_wireformat format)
 {
     size_t position = 0;
-    size_t chunksize, padding = 0, packet_data_length, first_chunk = 0x00800000U;     // limit chunksize to multiple of 16384 bytes (incl. 24 byte header data for first packet)
+    size_t chunksize, packet_data_length, first_chunk = 0x00800000U;     // limit chunksize to multiple of 16384 bytes (incl. 24 byte header data for first packet)
     size_t frame_size = netmd_get_frame_size(format);
+    int padding = 0;
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
 
@@ -448,11 +449,14 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
             packet_data_length = data_lenght - position;             // do not encrypt padding bytes
             /* adjust size for DES encryption, should not happen if input file is not corrupt, ensure buffer for input file is large enough */
             if((packet_data_length % 8) != 0) {
-                packet_data_length += 8 - (packet_data_length % 8);
+                padding = 8 - (packet_data_length % 8);
+                packet_data_length += padding;
             }
-            /* do not truncate if last frame is incomplete */
-            if((data_lenght % frame_size) != 0) {
-                padding = frame_size - (data_lenght % frame_size);
+            /* do not truncate if last frame is incomplete, include padding bytes for DES encryption in size calculation */
+            if((data_lenght % frame_size) != 0 || padding != 0) {
+                padding = frame_size - (data_lenght % frame_size) - padding;
+                if(padding < 0)
+                    padding += frame_size;
             }
             chunksize = packet_data_length + padding;
         }
