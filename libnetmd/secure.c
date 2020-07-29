@@ -391,11 +391,12 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
 
 netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   netmd_track_packets **packets,
-                                  size_t *packet_count,
-                                  unsigned char *key_encryption_key)
+                                  size_t *packet_count, size_t *frames, size_t channels,
+                                  unsigned char *key_encryption_key, netmd_wireformat format)
 {
     size_t position = 0;
     size_t chunksize = 0xffffffffU;
+    size_t frame_size = netmd_get_frame_size(format);
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
 
@@ -406,6 +407,8 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
 
     netmd_error error = NETMD_NO_ERROR;
 
+    if(channels == NETMD_CHANNELS_MONO)
+        frame_size /= 2;
 
     gcry_cipher_open(&key_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
     gcry_cipher_open(&data_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
@@ -422,9 +425,9 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
             chunksize = data_lenght - position;
         }
 
-        if ((chunksize % 8) != 0) {
-            chunksize = chunksize + 8 - (chunksize % 8);
-        }
+        /* do not truncate frames, transfer data size will be calculated by number of frames in netmd_secure_send_track(),
+           alternatively change totalbytes calculation in netmd_secure_send_track() */
+        chunksize = ((chunksize + frame_size - 1) / frame_size) * frame_size;
 
         /* alloc memory */
         next = malloc(sizeof(netmd_track_packets));
@@ -462,6 +465,8 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
 
     gcry_cipher_close(key_handle);
     gcry_cipher_close(data_handle);
+
+    *frames = position/frame_size;
 
     return error;
 }
