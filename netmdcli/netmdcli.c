@@ -858,6 +858,9 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
         }
     }
 
+    error = netmd_acquire_dev(devh);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_acquire_dev: %s\n", netmd_strerror(error));
+
     error = netmd_secure_leave_session(devh);
     netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(error));
 
@@ -988,6 +991,9 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
     /* leave session */
     cleanup_error = netmd_secure_leave_session(devh);
     netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(cleanup_error));
+
+	cleanup_error = netmd_release_dev(devh);
+	netmd_log(NETMD_LOG_VERBOSE, "netmd_release_dev : %s\n", netmd_strerror(cleanup_error));
 
     return error; /* return error code from the "business logic" */
 }

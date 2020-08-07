@@ -1157,3 +1157,25 @@ int netmd_sync_toc(netmd_dev_handle* dev)
     ret = netmd_exch_message(dev, request, sizeof(request), reply);
     return ret;
 }
+
+int netmd_acquire_dev(netmd_dev_handle* dev)
+{
+    int ret = 0;
+    unsigned char request[] = {0x00, 0xff, 0x01, 0x0c, 0xff, 0xff, 0xff, 0xff,
+                               0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    unsigned char reply[255];
+
+    ret = netmd_exch_message(dev, request, sizeof(request), reply);
+    return ret;
+}
+
+int netmd_release_dev(netmd_dev_handle* dev)
+{
+    int ret = 0;
+    unsigned char request[] = {0x00, 0xff, 0x01, 0x00, 0xff, 0xff, 0xff, 0xff,
+                               0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    unsigned char reply[255];
+
+    ret = netmd_exch_message(dev, request, sizeof(request), reply);
+    return ret;
+}
