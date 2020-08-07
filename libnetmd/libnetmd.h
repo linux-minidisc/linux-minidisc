@@ -245,3 +245,5 @@ int netmd_wait_for_sync(netmd_dev_handle* dev);
 
 int netmd_cache_toc(netmd_dev_handle* dev);
 int netmd_sync_toc(netmd_dev_handle* dev);
+int netmd_acquire_dev(netmd_dev_handle* dev);
+int netmd_release_dev(netmd_dev_handle* dev);
