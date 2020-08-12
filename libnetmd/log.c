@@ -98,4 +98,5 @@ void netmd_log(netmd_loglevel level, const char* const fmt, ...)
     va_start(arg, fmt);
     vprintf(fmt, arg);
     va_end(arg);
+    fflush(stdout);
 }
