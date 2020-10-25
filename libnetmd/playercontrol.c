@@ -209,12 +209,14 @@ netmd_error netmd_get_position(netmd_dev_handle* dev, netmd_time* time)
 
 netmd_error netmd_get_disc_capacity(netmd_dev_handle* dev, netmd_disc_capacity* capacity)
 {
+    unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x10, 0x00, 0x01, 0x00};
     unsigned char request[] = {0x00, 0x18, 0x06, 0x02, 0x10, 0x10,
                                0x00, 0x30, 0x80, 0x03, 0x00, 0xff,
                                0x00, 0x00, 0x00, 0x00, 0x00};
     unsigned char buf[255];
 
     /* TODO: error checking */
+    netmd_exch_message(dev, hs, sizeof(hs), buf);
     netmd_exch_message(dev, request, sizeof(request), buf);
     netmd_parse_time(buf + 27, &capacity->recorded);
     netmd_parse_time(buf + 34, &capacity->total);

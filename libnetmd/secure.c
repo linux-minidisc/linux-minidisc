@@ -126,6 +126,11 @@ netmd_error netmd_recv_secure_msg(netmd_dev_handle *dev, unsigned char cmd,
     if (response->length < 1) {
         return NETMD_COMMAND_FAILED_NO_RESPONSE;
     }
+    /* Fix for decks/bookshelf systems that return interim status and require a
+       re-read for the real response. */
+    if (response->content[0] == NETMD_STATUS_INTERIM && expected_response_code != NETMD_STATUS_INTERIM) {
+      return NETMD_STATUS_INTERIM;
+    }
 
     error = parse_netmd_return_status(response->content[0], expected_response_code);
     response->position = 1;
@@ -147,8 +152,15 @@ netmd_error netmd_exch_secure_msg(netmd_dev_handle *dev, unsigned char cmd,
                                   unsigned char *data, size_t data_size,
                                   netmd_response *response)
 {
+    int rsp;
     netmd_send_secure_msg(dev, cmd, data, data_size);
-    return netmd_recv_secure_msg(dev, cmd, response, NETMD_STATUS_ACCEPTED);
+    rsp = netmd_recv_secure_msg(dev, cmd, response, NETMD_STATUS_ACCEPTED);
+    if (rsp == NETMD_STATUS_INTERIM) {
+      netmd_log(NETMD_LOG_DEBUG, "Re-reading secure exch\n");
+      return netmd_recv_secure_msg(dev, cmd, response, NETMD_STATUS_ACCEPTED);
+    } else {
+      return rsp;
+    }
 }
 
 /*
@@ -390,7 +402,7 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
             netmd_log(NETMD_LOG_ERROR, "USB transfer error after %zu of %zu total bytes (%d of %d bytes in packet): %s\n",
                 total_transferred, display_length, transferred, packet_size, libusb_strerror(error));
         else
-            netmd_log(NETMD_LOG_VERBOSE, "%zu of %zu bytes (%zu%%) transferred (%d of %d bytes in packet)\n", 
+            netmd_log(NETMD_LOG_VERBOSE, "%zu of %zu bytes (%zu%%) transferred (%d of %d bytes in packet)\n",
                 total_transferred, display_length, (total_transferred * 100 / display_length), transferred, packet_size);
 
         /* cleanup */
@@ -606,7 +618,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
         gcry_cipher_setkey(handle, sessionkey, 8);
         gcry_cipher_decrypt(handle, encryptedreply, sizeof(encryptedreply), NULL, 0);
         gcry_cipher_close(handle);
-        
+
         memcpy(uuid, encryptedreply, 8);
         memcpy(content_id, encryptedreply + 12, 20);
     }

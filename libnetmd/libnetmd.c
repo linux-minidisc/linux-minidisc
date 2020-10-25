@@ -32,7 +32,7 @@
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
 /*! Bertrik: the original interpretation of these numbers as codecs appears incorrect.
   These values look like track protection values instead */
-struct netmd_pair const trprot_settings[] = 
+struct netmd_pair const trprot_settings[] =
 {
     {0x00, "UnPROT"},
     {0x03, "TrPROT"},
@@ -42,7 +42,7 @@ struct netmd_pair const trprot_settings[] =
 /*! list of known bitrates (mapped to protocol ID) that can be used in NetMD devices */
 struct netmd_pair const bitrates[] =
 {
-    {NETMD_ENCODING_SP, "Stereo"},
+    {NETMD_ENCODING_SP, "SP"},
     {NETMD_ENCODING_LP2, "LP2"},
     {NETMD_ENCODING_LP4, "LP4"},
     {0, 0} /* terminating pair */
@@ -148,6 +148,7 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer)
 {
     int ret = 0;
+    unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x10, 0x01, 0x01, 0x00};
     unsigned char request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x10,
                                0x01, 0x00, 0x01, 0x30, 0x00, 0x01,
                                0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
@@ -157,6 +158,7 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
 
     buf = request + 7;
     netmd_copy_word_to_buffer(&buf, track, 0);
+    netmd_exch_message(dev, hs, 8, time_request);
     ret = netmd_exch_message(dev, request, 0x13, time_request);
     if(ret < 0)
     {
@@ -176,6 +178,10 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
 {
     int ret = 1;
     unsigned char *title_request = NULL;
+    /* handshakes for 780/980/etc */
+    unsigned char hs2[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02, 0x00, 0x00};
+    unsigned char hs3[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02, 0x03, 0x00};
+
     unsigned char title_header[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
                                     0x02, 0x00, 0x00, 0x30, 0x00, 0x0a,
                                     0x00, 0x50, 0x00, 0x00, 0x0a, 0x00,
@@ -200,6 +206,11 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     title_request[16] = size & 0xff;
     title_request[20] = oldsize & 0xff;
 
+
+    /* send handshakes */
+    netmd_exch_message(dev, hs2, 8, reply);
+    netmd_exch_message(dev, hs3, 8, reply);
+
     ret = netmd_exch_message(dev, title_request, 0x15 + size, reply);
     free(title_request);
 
@@ -214,6 +225,7 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
 int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t finish)
 {
     int ret = 0;
+    unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x10, 0x01, 0x00, 0x00};
     unsigned char request[] = {0x00, 0x18, 0x43, 0xff, 0x00, 0x00,
                                0x20, 0x10, 0x01, 0x00, 0x04, 0x20,
                                0x10, 0x01, 0x00, 0x03};
@@ -226,6 +238,8 @@ int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t
     buf = request + 14;
     netmd_copy_word_to_buffer(&buf, finish, 0);
 
+    netmd_exch_message(dev, hs, 8, reply);
+    netmd_exch_message(dev, request, 16, reply);
     ret = netmd_exch_message(dev, request, 16, reply);
 
     if(ret < 0)
@@ -481,6 +495,10 @@ int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length
     unsigned char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
                                  0x01, 0x00, 0x00, 0x30, 0x00, 0x0a,
                                  0x00, 0x50, 0x00, 0x00};
+    unsigned char hs1[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x01, 0x00};
+    unsigned char hs2[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x00, 0x00};
+    unsigned char hs3[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x03, 0x00};
+    unsigned char hs4[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x00, 0x00};
     unsigned char reply[256];
     int result;
     int oldsize;
@@ -500,7 +518,13 @@ int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length
     p = request + 21;
     memcpy(p, title, title_length);
 
+    /* send handshakes */
+    netmd_exch_message(dev, hs1, sizeof(hs1), reply);
+    netmd_exch_message(dev, hs2, sizeof(hs2), reply);
+    netmd_exch_message(dev, hs3, sizeof(hs3), reply);
     result = netmd_exch_message(dev, request, 0x15 + title_length, reply);
+    /* send handshake to write */
+    netmd_exch_message(dev, hs4, sizeof(hs4), reply);
     return result;
 }
 
@@ -867,17 +891,22 @@ char* netmd_generate_disc_header(minidisc* md, char* header, size_t header_lengt
 
 int netmd_write_disc_header(netmd_dev_handle* devh, minidisc* md)
 {
+
     size_t header_size;
     size_t request_size;
     char* header = 0;
     unsigned char* request = 0;
+    unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x03, 0x00};
+    unsigned char hs2[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x00, 0x00};
     unsigned char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
                                  0x01, 0x00, 0x00, 0x30, 0x00, 0x0a,
                                  0x00, 0x50, 0x00, 0x00, 0x00, 0x00,
                                  0x00, 0x00, 0x00};
     unsigned char reply[255];
     int ret;
-
+    printf("sending write disc header handshake");
+    netmd_exch_message(devh, hs, 8, reply);
+    printf("...OK\n");
     header_size = netmd_calculate_disc_header_length(md);
     header = malloc(sizeof(char) * header_size);
     memset(header, 0, header_size);
@@ -1165,7 +1194,11 @@ int netmd_acquire_dev(netmd_dev_handle* dev)
     unsigned char reply[255];
 
     ret = netmd_exch_message(dev, request, sizeof(request), reply);
-    return ret;
+    if (reply[0] == NETMD_STATUS_ACCEPTED){
+      return NETMD_NO_ERROR;
+    } else {
+      return NETMD_COMMAND_FAILED_UNKNOWN_ERROR;
+    }
 }
 
 int netmd_release_dev(netmd_dev_handle* dev)

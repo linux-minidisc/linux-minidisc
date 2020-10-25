@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "trackinformation.h"
 #include "utils.h"
@@ -65,6 +66,7 @@ int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint16_t track,
 {
     unsigned char info[8] = { 0 };
 
+    msleep(5); // Sleep fixes 'unknown' bitrate being returned on many devices.
     netmd_get_track_information(dev, track, 0x3080, 0x0700, info, sizeof(info));
     memcpy(encoding, info + 6, 1);
     memcpy(channel, info + 7, 1);

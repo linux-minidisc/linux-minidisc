@@ -305,7 +305,6 @@ int main(int argc, char* argv[])
         print_syntax();
         return 0;
     }
-
     error = netmd_init(&device_list, NULL);
     if (error != NETMD_NO_ERROR) {
         printf("Error initializing netmd\n%s\n", netmd_strerror(error));
@@ -326,7 +325,7 @@ int main(int argc, char* argv[])
         printf("Error opening netmd\n%s\n", netmd_strerror(error));
         return 1;
     }
-
+    
     error = netmd_get_devname(devh, name, 16);
     if (error != NETMD_NO_ERROR)
     {
@@ -554,9 +553,11 @@ int main(int argc, char* argv[])
                 title = argv[3];
 
             exit_code = send_track(devh, filename, title) == NETMD_NO_ERROR ? 0 : 1;
+        } else if (strcmp("leave", argv[1]) == 0) {
+          error = netmd_secure_leave_session(devh);
+          netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(error));
         }
-        else
-        {
+        else {
             netmd_log(NETMD_LOG_ERROR, "Unknown command '%s'; use 'help' for list of commands\n", argv[1]);
             exit_code = 1;
         }
@@ -602,7 +603,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
     struct netmd_pair const *trprot, *bitrate;
 
     trprot = bitrate = 0;
-    
+
     netmd_disc_capacity capacity;
     netmd_get_disc_capacity(devh, &capacity);
 
@@ -686,7 +687,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
     json_object_put(json);
 
     exit(0);
-    
+
     /* XXX - This needs a rethink with the above method */
     /* groups may not have tracks, print the rest. */
     printf("\n--Empty Groups--\n");
@@ -886,7 +887,7 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
         if ((data_position = wav_data_position(data, headersize, data_size)) == 0) {
             netmd_log(NETMD_LOG_ERROR, "cannot locate audio data in file\n");
             free(data);
-            
+
             return NETMD_ERROR;
         }
         else {

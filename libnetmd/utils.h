@@ -16,6 +16,13 @@ typedef struct {
     #define min(a,b) ((a)<(b)?(a):(b))
 #endif
 
+#ifdef WIN32
+    #include <windows.h>
+    #define msleep(x) Sleep(x)
+#else
+    #define msleep(x) usleep(1000*x)
+#endif
+
 unsigned char proper_to_bcd_single(unsigned char value);
 unsigned char* proper_to_bcd(unsigned int value, unsigned char* target, size_t len);
 unsigned char bcd_to_proper_single(unsigned char value);
