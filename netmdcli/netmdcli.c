@@ -325,7 +325,7 @@ int main(int argc, char* argv[])
         printf("Error opening netmd\n%s\n", netmd_strerror(error));
         return 1;
     }
-    
+
     error = netmd_get_devname(devh, name, 16);
     if (error != NETMD_NO_ERROR)
     {
@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
 
     // Construct JSON object
     json = json_object_new_object();
-    json_object_object_add(json, "device",  json_object_new_string(name));
+    json_object_object_add(json, "device",  json_object_new_string(netmd->model));
     json_object_object_add(json, "title",   json_object_new_string(md->groups[0].name));
 
     /* parse commands */
