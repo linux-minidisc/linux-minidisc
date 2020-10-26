@@ -98,9 +98,6 @@ int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd,
       netmd_log(NETMD_LOG_DEBUG, "Response code:\n");
       netmd_log_hex(NETMD_LOG_DEBUG, &rsp[0], 1);
     }
-    else if (rsp[0] == NETMD_STATUS_REJECTED) {
-      netmd_log(NETMD_LOG_ERROR, "NETMD ERROR: REJECTED\n");
-    }
     return len;
 }
 
