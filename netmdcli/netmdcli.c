@@ -653,14 +653,12 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
         bitrate = find_pair(bitrate_id, bitrates);
 
         /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
-        //if( strncmp( buffer, "LP:", 3 ))
-        //{
+        if( strncmp( buffer, "LP:", 3 ))
+        {
             name = buffer;
-        //}
-        //else
-        //{
-        //    name = buffer + 3;
-        //}
+        } else {
+            name = buffer + 3;
+        }
 
         /*printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
                i, trprot->name, bitrate->name, time.minute,
