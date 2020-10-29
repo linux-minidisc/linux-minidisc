@@ -645,7 +645,7 @@ netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length,
             done += transferred;
             fwrite(data, (size_t) transferred, 1, file);
 
-            netmd_log(NETMD_LOG_DEBUG, "%.1f%%\n", (double)done/(double)length * 100);
+            netmd_log(NETMD_LOG_VERBOSE, "%.1f%%\n", (double)done/(double)length * 100);
         }
         else if (status != -LIBUSB_ERROR_TIMEOUT) {
             error = NETMD_USB_ERROR;
@@ -678,7 +678,6 @@ void netmd_write_aea_header(char *name, uint32_t frames, unsigned char channel, 
     netmd_copy_doubleword_to_buffer(&buf, 2048, 1);
     strncpy((char *)buf, name, 255);
     buf += 256;
-
     netmd_copy_doubleword_to_buffer(&buf, frames, 1);
     *(buf++) = netmd_get_channel_count(channel);
     *(buf++) = 0; /* flags */
@@ -686,7 +685,6 @@ void netmd_write_aea_header(char *name, uint32_t frames, unsigned char channel, 
     netmd_copy_doubleword_to_buffer(&buf, 0, 1); /* encrypted*/
     netmd_copy_doubleword_to_buffer(&buf, 0, 1); /*groupstart*/
 
-    netmd_log_hex(NETMD_LOG_DEBUG, header, sizeof(header));
     fwrite(header, sizeof(header), 1, f);
 }
 
@@ -774,13 +772,11 @@ netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
     buf += sizeof(cmdhdr);
     netmd_copy_word_to_buffer(&buf, track, 0);
 
-    track_id = (track - 1U) & 0xffff;;
+    track_id = (track - 1U) & 0xffff;
     netmd_request_track_bitrate(dev, track_id, &encoding, &channel);
 
     if (encoding == NETMD_ENCODING_SP) {
         netmd_request_title(dev, track_id, name, sizeof(name) - 1);
-    }
-    else {
     }
 
     netmd_send_secure_msg(dev, 0x30, cmd, sizeof(cmd));
@@ -788,12 +784,13 @@ netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
     netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
     netmd_check_response_word(&response, track, &error);
     codec = netmd_read(&response);
+
     length = netmd_read_doubleword(&response);
 
     if (encoding == NETMD_ENCODING_SP) {
-        netmd_write_aea_header(name, codec, channel, file);
-    }
-    else {
+        // this now matches the python upload script, where 'trackid + 1' is passed to the frames value
+        netmd_write_aea_header(name, track_id + 1, channel, file);
+    } else {
         netmd_write_wav_header(codec, length, file);
     }
 
