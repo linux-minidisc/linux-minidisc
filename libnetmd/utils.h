@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include "error.h"
 
@@ -14,6 +15,13 @@ typedef struct {
 
 #ifndef min
     #define min(a,b) ((a)<(b)?(a):(b))
+#endif
+
+#ifdef WIN32
+    #include <windows.h>
+    #define msleep(x) Sleep(x)
+#else
+    #define msleep(x) usleep(1000*x)
 #endif
 
 unsigned char proper_to_bcd_single(unsigned char value);

@@ -28,18 +28,13 @@
 #include "common.h"
 #include "const.h"
 #include "log.h"
+#include "utils.h"
 
 #define NETMD_POLL_TIMEOUT 1000	/* miliseconds */
 #define NETMD_SEND_TIMEOUT 1000
 #define NETMD_RECV_TIMEOUT 1000
-#define NETMD_RECV_TRIES 30
+#define NETMD_RECV_TRIES 39
 
-#ifdef WIN32
-    #include <windows.h>
-    #define msleep(x) Sleep(x)
-#else
-    #define msleep(x) usleep(1000*x)
-#endif
 
 /*
   polls to see if minidisc wants to send data
@@ -51,7 +46,15 @@
 */
 static int netmd_poll(libusb_device_handle *dev, unsigned char *buf, int tries)
 {
+    /* original netmd poll sleep time was 1s, which lead to a print disc info
+       taking ~50s on a JE780. Dropping down to 5ms dropped print disc info
+       time to 0.54s, but was hitting timeout limits when sending tracks.
+       Unsure if just increasing limit is good practice, so set sleep time to
+       grow back to 1s if it retries more than 10x. Testing with 780 shows this
+       works for track transfers, typically hitting 15 loop iterations.
+    */
     int i;
+    int sleepytime = 5;
 
     for (i = 0; i < tries; i++) {
         /* send a poll message */
@@ -69,7 +72,11 @@ static int netmd_poll(libusb_device_handle *dev, unsigned char *buf, int tries)
         }
 
         if (i > 0) {
-            msleep(1000);
+            msleep(sleepytime);
+            sleepytime = 100;
+        }
+        if (i > 10) {
+          sleepytime = 1000;
         }
     }
 
@@ -80,8 +87,18 @@ static int netmd_poll(libusb_device_handle *dev, unsigned char *buf, int tries)
 int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd,
                        const size_t cmdlen, unsigned char *rsp)
 {
+    int len;
     netmd_send_message(devh, cmd, cmdlen);
-    return netmd_recv_message(devh, rsp);
+    len = netmd_recv_message(devh, rsp);
+    netmd_log(NETMD_LOG_DEBUG, "Response code:\n");
+    netmd_log_hex(NETMD_LOG_DEBUG, &rsp[0], 1);
+    if (rsp[0] == NETMD_STATUS_INTERIM) {
+      netmd_log(NETMD_LOG_DEBUG, "Re-reading:\n");
+      len = netmd_recv_message(devh, rsp);
+      netmd_log(NETMD_LOG_DEBUG, "Response code:\n");
+      netmd_log_hex(NETMD_LOG_DEBUG, &rsp[0], 1);
+    }
+    return len;
 }
 
 

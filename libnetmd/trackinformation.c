@@ -23,10 +23,14 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "trackinformation.h"
 #include "utils.h"
 #include "log.h"
+#include "libnetmd.h"
+
+#include <stdlib.h>
 
 void netmd_get_track_information(netmd_dev_handle *dev, uint16_t track,
                                 uint16_t p1, uint16_t p2,
@@ -45,7 +49,7 @@ void netmd_get_track_information(netmd_dev_handle *dev, uint16_t track,
     netmd_copy_word_to_buffer(&buf, p1, 0);
     netmd_copy_word_to_buffer(&buf, p2, 0);
 
-    length = netmd_exch_message(dev, cmd, sizeof(cmd), rsp);
+
     if (length > 0) {
         uint32_t tmp = (unsigned int)data[19] << 8;
         real_data_length = (tmp + data[20]) & 0xffffU;
@@ -63,11 +67,31 @@ void netmd_get_track_information(netmd_dev_handle *dev, uint16_t track,
 int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint16_t track,
                                 unsigned char* encoding, unsigned char *channel)
 {
+    unsigned char cmd[] = { 0x00, 0x18, 0x06, 0x02, 0x20, 0x10, 0x01,  0x00, 0x00,  0x30, 0x80,  0x07, 0x00,
+                            0xff, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    unsigned char rsp[255];
+    unsigned char *buf;
     unsigned char info[8] = { 0 };
+    unsigned char flags;
+    struct netmd_track time;
 
-    netmd_get_track_information(dev, track, 0x3080, 0x0700, info, sizeof(info));
-    memcpy(encoding, info + 6, 1);
-    memcpy(channel, info + 7, 1);
+    msleep(5); // Sleep fixes 'unknown' bitrate being returned on many devices.
+
+    // Copy the track number into the request
+    buf = cmd + 7;
+    netmd_copy_word_to_buffer(&buf, track, 0);
+    //send request to device
+    int length = netmd_exch_message(dev, cmd, sizeof(cmd), rsp);
+
+    // pull encoding and channel from response
+    if (length >= 29) {
+      memcpy(encoding, rsp + 27, 1);
+      memcpy(channel, rsp + 28, 1);
+    } else {
+      memset(encoding, 0, 1);
+      memset(channel, 0, 1);
+    }
+
     return 2;
 }
 

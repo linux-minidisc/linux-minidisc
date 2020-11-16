@@ -7,6 +7,7 @@
 typedef struct netmd_device {
     struct netmd_device *link;
     char name[32];
+    char *model;
     struct libusb_device *usb_dev;
 } netmd_device;
 
@@ -16,6 +17,7 @@ typedef struct netmd_device {
 struct netmd_devices {
     int	idVendor;
     int	idProduct;
+    char *model;
 };
 
 /**
