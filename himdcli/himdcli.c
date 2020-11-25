@@ -254,17 +254,17 @@ clean:
     himd_blockstream_close(&str);
 }
 
-void himd_dumpmp3(struct himd * himd, int trknum)
+void himd_dumpmp3(struct himd * himd, int trknum, char * filepath)
 {
     struct himd_mp3stream str;
     struct himderrinfo status;
     FILE * strdumpf;
     unsigned int len;
     const unsigned char * data;
-    strdumpf = fopen("stream.mp3","wb");
+    strdumpf = fopen(filepath,"wb");
     if(!strdumpf)
     {
-        perror("Opening stream.mp3");
+        perror("Opening filepath");
         return;
     }
     if(himd_mp3stream_open(himd, trknum, &str, &status) < 0)
@@ -307,7 +307,7 @@ int write_oma_header(FILE * f, const struct trackinfo * trkinfo)
              play with Sonic Stage (ffmpeg needs support of tagless files,
                                     ffmpeg does not support ATRAC3+)
  */
-void himd_dumpnonmp3(struct himd * himd, int trknum)
+void himd_dumpnonmp3(struct himd * himd, int trknum, char * filepath)
 {
     struct himd_nonmp3stream str;
     struct himderrinfo status;
@@ -325,7 +325,10 @@ void himd_dumpnonmp3(struct himd * himd, int trknum)
     if(!sony_codecinfo_is_lpcm(&trkinfo.codec_info))
         filename = "stream.oma";
 
-    strdumpf = fopen(filename,"wb");
+    if (filepath != NULL)
+      strdumpf = fopen(filepath,"wb");
+    else
+      strdumpf = fopen(filename,"wb");
     if(!strdumpf)
     {
         fprintf(stderr, "opening ");
@@ -822,13 +825,20 @@ int main(int argc, char ** argv)
     {
         idx = 1;
         sscanf(argv[3], "%d", &idx);
-        himd_dumpmp3(&h, idx);
+        if (argc > 4)
+          himd_dumpmp3(&h, idx, argv[4]);
+        else
+          himd_dumpmp3(&h, idx, "stream.mp3");
     }
     else if(strcmp(argv[2],"dumpnonmp3") == 0 && argc > 3)
     {
         idx = 1;
         sscanf(argv[3], "%d", &idx);
-        himd_dumpnonmp3(&h, idx);
+        if (argc > 4) {
+          himd_dumpnonmp3(&h, idx, argv[4]);
+        } else {
+          himd_dumpnonmp3(&h, idx, NULL);
+        }
     }
     else if(strcmp(argv[2],"writemp3") == 0 && argc > 3)
     {
