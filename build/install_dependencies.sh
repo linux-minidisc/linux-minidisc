@@ -21,7 +21,8 @@ case "$BUILD_TYPE" in
         sudo apt-get update -q || true
         sudo apt-get install -q -f -y mingw-w64 mingw-w64-tools \
             mingw64-x-qt mingw64-x-glib2 mingw64-x-zlib mingw64-x-libusb \
-            mingw32-x-qt mingw32-x-glib2 mingw32-x-zlib mingw32-x-libusb
+            mingw32-x-qt mingw32-x-glib2 mingw32-x-zlib mingw32-x-libusb \
+            libjson-c-dev
 
         for tool in uic moc rcc; do
             sudo ln -sf $tool /opt/mingw32/bin/i686-w64-mingw32-$tool
