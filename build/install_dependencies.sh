@@ -21,8 +21,7 @@ case "$BUILD_TYPE" in
         sudo apt-get update -q || true
         sudo apt-get install -q -f -y mingw-w64 mingw-w64-tools \
             mingw64-x-qt mingw64-x-glib2 mingw64-x-zlib mingw64-x-libusb \
-            mingw32-x-qt mingw32-x-glib2 mingw32-x-zlib mingw32-x-libusb \
-            libjson-c-dev
+            mingw32-x-qt mingw32-x-glib2 mingw32-x-zlib mingw32-x-libusb
 
         for tool in uic moc rcc; do
             sudo ln -sf $tool /opt/mingw32/bin/i686-w64-mingw32-$tool
@@ -83,11 +82,14 @@ case "$BUILD_TYPE" in
         ;;
     linux-native-*)
         sudo apt-get update -q
-        sudo apt-get install -q -y libqt4-dev libglib2.0-dev libmad0-dev libgcrypt11-dev libusb-1.0-0-dev libid3tag0-dev libtag1-dev
+        sudo apt-get install -q -y libqt4-dev libglib2.0-dev libmad0-dev \
+             libgcrypt11-dev libusb-1.0-0-dev libid3tag0-dev libtag1-dev \
+             libjson-c-dev
         ;;
     osx-native-*)
         brew update
-        brew install --force pkg-config qt5 mad libid3tag libtag glib libusb libusb-compat libgcrypt
+        brew install --force pkg-config qt5 mad libid3tag libtag glib libusb \
+             libusb-compat libgcrypt
         brew link --force qt5
         ;;
     *)
