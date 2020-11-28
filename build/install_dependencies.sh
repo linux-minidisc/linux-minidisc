@@ -22,7 +22,7 @@ case "$BUILD_TYPE" in
         sudo apt-get install -q -f -y mingw-w64 mingw-w64-tools \
             mingw64-x-qt mingw64-x-glib2 mingw64-x-zlib mingw64-x-libusb \
             mingw32-x-qt mingw32-x-glib2 mingw32-x-zlib mingw32-x-libusb \
-            gettext cmake
+            gettext
 
         for tool in uic moc rcc; do
             sudo ln -sf $tool /opt/mingw32/bin/i686-w64-mingw32-$tool
@@ -67,18 +67,6 @@ case "$BUILD_TYPE" in
                 make && sudo make install
             )
 
-            wget -N https://taglib.github.io/releases/taglib-1.11.tar.gz
-            (
-                tar xvf taglib-1.11.tar.gz && cd taglib-1.11
-                mkdir build && cd build
-                cmake \
-                    -DCMAKE_TOOLCHAIN_FILE=$(pwd)/../../../build/toolchain-$BUILD_TYPE_HOST.cmake \
-                    -DCMAKE_INSTALL_PREFIX=$BUILD_TYPE_PREFIX \
-                    -DBUILD_SHARED_LIBS=ON \
-                    -DBUILD_BINDINGS=OFF \
-                    ..
-                make && sudo make install
-            )
         )
         ;;
     linux-native-*)
