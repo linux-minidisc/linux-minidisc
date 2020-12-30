@@ -7,7 +7,7 @@ SOURCES += himdcli.c
 
 include(../libhimd/use_libhimd.pri)
 include(../build/libmad.pri)
-include(../build/libz.pri)
 include(../build/libglib.pri)
+include(../build/libz.pri)
 include(../build/installunix.pri)
 include(../build/common.pri)
