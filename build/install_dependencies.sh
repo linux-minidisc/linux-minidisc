@@ -67,6 +67,23 @@ case "$BUILD_TYPE" in
                 make && sudo make install
             )
 
+            git clone https://github.com/facebook/zstd
+            {
+              cd zstd
+              make
+              wget https://repo.msys2.org/mingw/i686/mingw-w64-i686-json-c-0.15-1-any.pkg.tar.zst
+              wget https://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-json-c-0.15-1-any.pkg.tar.zst
+              ./zstd -d mingw-w64-i686-json-c-0.15-1-any.pkg.tar.zst -o mingw-w64-i686-json-c-0.15-1-any.pkg.tar
+              ./zstd -d mingw-w64-x86_64-json-c-0.15-1-any.pkg.tar.zst -o mingw-w64-x86_64-json-c-0.15-1-any.pkg.tar
+              tar xvf mingw-w64-i686-json-c-0.15-1-any.pkg.tar
+              tar xvf mingw-w64-x86_64-json-c-0.15-1-any.pkg.tar
+              sudo cp -r mingw32 /opt/
+              sudo cp -r mingw64 /opt/
+              sudo sh -c 'cat mingw32/lib/pkgconfig/json-c.pc | sed s^=/mingw32^=/opt/mingw32^g > /opt/mingw32/lib/pkgconfig/json-c.pc'
+              sudo sh -c 'cat mingw64/lib/pkgconfig/json-c.pc | sed s^=/mingw64^=/opt/mingw64^g > /opt/mingw64/lib/pkgconfig/json-c.pc'
+            }
+
+
         )
         ;;
     linux-native-*)
