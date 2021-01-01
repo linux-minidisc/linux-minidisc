@@ -82,8 +82,8 @@ case "$BUILD_TYPE" in
               sudo sh -c 'cat mingw32/lib/pkgconfig/json-c.pc | sed s^=/mingw32^=/opt/mingw32^g > /opt/mingw32/lib/pkgconfig/json-c.pc'
               sudo sh -c 'cat mingw64/lib/pkgconfig/json-c.pc | sed s^=/mingw64^=/opt/mingw64^g > /opt/mingw64/lib/pkgconfig/json-c.pc'
             }
-            for file in himdcli/himdcli.pro libhimd/libhimd.pro netmdcli/netmdcli.pro libnetmd/libnetmd.pro; do sed -i 'PKG_CONFIG = PKG_CONFIG_PATH=/opt/`echo $BUILD_TYPE | sed s/linux-cross-//`/lib/pkgconfig pkg-config' file; done
-            
+            for file in himdcli/himdcli.pro libhimd/libhimd.pro netmdcli/netmdcli.pro libnetmd/libnetmd.pro; do sed -i 'PKG_CONFIG = PKG_CONFIG_PATH=/opt/`echo $BUILD_TYPE | sed s/linux-cross-//`/lib/pkgconfig pkg-config' $file; done
+
 
         )
         ;;
