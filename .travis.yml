@@ -47,6 +47,6 @@ install:
   - git submodule update --init --recursive
 
 script:
-  - ${CONFIGURE_COMMAND:-qmake}
+  - ${CONFIGURE_COMMAND:-qmake CONFIG+=without_gui}
   - ${COMPILE_COMMAND:-make}
   - ${PACKAGE_COMMAND:-sh build/package_build.sh}
