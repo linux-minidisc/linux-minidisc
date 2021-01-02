@@ -66,9 +66,8 @@ char * get_locale_str(struct himd * himd, int idx)
 void himd_trackdump(struct himd * himd, int verbose)
 {
     json = json_object_new_object();
-    json_object_object_add(json, "device", json_object_new_string("Sony MZ-RH1 Hi-MD"));
+    json_object_object_add(json, "device", json_object_new_string("Hi-MD"));
     json_object_object_add(json, "title", json_object_new_string("Unknown"));
-    json_object_object_add(json, "availableTime", json_object_new_string("00:00:00.00"));
     int i;
     int recordedTime = 0;
     json_object* tracks = json_object_new_array();
