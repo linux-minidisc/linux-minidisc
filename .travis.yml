@@ -25,7 +25,7 @@ matrix:
       compiler: gcc
       env: BUILD_TYPE=linux-cross-mingw32 CONFIGURE_COMMAND="sh build/cross_wrapper_mingw.sh qmake" COMPILE_COMMAND="sh build/cross_wrapper_mingw.sh make"
     - os: osx
-      osx_image: xcode7.2
+      osx_image: xcode10.2
       language: cpp
       compiler: clang
       env: BUILD_TYPE=osx-native-clang
