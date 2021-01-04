@@ -55,7 +55,7 @@ case "$BUILD_TYPE" in
         for filename in himdcli/release/himdcli.exe netmdcli/release/netmdcli.exe; do
             basename="$(basename "$filename")"
             target="$TMP_OUT/$basename"
-            if test -F "$filename"; then
+            if test -f "$filename"; then
               cp "$filename" "$target"
             fi
             python3 build/mingw-bundledlls --copy "$target"
@@ -64,12 +64,12 @@ case "$BUILD_TYPE" in
     linux-native-*)
         mkdir -p "$TMP_OUT/bin"
         cp -rpv himdcli/himdcli netmdcli/netmdcli "$TMP_OUT/bin"
-        if test -F "qhimdtransfer/qhimdtransfer"; then
+        if test -f "qhimdtransfer/qhimdtransfer"; then
           cp -rpv qhimdtransfer/qhimdtransfer "$TMP_OUT/bin"
         fi
         ;;
     osx-native-clang)
-        if test -F "qhimdtransfer/QHiMDTransfer.app"; then
+        if test -f "qhimdtransfer/QHiMDTransfer.app"; then
           cp -rpv qhimdtransfer/QHiMDTransfer.app "$TMP_OUT"
           macdeployqt "$TMP_OUT/QHiMDTransfer.app"
         fi
