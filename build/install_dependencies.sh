@@ -94,7 +94,7 @@ case "$BUILD_TYPE" in
     osx-native-*)
         brew update
         brew install --force pkg-config qt5 mad libid3tag libtag glib libusb \
-             libusb-compat libgcrypt libjson-c-dev
+             libusb-compat libgcrypt json-c
         brew link --force qt5
         ;;
     *)
