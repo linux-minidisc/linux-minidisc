@@ -31,6 +31,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <libusb.h>
 
@@ -105,6 +106,14 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
 /**
    Sets title for the specified track.
 
+   Titles set using this function are converted from
+   UTF-8 for your convenience.
+
+   Note that this function will automatically choose the
+   most appropriate title field to use, and clear the other.
+   For specific control over the wide and narrow title fields,
+   please use netmd_set_title_narrow and netmd_set_title_wide.
+
    @param dev pointer to device returned by netmd_open
    @param track Zero based index of track your requesting.
    @param buffer buffer to hold the name.
@@ -113,7 +122,51 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
 int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer);
 
 /**
-   Sets title for the specified track.
+   Sets narrow (JIS X0201) title for the specified track.
+
+   Titles set using this function are converted from
+   UTF-8 for your convenience.
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param buffer buffer to hold the name.
+   @return returns -1 if text couldn't be converted, 0 for failure, and 1 for success.
+*/
+int netmd_set_title_narrow(netmd_dev_handle* dev, const uint16_t track, const char* const buffer);
+
+/**
+   Sets wide (Shift JIS) title for the specified track.
+
+   Titles set using this function are converted from
+   UTF-8 for your convenience.
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param buffer buffer to hold the name.
+   @return returns -1 if text couldn't be converted, 0 for failure, and 1 for success.
+*/
+int netmd_set_title_wide(netmd_dev_handle* dev, const uint16_t track, const char* const buffer);
+
+/**
+   Sets raw title for the specified track.
+
+   Narrow titles are expected to be raw JIS X0201 text,
+   wide titles are expected to be raw Shift JIS text.
+   A given MiniDisc track may only have one set.
+
+   For automatic selection, and UTF-8 conversion,
+   please use netmd_set_title instead.
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based index of track your requesting.
+   @param buffer buffer to hold the name.
+   @param whether to set the narrow or wide title.
+   @return returns 0 for fail 1 for success.
+*/
+int netmd_set_title_raw(netmd_dev_handle* dev, const uint16_t track, const char* const buffer, bool wide_chars);
+
+/**
+   Sets title for the specified group.
 
    @param dev pointer to device returned by netmd_open
    @param md pointer to minidisc structure
