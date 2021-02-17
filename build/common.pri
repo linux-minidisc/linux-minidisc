@@ -6,5 +6,7 @@ QMAKE_LFLAGS += $$(LDFLAGS)
 macx {
   # Dependencies from Homebrew are put here
   INCLUDEPATH += /usr/local/include
+  INCLUDEPATH += /opt/homebrew/include
   LIBS += -L/usr/local/lib
+  LIBS += -L/opt/homebrew/lib
 }
