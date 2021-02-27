@@ -30,8 +30,8 @@
 &lt;p&gt;&lt;p&gt; 
 &lt;p&gt;https://wiki.physik.fu-berlin.de/linux-minidisc&lt;/p&gt;
 &lt;p&gt;&lt;p&gt; 
-&lt;p&gt;Questo software e coperto dalla licenza GNU GPL v2.
-Vedi il file LICENSE nella directory del programma  per ulteriori informazioni.&lt;/p&gt;</translation>
+&lt;p&gt;Questo software è coperto dalla licenza GNU GPL v2.
+Per ulteriori informazioni, vedi il file LICENSE nella directory del programma.&lt;/p&gt;</translation>
     </message>
     <message>
         <source>&amp;Close</source>
@@ -51,23 +51,22 @@ Vedi il file LICENSE nella directory del programma  per ulteriori informazioni.&
     </message>
     <message>
         <source>Build Date:</source>
-        <translation>Creato il:</translation>
+        <translation>Creato il </translation>
     </message>
     <message>
         <source>A free music transfer software for MiniDisc
 Walkman. Brought to you by the linux-minidisc
 project:</source>
         <translation>Un software gratuito da trasferta di musica
-per MiniDisc walkman. Creato dal linux-minidisc
+per MiniDisc walkman, creato da linux-minidisc
 project:</translation>
     </message>
     <message>
         <source>This software is covered by the GNU GPL v2
 license. See the file LICENSE in the program
 folder for more information.</source>
-        <translation>Questo software e coperto dalla licenza GNU GPL v2.
-Vedi il file LICENSE nella directory del programma
-per ulteriori informazioni.</translation>
+        <translation>Questo software è coperto dalla licenza GNU GPL v2.
+Per ulteriori informazioni, vedi il file LICENSE nella directory del programma.&lt;/p&gt;</translation>
     </message>
 </context>
 <context>
@@ -78,7 +77,7 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>Really format MiniDisc (all audio-tracks and data will be lost) ?</source>
-        <translation>Formattare MiniDisc davvero (tutte le tracce audio e tutti i dati saranno persi)?</translation>
+        <translation>Formattare veramente il MiniDisc (tutte le tracce audio e tutti i dati andranno persi) ?</translation>
     </message>
 </context>
 <context>
@@ -89,7 +88,7 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>Error opening track: </source>
-        <translation>Errore aprendo traccia:</translation>
+        <translation>Errore aprendo traccia: </translation>
     </message>
     <message>
         <source>Error writing audio data</source>
@@ -97,11 +96,11 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation>upload anullato da utente</translation>
+        <translation>upload annullato dall'utente</translation>
     </message>
     <message>
         <source>Error reading audio data: </source>
-        <translation>Errore leggendo dati audio:</translation>
+        <translation>Errore leggendo dati audio: </translation>
     </message>
     <message>
         <source>Error opening file for ATRAC output</source>
@@ -109,7 +108,7 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>Error writing header</source>
-        <translation>Errore scrivendo la testata</translation>
+        <translation>Errore scrivendo l'header</translation>
     </message>
     <message>
         <source>Error opening file for WAV output</source>
@@ -118,7 +117,7 @@ per ulteriori informazioni.</translation>
     <message>
         <source>Error opening HiMD data. Make sure you chose the proper root directory of your HiMD-Walkman.
 </source>
-        <translation>Errore aprendo dati HiMD. Assicurati di aver scelto la giusta root directory del tuo HiMD-Walkman.
+        <translation>Errore aprendo dati HiMD. Assicurare di aver scelto la giusta root directory del tuo HiMD-Walkman.
 </translation>
     </message>
     <message>
@@ -135,11 +134,11 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>Select directory for Upload</source>
-        <translation>Seleziona directory per Upload</translation>
+        <translation>Seleziona cartella per Upload</translation>
     </message>
     <message>
         <source>Select directory of HiMD Medium</source>
-        <translation>Seleziona directory per mezzo HiMD</translation>
+        <translation>Seleziona cartella per mezzo HiMD</translation>
     </message>
     <message>
         <source>(disconnected)</source>
@@ -170,7 +169,7 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>local directory</source>
-        <translation>directory locale</translation>
+        <translation>cartella locale</translation>
     </message>
     <message>
         <source>/tmp</source>
@@ -186,7 +185,7 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>&amp;Download tracks onto MD</source>
-        <translation>&amp;Download delle traccie sul MD</translation>
+        <translation>&amp;Download delle tracce sul MD</translation>
     </message>
     <message>
         <source>&amp;Upload tracks from MD</source>
@@ -194,15 +193,15 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>Re&amp;name</source>
-        <translation>Ri&amp;batezza</translation>
+        <translation>Rinomina</translation>
     </message>
     <message>
         <source>Rename selected</source>
-        <translation>Ribatezza selezionati</translation>
+        <translation>Rinomina selezionati</translation>
     </message>
     <message>
         <source>D&amp;elete selected</source>
-        <translation>C&amp;ancella selezzionato</translation>
+        <translation>C&amp;ancella il selezionato</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -245,11 +244,11 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>Album</source>
-        <translation>Albo</translation>
+        <translation>Album</translation>
     </message>
     <message>
         <source>Length</source>
-        <translation>Lungezza</translation>
+        <translation>Durata</translation>
     </message>
     <message>
         <source>Format</source>
@@ -264,15 +263,15 @@ per ulteriori informazioni.</translation>
     <name>QHiMDUploadDialog</name>
     <message>
         <source>Track upload - QHiMDTransfer</source>
-        <translation>Upload di traccia - Trasferta QHMiD</translation>
+        <translation>Upload di traccia - Trasferta QHiMD</translation>
     </message>
     <message>
         <source>please wait while uploading XX track(s)</source>
-        <translation>Attendi prego mentre upload di XX tracccie e in corso</translation>
+        <translation>caricando XX tracce...</translation>
     </message>
     <message>
         <source>overall progress</source>
-        <translation>Progresso totale</translation>
+        <translation>progresso totale</translation>
     </message>
     <message>
         <source>current track: trknum - filename</source>
@@ -280,11 +279,11 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>xx track(s) successfully uploaded</source>
-        <translation>upload di xx traccie riuscito</translation>
+        <translation>xx tracce caricate</translation>
     </message>
     <message>
         <source>xx track(s) could not be uploaded</source>
-        <translation>upload di xx tracce non potreva essere effetuato</translation>
+        <translation>L'upload di xx tracce non è riuscito</translation>
     </message>
     <message>
         <source>Show Details</source>
@@ -308,7 +307,7 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>%1 track(s) could not be uploaded</source>
-        <translation>Upload di %1 traccie non poteva essere effetuato</translation>
+        <translation>L'upload di %1 tracce non è riuscito</translation>
     </message>
     <message>
         <source>Track %1</source>
@@ -316,7 +315,7 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>%1 track(s) successfully uploaded</source>
-        <translation>Upload di %1 traccie riuscito</translation>
+        <translation>%1 tracce caricate</translation>
     </message>
     <message>
         <source>upload finished</source>
@@ -332,11 +331,11 @@ per ulteriori informazioni.</translation>
     </message>
     <message>
         <source>please wait while uploading %1 track(s)</source>
-        <translation>Attendi per favore mentre l&apos;upload di %1 traccie e completo</translation>
+        <translation>Caricando %1 tracce</translation>
     </message>
     <message>
         <source>upload aborted by the user</source>
-        <translation>upload annullato da utente</translation>
+        <translation>upload annullato dall'utente</translation>
     </message>
 </context>
 </TS>

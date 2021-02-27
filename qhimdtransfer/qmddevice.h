@@ -59,6 +59,7 @@ public:
     virtual void checkfile(QString UploadDirectory, QString &filename, QString extension);
     virtual void batchUpload(QMDTrackIndexList tlist, QString path) = 0;
     virtual void upload(unsigned int trackidx, QString path) = 0;
+    virtual bool download(const QString &filename) = 0;
 
 signals:
     void opened();
@@ -83,6 +84,7 @@ public:
     virtual QNetMDTrack netmdTrack(unsigned int trkindex);
     virtual void batchUpload(QMDTrackIndexList tlist, QString path);
     virtual void upload(unsigned int trackidx, QString path);
+    virtual bool download(const QString &filename);
 
 };
 
@@ -101,6 +103,7 @@ public:
     virtual QHiMDTrack himdTrack(unsigned int trkindex);
     virtual void upload(unsigned int trackidx, QString path);
     virtual void batchUpload(QMDTrackIndexList tlist, QString path);
+    virtual bool download(const QString &filename);
 
 };
 

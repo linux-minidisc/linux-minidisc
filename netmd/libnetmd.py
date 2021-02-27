@@ -52,7 +52,7 @@ KNOWN_USB_ID_SET = frozenset([
     (0x054c, 0x018a), # Sony LAM-3
     (0x054c, 0x01e9), # Sony MZ-DH10P
     (0x054c, 0x0219), # Sony MZ-RH10
-    (0x054c, 0x021b), # Sony MZ-RH710/MZ-RH910
+    (0x054c, 0x021b), # Sony MZ-RH710/MZ-RH910/MZ-M10
     (0x054c, 0x022c), # Sony CMT-AH10 (stereo set with integrated MD)
     (0x054c, 0x023c), # Sony DS-HMD1 (device without analog music rec/playback)
     (0x054c, 0x0286), # Sony MZ-RH1

@@ -28,7 +28,7 @@
 void print_disc_info(netmd_dev_handle* devh, minidisc *md);
 void print_current_track_info(netmd_dev_handle* devh);
 void print_syntax();
-int check_args(int n, int i, const char* text);
+int check_args(int argc, int min_argc, const char *text);
 void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char *in_title);
 
@@ -1059,5 +1059,16 @@ int check_args(int n, int i, const char* text)
     if (n > i)
         return 1;
     fprintf(stderr, "Error: %s requires at least %d arguments\n", text, i);
+    return 0;
+}
+
+int check_args(int argc, int min_argc, const char *text)
+{
+    /* n is the original argc, incl. program name */
+    if (argc > min_argc) {
+        return 1;
+    }
+
+    fprintf(stderr, "Error: %s requires at least %d arguments\n", text, min_argc);
     return 0;
 }

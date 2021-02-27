@@ -265,6 +265,10 @@ int himd_find_holes(struct himd * himd, struct himd_holelist * holes, struct him
 
 int himd_get_songinfo(const char *filepath, char ** artist, char ** title, char **album, struct himderrinfo * status);
 
+/* mp3download.c */
+
+int himd_writemp3(struct himd * himd, const char *filepath);
+
 #ifdef __cplusplus
 }
 #endif
