@@ -13,12 +13,12 @@ for both SP (ATRAC1) and LP2/LP4 (ATRAC3) tracks at least on an MZ-N710. The pla
 USB interface will still occasionally crash, but things work most of the time.
 
 Original README is [here](README). HiMD support should work, but since only oil barons
-can afford HiMD players in 2018, I have not tested it.
+can afford HiMD players nowadays, I have not tested it.
 
 SP tracks will be transferred as PCM and encoded on the device. LP2/LP4 tracks
 must be encoded on the host into an ATRAC3 WAV file. Because there is no complete free
-ATRAC3 encoder available as of early 2018, most users should probably use ATRAC1 (but
-see below if you want to try your luck anyway).
+ATRAC3 encoder available as of this writing, most users should probably use ATRAC1.
+See below if you want to try your luck with an experimental encoder anyway though.
 
 ## Building
 
@@ -28,13 +28,14 @@ and `libusb`.
 ### Ubuntu
 On a recent Ubuntu, the following installs the required dependencies:
 
-    apt-get install libgcrypt20-dev libglib2.0-dev libusb-1.0-0-dev qt4-qmake libid3tag0-dev libmad0-dev
+    apt-get install libgcrypt20-dev libglib2.0-dev libusb-1.0-0-dev qt5-qmake libid3tag0-dev libmad0-dev
 
 To set up the Makefiles, run
 
-    qmake -qt=qt4 CONFIG+=without_mad CONFIG+=without_gui
+    qmake -qt=qt5 CONFIG+=without_gui
 
-Next, run `make` and everything relevant should get built.
+Next, run `make` and everything relevant should get built (this will also build
+HiMD-related programs, though not the GUI).
 
 By default, the USB device will only be accessible as root. Therefore you may want
 to run the following commands to automatically give members of the `plugdev` group access
@@ -52,7 +53,7 @@ On a recent Fedora, the following installs the required dependencies:
     
 To set up the Makefiles, run
 
-    qmake-qt4 CONFIG=without_mad CONFIG+=without_gui
+    qmake-qt5 CONFIG+=without_gui
 
 Next, run `make` and everything relevant should get built.
 
