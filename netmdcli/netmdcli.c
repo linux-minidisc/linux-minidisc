@@ -1053,15 +1053,6 @@ void print_syntax()
     puts("help - show this message\n");
 }
 
-int check_args(int n, int i, const char* text)
-{
-    /* n is the original argc, incl. program name */
-    if (n > i)
-        return 1;
-    fprintf(stderr, "Error: %s requires at least %d arguments\n", text, i);
-    return 0;
-}
-
 int check_args(int argc, int min_argc, const char *text)
 {
     /* n is the original argc, incl. program name */
