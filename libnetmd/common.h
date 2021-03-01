@@ -40,5 +40,14 @@ int netmd_send_message(netmd_dev_handle *dev, unsigned char *cmd,
 */
 int netmd_recv_message(netmd_dev_handle *dev, unsigned char *rsp);
 
+/**
+   Wait for the device to respond to commands. Should only be used
+   when the device needs to be given "breathing room" and is not
+   expected to have anything to send.
+
+   @param dev device handle
+   @return 1 if success, 0 if there was no response
+*/
+int netmd_wait_for_sync(netmd_dev_handle* dev);
 
 #endif

@@ -27,8 +27,6 @@
 #include "libnetmd.h"
 #include "utils.h"
 
-#define MAX_SYNC_WAITS 5
-
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
 /*! Bertrik: the original interpretation of these numbers as codecs appears incorrect.
   These values look like track protection values instead */
@@ -62,39 +60,6 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* array)
     return &unknown_pair;
 }
 
-int netmd_wait_for_sync(netmd_dev_handle* devh)
-{
-    unsigned char syncmsg[4];
-    int tries = MAX_SYNC_WAITS;
-    libusb_device_handle *dev;
-    int ret;
-    
-    dev = (libusb_device_handle *)devh;
-
-    do {
-        ret = libusb_control_transfer(dev, 0xc1, 0x01, 0, 0,
-                                      syncmsg, 0x04, 5000);
-        tries -= 1;
-        if (ret < 0) {
-            netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: libusb error %d waiting for control transfer\n", ret);
-        } else if (ret != 4) {
-            netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: control transfer returned %d bytes instead of the expected 4\n", ret);
-        } else if (memcmp(syncmsg, "\0\0\0\0", 4) == 0) {
-            /* When the device returns 00 00 00 00 we are done. */
-            break;
-        }
-        
-        usleep(100 * 1000); /* 100ms */
-    } while (tries);
-
-    if (tries == 0)
-        netmd_log(NETMD_LOG_WARNING, "netmd_wait_for_sync: no sync response from device\n"); 
-    else if (tries != (MAX_SYNC_WAITS - 1))
-        /* Notify if we ended up waiting for more than one iteration */
-        netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: waited for sync, %d tries remained\n", tries);
-
-    return (tries > 0);
-}
 
 static unsigned char* sendcommand(netmd_dev_handle* devh, unsigned char* str, const size_t len, unsigned char* response, int rlen)
 {
