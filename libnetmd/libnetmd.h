@@ -193,6 +193,13 @@ int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, const unsigned int g
 int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track);
 
 /**
+   Erase all disc contents
+
+   @param dev pointer to device returned by netmd_open
+*/
+int netmd_erase_disc(netmd_dev_handle* dev);
+
+/**
    Writes atrac file to device
 
    @param dev pointer to device returned by netmd_open

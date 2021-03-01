@@ -483,6 +483,18 @@ int main(int argc, char* argv[])
                 netmd_sync_toc(devh);
             }
         }
+        else if(strcmp("erase", argv[1]) == 0)
+        {
+          if (!check_args(argc, 2, "erase")) return -1;
+
+          if (strcmp("force", argv[2]) != 0) {
+            netmd_log(NETMD_LOG_ERROR, "erase: 'force' must be given as argument to proceed\n");
+            exit_code = 1;
+          } else {
+            netmd_log(NETMD_LOG_VERBOSE, "erase: executing erase\n");
+            netmd_erase_disc(devh);
+          }
+        }
         else if(strcmp("deletegroup", argv[1]) == 0)
         {
             if (!check_args(argc, 2, "deletegroup")) return -1;
@@ -1021,6 +1033,7 @@ void print_syntax()
     puts("pause - pause the unit");
     puts("stop - stop the unit");
     puts("delete #1 [#2] - delete track (or tracks in range #1-#2 if #2 given)");
+    puts("erase [force] - erase the disc (the argument 'force' must be given to actually do it)");
     puts("m3uimport <file> - import song and disc title from a playlist");
     puts("send <file> [<string>] - send WAV format audio file to the device and set title to <string> (optional)");
     puts("      Supported file formats: 16 bit pcm (stereo or mono) @44100Hz or");

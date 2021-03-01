@@ -1125,6 +1125,19 @@ int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track)
     return ret;
 }
 
+/* AV/C Disc Subunit Specification ERASE (0x40),
+ * subfunction "complete" (0x00) */
+int netmd_erase_disc(netmd_dev_handle* dev)
+{
+    int ret = 0;
+    unsigned char request[] = {0x00, 0x18, 0x40, 0xff, 0x00, 0x00};
+    unsigned char reply[255];
+
+    ret = netmd_exch_message(dev, request, 11, reply);
+
+    return ret;
+}
+
 void netmd_clean_disc_info(minidisc *md)
 {
     unsigned int i;
