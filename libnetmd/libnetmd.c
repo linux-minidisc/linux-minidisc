@@ -188,10 +188,19 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
 {
     int ret = 1;
     unsigned char *title_request = NULL;
-    unsigned char title_header[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
-                                    0x02, 0x00, 0x00, 0x30, 0x00, 0x0a,
-                                    0x00, 0x50, 0x00, 0x00, 0x0a, 0x00,
-                                    0x00, 0x00, 0x0d};
+    /* AV/C Descriptor Mechanism 1.0 WRITE INFO BLOCK (0x07)
+     * to track text infoblock (list ID 18 02) using the "partial
+     * replace" subfunction (0x50) */
+    unsigned char title_header[] = {
+      0x00, 0x18, 0x07, 0x02, 0x20, 0x18, 0x02,
+      /* Track number */
+      0x00, 0x00,
+      0x30, 0x00, 0x0a, 0x00, 0x50, 0x00,
+      /* New length */
+      0x00, 0x0a,
+      0x00, 0x00,
+      /* Prior length */
+      0x00, 0x0d};
     unsigned char reply[255];
     unsigned char *buf;
     size_t size;
@@ -219,8 +228,9 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     {
         netmd_log(NETMD_LOG_WARNING, "netmd_set_title: exchange failed, ret=%d\n", ret);
         return 0;
-    } else
-        return 1;
+    }
+
+    return 1;
 }
 
 int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t finish)
@@ -1122,6 +1132,8 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
     return ret;
 }
 
+/* AV/C Disc Subunit Specification ERASE (0x40),
+ * subfunction "specific_object" (0x01) */
 int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track)
 {
     int ret = 0;
@@ -1163,6 +1175,8 @@ void netmd_clean_disc_info(minidisc *md)
     md->groups = NULL;
 }
 
+/* AV/C Description Spefication OPEN DESCRIPTOR (0x08),
+ * subfunction "open for write" (0x03) */
 int netmd_cache_toc(netmd_dev_handle* dev)
 {
     int ret = 0;
@@ -1173,6 +1187,8 @@ int netmd_cache_toc(netmd_dev_handle* dev)
     return ret;
 }
 
+/* AV/C Description Spefication OPEN DESCRIPTOR (0x08),
+ * subfunction "close" (0x00) */
 int netmd_sync_toc(netmd_dev_handle* dev)
 {
     int ret = 0;
@@ -1183,6 +1199,7 @@ int netmd_sync_toc(netmd_dev_handle* dev)
     return ret;
 }
 
+/* Calls need for Sharp devices */
 int netmd_acquire_dev(netmd_dev_handle* dev)
 {
     int ret = 0;
