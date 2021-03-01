@@ -67,18 +67,30 @@ int netmd_wait_for_sync(netmd_dev_handle* devh)
     unsigned char syncmsg[4];
     int tries = MAX_SYNC_WAITS;
     libusb_device_handle *dev;
-
+    int ret;
+    
     dev = (libusb_device_handle *)devh;
 
     do {
-        if (tries != MAX_SYNC_WAITS)
-            usleep(100 * 1000); // 100ms
-
-        libusb_control_transfer(dev, 0xc1, 0x01, 0, 0, syncmsg, 0x04, 5000);
+        ret = libusb_control_transfer(dev, 0xc1, 0x01, 0, 0,
+                                      syncmsg, 0x04, 5000);
         tries -= 1;
-    } while  (memcmp(syncmsg,"\0\0\0\0",4)!=0 && tries);
+        if (ret < 0) {
+            netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: libusb error %d waiting for control transfer\n", ret);
+        } else if (ret != 4) {
+            netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: control transfer returned %d bytes instead of the expected 4\n", ret);
+        } else if (memcmp(syncmsg, "\0\0\0\0", 4) == 0) {
+            /* When the device returns 00 00 00 00 we are done. */
+            break;
+        }
+        
+        usleep(100 * 1000); /* 100ms */
+    } while (tries);
 
-    if (tries != (MAX_SYNC_WAITS - 1))  // only log if actually waited
+    if (tries == 0)
+        netmd_log(NETMD_LOG_WARNING, "netmd_wait_for_sync: no sync response from device\n"); 
+    else if (tries != (MAX_SYNC_WAITS - 1))
+        /* Notify if we ended up waiting for more than one iteration */
         netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: waited for sync, %d tries remained\n", tries);
 
     return (tries > 0);

@@ -991,6 +991,8 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
             netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_commit_track : %s\n", netmd_strerror(error));
         else
             netmd_log(NETMD_LOG_ERROR, "netmd_secure_commit_track failed : %s\n", netmd_strerror(error));
+
+        netmd_wait_for_sync(devh);
     }
     else {
         netmd_log(NETMD_LOG_ERROR, "netmd_secure_send_track failed : %s\n", netmd_strerror(error));
