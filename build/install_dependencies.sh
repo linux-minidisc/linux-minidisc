@@ -21,7 +21,8 @@ case "$BUILD_TYPE" in
         sudo apt-get update -q || true
         sudo apt-get install -q -f -y mingw-w64 mingw-w64-tools \
             mingw64-x-qt mingw64-x-glib2 mingw64-x-zlib mingw64-x-libusb \
-            mingw32-x-qt mingw32-x-glib2 mingw32-x-zlib mingw32-x-libusb
+            mingw32-x-qt mingw32-x-glib2 mingw32-x-zlib mingw32-x-libusb \
+            gettext
 
         for tool in uic moc rcc; do
             sudo ln -sf $tool /opt/mingw32/bin/i686-w64-mingw32-$tool
@@ -66,27 +67,34 @@ case "$BUILD_TYPE" in
                 make && sudo make install
             )
 
-            wget -N https://taglib.github.io/releases/taglib-1.11.tar.gz
-            (
-                tar xvf taglib-1.11.tar.gz && cd taglib-1.11
-                mkdir build && cd build
-                cmake \
-                    -DCMAKE_TOOLCHAIN_FILE=$(pwd)/../../../build/toolchain-$BUILD_TYPE_HOST.cmake \
-                    -DCMAKE_INSTALL_PREFIX=$BUILD_TYPE_PREFIX \
-                    -DBUILD_SHARED_LIBS=ON \
-                    -DBUILD_BINDINGS=OFF \
-                    ..
-                make && sudo make install
-            )
+            git clone https://github.com/facebook/zstd
+            {
+              cd zstd
+              make
+              wget https://repo.msys2.org/mingw/i686/mingw-w64-i686-json-c-0.15-1-any.pkg.tar.zst
+              wget https://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-json-c-0.15-1-any.pkg.tar.zst
+              ./zstd -d mingw-w64-i686-json-c-0.15-1-any.pkg.tar.zst -o mingw-w64-i686-json-c-0.15-1-any.pkg.tar
+              ./zstd -d mingw-w64-x86_64-json-c-0.15-1-any.pkg.tar.zst -o mingw-w64-x86_64-json-c-0.15-1-any.pkg.tar
+              tar xvf mingw-w64-i686-json-c-0.15-1-any.pkg.tar
+              tar xvf mingw-w64-x86_64-json-c-0.15-1-any.pkg.tar
+              sudo cp -r mingw32 /opt/
+              sudo cp -r mingw64 /opt/
+              sudo sh -c 'cat mingw32/lib/pkgconfig/json-c.pc | sed s^=/mingw32^=/opt/mingw32^g > /opt/mingw32/lib/pkgconfig/json-c.pc'
+              sudo sh -c 'cat mingw64/lib/pkgconfig/json-c.pc | sed s^=/mingw64^=/opt/mingw64^g > /opt/mingw64/lib/pkgconfig/json-c.pc'
+            }
         )
+        for file in himdcli/himdcli.pro libhimd/libhimd.pro netmdcli/netmdcli.pro libnetmd/libnetmd.pro; do sed -i '1iPKG_CONFIG = PKG_CONFIG_PATH=/opt/'`echo $BUILD_TYPE | sed s/linux-cross-//`'/lib/pkgconfig pkg-config' $file; done
         ;;
     linux-native-*)
         sudo apt-get update -q
-        sudo apt-get install -q -y libqt4-dev libglib2.0-dev libmad0-dev libgcrypt11-dev libusb-1.0-0-dev libid3tag0-dev libtag1-dev
+        sudo apt-get install -q -y libqt4-dev libglib2.0-dev libmad0-dev \
+             libgcrypt11-dev libusb-1.0-0-dev libid3tag0-dev libtag1-dev \
+             libjson-c-dev
         ;;
     osx-native-*)
         brew update
-        brew install --force pkg-config qt5 mad libid3tag libtag glib libusb libusb-compat libgcrypt
+        brew install --force pkg-config qt5 mad libid3tag libtag glib libusb \
+             libusb-compat libgcrypt json-c
         brew link --force qt5
         ;;
     *)

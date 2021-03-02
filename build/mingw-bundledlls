@@ -47,6 +47,7 @@ blacklist = [
     "shell32.dll", "winmm.dll", "winspool.drv", "wldap32.dll",
     "ntdll.dll", "d3d9.dll", "mpr.dll", "crypt32.dll", "dnsapi.dll",
     "shlwapi.dll", "version.dll", "iphlpapi.dll", "msimg32.dll", "setupapi.dll",
+    "libgcc_s_dw2-1.dll", "libgcc_s_seh-1.dll"
 ]
 
 

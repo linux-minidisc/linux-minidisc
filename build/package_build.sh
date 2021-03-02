@@ -52,22 +52,30 @@ case "$BUILD_TYPE" in
     linux-cross-mingw*)
         export MINGW_BUNDLEDLLS_SEARCH_PATH
 
-        for filename in himdcli/release/himdcli.exe netmdcli/release/netmdcli.exe qhimdtransfer/release/QHiMDTransfer.exe; do
+        for filename in himdcli/release/himdcli.exe netmdcli/release/netmdcli.exe; do
             basename="$(basename "$filename")"
             target="$TMP_OUT/$basename"
-            cp "$filename" "$target"
+            if test -f "$filename"; then
+              cp "$filename" "$target"
+            fi
             python3 build/mingw-bundledlls --copy "$target"
         done
         ;;
     linux-native-*)
         mkdir -p "$TMP_OUT/bin"
-        cp -rpv himdcli/himdcli netmdcli/netmdcli qhimdtransfer/qhimdtransfer "$TMP_OUT/bin"
+        cp -rpv himdcli/himdcli netmdcli/netmdcli "$TMP_OUT/bin"
+        if test -f "qhimdtransfer/qhimdtransfer"; then
+          cp -rpv qhimdtransfer/qhimdtransfer "$TMP_OUT/bin"
+        fi
         ;;
     osx-native-clang)
-        cp -rpv qhimdtransfer/QHiMDTransfer.app "$TMP_OUT"
-        macdeployqt "$TMP_OUT/QHiMDTransfer.app"
+        if test -f "qhimdtransfer/QHiMDTransfer.app"; then
+          cp -rpv qhimdtransfer/QHiMDTransfer.app "$TMP_OUT"
+          macdeployqt "$TMP_OUT/QHiMDTransfer.app"
+        fi
         mkdir -p "$TMP_OUT/bin"
         cp -rpv himdcli/himdcli netmdcli/netmdcli "$TMP_OUT/bin"
+
         ;;
     *)
         echo "Unset/unknown \$BUILD_TYPE: $BUILD_TYPE"

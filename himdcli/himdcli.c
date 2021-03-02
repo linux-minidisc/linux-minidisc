@@ -1,5 +1,5 @@
 /*
- *   himdcli.c - list contents (tracks, holes), dump tracks and show diskid of a HiMD 
+ *   himdcli.c - list contents (tracks, holes), dump tracks and show diskid of a HiMD
  */
 
 #include <stdio.h>
@@ -10,9 +10,12 @@
 #include <mad.h>
 #include <id3tag.h>
 #include <glib/gstdio.h>
+#include <json.h>
 
 #include "himd.h"
 #include "sony_oma.h"
+
+static json_object *json;
 
 void usage(char * cmdname)
 {
@@ -20,6 +23,7 @@ void usage(char * cmdname)
           strings          - dumps all strings found in the tracklist file\n\
           tracks           - lists all tracks on disc\n\
           tracks verbose   - lists details of all tracks on disc\n\
+          tracks json      - lists all tracks on disc in json format\n\
           discid           - reads the disc id of the inserted medium\n\
           holes            - lists all holes on disc\n\
           mp3key <TRK>     - show the MP3 encryption key for track <TRK>\n\
@@ -61,27 +65,51 @@ char * get_locale_str(struct himd * himd, int idx)
 
 void himd_trackdump(struct himd * himd, int verbose)
 {
+    json = json_object_new_object();
+    json_object_object_add(json, "device", json_object_new_string("Hi-MD"));
+    json_object_object_add(json, "title", json_object_new_string("Unknown"));
     int i;
+    int recordedTime = 0;
+    json_object* tracks = json_object_new_array();
     struct himderrinfo status;
     for(i = HIMD_FIRST_TRACK;i <= HIMD_LAST_TRACK;i++)
     {
         struct trackinfo t;
         if(himd_get_track_info(himd, i, &t, NULL)  >= 0)
         {
-            char *title, *artist, *album;
+            // TODO: malloc name in case of long title
+            char *title, *artist, *album, *codec, name[255], time[12];
+            json_object* track = json_object_new_object();
             title = get_locale_str(himd, t.title);
             artist = get_locale_str(himd, t.artist);
             album = get_locale_str(himd, t.album);
-            printf("%4d: %d:%02d %s %s:%s (%s %d)%s\n",
-                    i, t.seconds/60, t.seconds % 60, himd_get_codec_name(&t),
-                    artist ? artist : "Unknown artist", 
-                    title ? title : "Unknown title",
-                    album ? album : "Unknown album", t.trackinalbum,
-                    himd_track_uploadable(himd, &t) ? " [uploadable]":"");
+            sprintf(name,"%s - %s",artist, title);
+            recordedTime += t.seconds;
+            //TODO handle track times in hours
+            sprintf(time, "%02d:%02d.00", t.seconds/60, t.seconds % 60);
+            codec = himd_get_codec_name(&t);
+            if (verbose < 2) {
+              printf("%4d: %d:%02d %s %s:%s (%s %d)%s\n",
+                      i, t.seconds/60, t.seconds % 60, codec,
+                      artist ? artist : "Unknown artist",
+                      title ? title : "Unknown title",
+                      album ? album : "Unknown album", t.trackinalbum,
+                      himd_track_uploadable(himd, &t) ? " [uploadable]":"");
+            }
+            json_object_object_add(track, "no",         json_object_new_int(i-1));
+            json_object_object_add(track, "protect",    json_object_new_string(himd_track_uploadable(himd, &t) ? "UnPROT":"TrPROT"));
+            if (!strcmp(codec, "MPEG")) {
+              json_object_object_add(track, "bitrate",    json_object_new_string("MP3"));
+            } else {
+              json_object_object_add(track, "bitrate",    json_object_new_string(codec));
+            }
+            json_object_object_add(track, "time",       json_object_new_string(time));
+            json_object_object_add(track, "name",       json_object_new_string(name));
+            json_object_array_add(tracks, track);
             g_free(title);
             g_free(artist);
             g_free(album);
-            if(verbose)
+            if(verbose == 1)
             {
                 char rtime[30],stime[30],etime[30];
                 struct fraginfo f;
@@ -124,6 +152,15 @@ void himd_trackdump(struct himd * himd, int verbose)
                 printf("     Recorded: %s, licensed: %s-%s\n", rtime, stime, etime);
             }
         }
+    }
+    char time[16];
+    sprintf(time, "%02d:%02d:%02d.00", recordedTime/3600, (recordedTime % 3600)/60, recordedTime % 60);
+    json_object_object_add(json, "recordedTime", json_object_new_string(time));
+    json_object_object_add(json, "totalTime", json_object_new_string(time));
+    json_object_object_add(json, "tracks", tracks);
+    if (verbose == 2) {
+      printf(json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
+      printf("\n");
     }
 }
 
@@ -170,7 +207,7 @@ void himd_dumpdiscid(struct himd * h)
     printf("Disc ID: ");
     for(i = 0;i < 16;++i)
         printf("%02X",discid[i]);
-    puts("");        
+    puts("");
 }
 
 void himd_dumptrack(struct himd * himd, int trknum)
@@ -216,17 +253,17 @@ clean:
     himd_blockstream_close(&str);
 }
 
-void himd_dumpmp3(struct himd * himd, int trknum)
+void himd_dumpmp3(struct himd * himd, int trknum, char * filepath)
 {
     struct himd_mp3stream str;
     struct himderrinfo status;
     FILE * strdumpf;
     unsigned int len;
     const unsigned char * data;
-    strdumpf = fopen("stream.mp3","wb");
+    strdumpf = fopen(filepath,"wb");
     if(!strdumpf)
     {
-        perror("Opening stream.mp3");
+        perror("Opening filepath");
         return;
     }
     if(himd_mp3stream_open(himd, trknum, &str, &status) < 0)
@@ -269,7 +306,7 @@ int write_oma_header(FILE * f, const struct trackinfo * trkinfo)
              play with Sonic Stage (ffmpeg needs support of tagless files,
                                     ffmpeg does not support ATRAC3+)
  */
-void himd_dumpnonmp3(struct himd * himd, int trknum)
+void himd_dumpnonmp3(struct himd * himd, int trknum, char * filepath)
 {
     struct himd_nonmp3stream str;
     struct himderrinfo status;
@@ -287,7 +324,10 @@ void himd_dumpnonmp3(struct himd * himd, int trknum)
     if(!sony_codecinfo_is_lpcm(&trkinfo.codec_info))
         filename = "stream.oma";
 
-    strdumpf = fopen(filename,"wb");
+    if (filepath != NULL)
+      strdumpf = fopen(filepath,"wb");
+    else
+      strdumpf = fopen(filename,"wb");
     if(!strdumpf)
     {
         fprintf(stderr, "opening ");
@@ -434,7 +474,7 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
                    unsigned char *mp3codecinfo, struct himderrinfo * status)
 {
     guchar var_flags = 0x80;
-    unsigned mpegvers = 3, mpeglayer = 1, mpegbitrate = 9, mpegsamprate = 0, 
+    unsigned mpegvers = 3, mpeglayer = 1, mpegbitrate = 9, mpegsamprate = 0,
              mpegchmode = 0, mpegpreemph = 0;
     gboolean firsttime = TRUE;
     struct abucket bucket;
@@ -460,9 +500,9 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
         guchar * pframe = (gpointer) stream->this_frame;
 	gint framelen = (guint) (stream->next_frame - stream->this_frame);
 	/* "b" means "this Block" */
-        unsigned bmpegvers, bmpeglayer, bmpegbitrate, bmpegsamprate, 
+        unsigned bmpegvers, bmpeglayer, bmpegbitrate, bmpegsamprate,
                  bmpegchmode, bmpegpreemph;
-        
+
         bmpegvers =     (pframe[1] >> 3) & 0x03;
         bmpeglayer =    (pframe[1] >> 1) & 0x03;
         bmpegbitrate =  (pframe[2] >> 4) & 0x0F;
@@ -749,9 +789,18 @@ int main(int argc, char ** argv)
         puts(status.statusmsg);
         return 1;
     }
-    if(argc == 2 || strcmp(argv[2],"tracks") == 0)
-        himd_trackdump(&h, argc > 3);
-    else if(strcmp(argv[2],"strings") == 0)
+    if(argc == 2 || strcmp(argv[2],"tracks") == 0) {
+      if (argc <= 3)
+        himd_trackdump(&h, 0);
+      else {
+        if (strcmp(argv[3],"verbose") == 0)
+          himd_trackdump(&h, 1);
+        else if (strcmp(argv[3],"json") == 0)
+          himd_trackdump(&h, 2);
+        else
+          printf("ERROR: Unknown argument - %s\n", argv[3]);
+      }
+    } else if(strcmp(argv[2],"strings") == 0)
         himd_stringdump(&h);
     else if(strcmp(argv[2],"discid") == 0)
         himd_dumpdiscid(&h);
@@ -775,13 +824,20 @@ int main(int argc, char ** argv)
     {
         idx = 1;
         sscanf(argv[3], "%d", &idx);
-        himd_dumpmp3(&h, idx);
+        if (argc > 4)
+          himd_dumpmp3(&h, idx, argv[4]);
+        else
+          himd_dumpmp3(&h, idx, "stream.mp3");
     }
     else if(strcmp(argv[2],"dumpnonmp3") == 0 && argc > 3)
     {
         idx = 1;
         sscanf(argv[3], "%d", &idx);
-        himd_dumpnonmp3(&h, idx);
+        if (argc > 4) {
+          himd_dumpnonmp3(&h, idx, argv[4]);
+        } else {
+          himd_dumpnonmp3(&h, idx, NULL);
+        }
     }
     else if(strcmp(argv[2],"writemp3") == 0 && argc > 3)
     {

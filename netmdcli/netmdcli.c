@@ -486,7 +486,8 @@ int main(int argc, char* argv[])
             }
             else {
                 netmd_cache_toc(devh);
-                for (int track = (int) j; track >= i && track >= 0; track--) {
+                int track = (int) j;
+                for (track; track >= i && track >= 0; track--) {
                     netmd_log(NETMD_LOG_VERBOSE, "delete: removing track %d\n", track);
 
                     netmd_delete_track(devh, ((uint16_t) track) & 0xffff);
