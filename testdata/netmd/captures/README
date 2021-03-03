@@ -1,0 +1,5 @@
+This directory contains NetMD-related USB captures for Sonicstage operations.
+
+  * mz-n710-transfer.pcapng: erase disc and transfer 10 second track to MZ-N710.
+    Erase occurs at packet 2479, transfer starts at 6061, track name write at 6351,
+    commit at 6367.

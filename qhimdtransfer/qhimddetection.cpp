@@ -381,7 +381,7 @@ const char * identify_usb_device(int vid, int pid)
         case MZ_RH10_HIMD:
             return "SONY MZ-RH10";
         case MZ_RH910_HIMD:
-            return "SONY MZ-RH910";
+            return "SONY MZ-RH910 / MZ-M10";
         case CMT_AH10_HIMD:
             return "SONY CMT-AH10";
         case DS_HMD1_HIMD:
@@ -451,7 +451,7 @@ const char * identify_usb_device(int vid, int pid)
         case MZ_RH10:
             return "SONY MZ-RH10 (NetMD)";
         case MZ_RH910:
-            return "SONY MZ-RH910 (NetMD)";
+            return "SONY MZ-RH910 / MZ-M10 (NetMD)";
         case CMT_AH10_A:
             return "SONY CMT-AH10 (NetMD)";
         case CMT_AH10_B:

@@ -832,10 +832,17 @@ netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
     buf += sizeof(hash);
     gcry_cipher_close(handle);
 
+    /* Make sure that the device is well and truly finished with
+     * what it was doing. Fixes USB interface crashes on at least
+     * MZ-N420D. */
+    netmd_wait_for_sync(dev);
+
     error = netmd_exch_secure_msg(dev, 0x48, cmd, sizeof(cmd), &response);
     netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
     netmd_check_response_word(&response, track, &error);
 
+    netmd_wait_for_sync(dev);
+    
     return error;
 }
 

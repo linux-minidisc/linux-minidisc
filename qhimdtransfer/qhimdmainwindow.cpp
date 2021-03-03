@@ -385,5 +385,17 @@ void QHiMDMainWindow::current_device_closed()
 
 void QHiMDMainWindow::on_download_button_clicked()
 {
-    /*download_of(localmodel.filePath(ui->localScan->currentIndex()));*/
+    if (!current_device) {
+        return;
+    }
+
+    // TODO: Show UI progress while download is taking place (right now, UI freezes)
+    if (current_device->download(localmodel.filePath(ui->localScan->currentIndex()))) {
+        // Open device again to refresh the UI
+        open_device(current_device);
+    } else {
+        QMessageBox errormsg;
+        errormsg.setText(tr("Downloading of files failed."));
+        errormsg.exec();
+    }
 }

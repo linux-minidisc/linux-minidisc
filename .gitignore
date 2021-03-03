@@ -5,6 +5,8 @@
 *.xcodeproj
 *.sln
 *.vcxproj*
+/.qmake.stash
+/.dir-locals.el
 /.vs
 Info.plist
 Makefile*

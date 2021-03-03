@@ -33,7 +33,7 @@ matrix:
 deploy:
   provider: releases
   api_key:
-    secure: xxxxxxxxx
+    secure: j5+2N9IDWfxg7cx7AMlubMbqIoYUks4NfIzxnjcraOcQM1i8gOhKde3JjKLfxOgTYQUAlOtX7jHsb1FciNheWsqKz7voDJd++HhsVt4xc5iK+xb3zvNjT5wwgGmti7ltI8VMq9LOCohagc2m4tZl/itEPlMK7pB/AVG3sML/y2onRf2Dzi+vcE1AWNMUciv2Vrwj6E9Wsy/aBHZztMwD/cfMSPHIh746rN2cLfH94Uqzb8gJrwhR/BEMOHGQZd9KjxaWCmYRfotEvYNak1BU4bBaSYAc0mEtg+Ie2jd8COQCf5XWb0t1vflMTJ5RI2htpfX0NoJcoCUcFv5I369fcBTWXQYMD2Emxt4tmrWaZt0yarzzoEdoECYKJ5nOty6vymdsI2R1JDyn8YOQWY94ULk2OOCl1P3OcT7ZhFFjRy8/6Ygp9Xe0/CKCGDgnctRNyQfER2dssjN3YZCHlSSoybjAJ71RU99+hCJQK9SHAqnD4zmCMoPx4bCLnxOLZFxbUHiOlJw+90h7IX2l/fncHr6kBil9Xg+bIcNUK29sQoulIjZdsEGGwNaAQg52xsI7fARlgUnD0M+NPvhoEP+2HHsLbxmG7RcKpGZ+BxZ3TEMLpiFtMa3kyp77r0e53oHb72n6d68mJp2Sao/sMkLBrDLv8S6isrxyDlYARi/cuVQ=
   file: dist/*
   file_glob: true
   on:

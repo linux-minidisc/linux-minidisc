@@ -84,6 +84,7 @@ static struct netmd_devices const known_devices[] =
   {0x04, 0x23b3, "Panasonic SJ-MR250"},
 
   {0, 0, NULL} /* terminating pair */
+  
 };
 
 

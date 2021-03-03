@@ -103,7 +103,9 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* pair);
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer);
 
 /**
-   Sets title for the specified track.
+   Sets title for the specified track. If making multiple changes,
+   call netmd_cache_toc before netmd_set_title and netmd_sync_toc
+   afterwards.
 
    @param dev pointer to device returned by netmd_open
    @param track Zero based index of track your requesting.
@@ -190,7 +192,20 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const uint16_t track, 
 */
 int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, const unsigned int group);
 
+/**
+   Deletes track from disc (does not update groups)
+
+   @param dev pointer to device returned by netmd_open
+   @param track Zero based track to delete
+*/
 int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track);
+
+/**
+   Erase all disc contents
+
+   @param dev pointer to device returned by netmd_open
+*/
+int netmd_erase_disc(netmd_dev_handle* dev);
 
 /**
    Writes atrac file to device
@@ -234,14 +249,6 @@ void netmd_clean_disc_info(minidisc* md);
    @return the response. NOTE: this has to be freed up after calling.
 */
 /* char* sendcommand(netmd_dev_handle* dev, char* str, int len, char* response, int rlen);*/
-
-/**
-   Wait for syncronisation signal from minidisc
-
-   @param dev a handler to the usb device
-   @return 1 if success, 0 otherwise
-*/
-int netmd_wait_for_sync(netmd_dev_handle* dev);
 
 int netmd_cache_toc(netmd_dev_handle* dev);
 int netmd_sync_toc(netmd_dev_handle* dev);

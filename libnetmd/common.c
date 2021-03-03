@@ -33,8 +33,8 @@
 #define NETMD_POLL_TIMEOUT 1000	/* miliseconds */
 #define NETMD_SEND_TIMEOUT 1000
 #define NETMD_RECV_TIMEOUT 1000
-#define NETMD_RECV_TRIES 39
-
+#define NETMD_RECV_TRIES 30
+#define NETMD_SYNC_TRIES 5
 
 /*
   polls to see if minidisc wants to send data
@@ -159,4 +159,48 @@ int netmd_recv_message(netmd_dev_handle *devh, unsigned char* rsp)
 
     /* return length */
     return len;
+}
+
+/* Wait for the device to respond to a command (any command). Some
+ * devices need to be given a bit of "breathing room" to avoid USB
+ * interface crashes, which is what this does.
+ *
+ * This is almost the same as netmd_poll, they could probably be
+ * merged at some point. */
+int netmd_wait_for_sync(netmd_dev_handle* devh)
+{
+    unsigned char syncmsg[4];
+    int tries = NETMD_SYNC_TRIES;
+    libusb_device_handle *dev;
+    int ret;
+    
+    dev = (libusb_device_handle *)devh;
+
+    do {
+        ret = libusb_control_transfer(dev, LIBUSB_ENDPOINT_IN |
+                                      LIBUSB_REQUEST_TYPE_VENDOR |
+                                      LIBUSB_RECIPIENT_INTERFACE,
+                                      0x01, 0, 0,
+                                      syncmsg, 0x04,
+                                      NETMD_POLL_TIMEOUT * 5);
+        tries -= 1;
+        if (ret < 0) {
+            netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: libusb error %d waiting for control transfer\n", ret);
+        } else if (ret != 4) {
+            netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: control transfer returned %d bytes instead of the expected 4\n", ret);
+        } else if (memcmp(syncmsg, "\0\0\0\0", 4) == 0) {
+            /* When the device returns 00 00 00 00 we are done. */
+            break;
+        }
+        
+        msleep(100);
+    } while (tries);
+
+    if (tries == 0)
+        netmd_log(NETMD_LOG_WARNING, "netmd_wait_for_sync: no sync response from device\n"); 
+    else if (tries != (NETMD_SYNC_TRIES - 1))
+        /* Notify if we ended up waiting for more than one iteration */
+        netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: waited for sync, %d tries remained\n", tries);
+
+    return (tries > 0);
 }

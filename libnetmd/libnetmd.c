@@ -27,8 +27,6 @@
 #include "libnetmd.h"
 #include "utils.h"
 
-#define MAX_SYNC_WAITS 5
-
 /*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
 /*! Bertrik: the original interpretation of these numbers as codecs appears incorrect.
   These values look like track protection values instead */
@@ -62,27 +60,6 @@ struct netmd_pair const* find_pair(int hex, struct netmd_pair const* array)
     return &unknown_pair;
 }
 
-int netmd_wait_for_sync(netmd_dev_handle* devh)
-{
-    unsigned char syncmsg[4];
-    int tries = MAX_SYNC_WAITS;
-    libusb_device_handle *dev;
-
-    dev = (libusb_device_handle *)devh;
-
-    do {
-        if (tries != MAX_SYNC_WAITS)
-            usleep(100 * 1000); // 100ms
-
-        libusb_control_transfer(dev, 0xc1, 0x01, 0, 0, syncmsg, 0x04, 5000);
-        tries -= 1;
-    } while  (memcmp(syncmsg,"\0\0\0\0",4)!=0 && tries);
-
-    if (tries != (MAX_SYNC_WAITS - 1))  // only log if actually waited
-        netmd_log(NETMD_LOG_VERBOSE, "netmd_wait_for_sync: waited for sync, %d tries remained\n", tries);
-
-    return (tries > 0);
-}
 
 static unsigned char* sendcommand(netmd_dev_handle* devh, unsigned char* str, const size_t len, unsigned char* response, int rlen)
 {
@@ -218,8 +195,9 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     {
         netmd_log(NETMD_LOG_WARNING, "netmd_set_title: exchange failed, ret=%d\n", ret);
         return 0;
-    } else
-        return 1;
+    }
+
+    return 1;
 }
 
 int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t finish)
@@ -1138,6 +1116,8 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
     return ret;
 }
 
+/* AV/C Disc Subunit Specification ERASE (0x40),
+ * subfunction "specific_object" (0x01) */
 int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track)
 {
     int ret = 0;
@@ -1148,6 +1128,19 @@ int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track)
 
     buf = request + 9;
     netmd_copy_word_to_buffer(&buf, track, 0);
+    ret = netmd_exch_message(dev, request, 11, reply);
+
+    return ret;
+}
+
+/* AV/C Disc Subunit Specification ERASE (0x40),
+ * subfunction "complete" (0x00) */
+int netmd_erase_disc(netmd_dev_handle* dev)
+{
+    int ret = 0;
+    unsigned char request[] = {0x00, 0x18, 0x40, 0xff, 0x00, 0x00};
+    unsigned char reply[255];
+
     ret = netmd_exch_message(dev, request, 11, reply);
 
     return ret;
@@ -1166,6 +1159,8 @@ void netmd_clean_disc_info(minidisc *md)
     md->groups = NULL;
 }
 
+/* AV/C Description Spefication OPEN DESCRIPTOR (0x08),
+ * subfunction "open for write" (0x03) */
 int netmd_cache_toc(netmd_dev_handle* dev)
 {
     int ret = 0;
@@ -1176,6 +1171,8 @@ int netmd_cache_toc(netmd_dev_handle* dev)
     return ret;
 }
 
+/* AV/C Description Spefication OPEN DESCRIPTOR (0x08),
+ * subfunction "close" (0x00) */
 int netmd_sync_toc(netmd_dev_handle* dev)
 {
     int ret = 0;
@@ -1186,6 +1183,7 @@ int netmd_sync_toc(netmd_dev_handle* dev)
     return ret;
 }
 
+/* Calls need for Sharp devices */
 int netmd_acquire_dev(netmd_dev_handle* dev)
 {
     int ret = 0;

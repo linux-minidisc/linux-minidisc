@@ -87,38 +87,36 @@ static int scanforatdata(GDir * dir)
 static int scanfortif(GDir * dir, int* oldnum, int *newnum)
 {
     const char * hmafile;
-    int found_unused=-1, found_used=-1;
-    int old_datanum, new_datanum;
+    gboolean found_something = FALSE;
+
+    GRegex *trkidx_hma = g_regex_new("^[t_]rkidx([0-9a-f]{2})\\.hma$", G_REGEX_CASELESS, 0, NULL);
 
     while((hmafile = g_dir_read_name(dir)) != NULL)
     {
-	// Look for old version
-	if(g_ascii_strncasecmp(hmafile,"_rkidx0",7) == 0 &&
-	   strlen(hmafile) == 12 &&
-	   isxdigit(hmafile[7]) &&
-	   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
-	{
-	    sscanf(hmafile+7,"%x",&old_datanum);
-	    if (old_datanum > found_unused) {
-		*oldnum = old_datanum;
-		found_unused = old_datanum;
-	    }
-	}
-	// Look for current version
-	if(g_ascii_strncasecmp(hmafile,"trkidx0",7) == 0 &&
-	   strlen(hmafile) == 12 &&
-	   isxdigit(hmafile[7]) &&
-	   g_ascii_strncasecmp(hmafile+8,".hma",4) == 0)
-	{
-	    sscanf(hmafile+7,"%x",&new_datanum);
-	    if (new_datanum > found_used) {
-		*newnum = new_datanum;
-		found_used = new_datanum;
-	    }
-	}
+        GMatchInfo *info = NULL;
+        if (g_regex_match(trkidx_hma, hmafile, 0, &info)) {
+            int value = (int)g_ascii_strtoll(g_match_info_fetch(info, 1), NULL, 16);
+
+            if (hmafile[0] == '_') {
+                // old version
+                if (value > *oldnum) {
+                    *oldnum = value;
+                    found_something = TRUE;
+                }
+            } else {
+                // new version
+                if (value > *newnum) {
+                    *newnum = value;
+                    found_something = TRUE;
+                }
+            }
+        }
+        g_match_info_free(info);
     }
 
-    return (FALSE || found_unused >= 0 || found_used >= 0);
+    g_regex_unref(trkidx_hma);
+
+    return found_something;
 }
 
 static void nong_inplace_ascii_down(gchar * string)
@@ -159,8 +157,7 @@ FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode
 
 int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 {
-    char indexfilename[13];
-    gchar *unusedfile,*usedfile,*tempfile;
+    gchar *unusedfile=NULL,*usedfile=NULL,*tempfile=NULL;
     gchar *filepath;
     GDir * dir;
     GError * error = NULL;
@@ -172,12 +169,15 @@ int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 
     if(scanfortif(dir, &oldnum, &newnum))
 	{
-	    sprintf(indexfilename, himd->need_lowercase ? "_rkidx%02x.hma" : "_RKIDX%02X.HMA", oldnum);
+	    char *indexfilename = g_strdup_printf(himd->need_lowercase ? "_rkidx%02x.hma" : "_RKIDX%02X.HMA", oldnum);
 	    unusedfile = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
 					  indexfilename,NULL);
-	    sprintf(indexfilename, himd->need_lowercase ? "trkidx%02x.hma" : "TRKIDX%02X.HMA", newnum);
+	    g_free(indexfilename);
+
+	    indexfilename = g_strdup_printf(himd->need_lowercase ? "trkidx%02x.hma" : "TRKIDX%02X.HMA", newnum);
 	    usedfile = g_build_filename(himd->rootpath,himd->need_lowercase ? "hmdhifi" : "HMDHIFI",
 					indexfilename,NULL);
+	    g_free(indexfilename);
 	}
     else
 	{
@@ -214,6 +214,9 @@ int himd_write_tifdata(struct himd * himd, struct himderrinfo * status)
 	    printf("Could not rename %s to %s\n", tempfile, usedfile);
 	}
 
+    g_free(tempfile);
+    g_free(unusedfile);
+    g_free(usedfile);
     g_free(filepath);
     g_dir_close(dir);
 

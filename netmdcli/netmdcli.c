@@ -31,7 +31,7 @@ static json_object *json;
 void print_disc_info(netmd_dev_handle* devh, minidisc *md);
 void print_current_track_info(netmd_dev_handle* devh);
 void print_syntax();
-int check_args(int n, int i, const char* text);
+int check_args(int argc, int min_argc, const char *text);
 void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char *in_title);
 
@@ -496,6 +496,18 @@ int main(int argc, char* argv[])
                 netmd_sync_toc(devh);
             }
         }
+        else if(strcmp("erase", argv[1]) == 0)
+        {
+          if (!check_args(argc, 2, "erase")) return -1;
+
+          if (strcmp("force", argv[2]) != 0) {
+            netmd_log(NETMD_LOG_ERROR, "erase: 'force' must be given as argument to proceed\n");
+            exit_code = 1;
+          } else {
+            netmd_log(NETMD_LOG_VERBOSE, "erase: executing erase\n");
+            netmd_erase_disc(devh);
+          }
+        }
         else if(strcmp("deletegroup", argv[1]) == 0)
         {
             if (!check_args(argc, 2, "deletegroup")) return -1;
@@ -900,6 +912,7 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
         }
     }
 
+    /* acquire device - needed by Sharp devices, may fail on Sony devices */
     error = netmd_acquire_dev(devh);
     netmd_log(NETMD_LOG_VERBOSE, "netmd_acquire_dev: %s\n", netmd_strerror(error));
 
@@ -1013,7 +1026,6 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
         netmd_cache_toc(devh);
         netmd_set_title(devh, track, titlep);
         netmd_sync_toc(devh);
-        netmd_wait_for_sync(devh);
 
         /* commit track */
         error = netmd_secure_commit_track(devh, track, sessionkey);
@@ -1034,8 +1046,9 @@ netmd_error send_track(netmd_dev_handle *devh, const char *filename, const char 
     cleanup_error = netmd_secure_leave_session(devh);
     netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(cleanup_error));
 
-	cleanup_error = netmd_release_dev(devh);
-	netmd_log(NETMD_LOG_VERBOSE, "netmd_release_dev : %s\n", netmd_strerror(cleanup_error));
+    /* release device - needed by Sharp devices, may fail on Sony devices */
+    cleanup_error = netmd_release_dev(devh);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_release_dev : %s\n", netmd_strerror(cleanup_error));
 
     return error; /* return error code from the "business logic" */
 }
@@ -1063,6 +1076,7 @@ void print_syntax()
     puts("pause - pause the unit");
     puts("stop - stop the unit");
     puts("delete #1 [#2] - delete track (or tracks in range #1-#2 if #2 given)");
+    puts("erase [force] - erase the disc (the argument 'force' must be given to actually do it)");
     puts("m3uimport <file> - import song and disc title from a playlist");
     puts("send <file> [<string>] - send WAV format audio file to the device and set title to <string> (optional)");
     puts("      Supported file formats: 16 bit pcm (stereo or mono) @44100Hz or");
@@ -1095,11 +1109,13 @@ void print_syntax()
     puts("help - show this message\n");
 }
 
-int check_args(int n, int i, const char* text)
+int check_args(int argc, int min_argc, const char *text)
 {
     /* n is the original argc, incl. program name */
-    if (n > i)
+    if (argc > min_argc) {
         return 1;
-    fprintf(stderr, "Error: %s requires at least %d arguments\n", text, i);
+    }
+
+    fprintf(stderr, "Error: %s requires at least %d arguments\n", text, min_argc);
     return 0;
 }
