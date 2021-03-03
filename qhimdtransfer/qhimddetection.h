@@ -90,6 +90,7 @@ public:
     void scan_for_netmd_devices();
     QMDDevice *find_by_path(QString path);
     QMDDevice *find_by_name(QString name);
+    virtual QString mountpoint(QMDDevice *dev);
 
 signals:
     void deviceListChanged(QMDDevicePtrList list);

@@ -93,6 +93,7 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
     QMessageBox mdStatus;
     QString error;
     QMDTracksModel * mod;
+    QString path;
 
     int index = ui->himd_devices->currentIndex();  // remember current index of devices combo box, will be resetted by current_device_closed() function
 
@@ -109,11 +110,39 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
         ui->himd_devices->setCurrentIndex(index);  // set correct device index in the combo box
     }
 
-    if(dev->deviceType() == HIMD_DEVICE && dev->path().isEmpty())
+    /* handle disc images, use previously choosen image path if availlable else ask for path
+     * user can use connect button to choose another imape path */
+    if(dev->deviceType() == HIMD_DEVICE && dev->path().isEmpty() && dev->name().contains("disc image"))
     {
         ui->himd_devices->setCurrentIndex(0);
         on_action_Connect_triggered();
         return;
+    }
+
+    /* handle himd devices, search for mountpoint first */
+    if(dev->deviceType() == HIMD_DEVICE && dev->path().isEmpty())
+    {
+        path = detect->mountpoint(dev);
+
+        /* ask for mountpoint if autodetection fails */
+        if(path.isEmpty())
+        {
+            path = QFileDialog::getExistingDirectory(this,
+                                                     tr("Select mountpath for %1").arg(dev->name()),
+                                                     settings.value("lastImageDirectory", QDir::rootPath()).toString(),
+                                                     QFileDialog::ShowDirsOnly
+                                                     | QFileDialog::DontResolveSymlinks);
+        }
+        /* break if no or invalid path is choosen */
+        if(path.isEmpty())
+        {
+            ui->himd_devices->setCurrentIndex(0);
+            return;
+        }
+        /* set manually choosen path if mountpoint detection fails */
+        if(dev->path().isEmpty())
+            dev->setPath(path);
+        ui->himd_devices->setItemText(index, ui->himd_devices->currentText().append( " at " + dev->path() ));
     }
 
     setCurrentDevice(dev);
@@ -276,6 +305,7 @@ void QHiMDMainWindow::handle_local_selection_change(const QItemSelection&, const
 void QHiMDMainWindow::device_list_changed(QMDDevicePtrList dplist)
 {
     QString device;
+    QStringList devices;
     QMDDevice * dev;
 
     /* close current device if it is removed from device list, just to be sure, should be handled by closed() signal */
@@ -288,19 +318,29 @@ void QHiMDMainWindow::device_list_changed(QMDDevicePtrList dplist)
 
     foreach(dev, dplist)
     {
-        device = QString(dev->deviceType() == NETMD_DEVICE ? dev->name() : dev->name() + " at " + dev->path() );
+        device = dev->name();
+        if(dev->deviceType() == HIMD_DEVICE && !dev->path().isEmpty())
+            device.append(" at " + dev->path());
         ui->himd_devices->addItem(device, qVariantFromValue((void *)dev));
+        if(!dev->name().contains("disc image"))
+            devices << dev->name();
     }
 
     if(current_device)
         ui->himd_devices->setCurrentIndex(dplist.indexOf(current_device) + 1);
     else
     {
-        if(dplist.count() > 1)   // open first autodetected device
+        /* do not open autodetected devices, just inform the user in the status bar
+         * netmd devices: TOC may not be loaded completely in early state of detection
+         * himd devices: device may not be mounted at this time (on unix: udev didn't finish processing)
+         * user should wait for TOC loading/ mounting himd devices before opening */
+        if(dplist.count() > 1)
         {
-            ui->himd_devices->setCurrentIndex(2);
-            open_device(dplist.at(1));
+            ui->himd_devices->setCurrentIndex(0);
+            ui->statusBar->showMessage(tr("detected minidisc devices : %1").arg(devices.join(" , ")));
         }
+        else
+            ui->statusBar->clearMessage();
     }
 }
 
