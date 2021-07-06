@@ -378,10 +378,11 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
         free(packet);
         buf = NULL;
 
-        if (error >= 0) {
-            p = p->next;
+        if (error < 0) {
+            break;
         }
-        break;
+        
+        p = p->next;
     }
 }
 
@@ -391,7 +392,7 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
                                   unsigned char *key_encryption_key)
 {
     size_t position = 0;
-    size_t chunksize = 0xffffffffU;
+    size_t chunksize = 0x00180000U;
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
 
