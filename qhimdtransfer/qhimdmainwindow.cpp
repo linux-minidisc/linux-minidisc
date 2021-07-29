@@ -289,7 +289,7 @@ void QHiMDMainWindow::device_list_changed(QMDDevicePtrList dplist)
     foreach(dev, dplist)
     {
         device = QString(dev->deviceType() == NETMD_DEVICE ? dev->name() : dev->name() + " at " + dev->path() );
-        ui->himd_devices->addItem(device, qVariantFromValue((void *)dev));
+        ui->himd_devices->addItem(device, QVariant::fromValue((void *)dev));
     }
 
     if(current_device)
