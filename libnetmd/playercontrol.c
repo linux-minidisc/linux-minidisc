@@ -103,7 +103,7 @@ netmd_error netmd_set_track(netmd_dev_handle* dev, const uint16_t track)
                                0x00, 0x00, 0x00, 0x00, 0x00};
     unsigned char buf[255];
 
-    proper_to_bcd(track, request + 9, 2);
+    request[10] = track & 0xff;
 
     /* TODO: error checking */
     netmd_exch_message(dev, request, sizeof(request), buf);
