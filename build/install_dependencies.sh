@@ -20,7 +20,7 @@ case "$BUILD_TYPE" in
         sudo add-apt-repository --yes ppa:tobydox/mingw-w64
         sudo apt-get update -q || true
         sudo apt-get install -q -f -y mingw-w64 mingw-w64-tools \
-            qt5base-mingw-w64 glib2-mingw-w64 libz-mingw-w64
+            qt5base-mingw-w64 glib2-mingw-w64 libz-mingw-w64-dev
 
         for tool in uic moc rcc; do
             sudo ln -sf "$tool" "$BUILD_TYPE_PREFIX/bin/$BUILD_TYPE_HOST-$tool"
