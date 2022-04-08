@@ -5,11 +5,10 @@ set -x
 
 if [ "$BUILD_TYPE" = "linux-cross-mingw32" ]; then
     BUILD_TYPE_HOST="i686-w64-mingw32"
-    BUILD_TYPE_PREFIX="/opt/mingw32/"
 else
     BUILD_TYPE_HOST="x86_64-w64-mingw32"
-    BUILD_TYPE_PREFIX="/opt/mingw64/"
 fi
+BUILD_TYPE_PREFIX="/usr/$BUILD_TYPE_HOST/"
 
 if [ ! -z "$BUILD_TYPE_PREFIX" ]; then
     export PATH="$BUILD_TYPE_PREFIX/bin:$PATH"

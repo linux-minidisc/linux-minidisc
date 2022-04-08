@@ -12,20 +12,18 @@ case "$BUILD_TYPE" in
     linux-cross-mingw*)
         if [ "$BUILD_TYPE" = "linux-cross-mingw32" ]; then
             BUILD_TYPE_HOST="i686-w64-mingw32"
-            BUILD_TYPE_PREFIX="/opt/mingw32/"
         else
             BUILD_TYPE_HOST="x86_64-w64-mingw32"
-            BUILD_TYPE_PREFIX="/opt/mingw64/"
         fi
-        sudo add-apt-repository --yes ppa:tobydox/mingw-x-trusty
+        BUILD_TYPE_PREFIX="/usr/$BUILD_TYPE_HOST/"
+
+        sudo add-apt-repository --yes ppa:tobydox/mingw-w64
         sudo apt-get update -q || true
         sudo apt-get install -q -f -y mingw-w64 mingw-w64-tools \
-            mingw64-x-qt mingw64-x-glib2 mingw64-x-zlib mingw64-x-libusb \
-            mingw32-x-qt mingw32-x-glib2 mingw32-x-zlib mingw32-x-libusb
+            qt5base-mingw-w64 glib2-mingw-w64 libz-mingw-w64
 
         for tool in uic moc rcc; do
-            sudo ln -sf $tool /opt/mingw32/bin/i686-w64-mingw32-$tool
-            sudo ln -sf $tool /opt/mingw64/bin/x86_64-w64-mingw32-$tool
+            sudo ln -sf "$tool" "$BUILD_TYPE_PREFIX/bin/$BUILD_TYPE_HOST-$tool"
         done
 
         export PKG_CONFIG_PATH="$BUILD_TYPE_PREFIX/lib/pkgconfig/"
@@ -82,12 +80,10 @@ case "$BUILD_TYPE" in
         ;;
     linux-native-*)
         sudo apt-get update -q
-        sudo apt-get install -q -y libqt4-dev libglib2.0-dev libmad0-dev libgcrypt11-dev libusb-1.0-0-dev libid3tag0-dev libtag1-dev
+        sudo apt-get install -q -y qtbase5-dev qttools5-dev-tools libglib2.0-dev libmad0-dev libgcrypt20-dev libusb-1.0-0-dev libid3tag0-dev libtag1-dev
         ;;
     osx-native-*)
         brew update
-        # 2020-03-21: Remove Python 2 to not conflict with Python 3
-        brew unlink python@2
         for pkg in pkg-config qt5 mad libid3tag libtag glib libusb libusb-compat libgcrypt; do
             # 2018-11-07: Fix issues related to already-existing packages
             brew install --force $pkg || brew upgrade $pkg
