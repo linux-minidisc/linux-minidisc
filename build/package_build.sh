@@ -22,15 +22,11 @@ case "$BUILD_TYPE" in
         MINGW_ARCH="x86_64-w64-mingw32"
         MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/$MINGW_ARCH/bin:/usr/$MINGW_ARCH/lib:/usr/$MINGW_ARCH/sys-root/mingw/bin
         ;;
-    linux-native-clang)
-        PLATFORM="linux-clang"
+    linux-native)
+        PLATFORM="linux"
         ARCHIVE="tar"
         ;;
-    linux-native-gcc)
-        PLATFORM="linux-gcc"
-        ARCHIVE="tar"
-        ;;
-    osx-native-clang)
+    osx-native)
         PLATFORM="macos"
         ARCHIVE="zip"
         ;;
@@ -69,11 +65,11 @@ case "$BUILD_TYPE" in
             python3 build/mingw-bundledlls --copy "$target"
         done
         ;;
-    linux-native-*)
+    linux-native)
         mkdir -p "$TMP_OUT/bin"
         cp -rpv himdcli/himdcli netmdcli/netmdcli qhimdtransfer/qhimdtransfer "$TMP_OUT/bin"
         ;;
-    osx-native-clang)
+    osx-native)
         cp -rpv qhimdtransfer/QHiMDTransfer.app "$TMP_OUT"
         macdeployqt "$TMP_OUT/QHiMDTransfer.app"
         mkdir -p "$TMP_OUT/bin"
