@@ -3,11 +3,19 @@
 set -e
 set -x
 
-if [ "$BUILD_TYPE" = "linux-cross-mingw32" ]; then
-    BUILD_TYPE_HOST="i686-w64-mingw32"
-else
-    BUILD_TYPE_HOST="x86_64-w64-mingw32"
-fi
+case "$BUILD_TYPE" in
+    mingw32)
+        BUILD_TYPE_HOST="i686-w64-mingw32"
+        ;;
+    mingw64)
+        BUILD_TYPE_HOST="x86_64-w64-mingw32"
+        ;;
+    *)
+        echo "Unknown \$BUILD_TYPE: $BUILD_TYPE"
+        exit 1
+        ;;
+esac
+
 BUILD_TYPE_PREFIX="/usr/$BUILD_TYPE_HOST/"
 
 if [ ! -z "$BUILD_TYPE_PREFIX" ]; then

@@ -3,12 +3,7 @@
 set -e
 set -x
 
-for BUILD_TYPE in linux-cross-mingw32 linux-cross-mingw64; do
-    if [ "$BUILD_TYPE" = "linux-cross-mingw32" ]; then
-        BUILD_TYPE_HOST="i686-w64-mingw32"
-    else
-        BUILD_TYPE_HOST="x86_64-w64-mingw32"
-    fi
+for BUILD_TYPE_HOST in i686-w64-mingw32 x86_64-w64-mingw32; do
     BUILD_TYPE_PREFIX="/usr/$BUILD_TYPE_HOST/"
 
     for tool in uic moc rcc; do

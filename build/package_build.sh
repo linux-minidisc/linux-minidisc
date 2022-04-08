@@ -10,23 +10,23 @@ PACKAGE="qhimdtransfer"
 VERSION="$(sh build/get_version.sh)"
 
 case "$BUILD_TYPE" in
-    linux-cross-mingw32)
+    mingw32)
         PLATFORM="win32"
         ARCHIVE="zip"
         MINGW_ARCH="i686-w64-mingw32"
         MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/$MINGW_ARCH/bin:/usr/$MINGW_ARCH/lib:/usr/$MINGW_ARCH/sys-root/mingw/bin
         ;;
-    linux-cross-mingw64)
+    mingw64)
         PLATFORM="win64"
         ARCHIVE="zip"
         MINGW_ARCH="x86_64-w64-mingw32"
         MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/$MINGW_ARCH/bin:/usr/$MINGW_ARCH/lib:/usr/$MINGW_ARCH/sys-root/mingw/bin
         ;;
-    linux-native)
+    linux)
         PLATFORM="linux"
         ARCHIVE="tar"
         ;;
-    osx-native)
+    macos)
         PLATFORM="macos"
         ARCHIVE="zip"
         ;;
@@ -47,7 +47,7 @@ mkdir -p "$TMP_OUT"
 cp -rpv COPYING COPYING.LIB README docs "$TMP_OUT"
 
 case "$BUILD_TYPE" in
-    linux-cross-mingw*)
+    mingw32|mingw64)
         export MINGW_BUNDLEDLLS_SEARCH_PATH
 
         (
@@ -65,11 +65,11 @@ case "$BUILD_TYPE" in
             python3 build/mingw-bundledlls --copy "$target"
         done
         ;;
-    linux-native)
+    linux)
         mkdir -p "$TMP_OUT/bin"
         cp -rpv himdcli/himdcli netmdcli/netmdcli qhimdtransfer/qhimdtransfer "$TMP_OUT/bin"
         ;;
-    osx-native)
+    macos)
         cp -rpv qhimdtransfer/QHiMDTransfer.app "$TMP_OUT"
         macdeployqt "$TMP_OUT/QHiMDTransfer.app"
         mkdir -p "$TMP_OUT/bin"
