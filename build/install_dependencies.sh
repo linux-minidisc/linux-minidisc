@@ -50,16 +50,16 @@ case "$BUILD_TYPE" in
                 make && sudo make install
             )
 
-            wget -N https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.24.tar.bz2
+            wget -N https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.45.tar.bz2
             (
-                tar xvf libgpg-error-1.24.tar.bz2 && cd libgpg-error-1.24
+                tar xvf libgpg-error-1.45.tar.bz2 && cd libgpg-error-1.45
                 ./configure --host=$BUILD_TYPE_HOST --prefix=$BUILD_TYPE_PREFIX
                 make && sudo make install
             )
 
-            wget -N https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.7.3.tar.bz2
+            wget -N https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.10.1.tar.bz2
             (
-                tar xvf libgcrypt-1.7.3.tar.bz2 && cd libgcrypt-1.7.3
+                tar xvf libgcrypt-1.10.1.tar.bz2 && cd libgcrypt-1.10.1
                 ./configure --host=$BUILD_TYPE_HOST --prefix=$BUILD_TYPE_PREFIX
                 make && sudo make install
             )
