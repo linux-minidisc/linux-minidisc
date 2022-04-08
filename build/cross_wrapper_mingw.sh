@@ -16,6 +16,8 @@ case "$BUILD_TYPE" in
         ;;
 esac
 
+export BUILD_TYPE_HOST
+
 BUILD_TYPE_PREFIX="/usr/$BUILD_TYPE_HOST/"
 
 if [ ! -z "$BUILD_TYPE_PREFIX" ]; then
