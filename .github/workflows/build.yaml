@@ -41,11 +41,17 @@ jobs:
           qmake
           make
           sh build/package_build.sh
-      - name: Build (mingw)
-        if: contains(matrix.build_type, 'mingw')
+      - name: Build (mingw32)
+        if: matrix.build_type == 'linux-cross-mingw32'
         run: |
-          sh build/cross_wrapper_mingw.sh qmake
-          sh build/cross_wrapper_mingw.sh make
+          docker run -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh i686-w64-mingw32-qmake-qt5
+          docker run -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh make
+          sh build/package_build.sh
+      - name: Build (mingw64)
+        if: matrix.build_type == 'linux-cross-mingw64'
+        run: |
+          docker run -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh x86_64-w64-mingw32-qmake-qt5
+          docker run -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh make
           sh build/package_build.sh
       - name: Upload artifacts
         uses: actions/upload-artifact@v2

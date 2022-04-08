@@ -12,6 +12,7 @@ BUILD_TYPE_PREFIX="/usr/$BUILD_TYPE_HOST/"
 
 if [ ! -z "$BUILD_TYPE_PREFIX" ]; then
     export PATH="$BUILD_TYPE_PREFIX/bin:$PATH"
+    export PKG_CONFIG=$BUILD_TYPE_HOST-pkg-config
     export PKG_CONFIG_PATH=$BUILD_TYPE_PREFIX/lib/pkgconfig/
     export LDFLAGS="$LDFLAGS -L$BUILD_TYPE_PREFIX/lib/"
     BUILD_TYPE_CFLAGS="-DG_OS_WIN32 -I$BUILD_TYPE_PREFIX/include/"
