@@ -7,7 +7,8 @@ RUN dnf install -y \
     mingw32-libgcrypt          mingw64-libgcrypt \
     mingw32-libid3tag          mingw64-libid3tag \
     mingw32-taglib             mingw64-taglib \
-    mingw32-qt5-qtbase-devel   mingw64-qt5-qtbase-devel
+    mingw32-qt5-qtbase-devel   mingw64-qt5-qtbase-devel \
+    mingw32-qt5-qttools-tools  mingw64-qt5-qttools-tools
 
 COPY libmad_optimize-flags.patch /root/
 COPY build-libmad.sh /root/
