@@ -6,3 +6,5 @@ Info.plist
 Makefile*
 *.user
 qtc-gdbmacros
+/.qmake.stash
+/qhimdtransfer/moc_predefs.h
