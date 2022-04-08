@@ -26,6 +26,7 @@ for BUILD_TYPE in linux-cross-mingw32 linux-cross-mingw64; do
         mkdir -p deps && cd deps
         wget -N https://sourceforge.net/projects/mad/files/libmad/0.15.1b/libmad-0.15.1b.tar.gz
         (
+            rm -rf libmad-0.15.1b
             tar xvf libmad-0.15.1b.tar.gz && cd libmad-0.15.1b
             patch -p0 < ../../libmad_optimize-flags.patch
             ./configure --host=$BUILD_TYPE_HOST --prefix=$BUILD_TYPE_PREFIX
