@@ -13,12 +13,12 @@ case "$BUILD_TYPE" in
     linux-cross-mingw32)
         PLATFORM="win32"
         ARCHIVE="zip"
-        MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/i686-w64-mingw32/bin:/usr/lib/gcc/i686-w64-mingw32/4.8:/usr/i686-w64-mingw32/lib
+        MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/i686-w64-mingw32/bin:/usr/lib/gcc/i686-w64-mingw32/4.8:/usr/i686-w64-mingw32/lib:/usr/i686-w64-mingw32/sys-root/mingw/bin
         ;;
     linux-cross-mingw64)
         PLATFORM="win64"
         ARCHIVE="zip"
-        MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/x86_64-w64-mingw32/bin:/usr/lib/gcc/x86_64-w64-mingw32/4.8:/usr/x86_64-w64-mingw32/lib
+        MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/x86_64-w64-mingw32/bin:/usr/lib/gcc/x86_64-w64-mingw32/4.8:/usr/x86_64-w64-mingw32/lib:/usr/x86_64-w64-mingw32/sys-root/mingw/bin
         ;;
     linux-native-clang)
         PLATFORM="linux-clang"
