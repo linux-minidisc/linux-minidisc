@@ -42,9 +42,9 @@ jobs:
       - name: Build (cross-compile)
         if: matrix.build_type == 'linux-cross-mingw64'
         run: |
-          docker run -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh x86_64-w64-mingw32-qmake-qt5
-          docker run -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh make
-          docker run -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/package_build.sh
+          docker run -e BUILD_TYPE -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh x86_64-w64-mingw32-qmake-qt5
+          docker run -e BUILD_TYPE -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh make
+          docker run -e BUILD_TYPE -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh build/package_build.sh
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
