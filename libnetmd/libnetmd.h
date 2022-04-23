@@ -254,3 +254,18 @@ int netmd_cache_toc(netmd_dev_handle* dev);
 int netmd_sync_toc(netmd_dev_handle* dev);
 int netmd_acquire_dev(netmd_dev_handle* dev);
 int netmd_release_dev(netmd_dev_handle* dev);
+
+/**
+ * Download an audio file to the NetMD device.
+ *
+ * Supported file formats:
+ *  - 16 bit pcm (stereo or mono) @44100Hz OR
+ *  - Atrac LP2/LP4 data stored in a WAV container.
+ *
+ * If in_title is NULL, the filename (without path and extension) will be used as title.
+ *
+ * @param dev a handle to the USB device
+ * @param filename Local filename of file to be sent
+ * @param in_title Title to use for the track, or NULL
+ */
+netmd_error netmd_send_track(netmd_dev_handle *devh, const char *filename, const char *in_title);
