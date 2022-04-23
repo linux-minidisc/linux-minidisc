@@ -373,9 +373,7 @@ void QNetMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
 
 bool QNetMDDevice::download(const QString &filename)
 {
-    Q_UNUSED(filename);
-    // TODO: Implement support for downloading data to NetMD device
-    return false;
+    return (netmd_send_track(devh, filename.toUtf8().data(), NULL) == NETMD_NO_ERROR);
 }
 
 /* himd device members */
