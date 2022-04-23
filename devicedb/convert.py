@@ -71,6 +71,7 @@ with open('../qhimdtransfer/linux/etc/udev/60-minidisc.rules', 'w') as fp:
 # Export for libnetmd
 with open('../libnetmd/netmd_dev_ids.h', 'w') as fp:
     print('#include "netmd_dev.h"', file=fp)
+    print('#include <stddef.h>', file=fp)
     print('', file=fp)
     print('static struct netmd_devices const known_devices[] = {', file=fp)
     for vid, pid, name in models_by_mode['netmd']:
@@ -92,6 +93,7 @@ with open('../qhimdtransfer/qhimddetection_dev_ids.h', 'w') as fp:
 
 with open('../qhimdtransfer/qhimddetection_dev_ids.cpp', 'w') as fp:
     print('#include "qhimddetection_dev_ids.h"', file=fp)
+    print('#include <cstddef>', file=fp)
     print('', file=fp)
     print('const char *identify_usb_device(int vid, int pid) {', file=fp)
     for mode, devices in sorted(models_by_mode.items()):

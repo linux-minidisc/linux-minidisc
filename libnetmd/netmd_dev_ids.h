@@ -1,4 +1,5 @@
 #include "netmd_dev.h"
+#include <stddef.h>
 
 static struct netmd_devices const known_devices[] = {
     { 0x04da, 0x23b3, "Panasonic SJ-MR250" },

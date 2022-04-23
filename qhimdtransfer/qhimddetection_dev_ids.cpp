@@ -1,4 +1,5 @@
 #include "qhimddetection_dev_ids.h"
+#include <cstddef>
 
 const char *identify_usb_device(int vid, int pid) {
     if (vid == 0x054c && pid == 0x017f) {
