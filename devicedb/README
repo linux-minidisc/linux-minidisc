@@ -1,0 +1,6 @@
+This is a single-source list of USB Vendor IDs and Product IDs
+for NetMD and HiMD devices. The convert.py script can convert
+the "minidisc.devids" file into various formats.
+
+After updating "minidisc.devids", run "make" in this folder to
+update generated files and commit all changes.

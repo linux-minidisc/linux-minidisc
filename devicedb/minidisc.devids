@@ -1,0 +1,75 @@
+# Collected/combined from these places:
+#     qhimdtransfer/linux/etc/udev/60-minidisc.rules
+#     libnetmd/netmd_dev.c
+#     qhimdtransfer/qhimddetection.h
+#     qhimdtransfer/qhimddetection.c
+#     netmd/libnetmd.py
+#     https://github.com/cybercase/netmd-js/blob/master/src/netmd.ts
+
+[netmd]
+
+04da 23b3 "Panasonic SJ-MR250"
+04da 23b6 "Panasonic SJ-MR270"
+
+04dd 7202 "Sharp IM-MT880H/MT899H"
+04dd 9013 "Sharp IM-DR400/DR410"
+04dd 9014 "Sharp IM-DR80/DR420/DR580 or Kenwood DMC-S9NET"
+
+054c 0034 "Sony PCLK-XX"
+054c 0036 "Sony NetMD (unknown model)"
+054c 006F "Sony NW-E7"
+054c 0075 "Sony MZ-N1"
+054c 007c "Sony (unknown model)"
+054c 0080 "Sony LAM-1"
+054c 0081 "Sony MDS-JB980/MDS-NT1/MDS-JE780"
+054c 0084 "Sony MZ-N505"
+054c 0085 "Sony MZ-S1"
+054c 0086 "Sony MZ-N707"
+054c 008e "Sony CMT-C7NT"
+054c 0097 "Sony PCGA-MDN1"
+054c 00ad "Sony CMT-L7HD"
+054c 00c6 "Sony MZ-N10"
+054c 00c7 "Sony MZ-N910"
+054c 00c8 "Sony MZ-N710/NE810/NF810"
+054c 00c9 "Sony MZ-N510/NF610"
+054c 00ca "Sony MZ-NE410/DN430/NF520D"
+054c 00e7 "Sony CMT-M333NT/M373NT"
+054c 00eb "Sony MZ-NE810/NE910/DN430"
+054c 0101 "Sony LAM-10"
+054c 0113 "Aiwa AM-NX1"
+054c 0119 "Sony CMT-SE9"
+054c 011a "Sony CMT-SE7"
+054c 013f "Sony MDS-S500"
+054c 014c "Aiwa AM-NX9"
+054c 017e "Sony MZ-NH1"
+054c 0180 "Sony MZ-NH3D"
+054c 0182 "Sony MZ-NH900"
+054c 0184 "Sony MZ-NH700/MZ-NH800"
+054c 0186 "Sony MZ-NH600/MZ-NH600D"
+054c 0187 "Sony MZ-NH600D"
+054c 0188 "Sony MZ-N920"
+054c 018a "Sony LAM-3"
+054c 01e9 "Sony MZ-DH10P"
+054c 0219 "Sony MZ-RH10"
+054c 021b "Sony MZ-RH710/MZ-RH910/MZ-M10"
+054c 021d "Sony CMT-AH10"
+054c 022c "Sony CMT-AH10"
+054c 023c "Sony DS-HMD1"
+054c 0286 "Sony MZ-RH1"
+
+0b28 1004 "Kenwood MDX-J9"
+
+[himd]
+
+054c 017f "Sony MZ-NH1"
+054c 0181 "Sony MZ-NH3D"
+054c 0183 "Sony MZ-NH900"
+054c 0185 "Sony MZ-NH700 / MZ-NH800"
+054c 0187 "Sony MZ-NH600(D)"
+054c 018b "Sony LAM-3"
+054c 01ea "Sony MZ-DH10P"
+054c 021a "Sony MZ-RH10"
+054c 021c "Sony MZ-RH910 / MZ-M10"
+054c 022d "Sony CMT-AH10"
+054c 023d "Sony DS-HMD1"
+054c 0287 "Sony MZ-RH1"

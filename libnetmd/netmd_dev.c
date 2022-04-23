@@ -30,63 +30,7 @@
 
 static libusb_context *ctx = NULL;
 
-/*! list of known vendor/prod id's for NetMD devices
-    patch credit to Thomas Arp, 2011:
-    https://lists.fu-berlin.de/pipermail/linux-minidisc/2011-September/msg00027.html
-*/
-static struct netmd_devices const known_devices[] =
-{
-
-  {0x54c, 0x34, "Sony PCLK-XX"},
-  {0x54c, 0x36, "Sony (unknown model)"},
-  {0x54c, 0x6F, "Sony NW-E7"},
-  {0x54c, 0x75, "Sony MZ-N1"},
-  {0x54c, 0x7c, "Sony (unknown model)"},
-  {0x54c, 0x80, "Sony LAM-1"},
-  {0x54c, 0x81, "Sony MDS-JE780/JB980"},
-  {0x54c, 0x84, "Sony MZ-N505"},
-  {0x54c, 0x85, "Sony MZ-S1"},
-  {0x54c, 0x86, "Sony MZ-N707"},
-  {0x54c, 0x8e, "Sony CMT-C7NT"},
-  {0x54c, 0x97, "Sony PCGA-MDN1"},
-  {0x54c, 0xad, "Sony CMT-L7HD"},
-  {0x54c, 0xc6, "Sony MZ-N10"},
-  {0x54c, 0xc7, "Sony MZ-N910"},
-  {0x54c, 0xc8, "Sony MZ-N710/NE810/NF810"},
-  {0x54c, 0xc9, "Sony MZ-N510/NF610"},
-  {0x54c, 0xca, "Sony MZ-NE410/DN430/NF520"},
-  {0x54c, 0xeb, "Sony MZ-NE810/NE910"},
-  {0x54c, 0xe7, "Sony CMT-M333NT/M373NT"},
-  {0x54c, 0x101, "Sony LAM-10"},
-  {0x54c, 0x113, "Aiwa AM-NX1"},
-  {0x54c, 0x119, "Sony CMT-SE9"},
-  {0x54c, 0x13f, "Sony MDS-S500"},
-  {0x54c, 0x14c, "Aiwa AM-NX9"},
-  {0x54c, 0x17e, "Sony MZ-NH1"},
-  {0x54c, 0x180, "Sony MZ-NH3D"},
-  {0x54c, 0x182, "Sony MZ-NH900"},
-  {0x54c, 0x184, "Sony MZ-NH700/800"},
-  {0x54c, 0x186, "Sony MZ-NH600/600D"},
-  {0x54c, 0x188, "Sony MZ-N920"},
-  {0x54c, 0x18a, "Sony LAM-3"},
-  {0x54c, 0x1e9, "Sony MZ-DH10P"},
-  {0x54c, 0x219, "Sony MZ-RH10"},
-  {0x54c, 0x21b, "Sony MZ-RH910"},
-  {0x54c, 0x21d, "Sony CMT-AH10"},
-  {0x54c, 0x22c, "Sony CMT-AH10"},
-  {0x54c, 0x23c, "Sony DS-HMD1"},
-  {0x54c, 0x286, "Sony MZ-RH1"},
-
-  {0x4dd, 0x7202, "Sharp IM-MT880H/MT899H"},
-  {0x4dd, 0x9013, "Sharp IM-DR400/DR410"},
-  {0x4dd, 0x9014, "Sharp IM-DR80/DR420/DR580 or Kenwood DMC-S9NET"},
-
-  {0x04, 0x23b3, "Panasonic SJ-MR250"},
-
-  {0, 0, NULL} /* terminating pair */
-  
-};
-
+#include "netmd_dev_ids.h"
 
 netmd_error netmd_init(netmd_device **device_list, libusb_context *hctx)
 {
