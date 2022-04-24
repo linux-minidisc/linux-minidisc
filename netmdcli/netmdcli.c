@@ -38,77 +38,6 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 /* Max line length we support in M3U files... should match MD TOC max */
 #define M3U_LINE_MAX	128
 
-#if 0
-static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
-{
-    unsigned int player_id;
-    unsigned char ekb_head[] = {
-        0x01, 0xca, 0xbe, 0x07, 0x2c, 0x4d, 0xa7, 0xae,
-        0xf3, 0x6c, 0x8d, 0x73, 0xfa, 0x60, 0x2b, 0xd1};
-    unsigned char ekb_body[] = {
-        0x0f, 0xf4, 0x7d, 0x45, 0x9c, 0x72, 0xda, 0x81,
-        0x85, 0x16, 0x9d, 0x73, 0x49, 0x00, 0xff, 0x6c,
-        0x6a, 0xb9, 0x61, 0x6b, 0x03, 0x04, 0xf9, 0xce};
-    unsigned char rand_in[8], rand_out[8];
-    unsigned char hash8[8];
-    unsigned char hash32[32];
-
-    switch (cmdid) {
-    case 0x11:
-        if (netmd_secure_cmd_11(devh, &player_id) > 0) {
-            fprintf(stdout, "Player id = %04d\n", player_id);
-        }
-        break;
-    case 0x12:
-        netmd_secure_cmd_12(devh, ekb_head, ekb_body);
-        break;
-    case 0x20:
-        memset(rand_in, 0, sizeof(rand_in));
-        if (netmd_secure_cmd_20(devh, rand_in, rand_out) > 0) {
-            fprintf(stdout, "Random =\n");
-            print_hex(rand_out, sizeof(rand_out));
-        }
-        break;
-    case 0x21:
-        netmd_secure_cmd_21(devh);
-        break;
-    case 0x22:
-        memset(hash32, 0, sizeof(hash32));
-        netmd_secure_cmd_22(devh, hash32);
-        break;
-    case 0x23:
-        if (netmd_secure_cmd_23(devh, track, hash8) > 0) {
-            fprintf(stdout, "Hash id of track %d =\n", track);
-            print_hex(hash8, sizeof(hash8));
-        }
-        break;*/
-/*case 0x28: TODO*/
-    case 0x40:
-        if (netmd_secure_cmd_40(devh, track, hash8) > 0) {
-            fprintf(stdout, "Signature of deleted track %d =\n", track);
-            print_hex(hash8, sizeof(hash8));
-        }
-        break;
-    case 0x48:
-        memset(hash8, 0, sizeof(hash8));
-        if (netmd_secure_cmd_48(devh, track, hash8) > 0) {
-            fprintf(stdout, "Signature of downloaded track %d =\n", track);
-            print_hex(hash8, sizeof(hash8));
-        }
-        break;
-    case 0x80:
-        netmd_secure_cmd_80(devh);
-        break;
-    case 0x81:
-        netmd_secure_cmd_81(devh);
-        break;
-    default:
-        fprintf(stderr, "unsupported secure command\n");
-        break;
-    }
-}
-#endif
-
 static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
 {
     unsigned char cmd[255], rsp[255];
@@ -759,23 +688,6 @@ void print_syntax()
     puts("      (if three values are given, they are minute, second and frame)");
     puts("capacity - shows current minidisc capacity (used, available)");
     puts("usbids - Output NetMD USB ID list in JSON format");
-#if 0  // relevant code at top of file is commented out; leaving this in as reference
-    puts("secure #1 #2 - execute secure command #1 on track #2 (where applicable)");
-    puts("  --- general ---");
-    puts("  0x80 = start secure session");
-    puts("  0x11 = get player id");
-    puts("  0x12 = send ekb");
-    puts("  0x20 = exchange randoms");
-    puts("  0x21 = discard randoms");
-    puts("  0x81 = end secure session");
-    puts("  --- check-out ---");
-    puts("  0x22 = submit 32-byte hash");
-    puts("  0x28 = prepare download");
-    puts("  0x48 = verify downloaded track #");
-    puts("  --- check-in ---");
-    puts("  0x23 = get hash id for track #");
-    puts("  0x40 = secure delete track #");
-#endif
     puts("help - show this message\n");
 }
 
