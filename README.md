@@ -124,3 +124,9 @@ builddir/qhimdtransfer
 
 Some things might have been broken during the build system transition, let me know
 and we can look into fixing it up.
+
+
+## Proper device type detection in QHiMDTransfer
+
+Use the device type provided by `libusbmd` for detection of devices instead of
+relying on the string "NetMD" appearing in the device name.

@@ -196,29 +196,37 @@ void QHiMDDetection::add_hotplug_device(libusb_device * dev)
     QString name;
 
     libusb_get_device_descriptor(dev, &desc);
-    name = QString(identify_usb_device(desc.idVendor, desc.idProduct));
 
-    if(name.contains("NetMD"))
-        add_netmddevice(dev, name);
-    else {
-        /* wait some time (linux: let udev and udisks2 finish processing) */
-        QLibusbPoller::sleep(4);
-        add_himddevice(QString(), name, dev);
+    auto info = minidisc_usb_device_info_get(desc.idVendor, desc.idProduct);
+
+    if (info != nullptr) {
+        name = info->name;
+
+        if (info->device_type == MINIDISC_USB_DEVICE_TYPE_NETMD) {
+            add_netmddevice(dev, name);
+        } else {
+            /* wait some time (linux: let udev and udisks2 finish processing) */
+            QLibusbPoller::sleep(4);
+            add_himddevice(QString(), name, dev);
+        }
     }
 }
 
 void QHiMDDetection::remove_hotplug_device(libusb_device * dev)
 {
     struct libusb_device_descriptor desc;
-    QString name;
 
     libusb_get_device_descriptor(dev, &desc);
-    name = QString(identify_usb_device(desc.idVendor, desc.idProduct));
 
-    if(name.contains("NetMD"))
-        remove_netmddevice(dev);
-    else
-        remove_himddevice(QString(), dev);
+    auto info = minidisc_usb_device_info_get(desc.idVendor, desc.idProduct);
+
+    if (info != nullptr) {
+        if (info->device_type == MINIDISC_USB_DEVICE_TYPE_NETMD) {
+            remove_netmddevice(dev);
+        } else {
+            remove_himddevice(QString(), dev);
+        }
+    }
 }
 
 /* use this if no platform dependent implementation is available,
