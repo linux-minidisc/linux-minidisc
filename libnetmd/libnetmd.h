@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * libnetmd.h
  *
@@ -121,7 +123,7 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
    @param title buffer holding the name.
    @return returns 0 for fail 1 for success.
 */
-int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, unsigned int group, char* title);
+int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, unsigned int group, const char* title);
 
 /**
    Moves track around the disc.
@@ -149,9 +151,9 @@ void netmd_parse_group(minidisc* md, char* group, int* group_count);
 
 void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_count, char* tracks);
 
-int netmd_create_group(netmd_dev_handle* dev, minidisc* md, char* name);
+int netmd_create_group(netmd_dev_handle* dev, minidisc* md, const char* name);
 
-int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length);
+int netmd_set_disc_title(netmd_dev_handle* dev, const char* title, size_t title_length);
 
 /**
    Creates disc header out of groups and writes it to disc

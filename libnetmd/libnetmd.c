@@ -280,7 +280,7 @@ static unsigned int get_group_count(netmd_dev_handle* devh)
     return group_count;
 }
 
-int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, unsigned int group, char* title)
+int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, unsigned int group, const char* title)
 {
     size_t size = strlen(title);
 
@@ -456,7 +456,7 @@ void print_groups(minidisc *md)
     printf("\n");
 }
 
-int netmd_create_group(netmd_dev_handle* dev, minidisc* md, char* name)
+int netmd_create_group(netmd_dev_handle* dev, minidisc* md, const char* name)
 {
     unsigned int new_index;
 
@@ -472,7 +472,7 @@ int netmd_create_group(netmd_dev_handle* dev, minidisc* md, char* name)
     return 0;
 }
 
-int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length)
+int netmd_set_disc_title(netmd_dev_handle* dev, const char* title, size_t title_length)
 {
     unsigned char *request, *p;
     unsigned char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
