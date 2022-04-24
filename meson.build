@@ -64,6 +64,7 @@ libnetmd = library('netmd',
 
 netmdcli_sources = [
   'netmdcli/netmdcli.c',
+  'netmdcli/cmds.c',
 ]
 
 executable('netmdcli',
