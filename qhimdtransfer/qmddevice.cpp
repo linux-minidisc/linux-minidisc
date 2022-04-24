@@ -9,6 +9,7 @@
 #include <fileref.h>
 #include <tfile.h>
 #include <tag.h>
+#include <libusb.h>
 
 /* common device members */
 QMDDevice::QMDDevice() : dev_type(NO_DEVICE)

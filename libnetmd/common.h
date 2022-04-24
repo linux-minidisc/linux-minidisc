@@ -1,13 +1,20 @@
 #ifndef LIBNETMD_COMMON_H
 #define LIBNETMD_COMMON_H
 
-#include <libusb.h>
+#include <stddef.h>
+
+/**
+ * Forward-declaration of opaque libusb structures
+ */
+typedef struct libusb_context libusb_context;
+typedef struct libusb_device libusb_device;
 
 /**
    Typedef that nearly all netmd_* functions use to identify the USB connection
    with the minidisc player.
 */
-typedef libusb_device_handle *netmd_dev_handle;
+
+typedef struct libusb_device_handle *netmd_dev_handle;
 
 /**
   Function to exchange command/response buffer with minidisc player.

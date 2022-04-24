@@ -11,6 +11,9 @@
 Info.plist
 Makefile*
 *.user
+*.moc
+moc_predefs.h
 qtc-gdbmacros
 /bin
 /obj
+/builddir

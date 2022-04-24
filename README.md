@@ -27,3 +27,34 @@ upstream repo, but for now, this faster-moving branch is where it's at.
 
 README of the vuori fork is [here](README.vuori).
 Original README of upstream is [here](README).
+
+
+## Meson Build System
+
+There is now support for the [Meson Build System](https://mesonbuild.com/),
+which is a bit more flexible and modern than the old qmake (for libs, CLI).
+
+Care was taken so that the old `qmake`-based system still works if needed.
+
+Building with Meson is simple, it always builds out-of-source-tree (here,
+`build` is used as the build folder, and `ninja` is the build system):
+
+```
+meson builddir
+ninja -C builddir
+```
+
+To build `libnetmd` and `libhimd` as static libraries (e.g. so that
+`netmdcli` and `himdcli` can be used standalone):
+
+```
+meson builddir -Ddefault_library=static
+ninja -C builddir
+```
+
+As part of this modification, the `libnetmd` public headers do not depend
+on `libusb.h` directly anymore, which helps keep things modular.
+
+The build dependencies are now much cleaner, and Meson's dependency system
+is used, which on Linux uses `pkg-config` for everything by default, which
+works fine on modern distros.

@@ -32,8 +32,6 @@
 #include <errno.h>
 #include <stdint.h>
 
-#include <libusb.h>
-
 #include "const.h"
 #include "error.h"
 #include "common.h"

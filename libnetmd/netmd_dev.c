@@ -24,6 +24,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <libusb.h>
+
 #include "netmd_dev.h"
 #include "log.h"
 #include "const.h"

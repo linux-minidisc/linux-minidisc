@@ -25,6 +25,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <libusb.h>
+
 #include "common.h"
 #include "const.h"
 #include "log.h"

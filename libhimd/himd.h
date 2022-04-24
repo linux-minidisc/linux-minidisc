@@ -26,6 +26,10 @@
 #ifndef INCLUDED_LIBHIMD_HIMD_H
 #define INCLUDED_LIBHIMD_HIMD_H
 
+#if !defined(HIMD_QMAKE_BUILD_SYSTEM)
+#include "himd_config.h"
+#endif
+
 #include <time.h>
 #include <stdio.h>
 #include "codecinfo.h"

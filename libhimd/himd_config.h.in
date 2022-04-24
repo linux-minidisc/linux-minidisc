@@ -1,0 +1,2 @@
+#mesondefine CONFIG_WITH_MAD
+#mesondefine CONFIG_WITH_GCRYPT

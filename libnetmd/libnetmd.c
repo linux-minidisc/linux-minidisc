@@ -24,6 +24,8 @@
 
 #include <unistd.h>
 
+#include <libusb.h>
+
 #include "libnetmd.h"
 #include "utils.h"
 
