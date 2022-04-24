@@ -1,13 +1,14 @@
 #include "qhimdaboutdialog.h"
 #include "ui_qhimdaboutdialog.h"
 
+#include "qhimdtransfer_config.h"
+
 QHiMDAboutDialog::QHiMDAboutDialog(QWidget *parent) :
     QDialog(parent),
     m_ui(new Ui::QHiMDAboutDialog)
 {
     m_ui->setupUi(this);
-    m_ui->VersionString->setText(VER);
-    m_ui->BuildDateString->setText(BDATE);
+    m_ui->VersionString->setText(QHIMDTRANSFER_VERSION);
 }
 
 QHiMDAboutDialog::~QHiMDAboutDialog()

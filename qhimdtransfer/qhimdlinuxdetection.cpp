@@ -1,8 +1,4 @@
-#include <QtDBus/QtDBus>
-#include <qhimddetection.h>
-#include <QVariantList>
-#include <QDebug>
-#include <QApplication>
+#include "qhimdlinuxdetection.h"
 
 /* define some constants for UDisks2 bdus operations */
 #define UDISK_SERVICE "org.freedesktop.UDisks2"
@@ -14,31 +10,6 @@
 #define UDISK_INTERFACE_DRIVE "org.freedesktop.UDisks2.Drive"
 #define UDISK_DEVICE_PATH "/org/freedesktop/UDisks2/block_devices/"
 
-
-class QHiMDLinuxDetection : public QHiMDDetection{
-    Q_OBJECT
-
-    QDBusConnection dbus_sys;
-
-public:
-    QHiMDLinuxDetection(QObject * parent = NULL);
-    ~QHiMDLinuxDetection() {}
-    virtual QString mountpoint(QMDDevice *dev);
-    virtual void scan_for_himd_devices();
-
-private:
-    QVariant get_property(QString udiskPath, QString property, QString interface);
-    bool drive_is_himd(QString udisk_drive_path, QString &name);
-    bool udisks_drive_path(char drive, QString &drive_path);
-    bool check_serial(QString udisk_drive_path, QString serial);
-    QString deviceFile_from_serial(QString serial);
-    QMDDevice *find_by_deviceFile(QString file);
-    virtual void add_himddevice(QString path, QString name, libusb_device * dev);
-};
-
-/* force qmake to run moc on this .cpp file */
-#include "qhimdlinuxdetection.moc"
-//  MOC_SKIP_BEGIN
 
 QHiMDDetection * createDetection(QObject * parent)
 {
@@ -369,5 +340,3 @@ void QHiMDLinuxDetection::add_himddevice(QString path, QString name, libusb_devi
     dlist.append(new_device);
     emit deviceListChanged(dlist);
 }
-
-//  MOC_SKIP_END

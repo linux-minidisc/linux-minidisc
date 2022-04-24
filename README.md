@@ -108,3 +108,19 @@ When outputting the track list for both `netmdcli` and `himdcli`, there was
 a format string vulnerability, as the JSON output was the format string passed
 to `printf()`. Titling a track with special printf commands (`%s`, `%n`, ...)
 would result in a crash or worse.
+
+
+## Removal of qmake support
+
+The `meson.build` file now has support for building the Qt5 GUI, so we can remove
+all the `qmake`-related cruft. By default the GUI building is disabled, but you
+can enable it with:
+
+```
+meson builddir -Dwith_gui=true
+ninja -C builddir
+builddir/qhimdtransfer
+```
+
+Some things might have been broken during the build system transition, let me know
+and we can look into fixing it up.

@@ -1,9 +1,10 @@
-project('minidisc', 'c')
+project('minidisc', ['c', 'cpp'])
 
 libusb = dependency('libusb-1.0')
 gcrypt = dependency('libgcrypt')
 glib = dependency('glib-2.0')
 id3tag = dependency('id3tag')
+taglib = dependency('taglib')
 jsonc = dependency('json-c')
 mad = dependency('mad', required: false)
 
@@ -126,3 +127,88 @@ install_data(
   sources: 'devicedb/udev/60-minidisc.rules',
   install_dir: 'lib/udev/rules.d',
 )
+
+if get_option('with_gui')
+  qt5 = import('qt5')
+  qt5_dep = dependency('qt5', modules: ['Core', 'Gui', 'Widgets', 'DBus'])
+
+  qhimdtransfer_sources = [
+    'qhimdtransfer/main.cpp',
+    'qhimdtransfer/qhimdaboutdialog.cpp',
+    'qhimdtransfer/qhimddetection.cpp',
+    'qhimdtransfer/qhimdformatdialog.cpp',
+    'qhimdtransfer/qhimdmainwindow.cpp',
+    'qhimdtransfer/qhimduploaddialog.cpp',
+    'qhimdtransfer/qmddevice.cpp',
+    'qhimdtransfer/qmdmodel.cpp',
+    'qhimdtransfer/qmdtrack.cpp',
+    'qhimdtransfer/wavefilewriter.cpp',
+  ]
+
+  if get_option('target_os') == 'linux'
+    qhimdtransfer_sources += 'qhimdtransfer/qhimdlinuxdetection.cpp'
+    qhimdtransfer_sources += qt5.preprocess(moc_headers: [
+      'qhimdtransfer/qhimdlinuxdetection.h',
+    ])
+  elif get_option('target_os') == 'windows'
+    qhimdtransfer_sources += 'qhimdtransfer/qhimdwindowsdetection.cpp'
+  elif get_option('target_os') == 'macos'
+    qhimdtransfer_sources += 'qhimdtransfer/qhimdmacosdetection.cpp'
+  else
+    qhimdtransfer_sources += 'qhimdtransfer/qhimddummydetection.cpp'
+  endif
+
+  qhimdtransfer_sources += qt5.preprocess(ui_files: [
+    'qhimdtransfer/qhimdaboutdialog.ui',
+    'qhimdtransfer/qhimdformatdialog.ui',
+    'qhimdtransfer/qhimdmainwindow.ui',
+    'qhimdtransfer/qhimduploaddialog.ui',
+  ], moc_headers: [
+    'qhimdtransfer/qhimdaboutdialog.h',
+    'qhimdtransfer/qhimdformatdialog.h',
+    'qhimdtransfer/qhimdmainwindow.h',
+    'qhimdtransfer/qhimduploaddialog.h',
+
+    'qhimdtransfer/qhimddetection.h',
+    'qhimdtransfer/qmdmodel.h',
+    'qhimdtransfer/qmddevice.h',
+  ], qresources: [
+    'qhimdtransfer/icons.qrc',
+  ])
+
+  qhimdtransfer_sources += qt5.compile_translations(ts_files: [
+    'qhimdtransfer/qhimdtransfer_ar.ts',
+    'qhimdtransfer/qhimdtransfer_br.ts',
+    'qhimdtransfer/qhimdtransfer_cs.ts',
+    'qhimdtransfer/qhimdtransfer_da.ts',
+    'qhimdtransfer/qhimdtransfer_de.ts',
+    'qhimdtransfer/qhimdtransfer_el.ts',
+    'qhimdtransfer/qhimdtransfer_es.ts',
+    'qhimdtransfer/qhimdtransfer_fi.ts',
+    'qhimdtransfer/qhimdtransfer_fr.ts',
+    'qhimdtransfer/qhimdtransfer_it.ts',
+    'qhimdtransfer/qhimdtransfer_ja.ts',
+    'qhimdtransfer/qhimdtransfer_nb.ts',
+    'qhimdtransfer/qhimdtransfer_nl.ts',
+    'qhimdtransfer/qhimdtransfer_pl.ts',
+    'qhimdtransfer/qhimdtransfer_pt.ts',
+    'qhimdtransfer/qhimdtransfer_ru.ts',
+    'qhimdtransfer/qhimdtransfer_sv.ts',
+    'qhimdtransfer/qhimdtransfer_tr.ts',
+    'qhimdtransfer/qhimdtransfer_uk.ts',
+  ])
+
+  # TODO: Fallback to reading from VERSION and stuff
+  qhimdtransfer_config = configuration_data()
+  qhimdtransfer_config_h = vcs_tag(
+    input: 'qhimdtransfer/qhimdtransfer_config.h.in',
+    output: 'qhimdtransfer_config.h',
+  )
+
+  executable('qhimdtransfer',
+    qhimdtransfer_sources,
+    dependencies: [qt5_dep, libusb, taglib],
+    link_with: [libusbmd, libnetmd, libhimd],
+    include_directories: ['libusbmd', 'libnetmd', 'libhimd', 'qhimdtransfer'],
+  )
+endif
