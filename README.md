@@ -58,3 +58,13 @@ on `libusb.h` directly anymore, which helps keep things modular.
 The build dependencies are now much cleaner, and Meson's dependency system
 is used, which on Linux uses `pkg-config` for everything by default, which
 works fine on modern distros.
+
+
+## Linux NetMD Permissions
+
+The udev rules file for Linux (so users in the "plugdev" group will have
+access to NetMD devices without requiring root) is now installed in the
+right place automatically when using the Meson build system.
+
+The HAL file (`netmd/etc/20-netmd.fdi`) was removed without replacement,
+as HAL is deprecated in Linux for more than 10 years now.

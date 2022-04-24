@@ -1,9 +1,10 @@
 INPUTS := convert.py minidisc.devids
 
-OUTPUTS := ../qhimdtransfer/linux/etc/udev/60-minidisc.rules
+OUTPUTS := udev/60-minidisc.rules
+OUTPUTS += netmd-js/netmd.devices.ts
+
 OUTPUTS += ../libnetmd/netmd_dev_ids.h
 OUTPUTS += ../netmd/libnetmd_dev_ids.py
-OUTPUTS += netmd-js/netmd.devices.ts
 OUTPUTS += ../qhimdtransfer/qhimddetection_dev_ids.cpp ../qhimdtransfer/qhimddetection_dev_ids.h
 
 all: $(OUTPUTS)

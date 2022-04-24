@@ -103,3 +103,9 @@ executable('himdcli',
   include_directories: 'libhimd',
   install: true,
 )
+
+# TODO: Maybe install only on Linux, and ignore for MSVC/MinGW/macOS/*BSD
+install_data(
+  sources: 'devicedb/udev/60-minidisc.rules',
+  install_dir: 'lib/udev/rules.d',
+)
