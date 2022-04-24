@@ -27,9 +27,7 @@
 #include "libusbmd.h"
 #include "utils.h"
 
-static json_object *json;
-
-void print_disc_info(netmd_dev_handle* devh, minidisc *md);
+void print_disc_info(netmd_dev_handle* devh, minidisc *md, json_object *json);
 void print_current_track_info(netmd_dev_handle* devh);
 void print_syntax();
 int check_args(int argc, int min_argc, const char *text);
@@ -183,7 +181,7 @@ int main(int argc, char* argv[])
     netmd_initialize_disc_info(devh, md);
 
     // Construct JSON object
-    json = json_object_new_object();
+    json_object *json = json_object_new_object();
     json_object_object_add(json, "device",  json_object_new_string(netmd->model));
     json_object_object_add(json, "title",   json_object_new_string(md->groups[0].name));
 
@@ -423,7 +421,7 @@ int main(int argc, char* argv[])
         }
     }
     else
-        print_disc_info(devh, md);
+        print_disc_info(devh, md, json);
 
     netmd_clean_disc_info(md);
     netmd_close(devh);
@@ -450,7 +448,7 @@ void print_current_track_info(netmd_dev_handle* devh)
 
 }
 
-void print_disc_info(netmd_dev_handle* devh, minidisc* md)
+void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
 {
     uint8_t i = 0;
     int size = 1;
