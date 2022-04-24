@@ -122,11 +122,12 @@ executable('himdcli',
   install: true,
 )
 
-# TODO: Maybe install only on Linux, and ignore for MSVC/MinGW/macOS/*BSD
-install_data(
-  sources: 'devicedb/udev/60-minidisc.rules',
-  install_dir: 'lib/udev/rules.d',
-)
+if get_option('target_os') == 'linux'
+  install_data(
+    sources: 'devicedb/udev/60-minidisc.rules',
+    install_dir: 'lib/udev/rules.d',
+  )
+endif
 
 if get_option('with_gui')
   qt5 = import('qt5')
@@ -210,5 +211,6 @@ if get_option('with_gui')
     dependencies: [qt5_dep, libusb, taglib],
     link_with: [libusbmd, libnetmd, libhimd],
     include_directories: ['libusbmd', 'libnetmd', 'libhimd', 'qhimdtransfer'],
+    install: true,
   )
 endif
