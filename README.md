@@ -29,6 +29,23 @@ README of the vuori fork is [here](README.vuori).
 Original README of upstream is [here](README).
 
 
+## NetMD Download Support for QHiMDTransfer
+
+Now that `netmd_send_track()` exists in `libnetmd`, we can call it from
+QHiMDTransfer to download tracks to the device. This accepts the same
+file formats as Platinum MD, namely 44.1 kHz 16-bit stereo WAV files for
+SP download or ATRAC LP2/LP4 data stored in a WAV container for direct
+LP2/LP4 download.
+
+
+## Track Duration Fix
+
+`libnetmd` returned the wrong duration for tracks > 1 hour, because the
+"hour" item of the response wasn't take into account (so e.g. a 68-minute
+track would show up as an 8-minute track). This is fixed now, and the
+`struct netmd_track`'s `minute` can now be >= 60.
+
+
 ## Meson Build System
 
 There is now support for the [Meson Build System](https://mesonbuild.com/),
