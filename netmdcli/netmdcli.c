@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
     else if (argc > 1 && strcmp("usbids", argv[1]) == 0) {
         json_object *json = json_object_new_array();
 
-        struct minidisc_usb_device_info *cur = minidisc_usb_device_info_first();
+        const struct minidisc_usb_device_info *cur = minidisc_usb_device_info_first();
         while (cur != NULL) {
             if (cur->device_type == MINIDISC_USB_DEVICE_TYPE_NETMD) {
                 json_object *dev = json_object_new_object();

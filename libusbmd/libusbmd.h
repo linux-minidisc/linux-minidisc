@@ -60,7 +60,7 @@ minidisc_usb_device_info_first(void);
  * @return Pointer to the next entry, or NULL if there are no more entries
  */
 const struct minidisc_usb_device_info *
-minidisc_usb_device_info_next(struct minidisc_usb_device_info *info);
+minidisc_usb_device_info_next(const struct minidisc_usb_device_info *info);
 
 #ifdef __cplusplus
 }

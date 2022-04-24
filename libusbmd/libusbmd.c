@@ -41,7 +41,7 @@ minidisc_usb_device_info_first(void)
 }
 
 const struct minidisc_usb_device_info *
-minidisc_usb_device_info_next(struct minidisc_usb_device_info *info)
+minidisc_usb_device_info_next(const struct minidisc_usb_device_info *info)
 {
     if (!info) {
         return NULL;
