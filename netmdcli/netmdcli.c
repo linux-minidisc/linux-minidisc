@@ -38,10 +38,6 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 /* Max line length we support in M3U files... should match MD TOC max */
 #define M3U_LINE_MAX	128
 
-/* Min "usable" audio file size (1 frame Atrac LP4)
-   = 52 (RIFF/WAVE header Atrac LP) + 8 ("data" + length) + 92 (1 frame LP4) */
-#define MIN_WAV_LENGTH 152
-
 #if 0
 static void handle_secure_cmd(netmd_dev_handle* devh, int cmdid, int track)
 {
