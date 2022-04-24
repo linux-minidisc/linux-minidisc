@@ -1,4 +1,5 @@
 /* netmdcli.c
+ *      Copyright (C) 2022 Thomas Perl <m@thp.io>
  *      Copyright (C) 2017 René Rebe
  *      Copyright (C) 2002, 2003 Marc Britten
  *
@@ -19,7 +20,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <gcrypt.h>
 #include <json.h>
 #include <unistd.h>
 
@@ -27,16 +27,18 @@
 #include "libusbmd.h"
 #include "utils.h"
 
+#include "cmds.h"
+
+
+void usage();
+
 void print_disc_info(netmd_dev_handle* devh, minidisc *md, json_object *json);
-void print_current_track_info(netmd_dev_handle* devh);
-void print_syntax();
-int check_args(int argc, int min_argc, const char *text);
 void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 
 /* Max line length we support in M3U files... should match MD TOC max */
 #define M3U_LINE_MAX	128
 
-static void send_raw_message(netmd_dev_handle* devh, char *pszRaw)
+static void send_raw_message(netmd_dev_handle* devh, const char *pszRaw)
 {
     unsigned char cmd[255], rsp[255];
     unsigned int data;
@@ -83,19 +85,524 @@ void print_time(const netmd_time *time)
     printf("%02d:%02d:%02d.%02d", time->hour, time->minute, time->second, time->frame);
 }
 
+
+static int
+cmd_rename(struct netmdcli_context *ctx)
+{
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id") & 0xffff;
+    const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
+
+    netmd_cache_toc(ctx->devh);
+    netmd_set_title(ctx->devh, track_id, new_title);
+    netmd_sync_toc(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_play(struct netmdcli_context *ctx)
+{
+    int track_id = netmdcli_context_get_optional_int_arg(ctx, "track_id");
+
+    if (track_id != -1) {
+        track_id &= 0xffff;
+        netmd_set_track(ctx->devh, track_id);
+    }
+
+    netmd_play(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_move(struct netmdcli_context *ctx)
+{
+    int from_track_id = netmdcli_context_get_int_arg(ctx, "from_track_id");
+    int to_track_id = netmdcli_context_get_int_arg(ctx, "to_track_id");
+
+    netmd_move_track(ctx->devh, from_track_id & 0xffff, to_track_id & 0xffff);
+
+    return 0;
+}
+
+static int
+cmd_groupmove(struct netmdcli_context *ctx)
+{
+    int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
+    int start_track_id = netmdcli_context_get_int_arg(ctx, "start_track_id");
+
+    netmd_move_group(ctx->devh, ctx->md, group_id & 0xffff, start_track_id & 0xffff);
+
+    return 0;
+}
+
+static int
+cmd_deletegroup(struct netmdcli_context *ctx)
+{
+    int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
+
+    netmd_delete_group(ctx->devh, ctx->md, group_id & 0xffff);
+
+    return 0;
+}
+
+static int
+cmd_group(struct netmdcli_context *ctx)
+{
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
+    int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
+
+    if (!netmd_put_track_in_group(ctx->devh, ctx->md, track_id & 0xffff, group_id & 0xffff)) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static int
+cmd_newgroup(struct netmdcli_context *ctx)
+{
+    const char *group_name = netmdcli_context_get_string_arg(ctx, "group_name");
+
+    netmd_create_group(ctx->devh, ctx->md, group_name);
+
+    return 0;
+}
+
+static int
+cmd_retitle(struct netmdcli_context *ctx)
+{
+    int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
+    const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
+
+    netmd_set_group_title(ctx->devh, ctx->md, (unsigned int)group_id, new_title);
+
+    return 0;
+}
+
+static int
+cmd_pause(struct netmdcli_context *ctx)
+{
+    netmd_pause(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_stop(struct netmdcli_context *ctx)
+{
+    netmd_stop(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_restart(struct netmdcli_context *ctx)
+{
+    netmd_track_restart(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_next(struct netmdcli_context *ctx)
+{
+    netmd_track_next(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_previous(struct netmdcli_context *ctx)
+{
+    netmd_track_previous(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_fforward(struct netmdcli_context *ctx)
+{
+    netmd_fast_forward(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_rewind(struct netmdcli_context *ctx)
+{
+    netmd_rewind(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_json(struct netmdcli_context *ctx)
+{
+    json_object *json = json_object_new_object();
+    json_object_object_add(json, "device",  json_object_new_string(ctx->netmd->model));
+    json_object_object_add(json, "title",   json_object_new_string(ctx->md->groups[0].name));
+    print_disc_info(ctx->devh, ctx->md, json);
+
+    return 0;
+}
+
+static int
+cmd_capacity(struct netmdcli_context *ctx)
+{
+    netmd_disc_capacity capacity;
+    netmd_get_disc_capacity(ctx->devh, &capacity);
+
+    printf("Recorded:  ");
+    print_time(&capacity.recorded);
+    printf("\nTotal:     ");
+    print_time(&capacity.total);
+    printf("\nAvailable: ");
+    print_time(&capacity.available);
+    printf("\n");
+
+    return 0;
+}
+
+static int
+cmd_discinfo(struct netmdcli_context *ctx)
+{
+    netmd_device *netmd = ctx->netmd;
+    minidisc *md = ctx->md;
+    netmd_dev_handle *devh = ctx->devh;
+
+    uint8_t i = 0;
+    int size = 1;
+    uint8_t g, group = 0, lastgroup = 0;
+    unsigned char bitrate_id;
+    unsigned char flags;
+    unsigned char channel;
+    char *name, buffer[256];
+    struct netmd_track time;
+    struct netmd_pair const *trprot, *bitrate;
+
+    trprot = bitrate = 0;
+
+    printf("NetMD Device: %s\n", netmd->model);
+    printf("Disc title:   %s\n", ctx->md->groups[0].name);
+    printf("--\n");
+
+    cmd_capacity(ctx);
+    printf("--\n");
+
+    for(i = 0; size >= 0; i++) {
+        size = netmd_request_title(devh, i, buffer, 256);
+
+        if(size < 0)
+        {
+            break;
+        }
+
+        /* Figure out which group this track is in */
+        for( group = 0, g = 1; g < md->group_count; g++ )
+        {
+            if( (md->groups[g].start <= i+1U) && (md->groups[g].finish >= i+1U ))
+            {
+                group = g;
+                break;
+            }
+        }
+        /* Different to the last group? */
+        if( group != lastgroup )
+        {
+            lastgroup = group;
+            if( group )			/* Group 0 is 'no group' */
+            {
+                printf("Group: %s\n", md->groups[group].name);
+            }
+        }
+        /* Indent tracks which are in a group */
+        if( group )
+        {
+            printf("  ");
+        }
+
+        netmd_request_track_time(devh, i, &time);
+        netmd_request_track_flags(devh, i, &flags);
+        netmd_request_track_bitrate(devh, i, &bitrate_id, &channel);
+
+        trprot = find_pair(flags, trprot_settings);
+        bitrate = find_pair(bitrate_id, bitrates);
+
+        /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
+        if( strncmp( buffer, "LP:", 3 ))
+        {
+            name = buffer;
+        } else {
+            name = buffer + 3;
+        }
+
+        printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
+               i, trprot->name, bitrate->name, time.minute,
+               time.second, time.tenth, name);
+    }
+
+    /* XXX - This needs a rethink with the above method */
+    /* groups may not have tracks, print the rest. */
+    printf("\n--Empty Groups--\n");
+    for(group=1; group < md->group_count; group++)
+    {
+        if(md->groups[group].start == 0 && md->groups[group].finish == 0) {
+            printf("Group: %s\n", md->groups[group].name);
+        }
+
+    }
+
+    printf("\n\n");
+
+    return 0;
+}
+
+static int
+cmd_delete(struct netmdcli_context *ctx)
+{
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
+    int end_track_id = netmdcli_context_get_optional_int_arg(ctx, "end_track_id");
+
+    if (end_track_id == -1) {
+        end_track_id = track_id;
+    }
+
+    if (end_track_id < track_id || track_id >= 0xffff || end_track_id >= 0xffff) {
+        netmdcli_print_argument_error(ctx, "Invalid track range specified: %d-%d",
+                track_id, end_track_id);
+        return 1;
+    }
+
+    netmd_cache_toc(ctx->devh);
+
+    for (int track=end_track_id; track >= track_id && track >= 0; track--) {
+        netmd_log(NETMD_LOG_VERBOSE, "delete: removing track %d\n", track);
+
+        netmd_delete_track(ctx->devh, ((uint16_t) track) & 0xffff);
+        netmd_wait_for_sync(ctx->devh);
+    }
+
+    netmd_sync_toc(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_erase(struct netmdcli_context *ctx)
+{
+    const char *force = netmdcli_context_get_string_arg(ctx, "force");
+
+    if (strcmp(force, "force") != 0) {
+        netmdcli_print_argument_error(ctx, "Pass in 'force' as second argument");
+        return 1;
+    }
+
+    netmd_log(NETMD_LOG_VERBOSE, "erase: executing erase\n");
+    netmd_erase_disc(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_settitle(struct netmdcli_context *ctx)
+{
+    const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
+
+    netmd_cache_toc(ctx->devh);
+    netmd_set_disc_title(ctx->devh, new_title, strlen(new_title));
+    netmd_sync_toc(ctx->devh);
+
+    return 0;
+}
+
+static int
+cmd_m3uimport(struct netmdcli_context *ctx)
+{
+    const char *filename = netmdcli_context_get_string_arg(ctx, "filename");
+
+    import_m3u_playlist(ctx->devh, filename);
+
+    return 0;
+}
+
+static int
+cmd_send(struct netmdcli_context *ctx)
+{
+    const char *filename = netmdcli_context_get_string_arg(ctx, "filename");
+    const char *title = netmdcli_context_get_optional_string_arg(ctx, "title");
+
+    return netmd_send_track(ctx->devh, filename, title) == NETMD_NO_ERROR ? 0 : 1;
+}
+
+static int
+cmd_raw(struct netmdcli_context *ctx)
+{
+    const char *hexstring = netmdcli_context_get_string_arg(ctx, "hex_string");
+
+    send_raw_message(ctx->devh, hexstring);
+
+    return 0;
+}
+
+static int
+cmd_setplaymode(struct netmdcli_context *ctx)
+{
+    const char *playmode = netmdcli_context_get_string_arg(ctx, "playmode");
+    const char *arg2 = netmdcli_context_get_optional_string_arg(ctx, "arg2");
+    const char *arg3 = netmdcli_context_get_optional_string_arg(ctx, "arg3");
+
+    const char *args[] = { playmode, arg2, arg3, NULL };
+
+    uint16_t playmode_value = 0;
+
+    const char **arg = args;
+    while (*arg != NULL) {
+        if (strcmp(*arg, "single") == 0) {
+            playmode_value |= NETMD_PLAYMODE_SINGLE;
+        } else if (strcmp(*arg, "repeat") == 0) {
+            playmode_value |= NETMD_PLAYMODE_REPEAT;
+        } else if (strcmp(*arg, "shuffle") == 0) {
+            playmode_value |= NETMD_PLAYMODE_SHUFFLE;
+        } else if (strcmp(*arg, "none") == 0) {
+            // that's okay -- set zero play mode
+        } else {
+            netmdcli_print_argument_error(ctx, "Invalid play mode value: '%s' (valid values: single, repeat, shuffle, none)", *arg);
+            return 1;
+        }
+
+        ++arg;
+    }
+
+    netmd_set_playmode(ctx->devh, playmode_value);
+
+    return 0;
+}
+
+static int
+cmd_status(struct netmdcli_context *ctx)
+{
+    uint16_t track;
+    char buffer[256];
+    netmd_time time;
+
+    /* TODO: error checking */
+    netmd_get_position(ctx->devh, &time);
+    netmd_get_track(ctx->devh, &track);
+    netmd_request_title(ctx->devh, track, buffer, sizeof(buffer));
+
+    printf("Current track: %s \n", buffer);
+    printf("Current playback position: ");
+    print_time(&time);
+    printf("\n");
+
+    return 0;
+}
+
+static int
+cmd_recv(struct netmdcli_context *ctx)
+{
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
+    const char *filename = netmdcli_context_get_string_arg(ctx, "filename");
+
+    FILE *f = fopen(filename, "wb");
+    netmd_secure_recv_track(ctx->devh, track_id & 0xffff, f);
+    fclose(f);
+
+    return 0;
+}
+
+static int
+cmd_leave(struct netmdcli_context *ctx)
+{
+    netmd_error error = netmd_secure_leave_session(ctx->devh);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(error));
+
+    return 0;
+}
+
+static int
+cmd_settime(struct netmdcli_context *ctx)
+{
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
+    int hour = 0;
+    int minute = netmdcli_context_get_int_arg(ctx, "min");
+    int second = netmdcli_context_get_optional_int_arg(ctx, "sec");
+    int frame = netmdcli_context_get_optional_int_arg(ctx, "frame");
+
+    if (frame == -1) {
+        frame = 0;
+    }
+
+    if (second == -1) {
+        second = 0;
+    }
+
+    hour = minute / 60;
+    minute = minute % 60;
+
+    netmd_time time;
+    time.hour = hour;
+    time.minute = minute;
+    time.second = second;
+    time.frame = frame;
+
+    netmd_set_time(ctx->devh, track_id, &time);
+
+    return 0;
+}
+
+static const struct netmdcli_subcommand
+CMDS[] = {
+    { "discinfo",    cmd_discinfo,    "",                              "Print disc information" },
+    { "status",      cmd_status,      "",                              "Print current track and position" },
+    { "capacity",    cmd_capacity,    "",                              "Print disc used/available time info" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "erase",       cmd_erase,       "<force>",                       "Erase the entire disc (pass in 'force' to actually do it)" },
+    { "settitle",    cmd_settitle,    "<new_title>",                   "Set the complete disc title (with group information)" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "rename",      cmd_rename,      "<track_id> <new_title>",        "Rename track <track_id> to <new_title>" },
+    { "move",        cmd_move,        "<from_track_id> <to_track_id>", "Move <from_track_id> to <to_track_id>" },
+    { "delete",      cmd_delete,      "<track_id> [end_track_id]",     "Delete track <track_id>, or a range (if [end_track_id] is given)" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "send",        cmd_send,        "<filename> [title]",            "Send WAV (16-bit, 44.1 kHz -or- ATRAC3 LP2/LP4) audio to device" },
+    { "recv",        cmd_recv,        "<track_id> <filename>",         "Upload a track from the NetMD device to a file (MZ-RH1 only)" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "play",        cmd_play,        "[track_id]",                    "Start/resume playback (from [track_id] if set)" },
+    { "pause",       cmd_pause,       "",                              "Pause playback" },
+    { "stop",        cmd_stop,        "",                              "Stop playback" },
+    { "setplaymode", cmd_setplaymode, "<playmode> [arg2] [arg3]",      "Set play mode (single, repeat, shuffle or none, up to 3 args)" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "previous",    cmd_previous,    "",                              "Start playing the previous track" },
+    { "next",        cmd_next,        "",                              "Start playing the next track" },
+    { "restart",     cmd_restart,     "",                              "Start playing the current track from start" },
+    { "settime",     cmd_settime,     "<track_id> <min> [sec] [frame]", "Seek to a position on the disc" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "fforward",    cmd_fforward,    "",                              "Start fast forwarding" },
+    { "rewind",      cmd_rewind,      "",                              "Start rewinding" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "newgroup",    cmd_newgroup,    "<group_name>",                  "Create a new group named <group_name>" },
+    { "retitle",     cmd_retitle,     "<group_id> <new_title>",        "Rename group <group_id> to <new_title>" },
+    { "deletegroup", cmd_deletegroup, "<group_id>",                    "Delete group <group_id>, but not the tracks in it" },
+    { "groupmove",   cmd_groupmove,   "<group_id> <start_track_id>",   "Make <group_id> start at track <start_track_id>" },
+    { "group",       cmd_group,       "<track_id> <group_id>",         "Put track <track_id> into group <group_id>" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "m3uimport",   cmd_m3uimport,   "<filename>",                    "Import track title info from M3U file <filename>" },
+    { "json",        cmd_json,        "",                              "Output current disc information as JSON" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "raw",         cmd_raw,         "<hex_string>",                  "Send raw command to player (hex string)" },
+    { "leave",       cmd_leave,       "",                              "Call netmd_secure_leave_session()" },
+    { NULL,          NULL,            NULL,                            NULL },
+};
+
 int main(int argc, char* argv[])
 {
     netmd_dev_handle* devh;
     minidisc my_minidisc, *md = &my_minidisc;
     netmd_device *device_list, *netmd;
-    long unsigned int i = 0;
-    long unsigned int j = 0;
     char name[16];
-    uint16_t track, playmode;
     int c;
-    netmd_time time;
     netmd_error error;
-    FILE *f;
     int exit_code = 0;
 
     /* by default, log only errors */
@@ -125,9 +632,9 @@ int main(int argc, char* argv[])
     argc -= (optind - 1);
 
     /* don't require device init to show help */
-    if (argc > 1 && strcmp("help", argv[1]) == 0)
+    if (argc == 1 || (argc > 1 && strcmp("help", argv[1]) == 0))
     {
-        print_syntax();
+        usage();
         return 0;
     }
     else if (argc > 1 && strcmp("usbids", argv[1]) == 0) {
@@ -180,272 +687,24 @@ int main(int argc, char* argv[])
 
     netmd_initialize_disc_info(devh, md);
 
-    // Construct JSON object
-    json_object *json = json_object_new_object();
-    json_object_object_add(json, "device",  json_object_new_string(netmd->model));
-    json_object_object_add(json, "title",   json_object_new_string(md->groups[0].name));
-
     /* parse commands */
-    if(argc > 1)
-    {
-        if(strcmp("rename", argv[1]) == 0)
-        {
-            if (!check_args(argc, 3, "rename")) return -1;
-            i = strtoul(argv[2], NULL, 10);
-            netmd_cache_toc(devh);
-            netmd_set_title(devh, i & 0xffff, argv[3]);
-            netmd_sync_toc(devh);
-        }
-        else if(strcmp("move", argv[1]) == 0)
-        {
-            if (!check_args(argc, 3, "move")) return -1;
-            i = strtoul(argv[2], NULL, 10);
-            j = strtoul(argv[3], NULL, 10);
-            netmd_move_track(devh, i & 0xffff, j & 0xffff);
-        }
-        else if(strcmp("groupmove", argv[1]) == 0)
-        {
-            if (!check_args(argc, 3, "groupmove")) return -1;
-            i = strtoul(argv[2], NULL, 10);
-            j = strtoul(argv[3], NULL, 10);
-            netmd_move_group(devh, md, j & 0xffff, i & 0xffff);
-        }
-        else if(strcmp("write", argv[1]) == 0)
-        {
-            // Probably non-functional for most use cases
-            if (!check_args(argc, 2, "write")) return -1;
-            if(netmd_write_track(devh, argv[2]) < 0)
-            {
-                fprintf(stderr, "Error writing track %i\n", errno);
-            }
-        }
-        else if(strcmp("newgroup", argv[1]) == 0)
-        {
-            if (!check_args(argc, 2, "newgroup")) return -1;
-            netmd_create_group(devh, md, argv[2]);
-        }
-        else if(strcmp("settitle", argv[1]) == 0)
-        {
-            if (!check_args(argc, 2, "settitle")) return -1;
-            netmd_cache_toc(devh);
-            netmd_set_disc_title(devh, argv[2], strlen(argv[2]));
-            netmd_sync_toc(devh);
-        }
-        else if(strcmp("group", argv[1]) == 0)
-        {
-            if (!check_args(argc, 3, "group")) return -1;
-            i = strtoul(argv[2], NULL, 10);
-            j = strtoul(argv[3], NULL, 10);
-            if(!netmd_put_track_in_group(devh, md, i & 0xffff, j & 0xffff))
-            {
-                printf("Something screwy happened\n");
-            }
-        }
-        else if(strcmp("retitle", argv[1]) == 0)
-        {
-            if (!check_args(argc, 3, "retitle")) return -1;
-            i = strtoul(argv[2], NULL, 10);
-            netmd_set_group_title(devh, md, (unsigned int) i, argv[3]);
-        }
-        else if(strcmp("play", argv[1]) == 0)
-        {
-            if( argc > 2 ) {
-                i = strtoul(argv[2],NULL, 10);
-                netmd_set_track( devh, i & 0xffff );
-            }
-            netmd_play(devh);
-        }
-        else if(strcmp("stop", argv[1]) == 0)
-        {
-            netmd_stop(devh);
-        }
-        else if(strcmp("pause", argv[1]) == 0)
-        {
-            netmd_pause(devh);
-        }
-        else if(strcmp("fforward", argv[1]) == 0)
-        {
-            netmd_fast_forward(devh);
-        }
-        else if(strcmp("rewind", argv[1]) == 0)
-        {
-            netmd_rewind(devh);
-        }
-        else if(strcmp("next", argv[1]) == 0)
-        {
-            netmd_track_next(devh);
-        }
-        else if(strcmp("previous", argv[1]) == 0)
-        {
-            netmd_track_previous(devh);
-        }
-        else if(strcmp("restart", argv[1]) == 0)
-        {
-            netmd_track_restart(devh);
-        }
-        else if(strcmp("settime", argv[1]) == 0)
-        {
-            if (!check_args(argc, 4, "settime")) return -1;
-            track = strtoul(argv[2], (char **) NULL, 10) & 0xffff;
-            if (argc > 6)
-            {
-                time.hour = strtoul(argv[3], (char **) NULL, 10) & 0xffff;
-                time.minute = strtoul(argv[4], (char **) NULL, 10) & 0xff;
-                time.second = strtoul(argv[5], (char **) NULL, 10) & 0xff;
-                time.frame = strtoul(argv[6], (char **) NULL, 10) & 0xff;
-            }
-            else
-            {
-                time.hour = 0;
-                time.minute = strtoul(argv[3], (char **) NULL, 10) & 0xff;
-                time.second = strtoul(argv[4], (char **) NULL, 10) & 0xff;
-                if (argc > 5)
-                {
-                    time.frame = strtoul(argv[5], (char **) NULL, 10) & 0xff;;
-                }
-                else
-                {
-                    time.frame = 0;
-                }
-            }
-
-            netmd_set_time(devh, track, &time);
-        }
-        else if(strcmp("m3uimport", argv[1]) == 0)
-        {
-            if (!check_args(argc, 2, "m3uimport")) return -1;
-            import_m3u_playlist(devh, argv[2]);
-        }
-        else if(strcmp("delete", argv[1]) == 0)
-        {
-            if (!check_args(argc, 2, "delete")) return -1;
-            i = strtoul(argv[2], NULL, 10);
-            if (argc > 3)
-                j = strtoul(argv[3], NULL, 10);
-            else
-                j = i;
-
-            if (j < i || j >= 0xffff || i >= 0xffff) {
-                netmd_log(NETMD_LOG_ERROR, "delete: invalid track number\n");
-                exit_code = 1;
-            }
-            else {
-                netmd_cache_toc(devh);
-                int track = (int) j;
-                for (track; track >= i && track >= 0; track--) {
-                    netmd_log(NETMD_LOG_VERBOSE, "delete: removing track %d\n", track);
-
-                    netmd_delete_track(devh, ((uint16_t) track) & 0xffff);
-                    netmd_wait_for_sync(devh);
-                }
-                netmd_sync_toc(devh);
-            }
-        }
-        else if(strcmp("erase", argv[1]) == 0)
-        {
-          if (!check_args(argc, 2, "erase")) return -1;
-
-          if (strcmp("force", argv[2]) != 0) {
-            netmd_log(NETMD_LOG_ERROR, "erase: 'force' must be given as argument to proceed\n");
-            exit_code = 1;
-          } else {
-            netmd_log(NETMD_LOG_VERBOSE, "erase: executing erase\n");
-            netmd_erase_disc(devh);
-          }
-        }
-        else if(strcmp("deletegroup", argv[1]) == 0)
-        {
-            if (!check_args(argc, 2, "deletegroup")) return -1;
-            i = strtoul(argv[2], NULL, 10);
-            netmd_delete_group(devh, md, i & 0xffff);
-        }
-        else if(strcmp("status", argv[1]) == 0) {
-            print_current_track_info(devh);
-        }
-        else if (strcmp("raw", argv[1]) == 0) {
-            if (!check_args(argc, 2, "raw")) return -1;
-            send_raw_message(devh, argv[2]);
-        }
-        else if (strcmp("setplaymode", argv[1]) == 0) {
-            playmode = 0;
-            int i;
-            for (i = 2; i < argc; i++) {
-                if (strcmp(argv[i], "single") == 0) {
-                    playmode |= NETMD_PLAYMODE_SINGLE;
-                }
-                else if (strcmp(argv[i], "repeat") == 0) {
-                    playmode |= NETMD_PLAYMODE_REPEAT;
-                }
-                else if (strcmp(argv[i], "shuffle") == 0) {
-                    playmode |= NETMD_PLAYMODE_SHUFFLE;
-                }
-            }
-            printf("%x\n", playmode);
-            netmd_set_playmode(devh, playmode);
-        }
-        else if (strcmp("capacity", argv[1]) == 0) {
-            netmd_disc_capacity capacity;
-            netmd_get_disc_capacity(devh, &capacity);
-
-            printf("Recorded:  ");
-            print_time(&capacity.recorded);
-            printf("\nTotal:     ");
-            print_time(&capacity.total);
-            printf("\nAvailable: ");
-            print_time(&capacity.available);
-            printf("\n");
-        }
-        else if (strcmp("recv", argv[1]) == 0) {
-            if (!check_args(argc, 3, "recv")) return -1;
-            i = strtoul(argv[2], NULL, 10);
-            f = fopen(argv[3], "wb");
-            netmd_secure_recv_track(devh, i & 0xffff, f);
-            fclose(f);
-        }
-        else if (strcmp("send", argv[1]) == 0) {
-            if (!check_args(argc, 2, "send")) return -1;
-
-            const char *filename = argv[2];
-            char *title = NULL;
-            if (argc > 3)
-                title = argv[3];
-
-            exit_code = netmd_send_track(devh, filename, title) == NETMD_NO_ERROR ? 0 : 1;
-        } else if (strcmp("leave", argv[1]) == 0) {
-          error = netmd_secure_leave_session(devh);
-          netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_leave_session : %s\n", netmd_strerror(error));
-        }
-        else {
-            netmd_log(NETMD_LOG_ERROR, "Unknown command '%s'; use 'help' for list of commands\n", argv[1]);
-            exit_code = 1;
-        }
+    enum NetMDCLIHandleResult res = netmdcli_handle(CMDS, argc, argv, netmd, devh, md);
+    if (res == NETMDCLI_HANDLED) {
+        exit_code = 0;
+    } else if (res == NETMDCLI_ERROR) {
+        exit_code = 1;
+    } else {
+        netmd_log(NETMD_LOG_ERROR, "Unknown command '%s'; use 'help' for list of commands\n", argv[1]);
+        exit_code = 1;
     }
-    else
-        print_disc_info(devh, md, json);
+
+
 
     netmd_clean_disc_info(md);
     netmd_close(devh);
     netmd_clean(&device_list);
 
     return exit_code;
-}
-
-void print_current_track_info(netmd_dev_handle* devh)
-{
-    uint16_t track;
-    char buffer[256];
-    netmd_time time;
-
-    /* TODO: error checking */
-    netmd_get_position(devh, &time);
-    netmd_get_track(devh, &track);
-    netmd_request_title(devh, track, buffer, 256);
-
-    printf("Current track: %s \n", buffer);
-    printf("Current playback position: ");
-    print_time(&time);
-    printf("\n");
-
 }
 
 void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
@@ -569,7 +828,7 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
     if( file == NULL )
     {
         printf( "No filename specified\n" );
-        print_syntax();
+        usage();
         return;
     }
 
@@ -649,53 +908,25 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
     }
 }
 
-void print_syntax()
+void usage()
 {
     puts("\nNetMD command line tool");
     puts("Usage: netmd [options] command args\n");
     puts("Options:");
     puts("      -v show debug messages");
     puts("      -t enable tracing of USB command and response data\n");
-    puts("Commands:");
-    puts("rename # <string> - rename track # to <string> track numbers are off by one (ie track 1 is 0)");
-    puts("move #1 #2 - make track #1 track #2");
-    puts("groupmove #1 #2 - make group #1 start at track #2 !BUGGY!");
-    puts("deletegroup #1 - delete a group, but not the tracks in it");
-    puts("group #1 #2 - Stick track #1 into group #2");
-    puts("retitle #1 <string> - rename group number #1 to <string>");
-    puts("play #1 - play track #");
-    puts("fforward - start fast forwarding");
-    puts("rewind - start rewinding");
-    puts("next - starts next track");
-    puts("previous - starts previous track");
-    puts("restart - restarts current track");
-    puts("pause - pause the unit");
-    puts("stop - stop the unit");
-    puts("delete #1 [#2] - delete track (or tracks in range #1-#2 if #2 given)");
-    puts("erase [force] - erase the disc (the argument 'force' must be given to actually do it)");
-    puts("m3uimport <file> - import song and disc title from a playlist");
-    puts("send <file> [<string>] - send WAV format audio file to the device and set title to <string> (optional)");
-    puts("      Supported file formats: 16 bit pcm (stereo or mono) @44100Hz or");
-    puts("         Atrac LP2/LP4 data stored in a WAV container.");
-    puts("      Title defaults to file name if not specified.");
-    puts("raw - send raw command (hex)");
-    puts("setplaymode (single, repeat, shuffle) - set play mode");
-    puts("newgroup <string> - create a new group named <string>");
-    puts("settitle <string> - manually set the complete disc title (with group information)");
-    puts("settime <track> [<hour>] <minute> <second> [<frame>] - seeks to the given timestamp");
-    puts("      (if three values are given, they are minute, second and frame)");
-    puts("capacity - shows current minidisc capacity (used, available)");
-    puts("usbids - Output NetMD USB ID list in JSON format");
-    puts("help - show this message\n");
-}
+    puts("Commands:\n");
 
-int check_args(int argc, int min_argc, const char *text)
-{
-    /* n is the original argc, incl. program name */
-    if (argc > min_argc) {
-        return 1;
+    const struct netmdcli_subcommand *cmd = CMDS;
+    while (cmd->name != NULL) {
+        netmdcli_print_help(cmd);
+        ++cmd;
     }
 
-    fprintf(stderr, "Error: %s requires at least %d arguments\n", text, min_argc);
-    return 0;
+    puts("");
+    puts("    usbids                                   Output NetMD USB ID list in JSON format");
+    puts("    help                                     Show this message\n");
+
+    puts("\nNote: Track numbers are currently zero-based.\n");
+
 }

@@ -130,3 +130,15 @@ and we can look into fixing it up.
 
 Use the device type provided by `libusbmd` for detection of devices instead of
 relying on the string "NetMD" appearing in the device name.
+
+
+## Nicer command-line handling for netmdcli
+
+More structured command-line handling and better argument parsing / error reporting
+for `netmdcli` has been implemented. Some commands weren't visible in the help text,
+these have now been added. The JSON track list has been renamed to the `json`
+sub-command, and by default, the help message is printed. The CLI `discinfo` command
+now shows the text-only disc info (like before the JSON changes).
+
+Right now the commands have mostly been implemented in a backwards-compatible manner,
+in the future it might make sense to shuffle around and rename some commands.
