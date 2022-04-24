@@ -100,3 +100,11 @@ JSON (VID and PID as decimal, as JSON doesn't support hex literals).
 QHiMDTransfer now also uses `libusbmd` for identifying devices.
 
 The database is embedded in `libusbmd` and generated from `devicedb/minidisc.devids`.
+
+
+## JSON output format string vulnerability
+
+When outputting the track list for both `netmdcli` and `himdcli`, there was
+a format string vulnerability, as the JSON output was the format string passed
+to `printf()`. Titling a track with special printf commands (`%s`, `%n`, ...)
+would result in a crash or worse.

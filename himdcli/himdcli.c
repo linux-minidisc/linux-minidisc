@@ -159,8 +159,7 @@ void himd_trackdump(struct himd * himd, int verbose)
     json_object_object_add(json, "totalTime", json_object_new_string(time));
     json_object_object_add(json, "tracks", tracks);
     if (verbose == 2) {
-      printf(json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
-      printf("\n");
+      printf("%s\n", json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
     }
 }
 

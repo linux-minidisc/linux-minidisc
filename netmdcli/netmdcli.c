@@ -614,7 +614,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md)
     }
 
     json_object_object_add(json, "tracks", tracks);
-    printf(json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
+    printf("%s\n", json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
 
     // Clean up JSON object
     json_object_put(json);
