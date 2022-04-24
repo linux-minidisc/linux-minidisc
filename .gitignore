@@ -1,5 +1,7 @@
 *~
 *.o
+*.a
+*.prl
 *.app
 *.swp
 *.xcodeproj

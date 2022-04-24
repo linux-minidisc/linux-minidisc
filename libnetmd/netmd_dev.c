@@ -27,16 +27,15 @@
 #include <libusb.h>
 
 #include "netmd_dev.h"
+#include "libusbmd.h"
+
 #include "log.h"
 #include "const.h"
 
 static libusb_context *ctx = NULL;
 
-#include "netmd_dev_ids.h"
-
 netmd_error netmd_init(netmd_device **device_list, libusb_context *hctx)
 {
-    int count = 0;
     ssize_t usb_device_count;
     ssize_t i = 0;
     netmd_device *new_device;
@@ -59,16 +58,15 @@ netmd_error netmd_init(netmd_device **device_list, libusb_context *hctx)
     for (i = 0; i < usb_device_count; i++) {
       libusb_get_device_descriptor(list[i], &desc);
 
-      for (count = 0; known_devices[count].idVendor != 0 && known_devices[count].idProduct != 0; count++) {
-	if(desc.idVendor == known_devices[count].idVendor &&
-	   desc.idProduct == known_devices[count].idProduct) {
-	  new_device = malloc(sizeof(netmd_device));
-	  new_device->usb_dev = list[i];
-	  new_device->link = *device_list;
-    new_device->model = known_devices[count].model;
-	  *device_list = new_device;
-	}
+      const struct minidisc_usb_device_info *info = minidisc_usb_device_info_get(desc.idVendor, desc.idProduct);
+      if (info != NULL && info->device_type == MINIDISC_USB_DEVICE_TYPE_NETMD) {
+          new_device = malloc(sizeof(netmd_device));
+          new_device->usb_dev = list[i];
+          new_device->link = *device_list;
+          new_device->model = info->name;
+          *device_list = new_device;
       }
+
     }
 
     return NETMD_NO_ERROR;

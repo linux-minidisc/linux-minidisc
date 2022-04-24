@@ -2,6 +2,7 @@
 #include <QList>
 #include <QWidget>
 #include "qhimddetection.h"
+#include "libusbmd.h"
 
 #include <windows.h>
 #include <dbt.h>
@@ -173,12 +174,13 @@ static bool identified(QString devpath, QString & name)
 {
     int vid = devpath.mid(devpath.indexOf("VID") + 4, 4).toInt(NULL,16);
     int pid = devpath.mid(devpath.indexOf("PID") + 4, 4).toInt(NULL,16);
-    const char * devname = identify_usb_device(vid, pid);
-    if (devname)
-    {
-        name = devname;
+
+    auto info = minidisc_usb_device_info_get(vid, pid);
+    if (info != NULL) {
+        name = info->name;
         return true;
     }
+
     return false;
 }
 

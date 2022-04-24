@@ -7,6 +7,21 @@ id3tag = dependency('id3tag')
 jsonc = dependency('json-c')
 mad = dependency('mad', required: false)
 
+libusbmd_sources = [
+  'libusbmd/libusbmd.c',
+]
+
+libusbmd_headers = [
+  'libusbmd/libusbmd.h',
+]
+
+install_headers(libusbmd_headers, subdir: 'libusbmd')
+
+libusbmd = library('usbmd',
+  libusbmd_sources,
+  install: true,
+)
+
 libnetmd_sources = [
   'libnetmd/libnetmd.c',
   'libnetmd/common.c',
@@ -30,7 +45,6 @@ libnetmd_headers = [
   'libnetmd/libnetmd.h',
   'libnetmd/log.h',
   'libnetmd/netmd_dev.h',
-  'libnetmd/netmd_dev_ids.h',
   'libnetmd/playercontrol.h',
   'libnetmd/secure.h',
   'libnetmd/trackinformation.h',
@@ -42,6 +56,8 @@ install_headers(libnetmd_headers, subdir: 'libnetmd')
 libnetmd = library('netmd',
   libnetmd_sources,
   dependencies: [libusb, gcrypt],
+  link_with: [libusbmd],
+  include_directories: ['libusbmd'],
   install: true,
 )
 
@@ -52,8 +68,8 @@ netmdcli_sources = [
 executable('netmdcli',
   netmdcli_sources,
   dependencies: [jsonc],
-  link_with: [libnetmd],
-  include_directories: 'libnetmd',
+  link_with: [libusbmd, libnetmd],
+  include_directories: ['libusbmd', 'libnetmd'],
   install: true,
 )
 
@@ -89,6 +105,7 @@ install_headers(libhimd_headers, subdir: 'libhimd')
 libhimd = library('himd',
   libhimd_sources,
   dependencies: [glib, id3tag, gcrypt, mad],
+  link_with: [libusbmd],
   install: true,
 )
 
@@ -99,8 +116,8 @@ himdcli_sources = [
 executable('himdcli',
   himdcli_sources,
   dependencies: [glib, jsonc],
-  link_with: [libhimd],
-  include_directories: 'libhimd',
+  link_with: [libusbmd, libhimd],
+  include_directories: ['libusbmd', 'libhimd'],
   install: true,
 )
 

@@ -61,7 +61,6 @@ with open('netmd-js/netmd.devices.ts', 'w') as fp:
     print('];', file=fp)
 
 # Export udev rules
-
 with open('udev/60-minidisc.rules', 'w') as fp:
     print('# NetMD and Hi-MD devices', file=fp)
     print(f'# {AUTOGEN_INFO}', file=fp)
@@ -75,18 +74,6 @@ with open('udev/60-minidisc.rules', 'w') as fp:
             print(f'ATTRS{{idVendor}}=="{vid:04x}", ATTRS{{idProduct}}=="{pid:04x}", MODE="0664", GROUP="plugdev"', file=fp)
             print('', file=fp)
 
-# Export for libnetmd
-with open('../libnetmd/netmd_dev_ids.h', 'w') as fp:
-    print('#include "netmd_dev.h"', file=fp)
-    print('#include <stddef.h>', file=fp)
-    print('', file=fp)
-    print(f'/* {AUTOGEN_INFO} */', file=fp)
-    print('static struct netmd_devices const known_devices[] = {', file=fp)
-    for vid, pid, name in models_by_mode['netmd']:
-        print(f'    {{ 0x{vid:04x}, 0x{pid:04x}, "{name}" }},', file=fp)
-    print(f"    {{ 0, 0, NULL }}, /* sentinel */", file=fp)
-    print('};', file=fp)
-
 # Export for netmd
 with open('../netmd/libnetmd_dev_ids.py', 'w') as fp:
     print(f'# {AUTOGEN_INFO}', file=fp)
@@ -95,25 +82,15 @@ with open('../netmd/libnetmd_dev_ids.py', 'w') as fp:
         print(f'    (0x{vid:04x}, 0x{pid:04x}), # {name}', file=fp)
     print('])', file=fp)
 
-# Helper for QHiMDTransfer
-with open('../qhimdtransfer/qhimddetection_dev_ids.h', 'w') as fp:
-    print('#pragma once', file=fp)
-    print('const char *identify_usb_device(int vid, int pid);', file=fp)
-
-with open('../qhimdtransfer/qhimddetection_dev_ids.cpp', 'w') as fp:
-    print('#include "qhimddetection_dev_ids.h"', file=fp)
-    print('#include <cstddef>', file=fp)
+# Export for libusbmd
+with open('../libusbmd/libusbmd_data.h', 'w') as fp:
+    print('#include "libusbmd.h"', file=fp)
+    print('#include <stddef.h>', file=fp)
     print('', file=fp)
     print(f'/* {AUTOGEN_INFO} */', file=fp)
-    print('const char *identify_usb_device(int vid, int pid) {', file=fp)
+    print('static const struct minidisc_usb_device_info const KNOWN_DEVICES[] = {', file=fp)
     for mode, devices in sorted(models_by_mode.items()):
         for vid, pid, name in devices:
-            print(f'    if (vid == 0x{vid:04x} && pid == 0x{pid:04x}) {{', file=fp)
-            if mode == 'netmd':
-                print(f'        return "{name} (NetMD)";', file=fp)
-            else:
-                print(f'        return "{name}";', file=fp)
-            print('    }', file=fp)
-            print('', file=fp)
-    print('    return NULL;', file=fp)
-    print('}', file=fp)
+            print(f'    {{ MINIDISC_USB_DEVICE_TYPE_{mode.upper()}, 0x{vid:04x}, 0x{pid:04x}, "{name}" }},', file=fp)
+    print(f"    {{ 0, 0, NULL }}, /* sentinel */", file=fp)
+    print('};', file=fp)

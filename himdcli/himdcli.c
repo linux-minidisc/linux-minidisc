@@ -10,6 +10,7 @@
 #include <glib/gstdio.h>
 #include <json.h>
 
+#include "libusbmd.h"
 #include "himd.h"
 #include "sony_oma.h"
 
@@ -18,6 +19,7 @@ static json_object *json;
 void usage(char * cmdname)
 {
   printf("Usage: %s <HiMD path> <command>, where <command> is either of:\n\n\
+          usbids           - lists all USB VID/PIDs for Hi-MD devices as JSON (no <HiMD path>)\n\
           strings          - dumps all strings found in the tracklist file\n\
           tracks           - lists all tracks on disc\n\
           tracks verbose   - lists details of all tracks on disc\n\
@@ -380,6 +382,25 @@ int main(int argc, char ** argv)
     if (argc == 2 && (strcmp (argv[1], "help") == 0)) {
       usage(argv[0]);
       return 0;
+    }
+    else if (argc > 1 && strcmp("usbids", argv[1]) == 0) {
+        json_object *json = json_object_new_array();
+
+        struct minidisc_usb_device_info *cur = minidisc_usb_device_info_first();
+        while (cur != NULL) {
+            if (cur->device_type == MINIDISC_USB_DEVICE_TYPE_HIMD) {
+                json_object *dev = json_object_new_object();
+                json_object_object_add(dev, "vendor_id",  json_object_new_int(cur->vendor_id));
+                json_object_object_add(dev, "product_id", json_object_new_int(cur->product_id));
+                json_object_object_add(dev, "name",       json_object_new_string(cur->name));
+                json_object_array_add(json, dev);
+            }
+
+            cur = minidisc_usb_device_info_next(cur);
+        }
+
+        printf("%s\n", json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
+        return 0;
     }
 
     if (argc < 2) {

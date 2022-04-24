@@ -9,8 +9,6 @@
 #include <qmddevice.h>
 #include "libusb.h"
 
-#include "qhimddetection_dev_ids.h"
-
 typedef QList<QMDDevice *> QMDDevicePtrList;
 
 // polling object for libusb hotplug events

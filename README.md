@@ -68,3 +68,18 @@ right place automatically when using the Meson build system.
 
 The HAL file (`netmd/etc/20-netmd.fdi`) was removed without replacement,
 as HAL is deprecated in Linux for more than 10 years now.
+
+
+## libusbmd: Central VID/PID database
+
+A new library "libusbmd" contains the central database for both NetMD and
+Hi-MD USB device IDs. It provides a simple C API for querying all entries
+as well as identifying a device given a VID and PID.
+
+The CLI tools (`netmdcli` and `himdcli`) now each have a `usbids` sub-command
+that will query `libusbmd` for the specific device IDs and output them as
+JSON (VID and PID as decimal, as JSON doesn't support hex literals).
+
+QHiMDTransfer now also uses `libusbmd` for identifying devices.
+
+The database is embedded in `libusbmd` and generated from `devicedb/minidisc.devids`.

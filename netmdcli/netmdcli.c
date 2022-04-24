@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include "libnetmd.h"
+#include "libusbmd.h"
 #include "utils.h"
 
 static json_object *json;
@@ -206,6 +207,26 @@ int main(int argc, char* argv[])
         print_syntax();
         return 0;
     }
+    else if (argc > 1 && strcmp("usbids", argv[1]) == 0) {
+        json_object *json = json_object_new_array();
+
+        struct minidisc_usb_device_info *cur = minidisc_usb_device_info_first();
+        while (cur != NULL) {
+            if (cur->device_type == MINIDISC_USB_DEVICE_TYPE_NETMD) {
+                json_object *dev = json_object_new_object();
+                json_object_object_add(dev, "vendor_id",  json_object_new_int(cur->vendor_id));
+                json_object_object_add(dev, "product_id", json_object_new_int(cur->product_id));
+                json_object_object_add(dev, "name",       json_object_new_string(cur->name));
+                json_object_array_add(json, dev);
+            }
+
+            cur = minidisc_usb_device_info_next(cur);
+        }
+
+        printf("%s\n", json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY));
+        return 0;
+    }
+
     error = netmd_init(&device_list, NULL);
     if (error != NETMD_NO_ERROR) {
         printf("Error initializing netmd\n%s\n", netmd_strerror(error));
@@ -741,6 +762,7 @@ void print_syntax()
     puts("settime <track> [<hour>] <minute> <second> [<frame>] - seeks to the given timestamp");
     puts("      (if three values are given, they are minute, second and frame)");
     puts("capacity - shows current minidisc capacity (used, available)");
+    puts("usbids - Output NetMD USB ID list in JSON format");
 #if 0  // relevant code at top of file is commented out; leaving this in as reference
     puts("secure #1 #2 - execute secure command #1 on track #2 (where applicable)");
     puts("  --- general ---");

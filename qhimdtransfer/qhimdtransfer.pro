@@ -60,7 +60,6 @@ HEADERS += qhimdaboutdialog.h \
     qhimduploaddialog.h \
     qhimdmainwindow.h \
     qhimddetection.h \
-    qhimddetection_dev_ids.h \
     qmdmodel.h \
     qmdtrack.h \
     qmddevice.h
@@ -74,7 +73,6 @@ SOURCES += main.cpp \
     qhimduploaddialog.cpp \
     qhimdmainwindow.cpp \
     qhimddetection.cpp \
-    qhimddetection_dev_ids.cpp \
     qmdmodel.cpp \
     qmdtrack.cpp \
     qmddevice.cpp
@@ -109,6 +107,7 @@ unix {
     !macx:translations.path = /usr/share/qhimdtransfer/translations
 }
 
+include(../libusbmd/use_libusbmd.prl)
 include(../libhimd/use_libhimd.pri)
 include(../libnetmd/use_libnetmd.prl)
 include(../build/libusb.pri)

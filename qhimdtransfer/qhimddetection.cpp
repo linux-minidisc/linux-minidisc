@@ -1,5 +1,13 @@
 #include <QDebug>
 #include "qhimddetection.h"
+#include "libusbmd.h"
+
+static const char *
+identify_usb_device(int vid, int pid)
+{
+    auto info = minidisc_usb_device_info_get(vid, pid);
+    return info ? info->name : NULL;
+}
 
 /* callback function for libusb hotplug events, void *user_data is a pointer to the running QHiMDDetection object */
 static int LIBUSB_CALL hotplug_cb(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data)
