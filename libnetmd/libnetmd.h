@@ -267,5 +267,8 @@ int netmd_release_dev(netmd_dev_handle* dev);
  * @param dev a handle to the USB device
  * @param filename Local filename of file to be sent
  * @param in_title Title to use for the track, or NULL
+ * @param send_progress A callback for progress updates, or NULL
+ * @param send_progress_user_data An opaque pointer for send_progress() (closure), or NULL
  */
-netmd_error netmd_send_track(netmd_dev_handle *devh, const char *filename, const char *in_title);
+netmd_error netmd_send_track(netmd_dev_handle *devh, const char *filename, const char *in_title,
+        netmd_send_progress_func send_progress, void *send_progress_user_data);

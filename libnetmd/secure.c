@@ -360,9 +360,11 @@ size_t netmd_get_frame_size(netmd_wireformat wireformat)
     return 0;
 }
 
-void netmd_transfer_song_packets(netmd_dev_handle *dev,
+static void netmd_transfer_song_packets(netmd_dev_handle *dev,
                                  netmd_track_packets *packets,
-                                 size_t full_length)
+                                 size_t full_length,
+                                 netmd_send_progress_func send_progress,
+                                 void *send_progress_user_data)
 {
     netmd_track_packets *p;
     unsigned char *packet, *buf;
@@ -404,6 +406,14 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
         else
             netmd_log(NETMD_LOG_VERBOSE, "%zu of %zu bytes (%zu%%) transferred (%d of %d bytes in packet)\n",
                 total_transferred, display_length, (total_transferred * 100 / display_length), transferred, packet_size);
+
+        if (send_progress != NULL) {
+            send_progress(&(struct netmd_send_progress){
+                .progress = (float)total_transferred / (float)display_length,
+                .message = "Transferring data to NetMD device",
+                .user_data = send_progress_user_data,
+            });
+        }
 
         /* cleanup */
         free(packet);
@@ -568,7 +578,9 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
                                     unsigned char *sessionkey,
 
                                     uint16_t *track, unsigned char *uuid,
-                                    unsigned char *content_id)
+                                    unsigned char *content_id,
+                                    netmd_send_progress_func send_progress,
+                                    void *send_progress_user_data)
 {
     unsigned char cmdhdr[] = {0x00, 0x01, 0x00, 0x10, 0x01};
     unsigned char cmd[sizeof(cmdhdr) + 13];
@@ -601,7 +613,7 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     netmd_check_response(&response, 0x00, &error);
 
     if (error == NETMD_NO_ERROR) {
-        netmd_transfer_song_packets(dev, packets, packet_length);
+        netmd_transfer_song_packets(dev, packets, packet_length, send_progress, send_progress_user_data);
 
         error = netmd_recv_secure_msg(dev, 0x28, &response, NETMD_STATUS_ACCEPTED);
         netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);

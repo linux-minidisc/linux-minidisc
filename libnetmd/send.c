@@ -128,7 +128,8 @@ static int audio_supported(const unsigned char * file, netmd_wireformat * wirefo
 }
 
 netmd_error
-netmd_send_track(netmd_dev_handle *devh, const char *filename, const char *in_title)
+netmd_send_track(netmd_dev_handle *devh, const char *filename, const char *in_title,
+        netmd_send_progress_func send_progress, void *send_progress_user_data)
 {
     netmd_error error;
     netmd_ekb ekb;
@@ -318,7 +319,8 @@ netmd_send_track(netmd_dev_handle *devh, const char *filename, const char *in_ti
         discformat,
         frames, packets,
         packet_length, sessionkey,
-        &track, uuid, new_contentid);
+        &track, uuid, new_contentid,
+        send_progress, send_progress_user_data);
     netmd_log(NETMD_LOG_VERBOSE, "netmd_secure_send_track : %s\n", netmd_strerror(error));
 
     /* cleanup */

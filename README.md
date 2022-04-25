@@ -148,3 +148,10 @@ in the future it might make sense to shuffle around and rename some commands.
 
 The files `CHANGELOG`, `hotplug-netmd` and `minidisc.usermap` were not used/updated
 in a long time. They can always be inspected from Git history if needed.
+
+
+## Progress information callbacks in `libnetmd` for downloading tracks
+
+Added `netmd_send_progress_func` to `libnetmd`'s send-related functions that (if not
+NULL) will call back with progress information, so the user interface can show info
+about the current progress to the user. This is used by `netmdcli` and QHiMDTransfer.

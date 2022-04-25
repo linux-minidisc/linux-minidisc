@@ -125,6 +125,24 @@ netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
                                         unsigned char *sessionkey);
 
 /**
+ * Struct containing send progress information for netmd_send_progress_func().
+ */
+struct netmd_send_progress {
+    float progress; /* 0.0f -> 1.0f */
+    const char *message; /* message to display to the user */
+    void *user_data; /* opaque pointer passed in as closure */
+};
+
+/**
+ * Progress function callback netmd_secure_send_track()
+ *
+ * @param progress Progress of the current task (0.0f -> 1.0f)
+ * @param msg Message what's currently happening
+ * @param user_data Closure pointer
+ **/
+typedef void (*netmd_send_progress_func)(struct netmd_send_progress *progress);
+
+/**
    Send a track to the NetMD unit.
 
    @param wireformat Format of the packets that are transported over usb
@@ -141,6 +159,8 @@ netmd_error netmd_secure_setup_download(netmd_dev_handle *dev,
                written to after upload.
    @param content_id Pointer to 20 byte of memory where the content id of the
                      song is written to afte upload.
+   @param send_progress Callback to be called for progress updates, or NULL
+   @param send_progress_user_data Pointer to pass to send_progress(), or NULL
 */
 netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
                                     netmd_wireformat wireformat,
@@ -151,7 +171,9 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
                                     unsigned char *sessionkey,
 
                                     uint16_t *track, unsigned char *uuid,
-                                    unsigned char *content_id);
+                                    unsigned char *content_id,
+                                    netmd_send_progress_func send_progress,
+                                    void *send_progress_user_data);
 
 netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
                                     FILE* file);

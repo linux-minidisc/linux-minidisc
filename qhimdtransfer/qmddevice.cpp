@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QFile>
+#include <QProgressDialog>
 #include "wavefilewriter.h"
 #include "himd.h"
 
@@ -372,9 +373,23 @@ void QNetMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
     setBusy(false);
 }
 
+static void
+on_send_progress(struct netmd_send_progress *send_progress)
+{
+    QProgressDialog *dialog = static_cast<QProgressDialog *>(send_progress->user_data);
+
+    dialog->setValue(100 * send_progress->progress);
+    dialog->setLabelText(send_progress->message);
+}
+
 bool QNetMDDevice::download(const QString &filename)
 {
-    return (netmd_send_track(devh, filename.toUtf8().data(), NULL) == NETMD_NO_ERROR);
+    QProgressDialog progress("Please wait...", QString(), 0, 100);
+    progress.setWindowModality(Qt::WindowModal);
+
+    int result = netmd_send_track(devh, filename.toUtf8().data(), NULL, on_send_progress, &progress);
+
+    return result == NETMD_NO_ERROR;
 }
 
 /* himd device members */

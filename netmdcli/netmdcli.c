@@ -426,13 +426,28 @@ cmd_m3uimport(struct netmdcli_context *ctx)
     return 0;
 }
 
+static void
+on_send_progress(struct netmd_send_progress *send_progress)
+{
+    fprintf(stderr, "\r\033[K%s (%.0f %%)", send_progress->message, 100.f * send_progress->progress);
+    fflush(stderr);
+}
+
 static int
 cmd_send(struct netmdcli_context *ctx)
 {
     const char *filename = netmdcli_context_get_string_arg(ctx, "filename");
     const char *title = netmdcli_context_get_optional_string_arg(ctx, "title");
 
-    return netmd_send_track(ctx->devh, filename, title) == NETMD_NO_ERROR ? 0 : 1;
+    int result = netmd_send_track(ctx->devh, filename, title, on_send_progress, NULL) == NETMD_NO_ERROR ? 0 : 1;
+
+    if (result == 0) {
+        fprintf(stderr, "\r\033[KTransfer of %s completed successfully.\n", filename);
+    } else {
+        fprintf(stderr, "\r\033[Knetmd_send_track() return code: %d\n", result);
+    }
+
+    return result;
 }
 
 static int
