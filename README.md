@@ -142,3 +142,9 @@ now shows the text-only disc info (like before the JSON changes).
 
 Right now the commands have mostly been implemented in a backwards-compatible manner,
 in the future it might make sense to shuffle around and rename some commands.
+
+
+## Cleaned out obsolete files in `libnetmd`
+
+The files `CHANGELOG`, `hotplug-netmd` and `minidisc.usermap` were not used/updated
+in a long time. They can always be inspected from Git history if needed.
