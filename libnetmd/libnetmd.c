@@ -1238,3 +1238,45 @@ netmd_error netmd_get_track_info(netmd_dev_handle *dev, uint16_t track_id, struc
 
     return NETMD_NO_ERROR;
 }
+
+const char *
+netmd_minidisc_get_disc_name(const minidisc *md)
+{
+    return md->groups[0].name;
+}
+
+int
+netmd_minidisc_get_track_group(const minidisc *md, uint16_t track_id)
+{
+    // Tracks in the groups are 1-based
+    track_id += 1;
+
+    for (int group = 1; group < md->group_count; group++) {
+        if ((md->groups[group].start <= track_id) && (md->groups[group].finish >= track_id)) {
+            return group;
+        }
+    }
+
+    return 0;
+}
+
+const char *
+netmd_minidisc_get_group_name(const minidisc *md, int group)
+{
+    if (group == 0 || group >= md->group_count) {
+        return NULL;
+    }
+
+    return md->groups[group].name;
+}
+
+bool
+netmd_minidisc_is_group_empty(const minidisc *md, int group)
+{
+    // Non-existent groups are always considered "empty"
+    if (group == 0 || group >= md->group_count) {
+        return true;
+    }
+
+    return (md->groups[group].start == 0 && md->groups[group].finish == 0);
+}

@@ -205,7 +205,7 @@ void QNetMDDevice::close()
 
 QString QNetMDDevice::discTitle()
 {
-    return QString(current_md.groups[0].name);
+    return QString(netmd_minidisc_get_disc_name(&current_md));
 }
 
 QNetMDTrack QNetMDDevice::netmdTrack(unsigned int trkindex)

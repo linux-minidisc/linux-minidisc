@@ -74,6 +74,48 @@ typedef struct {
     unsigned int group_count;
 } minidisc;
 
+/**
+ * Get the disc name of a minidisc.
+ *
+ * @param md Minidisc object
+ * @return A string representing the disc name.
+ */
+const char *
+netmd_minidisc_get_disc_name(const minidisc *md);
+
+
+/**
+ * Get the group a track is in.
+ *
+ * @param md Minidisc object
+ * @param track_id Zero-based track number.
+ * @return 0 if the track is in no group, or the group number (1-based).
+ */
+int
+netmd_minidisc_get_track_group(const minidisc *md, uint16_t track_id);
+
+
+/**
+ * Get the name of a group.
+ *
+ * @param md Minidisc object
+ * @param group 1-based group number (as returned by netmd_minidisc_get_track_group())
+ * @return The name of the group, or NULL if the group does not exist
+ */
+const char *
+netmd_minidisc_get_group_name(const minidisc *md, int group);
+
+
+/**
+ * Check if a group is empty (contains no tracks).
+ *
+ * @param md Minidisc object
+ * @param group 1-based group number
+ * @return true if the group contains no tracks, false otherwise
+ */
+bool
+netmd_minidisc_is_group_empty(const minidisc *md, int group);
+
 
 /**
    Global variable containing netmd_group data for each group. There will be

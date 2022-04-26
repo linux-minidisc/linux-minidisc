@@ -201,3 +201,10 @@ duration, format) at once, as well as e.g. strip the "LP:" prefix of a track.
 This is now possible using a new struct and function to query the track info all
 at once. The struct that is filled also has proper enum types, and takes care of
 storing the title string, so it's all nice and tidy in a single place.
+
+
+## Better handling of the `minidisc` struct (groups and disc name)
+
+Added `netmd_minidisc_*()` functions to query disc name, group membership of a
+track, group name and whether a group is empty or not. This again combines logic
+that existed twice in `netmdcli` and QHiMDTransfer for some time.

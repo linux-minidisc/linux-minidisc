@@ -146,14 +146,9 @@ QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int track
         return;  // error retrieving track information
     }
 
-    /* Figure out which group this track is in */
-    for (uint8_t g = 1; g < md->group_count; g++ )
-    {
-        if( (md->groups[g].start <= trkindex+1U) && (md->groups[g].finish >= trkindex+1U ))
-        {
-            groupstring = QString(md->groups[g].name);
-            break;
-        }
+    int group = netmd_minidisc_get_track_group(md, trkindex);
+    if (group != 0) {
+        groupstring = QString(netmd_minidisc_get_group_name(md, group));
     }
 
     titlestring = QString(info.title);

@@ -241,7 +241,7 @@ cmd_json(struct netmdcli_context *ctx)
 {
     json_object *json = json_object_new_object();
     json_object_object_add(json, "device",  json_object_new_string(ctx->netmd->model));
-    json_object_object_add(json, "title",   json_object_new_string(ctx->md->groups[0].name));
+    json_object_object_add(json, "title",   json_object_new_string(netmd_minidisc_get_disc_name(ctx->md)));
     print_disc_info(ctx->devh, ctx->md, json);
 
     return 0;
@@ -274,10 +274,10 @@ cmd_discinfo(struct netmdcli_context *ctx)
     struct netmd_track_info info;
 
     uint8_t i = 0;
-    uint8_t g, group = 0, lastgroup = 0;
+    uint8_t lastgroup = 0;
 
     printf("NetMD Device: %s\n", netmd->model);
-    printf("Disc title:   %s\n", ctx->md->groups[0].name);
+    printf("Disc title:   %s\n", netmd_minidisc_get_disc_name(ctx->md));
     printf("--\n");
 
     cmd_capacity(ctx);
@@ -293,22 +293,15 @@ cmd_discinfo(struct netmdcli_context *ctx)
             continue;
         }
 
-        /* Figure out which group this track is in */
-        for( group = 0, g = 1; g < md->group_count; g++ )
-        {
-            if( (md->groups[g].start <= i+1U) && (md->groups[g].finish >= i+1U ))
-            {
-                group = g;
-                break;
-            }
-        }
+        int group = netmd_minidisc_get_track_group(md, i);
+
         /* Different to the last group? */
         if( group != lastgroup )
         {
             lastgroup = group;
             if( group )			/* Group 0 is 'no group' */
             {
-                printf("Group: %s\n", md->groups[group].name);
+                printf("Group: %s\n", netmd_minidisc_get_group_name(md, group));
             }
         }
         /* Indent tracks which are in a group */
@@ -325,15 +318,12 @@ cmd_discinfo(struct netmdcli_context *ctx)
                info.title);
     }
 
-    /* XXX - This needs a rethink with the above method */
-    /* groups may not have tracks, print the rest. */
     printf("\n--Empty Groups--\n");
-    for(group=1; group < md->group_count; group++)
+    for (int group=1; group < md->group_count; group++)
     {
-        if(md->groups[group].start == 0 && md->groups[group].finish == 0) {
-            printf("Group: %s\n", md->groups[group].name);
+        if (netmd_minidisc_is_group_empty(md, group)) {
+            printf("Group: %s\n", netmd_minidisc_get_group_name(md, group));
         }
-
     }
 
     printf("\n\n");
