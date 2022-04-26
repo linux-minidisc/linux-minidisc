@@ -184,3 +184,10 @@ Similar to the track downloading progress, `libnetmd` now also has support for a
 `netmd_recv_progress_func` callback. This is used by `netmdcli` and QHiMDTransfer.
 
 This also removes the duplicated `libnetmd`-based code that was in QHiMDTransfer.
+
+
+## Add enum types and remove `find_pair()` API for converting values to strings
+
+Add enums `NetMDEncoding`, `NetMDTrackFlags` and `NetMDChannels`. Add functions
+`netmd_get_encoding_name()` and `netmd_track_flags_to_string()`. Remove the old
+`find_pair()` APIs that were used for this purpose before.

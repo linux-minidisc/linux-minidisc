@@ -3,6 +3,7 @@
  *
  * This file is part of libnetmd, a library for accessing Sony NetMD devices.
  *
+ * Copyright (C) 2022 Thomas Perl <m@thp.io>
  * Copyright (C) 2002, 2003 Marc Britten
  * Copyright (C) 2011 Alexander Sulfrian
  *
@@ -29,39 +30,33 @@
 #include "libnetmd.h"
 #include "utils.h"
 
-/*! list of known codecs (mapped to protocol ID) that can be used in NetMD devices */
-/*! Bertrik: the original interpretation of these numbers as codecs appears incorrect.
-  These values look like track protection values instead */
-struct netmd_pair const trprot_settings[] =
+const char *
+netmd_get_encoding_name(enum NetMDEncoding encoding)
 {
-    {0x00, "UnPROT"},
-    {0x03, "TrPROT"},
-    {0, 0} /* terminating pair */
-};
-
-/*! list of known bitrates (mapped to protocol ID) that can be used in NetMD devices */
-struct netmd_pair const bitrates[] =
-{
-    {NETMD_ENCODING_SP, "SP"},
-    {NETMD_ENCODING_LP2, "LP2"},
-    {NETMD_ENCODING_LP4, "LP4"},
-    {0, 0} /* terminating pair */
-};
-
-struct netmd_pair const unknown_pair = {0x00, "UNKNOWN"};
-
-struct netmd_pair const* find_pair(int hex, struct netmd_pair const* array)
-{
-    int i = 0;
-    for(; array[i].name != NULL; i++)
-    {
-        if(array[i].hex == hex)
-            return &array[i];
+    switch (encoding) {
+        case NETMD_ENCODING_SP:
+            return "SP";
+        case NETMD_ENCODING_LP2:
+            return "LP2";
+        case NETMD_ENCODING_LP4:
+            return "LP4";
+        default:
+            return "UNKNOWN";
     }
-
-    return &unknown_pair;
 }
 
+const char *
+netmd_track_flags_to_string(enum NetMDTrackFlags flags)
+{
+    switch (flags) {
+        case NETMD_TRACK_FLAG_UNPROTECTED:
+            return "UnPROT";
+        case NETMD_TRACK_FLAG_PROTECTED:
+            return "TrPROT";
+        default:
+            return "UNKNOWN";
+    }
+}
 
 static unsigned char* sendcommand(netmd_dev_handle* devh, unsigned char* str, const size_t len, unsigned char* response, int rlen)
 {

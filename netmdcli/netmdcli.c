@@ -279,9 +279,6 @@ cmd_discinfo(struct netmdcli_context *ctx)
     unsigned char channel;
     char *name, buffer[256];
     struct netmd_track time;
-    struct netmd_pair const *trprot, *bitrate;
-
-    trprot = bitrate = 0;
 
     printf("NetMD Device: %s\n", netmd->model);
     printf("Disc title:   %s\n", ctx->md->groups[0].name);
@@ -326,8 +323,8 @@ cmd_discinfo(struct netmdcli_context *ctx)
         netmd_request_track_flags(devh, i, &flags);
         netmd_request_track_bitrate(devh, i, &bitrate_id, &channel);
 
-        trprot = find_pair(flags, trprot_settings);
-        bitrate = find_pair(bitrate_id, bitrates);
+        const char *flags_string = netmd_track_flags_to_string(flags);
+        const char *encoding = netmd_get_encoding_name(bitrate_id);
 
         /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
         if( strncmp( buffer, "LP:", 3 ))
@@ -338,7 +335,7 @@ cmd_discinfo(struct netmdcli_context *ctx)
         }
 
         printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
-               i, trprot->name, bitrate->name, time.minute,
+               i, flags_string, encoding, time.minute,
                time.second, time.tenth, name);
     }
 
@@ -743,9 +740,6 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
     unsigned char channel;
     char *name, buffer[256];
     struct netmd_track time;
-    struct netmd_pair const *trprot, *bitrate;
-
-    trprot = bitrate = 0;
 
     netmd_disc_capacity capacity;
     netmd_get_disc_capacity(devh, &capacity);
@@ -792,8 +786,8 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
         netmd_request_track_flags(devh, i, &flags);
         netmd_request_track_bitrate(devh, i, &bitrate_id, &channel);
 
-        trprot = find_pair(flags, trprot_settings);
-        bitrate = find_pair(bitrate_id, bitrates);
+        const char *flags_string = netmd_track_flags_to_string(flags);
+        const char *encoding = netmd_get_encoding_name(bitrate_id);
 
         /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
         if( strncmp( buffer, "LP:", 3 ))
@@ -803,10 +797,6 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
             name = buffer + 3;
         }
 
-        /*printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
-               i, trprot->name, bitrate->name, time.minute,
-               time.second, time.tenth, name);*/
-
         // Format track time
         char time_buf[9];
         sprintf(time_buf, "%02i:%02i:%02i", time.minute, time.second, time.tenth);
@@ -814,8 +804,8 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
         // Create JSON track object and add to array
         json_object* track = json_object_new_object();
         json_object_object_add(track, "no",         json_object_new_int(i));
-        json_object_object_add(track, "protect",    json_object_new_string(trprot->name));
-        json_object_object_add(track, "bitrate",    json_object_new_string(bitrate->name));
+        json_object_object_add(track, "protect",    json_object_new_string(flags_string));
+        json_object_object_add(track, "bitrate",    json_object_new_string(encoding));
         json_object_object_add(track, "time",       json_object_new_string(time_buf));
         json_object_object_add(track, "name",       json_object_new_string(name));
         json_object_array_add(tracks, track);

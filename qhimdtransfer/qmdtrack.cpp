@@ -133,7 +133,6 @@ QByteArray QHiMDTrack::makeEA3Header() const
 QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int trackindex)
 {
     uint8_t g;
-    struct netmd_pair const *bitrate;
     char *name, buffer[256];
 
     devh = deviceh;
@@ -160,13 +159,11 @@ QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int track
     netmd_request_track_flags(devh, trkindex, &flags);
     netmd_request_track_bitrate(devh, trkindex, &bitrate_id, &channel);
 
-    bitrate = find_pair(bitrate_id, bitrates);
-
     /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
     name = strncmp( buffer, "LP:", 3 ) ? buffer : buffer+3 ;
 
     titlestring = QString(name);
-    codecstring = QString(bitrate->name);
+    codecstring = QString(netmd_get_encoding_name((enum NetMDEncoding)bitrate_id));
     blocks = 0;
 }
 

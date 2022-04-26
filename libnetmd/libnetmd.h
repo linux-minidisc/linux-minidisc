@@ -66,15 +66,6 @@ struct netmd_track
 };
 
 /**
-   stores hex value from protocol and text value of name
-*/
-typedef struct netmd_pair
-{
-    unsigned char hex;
-    const char* const name;
-} netmd_pair_t;
-
-/**
    stores misc data for a minidisc
 */
 typedef struct {
@@ -89,16 +80,22 @@ typedef struct {
    enough for group_count total in the alloced memory
 */
 extern struct netmd_group* groups;
-extern struct netmd_pair const trprot_settings[];
-extern struct netmd_pair const bitrates[];
-extern struct netmd_pair const unknown_pair;
 
 /**
-   enum through an array of pairs looking for a specific hex code.
-   @param hex hex code to find.
-   @param pair array of pairs to look through.
-*/
-struct netmd_pair const* find_pair(int hex, struct netmd_pair const* pair);
+ * Return a string representation of the encoding name.
+ *
+ * @param encoding The encoding, NETMD_ENCODING_SP, NETMD_ENCODING_LP2 or NETMD_ENCODING_LP4
+ * @return "SP", "LP2" or "LP4" or "UNKNOWN"
+ **/
+const char *netmd_get_encoding_name(enum NetMDEncoding encoding);
+
+/**
+ * Return a string representation of the track flag.
+ *
+ * @param flags The flags, as returned by netmd_request_track_flags()
+ * @return "UnPROT", "TrPROT" or "UNKNOWN"
+ **/
+const char *netmd_track_flags_to_string(enum NetMDTrackFlags flags);
 
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer);
 
