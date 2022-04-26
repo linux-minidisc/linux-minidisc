@@ -144,7 +144,7 @@ const char *netmd_track_flags_to_string(enum NetMDTrackFlags flags);
  * Struct filled in by netmd_get_track_info(), see there.
  */
 struct netmd_track_info {
-    const char *title; // With any "LP:" prefix stripped
+    const char *title; // With any "LP:" prefix stripped for LP2/LP4 tracks
     struct netmd_track duration;
     enum NetMDEncoding encoding;
     enum NetMDChannels channels;

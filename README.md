@@ -208,3 +208,10 @@ storing the title string, so it's all nice and tidy in a single place.
 Added `netmd_minidisc_*()` functions to query disc name, group membership of a
 track, group name and whether a group is empty or not. This again combines logic
 that existed twice in `netmdcli` and QHiMDTransfer for some time.
+
+
+## More intelligent "LP:" prefix stripping
+
+MDLP recorders prefix LP2/LP4 recordings with "LP:" in the title, which is shown
+on non-MDLP recorders. Instead of stripping a leading "LP:" unconditionally, only
+strip it for LP2/LP4 tracks. This allows SP tracks to begin with "LP:" if needed.
