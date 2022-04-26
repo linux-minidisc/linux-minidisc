@@ -271,14 +271,10 @@ cmd_discinfo(struct netmdcli_context *ctx)
     minidisc *md = ctx->md;
     netmd_dev_handle *devh = ctx->devh;
 
+    struct netmd_track_info info;
+
     uint8_t i = 0;
-    int size = 1;
     uint8_t g, group = 0, lastgroup = 0;
-    unsigned char bitrate_id;
-    unsigned char flags;
-    unsigned char channel;
-    char *name, buffer[256];
-    struct netmd_track time;
 
     printf("NetMD Device: %s\n", netmd->model);
     printf("Disc title:   %s\n", ctx->md->groups[0].name);
@@ -287,12 +283,14 @@ cmd_discinfo(struct netmdcli_context *ctx)
     cmd_capacity(ctx);
     printf("--\n");
 
-    for(i = 0; size >= 0; i++) {
-        size = netmd_request_title(devh, i, buffer, 256);
+    for(i = 0; ; i++) {
+        netmd_error res = netmd_get_track_info(devh, i, &info);
 
-        if(size < 0)
-        {
+        if (res == NETMD_TRACK_DOES_NOT_EXIST) {
             break;
+        } else if (res != NETMD_NO_ERROR) {
+            fprintf(stderr, "Could not get track info for track %d: %s\n", i, netmd_strerror(res));
+            continue;
         }
 
         /* Figure out which group this track is in */
@@ -319,24 +317,12 @@ cmd_discinfo(struct netmdcli_context *ctx)
             printf("  ");
         }
 
-        netmd_request_track_time(devh, i, &time);
-        netmd_request_track_flags(devh, i, &flags);
-        netmd_request_track_bitrate(devh, i, &bitrate_id, &channel);
-
-        const char *flags_string = netmd_track_flags_to_string(flags);
-        const char *encoding = netmd_get_encoding_name(bitrate_id);
-
-        /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
-        if( strncmp( buffer, "LP:", 3 ))
-        {
-            name = buffer;
-        } else {
-            name = buffer + 3;
-        }
-
         printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
-               i, flags_string, encoding, time.minute,
-               time.second, time.tenth, name);
+               i,
+               netmd_track_flags_to_string(info.protection),
+               netmd_get_encoding_name(info.encoding),
+               info.duration.minute, info.duration.second, info.duration.tenth,
+               info.title);
     }
 
     /* XXX - This needs a rethink with the above method */
@@ -733,13 +719,8 @@ int main(int argc, char* argv[])
 void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
 {
     uint8_t i = 0;
-    int size = 1;
-    uint8_t g, group = 0, lastgroup = 0;
-    unsigned char bitrate_id;
-    unsigned char flags;
-    unsigned char channel;
-    char *name, buffer[256];
-    struct netmd_track time;
+
+    struct netmd_track_info info;
 
     netmd_disc_capacity capacity;
     netmd_get_disc_capacity(devh, &capacity);
@@ -749,65 +730,27 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
     json_object_object_add(json, "availableTime", json_time(&capacity.available));
     json_object* tracks = json_object_new_array();
 
-    for(i = 0; size >= 0; i++)
+    for(i = 0; ; i++)
     {
-        size = netmd_request_title(devh, i, buffer, 256);
-
-        if(size < 0)
-        {
+        netmd_error res = netmd_get_track_info(devh, i, &info);
+        if (res == NETMD_TRACK_DOES_NOT_EXIST) {
             break;
-        }
-
-        /* Figure out which group this track is in */
-        for( group = 0, g = 1; g < md->group_count; g++ )
-        {
-            if( (md->groups[g].start <= i+1U) && (md->groups[g].finish >= i+1U ))
-            {
-                group = g;
-                break;
-            }
-        }
-        /* Different to the last group? */
-        if( group != lastgroup )
-        {
-            lastgroup = group;
-            if( group )			/* Group 0 is 'no group' */
-            {
-                //printf("Group: %s\n", md->groups[group].name);
-            }
-        }
-        /* Indent tracks which are in a group */
-        if( group )
-        {
-            //printf("  ");
-        }
-
-        netmd_request_track_time(devh, i, &time);
-        netmd_request_track_flags(devh, i, &flags);
-        netmd_request_track_bitrate(devh, i, &bitrate_id, &channel);
-
-        const char *flags_string = netmd_track_flags_to_string(flags);
-        const char *encoding = netmd_get_encoding_name(bitrate_id);
-
-        /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
-        if( strncmp( buffer, "LP:", 3 ))
-        {
-            name = buffer;
-        } else {
-            name = buffer + 3;
+        } else if (res != NETMD_NO_ERROR) {
+            fprintf(stderr, "Could not get track info for track %d: %s\n", i, netmd_strerror(res));
+            continue;
         }
 
         // Format track time
         char time_buf[9];
-        sprintf(time_buf, "%02i:%02i:%02i", time.minute, time.second, time.tenth);
+        sprintf(time_buf, "%02i:%02i:%02i", info.duration.minute, info.duration.second, info.duration.tenth);
 
         // Create JSON track object and add to array
         json_object* track = json_object_new_object();
         json_object_object_add(track, "no",         json_object_new_int(i));
-        json_object_object_add(track, "protect",    json_object_new_string(flags_string));
-        json_object_object_add(track, "bitrate",    json_object_new_string(encoding));
+        json_object_object_add(track, "protect",    json_object_new_string(netmd_track_flags_to_string(info.protection)));
+        json_object_object_add(track, "bitrate",    json_object_new_string(netmd_get_encoding_name(info.encoding)));
         json_object_object_add(track, "time",       json_object_new_string(time_buf));
-        json_object_object_add(track, "name",       json_object_new_string(name));
+        json_object_object_add(track, "name",       json_object_new_string(info.title));
         json_object_array_add(tracks, track);
     }
 
@@ -816,21 +759,6 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
 
     // Clean up JSON object
     json_object_put(json);
-
-    exit(0);
-
-    /* XXX - This needs a rethink with the above method */
-    /* groups may not have tracks, print the rest. */
-    printf("\n--Empty Groups--\n");
-    for(group=1; group < md->group_count; group++)
-    {
-        if(md->groups[group].start == 0 && md->groups[group].finish == 0) {
-            printf("Group: %s\n", md->groups[group].name);
-        }
-
-    }
-
-    printf("\n\n");
 }
 
 void import_m3u_playlist(netmd_dev_handle* devh, const char *file)

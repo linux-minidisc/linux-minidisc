@@ -132,21 +132,22 @@ QByteArray QHiMDTrack::makeEA3Header() const
 
 QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int trackindex)
 {
-    uint8_t g;
-    char *name, buffer[256];
-
     devh = deviceh;
     md = my_md;
     trkindex = trackindex;
 
-    if(netmd_request_title(devh, trkindex, buffer, sizeof(buffer)) < 0)
-    {
+    netmd_error res = netmd_get_track_info(deviceh, trackindex, &info);
+
+    if (res == NETMD_TRACK_DOES_NOT_EXIST) {
         trkindex = -1;
         return;  // no track with this trackindex
+    } else if (res != NETMD_NO_ERROR) {
+        trkindex = -1;
+        return;  // error retrieving track information
     }
 
     /* Figure out which group this track is in */
-    for( g = 1; g < md->group_count; g++ )
+    for (uint8_t g = 1; g < md->group_count; g++ )
     {
         if( (md->groups[g].start <= trkindex+1U) && (md->groups[g].finish >= trkindex+1U ))
         {
@@ -155,16 +156,8 @@ QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int track
         }
     }
 
-    netmd_request_track_time(devh, trkindex, &time);
-    netmd_request_track_flags(devh, trkindex, &flags);
-    netmd_request_track_bitrate(devh, trkindex, &bitrate_id, &channel);
-
-    /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
-    name = strncmp( buffer, "LP:", 3 ) ? buffer : buffer+3 ;
-
-    titlestring = QString(name);
-    codecstring = QString(netmd_get_encoding_name((enum NetMDEncoding)bitrate_id));
-    blocks = 0;
+    titlestring = QString(info.title);
+    codecstring = QString(netmd_get_encoding_name(info.encoding));
 }
 
 QNetMDTrack::~QNetMDTrack()
@@ -212,22 +205,17 @@ QTime QNetMDTrack::duration() const
     if(trkindex < 0)
         return QTime();
 
-    return t.addSecs( time.minute * 60 + time.second);
+    return t.addSecs(info.duration.minute * 60 + info.duration.second);
 }
 
 bool QNetMDTrack::copyprotected() const
 {
-    switch(flags)
-    {
-       case 0x00 : return false;
-       case 0x03 : return true;
-       default : return true;   // return true if unknown
-    }
+    return info.protection != NETMD_TRACK_FLAG_UNPROTECTED;
 }
 
 int QNetMDTrack::blockcount() const
 {
     // Dummy "blocks" value, the value is just used to "weight" the
     // relative track durations in the QHiMDUploadDialog currently.
-    return 100 * (time.minute * 60 + time.second);
+    return 100 * (info.duration.minute * 60 + info.duration.second);
 }

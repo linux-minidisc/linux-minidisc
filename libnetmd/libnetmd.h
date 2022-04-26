@@ -97,6 +97,35 @@ const char *netmd_get_encoding_name(enum NetMDEncoding encoding);
  **/
 const char *netmd_track_flags_to_string(enum NetMDTrackFlags flags);
 
+
+/**
+ * Struct filled in by netmd_get_track_info(), see there.
+ */
+struct netmd_track_info {
+    const char *title; // With any "LP:" prefix stripped
+    struct netmd_track duration;
+    enum NetMDEncoding encoding;
+    enum NetMDChannels channels;
+    enum NetMDTrackFlags protection;
+
+    // Storage for the actual title as present on disk
+    char raw_title[256];
+};
+
+
+/**
+ * Query track information for a track.
+ *
+ * This queries all track infos in one go, and fills a netmd_track_info struct.
+ *
+ * @param dev Handle to the NetMD device
+ * @param track_id Zero-based track number
+ * @param info Pointer to struct that will be filled
+ * @return NETMD_NO_ERROR on success, or an error code on failure
+ */
+netmd_error netmd_get_track_info(netmd_dev_handle *dev, uint16_t track_id, struct netmd_track_info *info);
+
+
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer);
 
 /**

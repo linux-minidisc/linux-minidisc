@@ -1209,3 +1209,32 @@ int netmd_release_dev(netmd_dev_handle* dev)
     ret = netmd_exch_message(dev, request, sizeof(request), reply);
     return ret;
 }
+
+netmd_error netmd_get_track_info(netmd_dev_handle *dev, uint16_t track_id, struct netmd_track_info *info)
+{
+    unsigned char flags, bitrate_id, channel;
+
+    size_t title_len = netmd_request_title(dev, track_id, info->raw_title, sizeof(info->raw_title));
+
+    if (title_len == -1) {
+        return NETMD_TRACK_DOES_NOT_EXIST;
+    }
+
+    info->title = info->raw_title;
+
+    /* Skip 'LP:' prefix... the codec type shows up in the list anyway*/
+    if (strncmp(info->title, "LP:", 3) == 0) {
+        info->title += 3;
+    }
+
+    // TODO: All these calls need proper error handling
+    netmd_request_track_time(dev, track_id, &info->duration);
+    netmd_request_track_flags(dev, track_id, &flags);
+    netmd_request_track_bitrate(dev, track_id, &bitrate_id, &channel);
+
+    info->encoding = (enum NetMDEncoding)bitrate_id;
+    info->channels = (enum NetMDChannels)channel;
+    info->protection = (enum NetMDTrackFlags)flags;
+
+    return NETMD_NO_ERROR;
+}

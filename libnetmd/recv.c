@@ -31,34 +31,29 @@ netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *f
         return NETMD_UNSUPPORTED_FEATURE;
     }
 
+    struct netmd_track_info info;
+
+    netmd_error res = netmd_get_track_info(devh, track_id, &info);
+    if (res != NETMD_NO_ERROR) {
+        return res;
+    }
+
     char buf[256];
 
     if (filename == NULL) {
-        if (netmd_request_title(devh, track_id, buf, sizeof(buf)) > sizeof(buf)) {
-            // Title too long
-            return NETMD_ERROR;
-        }
-
-        if (strlen(buf) == 0) {
+        if (strlen(info.title) == 0) {
             snprintf(buf, sizeof(buf), "Track %d", track_id);
+        } else {
+            strncpy(buf, info.title, sizeof(buf)-1);
         }
     } else {
         strncpy(buf, filename, sizeof(buf)-1);
     }
 
-    uint8_t encoding;
-    uint8_t channel;
-
-    if (netmd_request_track_bitrate(devh, track_id, &encoding, &channel) != 2) {
-        return NETMD_RESPONSE_NOT_EXPECTED;
-    }
-
-    if (encoding == NETMD_ENCODING_SP) {
+    if (info.encoding == NETMD_ENCODING_SP) {
         strncat(buf, ".aea", sizeof(buf)-1);
-    } else if (encoding == NETMD_ENCODING_LP2 || encoding == NETMD_ENCODING_LP4) {
-        strncat(buf, ".wav", sizeof(buf)-1);
     } else {
-        return NETMD_TRACK_DOES_NOT_EXIST;
+        strncat(buf, ".wav", sizeof(buf)-1);
     }
 
     if (filename == NULL) {

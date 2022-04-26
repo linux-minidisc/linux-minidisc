@@ -62,16 +62,11 @@ class QNetMDTrack : public QMDTrack {
     netmd_dev_handle * devh;
     minidisc * md;
     int8_t trkindex;
-    struct netmd_track time;
-    unsigned char flags;
+    struct netmd_track_info info;
     QString groupstring;
     QString titlestring;
     QString codecstring;
-private:
-    int blocks;
 public:
-    unsigned char bitrate_id;
-    unsigned char channel;
     QNetMDTrack(netmd_dev_handle *deviceh, minidisc * my_md, int trackindex);
     virtual ~QNetMDTrack();
     virtual unsigned int tracknum() const;

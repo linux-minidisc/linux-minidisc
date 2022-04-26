@@ -191,3 +191,13 @@ This also removes the duplicated `libnetmd`-based code that was in QHiMDTransfer
 Add enums `NetMDEncoding`, `NetMDTrackFlags` and `NetMDChannels`. Add functions
 `netmd_get_encoding_name()` and `netmd_track_flags_to_string()`. Remove the old
 `find_pair()` APIs that were used for this purpose before.
+
+
+## `netmd_get_track_info()` convenience method and struct
+
+In many cases, a caller wants to retrieve all the information for a track (name,
+duration, format) at once, as well as e.g. strip the "LP:" prefix of a track.
+
+This is now possible using a new struct and function to query the track info all
+at once. The struct that is filled also has proper enum types, and takes care of
+storing the title string, so it's all nice and tidy in a single place.
