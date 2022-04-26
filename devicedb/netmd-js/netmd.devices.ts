@@ -30,6 +30,7 @@ export const DevicesIds = [
     { vendorId: 0x054c, deviceId: 0x0119, name: 'Sony CMT-SE9' },
     { vendorId: 0x054c, deviceId: 0x011a, name: 'Sony CMT-SE7' },
     { vendorId: 0x054c, deviceId: 0x013f, name: 'Sony MDS-S500' },
+    { vendorId: 0x054c, deviceId: 0x0148, name: 'Sony MDS-A1' },
     { vendorId: 0x054c, deviceId: 0x014c, name: 'Aiwa AM-NX9' },
     { vendorId: 0x054c, deviceId: 0x017e, name: 'Sony MZ-NH1' },
     { vendorId: 0x054c, deviceId: 0x0180, name: 'Sony MZ-NH3D' },

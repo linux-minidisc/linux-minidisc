@@ -131,6 +131,9 @@ ATTRS{idVendor}=="054c", ATTRS{idProduct}=="011a", MODE="0664", GROUP="plugdev"
 # Sony MDS-S500
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="013f", MODE="0664", GROUP="plugdev"
 
+# Sony MDS-A1
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0148", MODE="0664", GROUP="plugdev"
+
 # Aiwa AM-NX9
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="014c", MODE="0664", GROUP="plugdev"
 

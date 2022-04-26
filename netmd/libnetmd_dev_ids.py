@@ -30,6 +30,7 @@ KNOWN_USB_ID_SET = frozenset([
     (0x054c, 0x0119), # Sony CMT-SE9
     (0x054c, 0x011a), # Sony CMT-SE7
     (0x054c, 0x013f), # Sony MDS-S500
+    (0x054c, 0x0148), # Sony MDS-A1
     (0x054c, 0x014c), # Aiwa AM-NX9
     (0x054c, 0x017e), # Sony MZ-NH1
     (0x054c, 0x0180), # Sony MZ-NH3D
