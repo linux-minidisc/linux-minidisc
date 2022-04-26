@@ -155,3 +155,10 @@ in a long time. They can always be inspected from Git history if needed.
 Added `netmd_send_progress_func` to `libnetmd`'s send-related functions that (if not
 NULL) will call back with progress information, so the user interface can show info
 about the current progress to the user. This is used by `netmdcli` and QHiMDTransfer.
+
+
+## Consistent zero-based index for `netmdcli recv`
+
+The `netmdcli recv` function now interprets the track ID as zero-based to be consistent
+with other calls that take a zero-based track ID. This change also applies to the
+`netmd_secure_recv_track()` function, which previously took a 1-based track ID.

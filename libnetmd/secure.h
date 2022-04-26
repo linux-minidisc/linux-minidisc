@@ -175,7 +175,14 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
                                     netmd_send_progress_func send_progress,
                                     void *send_progress_user_data);
 
-netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
+/**
+ * Upload audio data from disc to PC (MZ-RH1 in NetMD mode only)
+ *
+ * @param dev Handle to device
+ * @param track_id Zero-based track ID
+ * @param file Opened file to write received data to
+ */
+netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track_id,
                                     FILE* file);
 
 

@@ -763,18 +763,17 @@ void netmd_write_wav_header(unsigned char format, uint32_t bytes, FILE *f)
     fwrite(header, sizeof(header), 1, f);
 }
 
-netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
+netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track_id,
                                     FILE* file)
 {
     unsigned char cmdhdr[] = {0x00, 0x10, 0x01};
-    unsigned char cmd[sizeof(cmdhdr) + sizeof(track)] = { 0 };
+    unsigned char cmd[sizeof(cmdhdr) + sizeof(track_id)] = { 0 };
     unsigned char *buf;
     unsigned char encoding;
     unsigned char channel;
     char name[257] = { 0 };
     unsigned char codec;
     uint32_t length;
-    uint16_t track_id;
 
     netmd_response response;
     netmd_error error;
@@ -782,9 +781,8 @@ netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
     buf = cmd;
     memcpy(buf, cmdhdr, sizeof(cmdhdr));
     buf += sizeof(cmdhdr);
-    netmd_copy_word_to_buffer(&buf, track, 0);
+    netmd_copy_word_to_buffer(&buf, track_id + 1, 0);
 
-    track_id = (track - 1U) & 0xffff;
     netmd_request_track_bitrate(dev, track_id, &encoding, &channel);
 
     if (encoding == NETMD_ENCODING_SP) {
@@ -794,7 +792,7 @@ netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track,
     netmd_send_secure_msg(dev, 0x30, cmd, sizeof(cmd));
     error = netmd_recv_secure_msg(dev, 0x30, &response, NETMD_STATUS_INTERIM);
     netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
-    netmd_check_response_word(&response, track, &error);
+    netmd_check_response_word(&response, track_id + 1, &error);
     codec = netmd_read(&response);
 
     length = netmd_read_doubleword(&response);
