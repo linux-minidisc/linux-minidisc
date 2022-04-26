@@ -106,6 +106,23 @@ netmd_error netmd_get_devname(netmd_dev_handle* devh, char *buf, size_t buffsize
     return NETMD_NO_ERROR;
 }
 
+bool netmd_dev_can_upload(netmd_dev_handle *devh)
+{
+    struct libusb_device_descriptor desc = {0};
+
+    libusb_device *device = libusb_get_device(devh);
+
+    int rc = libusb_get_device_descriptor(device, &desc);
+    if (rc == 0) {
+        static const uint16_t MZ_RH1_NETMD_VENDOR_ID = 0x54c;
+        static const uint16_t MZ_RH1_NETMD_PRODUCT_ID = 0x0286;
+
+        return desc.idVendor == MZ_RH1_NETMD_VENDOR_ID && desc.idProduct == MZ_RH1_NETMD_PRODUCT_ID;
+    }
+
+    return false;
+}
+
 netmd_error netmd_close(netmd_dev_handle* devh)
 {
     int result;

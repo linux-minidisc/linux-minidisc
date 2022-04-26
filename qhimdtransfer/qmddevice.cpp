@@ -246,6 +246,11 @@ QString QNetMDDevice::upload_track_blocks(uint32_t length, FILE *file, size_t ch
     return (error != NETMD_NO_ERROR) ? netmd_strerror(error) : QString();
 }
 
+bool QNetMDDevice::canUpload()
+{
+    return netmd_dev_can_upload(devh);
+}
+
 void QNetMDDevice::upload(unsigned int trackidx, QString path)
 {
     /* this is a copy of netmd_secure_recv_track(...) function, we need single block transfer function to make use of a progress bar,
@@ -263,7 +268,7 @@ void QNetMDDevice::upload(unsigned int trackidx, QString path)
     QString filename, errmsg, filepath;
     FILE * file = NULL;
 
-    if(name() != "SONY MZ-RH1 (NetMD)")
+    if (!canUpload())
     {
         errmsg = tr("upload disabled, %1 does not support netmd track uploads").arg(name());
         goto clean;

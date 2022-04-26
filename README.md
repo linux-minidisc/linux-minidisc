@@ -162,3 +162,10 @@ about the current progress to the user. This is used by `netmdcli` and QHiMDTran
 The `netmdcli recv` function now interprets the track ID as zero-based to be consistent
 with other calls that take a zero-based track ID. This change also applies to the
 `netmd_secure_recv_track()` function, which previously took a 1-based track ID.
+
+
+## Utility function `netmd_dev_can_upload()`
+
+Instead of hardcoding string comparisons with "Sony MZ-RH1 (NetMD)", add a utility
+function that can query whether or not a NetMD-capable device can upload. Right now,
+this is restricted to the MZ-RH1 only, but allows for more semantic features in the future.

@@ -72,7 +72,7 @@ QVariant QNetMDTracksModel::data(const QModelIndex & index, int role) const
     QNetMDTrack track = allTracks[index.row()];
 
     if(role == Qt::CheckStateRole && index.column() == CoUploadable)
-        return ((ndev->name() != "SONY MZ-RH1 (NetMD)") || track.copyprotected()) ? Qt::Unchecked : Qt::Checked;
+        return (!ndev->canUpload() || track.copyprotected()) ? Qt::Unchecked : Qt::Checked;
 
     if(role == Qt::DisplayRole)
     {

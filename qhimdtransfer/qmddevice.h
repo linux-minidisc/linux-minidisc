@@ -86,6 +86,7 @@ public:
     virtual void upload(unsigned int trackidx, QString path);
     virtual bool download(const QString &filename);
 
+    bool canUpload();
 };
 
 class QHiMDDevice : public QMDDevice {
