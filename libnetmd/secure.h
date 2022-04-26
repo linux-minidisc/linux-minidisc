@@ -176,6 +176,25 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
                                     void *send_progress_user_data);
 
 /**
+ * Struct containing send progress information for netmd_send_progress_func().
+ */
+struct netmd_recv_progress {
+    float progress; /* 0.0f -> 1.0f */
+    const char *message; /* message to display to the user */
+    void *user_data; /* opaque pointer passed in as closure */
+};
+
+/**
+ * Progress function callback netmd_secure_recv_track()
+ *
+ * @param progress Progress of the current task (0.0f -> 1.0f)
+ * @param msg Message what's currently happening
+ * @param user_data Closure pointer
+ **/
+typedef void (*netmd_recv_progress_func)(struct netmd_recv_progress *progress);
+
+
+/**
  * Upload audio data from disc to PC (MZ-RH1 in NetMD mode only)
  *
  * @param dev Handle to device
@@ -183,7 +202,9 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
  * @param file Opened file to write received data to
  */
 netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track_id,
-                                    FILE* file);
+                                    FILE* file,
+                                    netmd_recv_progress_func recv_progress,
+                                    void *recv_progress_user_data);
 
 
 /**

@@ -80,7 +80,6 @@ public:
     virtual QString codecname() const;
     virtual QTime duration() const;
     virtual bool copyprotected() const;
-    virtual void setBlocks(int cnt);
     virtual int blockcount() const;
 };
 

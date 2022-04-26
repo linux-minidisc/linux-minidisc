@@ -71,8 +71,9 @@ class QNetMDDevice : public QMDDevice {
     netmd_device * netmd;
     netmd_dev_handle * devh;
     minidisc current_md;
-private:
-    QString upload_track_blocks(uint32_t length, FILE *file, size_t chunksize);
+
+    int upload_reported_track_blocks;
+    int upload_total_track_blocks;
 public:
     explicit QNetMDDevice();
     virtual ~QNetMDDevice();
@@ -87,6 +88,7 @@ public:
     virtual bool download(const QString &filename);
 
     bool canUpload();
+    void onUploadProgress(float progress);
 };
 
 class QHiMDDevice : public QMDDevice {

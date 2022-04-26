@@ -279,5 +279,8 @@ netmd_error netmd_send_track(netmd_dev_handle *devh, const char *filename, const
  * @param devh A handle to the USB device
  * @param track_id Zero-based track index
  * @param filename Target filename, or NULL to generate a filename based on track title and format
+ * @param recv_progress A callback for progress updates, or NULL
+ * @param recv_progress_user_data An opaque pointer for recv_progress() (closure), or NULL
  */
-netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *filename);
+netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *filename,
+        netmd_recv_progress_func recv_progress, void *recv_progress_user_data);

@@ -439,15 +439,15 @@ cmd_send(struct netmdcli_context *ctx)
     const char *filename = netmdcli_context_get_string_arg(ctx, "filename");
     const char *title = netmdcli_context_get_optional_string_arg(ctx, "title");
 
-    int result = netmd_send_track(ctx->devh, filename, title, on_send_progress, NULL) == NETMD_NO_ERROR ? 0 : 1;
+    int result = netmd_send_track(ctx->devh, filename, title, on_send_progress, NULL);
 
-    if (result == 0) {
+    if (result == NETMD_NO_ERROR) {
         fprintf(stderr, "\r\033[KTransfer of %s completed successfully.\n", filename);
     } else {
-        fprintf(stderr, "\r\033[Knetmd_send_track() return code: %d\n", result);
+        fprintf(stderr, "\r\033[Knetmd_send_track() failed: %s (%d)\n", netmd_strerror(result), result);
     }
 
-    return result;
+    return (result == NETMD_NO_ERROR) ? 0 : 1;
 }
 
 static int
@@ -514,16 +514,25 @@ cmd_status(struct netmdcli_context *ctx)
     return 0;
 }
 
+static void
+on_recv_progress(struct netmd_recv_progress *recv_progress)
+{
+    fprintf(stderr, "\r\033[K%s (%.0f %%)", recv_progress->message, 100.f * recv_progress->progress);
+    fflush(stderr);
+}
+
 static int
 cmd_recv(struct netmdcli_context *ctx)
 {
     int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
     const char *filename = netmdcli_context_get_optional_string_arg(ctx, "filename");
 
-    int result = netmd_recv_track(ctx->devh, track_id, filename);
+    int result = netmd_recv_track(ctx->devh, track_id, filename, on_recv_progress, NULL);
 
-    if (result != NETMD_NO_ERROR) {
-        fprintf(stderr, "Error: %s\n", netmd_strerror(result));
+    if (result == NETMD_NO_ERROR) {
+        fprintf(stderr, "\r\033[KUpload completed successfully.\n");
+    } else {
+        fprintf(stderr, "\r\033[Knetmd_recv_track() failed: %s (%d)\n", netmd_strerror(result), result);
     }
 
     return (result == NETMD_NO_ERROR) ? 0 : 1;

@@ -638,7 +638,10 @@ netmd_error netmd_secure_send_track(netmd_dev_handle *dev,
     return error;
 }
 
-netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length, FILE *file, size_t chunksize)
+static netmd_error
+netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length, FILE *file, size_t chunksize,
+                                    netmd_recv_progress_func recv_progress,
+                                    void *recv_progress_user_data)
 {
     uint32_t done = 0, transferred = 0;
     unsigned char *data;
@@ -656,6 +659,14 @@ netmd_error netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length,
         if (status >= 0) {
             done += transferred;
             fwrite(data, (size_t) transferred, 1, file);
+
+            if (recv_progress != NULL) {
+                recv_progress(&(struct netmd_recv_progress){
+                    .progress = (float)done / (float)length,
+                    .message = "Receiving track data",
+                    .user_data = recv_progress_user_data,
+                });
+            }
 
             netmd_log(NETMD_LOG_VERBOSE, "%.1f%%\n", (double)done/(double)length * 100);
         }
@@ -764,7 +775,9 @@ void netmd_write_wav_header(unsigned char format, uint32_t bytes, FILE *f)
 }
 
 netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track_id,
-                                    FILE* file)
+                                    FILE* file,
+                                    netmd_recv_progress_func recv_progress,
+                                    void *recv_progress_user_data)
 {
     unsigned char cmdhdr[] = {0x00, 0x10, 0x01};
     unsigned char cmd[sizeof(cmdhdr) + sizeof(track_id)] = { 0 };
@@ -805,7 +818,8 @@ netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track_id,
     }
 
     if (error == NETMD_NO_ERROR) {
-        error = netmd_secure_real_recv_track(dev, length, file, 0x10000);
+        error = netmd_secure_real_recv_track(dev, length, file, 0x10000,
+                recv_progress, recv_progress_user_data);
     }
 
     if (error == NETMD_NO_ERROR) {

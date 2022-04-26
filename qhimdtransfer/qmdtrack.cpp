@@ -228,12 +228,9 @@ bool QNetMDTrack::copyprotected() const
     }
 }
 
-void QNetMDTrack::setBlocks(int cnt)
-{
-    blocks = cnt;
-}
-
 int QNetMDTrack::blockcount() const
 {
-    return blocks;
+    // Dummy "blocks" value, the value is just used to "weight" the
+    // relative track durations in the QHiMDUploadDialog currently.
+    return 100 * (time.minute * 60 + time.second);
 }

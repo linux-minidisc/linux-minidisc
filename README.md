@@ -176,3 +176,11 @@ this is restricted to the MZ-RH1 only, but allows for more semantic features in 
 The `filename` parameter to `netmdcli recv` is now optional. If not supplied, a filename
 will be generated based on the track title (or number if the title is empty) and file
 type (.aea for SP-mode tracks, .wav for LP2/LP4-mode tracks).
+
+
+## Progress information callbacks in `libnetmd` for uploading tracks
+
+Similar to the track downloading progress, `libnetmd` now also has support for a
+`netmd_recv_progress_func` callback. This is used by `netmdcli` and QHiMDTransfer.
+
+This also removes the duplicated `libnetmd`-based code that was in QHiMDTransfer.

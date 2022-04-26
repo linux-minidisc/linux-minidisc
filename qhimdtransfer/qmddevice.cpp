@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QProgressDialog>
+#include <QDir>
 #include "wavefilewriter.h"
 #include "himd.h"
 
@@ -146,6 +147,9 @@ QNetMDDevice::QNetMDDevice()
     devh = NULL;
     netmd = NULL;
     is_open = false;
+
+    upload_reported_track_blocks = 0;
+    upload_total_track_blocks = 0;
 }
 
 QNetMDDevice::~QNetMDDevice()
@@ -211,145 +215,57 @@ QNetMDTrack QNetMDDevice::netmdTrack(unsigned int trkindex)
     return QNetMDTrack(devh, disc, trkindex);
 }
 
-QString QNetMDDevice::upload_track_blocks(uint32_t length, FILE *file, size_t chunksize)
-{
-    /* this is a copy of netmd_secure_real_recv_track(...) function, but updates upload dialog progress bar */
-    uint32_t done = 0;
-    unsigned char *data;
-    int status;
-    netmd_error error = NETMD_NO_ERROR;
-    int transferred = 0;
-
-    data = (unsigned char *)malloc(chunksize);
-    while (done < length) {
-        if ((length - done) < chunksize) {
-            chunksize = length - done;
-        }
-
-        status = libusb_bulk_transfer((libusb_device_handle*)devh, 0x81, data, (int)chunksize, &transferred, 10000);
-
-        if (status >= 0) {
-            done += transferred;
-            fwrite(data, transferred, 1, file);
-            netmd_log(NETMD_LOG_DEBUG, "%.1f%%\n", (double)done/(double)length * 100);
-
-            uploadDialog.blockTransferred();
-            QApplication::processEvents();
-            /* do not check for uploadDialog.upload_canceled() here, netmd device will remain busy if track upload hasn´t finished */
-        }
-        else if (status != -LIBUSB_ERROR_TIMEOUT) {
-            error = NETMD_USB_ERROR;
-        }
-    }
-    free(data);
-
-    return (error != NETMD_NO_ERROR) ? netmd_strerror(error) : QString();
-}
-
 bool QNetMDDevice::canUpload()
 {
     return netmd_dev_can_upload(devh);
 }
 
+
+static void
+on_recv_progress(struct netmd_recv_progress *recv_progress)
+{
+    QNetMDDevice *self = static_cast<QNetMDDevice *>(recv_progress->user_data);
+
+    self->onUploadProgress(recv_progress->progress);
+}
+
+void QNetMDDevice::onUploadProgress(float progress)
+{
+    // This is weird due to the QHiMDUploadDialog API working only with "blocks"
+    int progress_blocks = progress * upload_total_track_blocks;
+    while (upload_reported_track_blocks < progress_blocks) {
+        uploadDialog.blockTransferred();
+        ++upload_reported_track_blocks;
+    }
+
+    QApplication::processEvents();
+}
+
 void QNetMDDevice::upload(unsigned int trackidx, QString path)
 {
-    /* this is a copy of netmd_secure_recv_track(...) function, we need single block transfer function to make use of a progress bar,
-     * maybe we can add/change something inside libnetmd for this
-     */
+    QString oldcwd = QDir::currentPath();
+
+    QDir::setCurrent(path);
+
     QNetMDTrack track = netmdTrack(trackidx);
-    uint16_t track_id = trackidx;
-    unsigned char cmdhdr[] = {0x00, 0x10, 0x01};
-    unsigned char cmd[sizeof(cmdhdr) + sizeof(track_id)] = { 0 };
-    unsigned char *buf;
-    unsigned char codec;
-    uint32_t length;
-    netmd_response response;
-    netmd_error error;
-    QString filename, errmsg, filepath;
-    FILE * file = NULL;
+    uploadDialog.starttrack(track, track.title());
 
-    if (!canUpload())
-    {
-        errmsg = tr("upload disabled, %1 does not support netmd track uploads").arg(name());
-        goto clean;
-    }
+    upload_reported_track_blocks = 0;
+    upload_total_track_blocks = track.blockcount();
 
-    if(track.copyprotected())
-    {
-        errmsg = tr("upload disabled, Track is copy protected");
-        goto clean;
-    }
+    netmd_error result = netmd_recv_track(devh, trackidx, NULL, on_recv_progress, this);
 
-    // create filename first
-    if(track.title().isEmpty())
-        filename = tr("Track %1").arg(track.tracknum() + 1);
-    else
-        filename = track.title();
+    onUploadProgress(1.f);
 
-    if(track.bitrate_id == NETMD_ENCODING_SP) {
-        checkfile(path, filename, ".aea");
-        filepath = path + "/" + filename + ".aea";
-    }
-    else {
-        checkfile(path, filename, ".wav");
-        filepath = path + "/" + filename + ".wav";
-    }
-
-    if(!(file = fopen(filepath.toUtf8().data(), "wb"))) {
-            errmsg = tr("cannot open file %1 for writing").arg(filepath);
-            goto clean;
-    }
-
-    buf = cmd;
-    memcpy(buf, cmdhdr, sizeof(cmdhdr));
-    buf += sizeof(cmdhdr);
-    netmd_copy_word_to_buffer(&buf, trackidx + 1U, 0);
-
-    netmd_send_secure_msg(devh, 0x30, cmd, sizeof(cmd));
-    error = netmd_recv_secure_msg(devh, 0x30, &response, NETMD_STATUS_INTERIM);
-    netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
-    netmd_check_response_word(&response, track_id + 1U, &error);
-    codec = netmd_read(&response);
-    length = netmd_read_doubleword(&response);
-
-    /* initialize track.blockcount() here, needed by progress bar in the uploadDialog */
-    track.setBlocks(length%NETMD_RECV_BUF_SIZE ? length / NETMD_RECV_BUF_SIZE + 1 : length / NETMD_RECV_BUF_SIZE);
-    uploadDialog.starttrack(track, filename);
-    if (track.bitrate_id == NETMD_ENCODING_SP) {
-        netmd_write_aea_header(track.title().toUtf8().data(), codec, track.channel, file);
-    }
-    else {
-        netmd_write_wav_header(codec, length, file);
-    }
-
-    errmsg = upload_track_blocks(length, file, NETMD_RECV_BUF_SIZE);
-    if(!errmsg.isNull()) {
-        goto clean;
-    }
-
-    error = netmd_recv_secure_msg(devh, 0x30, &response, NETMD_STATUS_ACCEPTED);
-    netmd_check_response_bulk(&response, cmdhdr, sizeof(cmdhdr), &error);
-    netmd_read_response_bulk(&response, NULL, 2, &error);
-    netmd_check_response_word(&response, 0, &error);
-
-    if(error != NETMD_NO_ERROR)
-        errmsg = QString(netmd_strerror(error));
-
-clean:
-    if(errmsg.isNull())
+    if (result == NETMD_NO_ERROR) {
         uploadDialog.trackSucceeded();
-    else
-        uploadDialog.trackFailed(errmsg);
-
-    if(file)
-        fclose(file);
-    if(!errmsg.isNull())
-    {
-        QFile f(filepath);
-        if(f.exists())
-            f.remove();
+    } else {
+        uploadDialog.trackFailed(netmd_strerror(result));
     }
+
+    QDir::setCurrent(oldcwd);
 }
+
 
 void QNetMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
 {
@@ -357,10 +273,6 @@ void QNetMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
 
     setBusy(true);
 
-    /* progress bar for all tracks does not work yet, is there any way to get track length without recieving a complete track ?
-     * as far as i´ve tested device remains busy if download procedure hasn´t finished.
-     * progressbar for all tracks shows idle mode if maximum value is set to 0
-     */
     for(int i = 0;i < tlist.length(); i++) {
         allblocks += netmdTrack(tlist.at(i)).blockcount();
     }
@@ -385,6 +297,8 @@ on_send_progress(struct netmd_send_progress *send_progress)
 
     dialog->setValue(100 * send_progress->progress);
     dialog->setLabelText(send_progress->message);
+
+    QApplication::processEvents();
 }
 
 bool QNetMDDevice::download(const QString &filename)

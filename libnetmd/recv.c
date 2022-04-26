@@ -24,7 +24,8 @@
 #include "libnetmd.h"
 
 
-netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *filename)
+netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *filename,
+        netmd_recv_progress_func recv_progress, void *recv_progress_user_data)
 {
     if (!netmd_dev_can_upload(devh)) {
         return NETMD_UNSUPPORTED_FEATURE;
@@ -66,7 +67,8 @@ netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *f
     }
 
     FILE *fp = fopen(buf, "wb");
-    int result = netmd_secure_recv_track(devh, track_id, fp);
+    int result = netmd_secure_recv_track(devh, track_id, fp,
+            recv_progress, recv_progress_user_data);
     fclose(fp);
 
     return result;
