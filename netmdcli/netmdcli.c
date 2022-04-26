@@ -75,16 +75,11 @@ static void send_raw_message(netmd_dev_handle* devh, const char *pszRaw)
 
 struct json_object* json_time(const netmd_time *time)
 {
-    char buffer[12];
-    sprintf(buffer, "%02d:%02d:%02d.%02d", time->hour, time->minute, time->second, time->frame);
-    return json_object_new_string(buffer);
+    char *buffer = netmd_time_to_string(time);
+    json_object *result = json_object_new_string(buffer);
+    netmd_free_string(buffer);
+    return result;
 }
-
-void print_time(const netmd_time *time)
-{
-    printf("%02d:%02d:%02d.%02d", time->hour, time->minute, time->second, time->frame);
-}
-
 
 static int
 cmd_rename(struct netmdcli_context *ctx)
@@ -253,13 +248,17 @@ cmd_capacity(struct netmdcli_context *ctx)
     netmd_disc_capacity capacity;
     netmd_get_disc_capacity(ctx->devh, &capacity);
 
-    printf("Recorded:  ");
-    print_time(&capacity.recorded);
-    printf("\nTotal:     ");
-    print_time(&capacity.total);
-    printf("\nAvailable: ");
-    print_time(&capacity.available);
-    printf("\n");
+    char *recorded = netmd_time_to_string(&capacity.recorded);
+    char *total = netmd_time_to_string(&capacity.total);
+    char *available = netmd_time_to_string(&capacity.available);
+
+    printf("Recorded:  %s\n", recorded);
+    printf("Total:     %s\n", total);
+    printf("Available: %s\n", available);
+
+    netmd_free_string(recorded);
+    netmd_free_string(total);
+    netmd_free_string(available);
 
     return 0;
 }
@@ -310,12 +309,16 @@ cmd_discinfo(struct netmdcli_context *ctx)
             printf("  ");
         }
 
-        printf("Track %2i: %-6s %6s - %02i:%02i:%02i - %s\n",
+        char *duration = netmd_track_duration_to_string(&info.duration);
+
+        printf("Track %2i: %-6s %6s - %s - %s\n",
                i,
                netmd_track_flags_to_string(info.protection),
                netmd_get_encoding_name(info.encoding),
-               info.duration.minute, info.duration.second, info.duration.tenth,
+               duration,
                info.title);
+
+        netmd_free_string(duration);
     }
 
     printf("\n--Empty Groups--\n");
@@ -480,9 +483,10 @@ cmd_status(struct netmdcli_context *ctx)
     netmd_request_title(ctx->devh, track, buffer, sizeof(buffer));
 
     printf("Current track: %s \n", buffer);
-    printf("Current playback position: ");
-    print_time(&time);
-    printf("\n");
+
+    char *time_str = netmd_time_to_string(&time);
+    printf("Current playback position: %s\n", time_str);
+    netmd_free_string(time_str);
 
     return 0;
 }
@@ -731,17 +735,18 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
         }
 
         // Format track time
-        char time_buf[9];
-        sprintf(time_buf, "%02i:%02i:%02i", info.duration.minute, info.duration.second, info.duration.tenth);
+        char *duration = netmd_track_duration_to_string(&info.duration);
 
         // Create JSON track object and add to array
         json_object* track = json_object_new_object();
         json_object_object_add(track, "no",         json_object_new_int(i));
         json_object_object_add(track, "protect",    json_object_new_string(netmd_track_flags_to_string(info.protection)));
         json_object_object_add(track, "bitrate",    json_object_new_string(netmd_get_encoding_name(info.encoding)));
-        json_object_object_add(track, "time",       json_object_new_string(time_buf));
+        json_object_object_add(track, "time",       json_object_new_string(duration));
         json_object_object_add(track, "name",       json_object_new_string(info.title));
         json_object_array_add(tracks, track);
+
+        netmd_free_string(duration);
     }
 
     json_object_object_add(json, "tracks", tracks);

@@ -352,3 +352,30 @@ netmd_error netmd_send_track(netmd_dev_handle *devh, const char *filename, const
  */
 netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *filename,
         netmd_recv_progress_func recv_progress, void *recv_progress_user_data);
+
+
+
+/**
+ * Format a netmd_track duration to a string.
+ *
+ * @param duration Pointer to a netmd_track duration struct
+ * @return Newly-allocated string, free with netmd_free_string()
+ */
+char *netmd_track_duration_to_string(const struct netmd_track *duration);
+
+
+/**
+ * Format a NetMD time to a string.
+ *
+ * @param time A pointer to a netmd_time structure
+ * @return A newly-allocated string, free with netmd_free_string()
+ */
+char *netmd_time_to_string(const netmd_time *time);
+
+
+/**
+ * Free a string previously returned.
+ *
+ * @param string An allocated string to be free'd
+ */
+void netmd_free_string(char *string);

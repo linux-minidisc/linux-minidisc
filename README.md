@@ -215,3 +215,11 @@ that existed twice in `netmdcli` and QHiMDTransfer for some time.
 MDLP recorders prefix LP2/LP4 recordings with "LP:" in the title, which is shown
 on non-MDLP recorders. Instead of stripping a leading "LP:" unconditionally, only
 strip it for LP2/LP4 tracks. This allows SP tracks to begin with "LP:" if needed.
+
+
+## Unified formatting of track and disc time durations
+
+Instead of doing custom formatting in multiple places and accessing the structs,
+`netmd_track_duration_to_string()` and `netmd_time_to_string()` are now available
+that format a custom structure into a C string. The returned string can be free'd
+with `netmd_free_string()`.
