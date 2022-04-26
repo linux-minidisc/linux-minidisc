@@ -152,7 +152,7 @@ QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int track
     }
 
     titlestring = QString(info.title);
-    codecstring = QString(netmd_get_encoding_name(info.encoding));
+    codecstring = QString(netmd_get_encoding_name(info.encoding, info.channels));
 }
 
 QNetMDTrack::~QNetMDTrack()

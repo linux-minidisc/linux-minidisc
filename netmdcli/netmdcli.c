@@ -741,7 +741,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
         json_object* track = json_object_new_object();
         json_object_object_add(track, "no",         json_object_new_int(i));
         json_object_object_add(track, "protect",    json_object_new_string(netmd_track_flags_to_string(info.protection)));
-        json_object_object_add(track, "bitrate",    json_object_new_string(netmd_get_encoding_name(info.encoding)));
+        json_object_object_add(track, "bitrate",    json_object_new_string(netmd_get_encoding_name(info.encoding, info.channels)));
         json_object_object_add(track, "time",       json_object_new_string(duration));
         json_object_object_add(track, "name",       json_object_new_string(info.title));
         json_object_array_add(tracks, track);

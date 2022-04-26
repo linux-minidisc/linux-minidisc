@@ -32,14 +32,14 @@ TIME_STRING_MAX_LEN = 16;
 char *netmd_track_duration_to_string(const struct netmd_track *duration)
 {
     char *result = malloc(TIME_STRING_MAX_LEN);
-    snprintf(result, TIME_STRING_MAX_LEN, "%02i:%02i:%02i", duration->minute, duration->second, duration->tenth);
+    snprintf(result, TIME_STRING_MAX_LEN, "%02i:%02i.%02i", duration->minute, duration->second, duration->tenth);
     return result;
 }
 
 char *netmd_time_to_string(const netmd_time *time)
 {
     char *result = malloc(TIME_STRING_MAX_LEN);
-    snprintf(result, TIME_STRING_MAX_LEN, "%02d:%02d:%02d.%02d", time->hour, time->minute, time->second, time->frame);
+    snprintf(result, TIME_STRING_MAX_LEN, "%02d:%02d", time->hour * 60 + time->minute, time->second);
     return result;
 }
 

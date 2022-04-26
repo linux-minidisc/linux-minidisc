@@ -127,9 +127,10 @@ extern struct netmd_group* groups;
  * Return a string representation of the encoding name.
  *
  * @param encoding The encoding, NETMD_ENCODING_SP, NETMD_ENCODING_LP2 or NETMD_ENCODING_LP4
- * @return "SP", "LP2" or "LP4" or "UNKNOWN"
+ * @param channels The channels, NETMD_CHANNELS_STEREO or NETMD_CHANNELS_MONO
+ * @return "SP", "LP2", "LP4", "Mono" or "UNKNOWN"
  **/
-const char *netmd_get_encoding_name(enum NetMDEncoding encoding);
+const char *netmd_get_encoding_name(enum NetMDEncoding encoding, enum NetMDChannels channels);
 
 /**
  * Return a string representation of the track flag.

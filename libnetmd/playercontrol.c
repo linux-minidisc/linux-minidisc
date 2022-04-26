@@ -27,6 +27,29 @@
 #include "const.h"
 
 
+void netmd_time_double(netmd_time *time)
+{
+    int value = netmd_time_to_seconds(time);
+    value *= 2;
+
+    // TODO: This ignores the "frames"
+    time->frame = 0;
+
+    time->second = value % 60;
+    value /= 60;
+
+    time->minute = value % 60;
+    value /= 60;
+
+    time->hour = value;
+}
+
+
+int netmd_time_to_seconds(const netmd_time *time)
+{
+    return time->second + 60 * (time->minute + 60 * time->hour);
+}
+
 static netmd_error netmd_playback_control(netmd_dev_handle* dev, unsigned char code)
 {
     unsigned char request[] = {0x00, 0x18, 0xc3, 0xff, 0x00, 0x00,

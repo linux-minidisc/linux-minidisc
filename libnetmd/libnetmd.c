@@ -31,18 +31,28 @@
 #include "utils.h"
 
 const char *
-netmd_get_encoding_name(enum NetMDEncoding encoding)
+netmd_get_encoding_name(enum NetMDEncoding encoding, enum NetMDChannels channels)
 {
-    switch (encoding) {
-        case NETMD_ENCODING_SP:
-            return "SP";
-        case NETMD_ENCODING_LP2:
-            return "LP2";
-        case NETMD_ENCODING_LP4:
-            return "LP4";
+    switch (channels) {
+        case NETMD_CHANNELS_MONO:
+            return "Mono";
+        case NETMD_CHANNELS_STEREO:
+            switch (encoding) {
+                case NETMD_ENCODING_SP:
+                    return "SP";
+                case NETMD_ENCODING_LP2:
+                    return "LP2";
+                case NETMD_ENCODING_LP4:
+                    return "LP4";
+                default:
+                    break;
+            }
+            break;
         default:
-            return "UNKNOWN";
+            break;
     }
+
+    return "UNKNOWN";
 }
 
 const char *

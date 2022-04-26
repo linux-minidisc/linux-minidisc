@@ -13,18 +13,44 @@ typedef struct {
 } netmd_time;
 
 /**
+ * Double a netmd_time (for SP/LP2/LP4 duration)
+ *
+ * This is useful for translating SP to Mono/LP2 or LP2 to LP4 time.
+ * At the moment, the netmd_time.frame value is ignored / set to zero.
+ *
+ * @param time The value to be multipled by 2 (in-place)
+ */
+void netmd_time_double(netmd_time *time);
+
+/**
+ * Calculate number of seconds in a netmd_time structure
+ *
+ * @param time The value to be converted
+ * @return The duration in seconds (frames are ignored)
+ */
+int netmd_time_to_seconds(const netmd_time *time);
+
+/**
    Structure to hold the capacity information of a disc.
 */
 typedef struct {
-    /** Time allready recorded on the disc. */
+    /** Time already recorded on the disc. This is the sum of the track
+     * durations independent of recording mode (SP/Mono/LP2/LP4), and
+     * therefore might not be the same as (total - available).
+     *
+     * To calculate the amount of time already recorded in SP units,
+     * subtract the available time from the total time.
+     **/
     netmd_time recorded;
 
-    /** Total time, that could be recorded on the disc. This depends on the
-       current recording settings. */
+    /** Total time that can be recorded on the disc in SP units, usually:
+     * 60:59 .. for 60-minute MDs
+     * 74:59 .. for 74-minute MDs
+     * 80:59 .. for 80-minute MDs
+     **/
     netmd_time total;
 
-    /** Time that is available on the disc. This depends on the current
-       recording settings. */
+    /** Time that is available on the disc in SP units. */
     netmd_time available;
 } netmd_disc_capacity;
 
