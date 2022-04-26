@@ -38,6 +38,35 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 /* Max line length we support in M3U files... should match MD TOC max */
 #define M3U_LINE_MAX	128
 
+/* Color output */
+static const char *
+ansi_grp_begin = "\033[37m";
+
+static const char *
+ansi_trk_begin = "\033[36m";
+
+static const char *
+ansi_sp_begin = "\033[92m";
+
+static const char *
+ansi_mono_begin = "\033[91m";
+
+static const char *
+ansi_lp2_begin = "\033[94m";
+
+static const char *
+ansi_lp4_begin = "\033[95m";
+
+static const char *
+ansi_no_title_begin = "\033[90m";
+
+static const char *
+ansi_header_begin = "\033[90m";
+
+static const char *
+ansi_end = "\033[0m";
+
+
 static void send_raw_message(netmd_dev_handle* devh, const char *pszRaw)
 {
     unsigned char cmd[255], rsp[255];
@@ -252,9 +281,9 @@ cmd_capacity(struct netmdcli_context *ctx)
     char *total = netmd_time_to_string(&capacity.total);
     char *available = netmd_time_to_string(&capacity.available);
 
-    printf("Recorded:  %s\n", recorded);
-    printf("Total:     %s\n", total);
-    printf("Available: %s\n", available);
+    printf("Recorded:  %s (total play time)\n", recorded);
+    printf("Total:     %s (SP units)\n", total);
+    printf("Available: %s (SP units)\n", available);
 
     netmd_free_string(recorded);
     netmd_free_string(total);
@@ -275,12 +304,41 @@ cmd_discinfo(struct netmdcli_context *ctx)
     uint8_t i = 0;
     uint8_t lastgroup = 0;
 
-    printf("NetMD Device: %s\n", netmd->model);
-    printf("Disc title:   %s\n", netmd_minidisc_get_disc_name(ctx->md));
-    printf("--\n");
+    netmd_disc_capacity capacity;
+    netmd_get_disc_capacity(ctx->devh, &capacity);
 
-    cmd_capacity(ctx);
-    printf("--\n");
+    char *recorded = netmd_time_to_string(&capacity.recorded);
+    char *total = netmd_time_to_string(&capacity.total);
+    char *available = netmd_time_to_string(&capacity.available);
+
+    int total_capacity = netmd_time_to_seconds(&capacity.total);
+    int available_capacity = netmd_time_to_seconds(&capacity.available);
+
+    // Need to calculate it like this, because only "total" and "available" are
+    // calculated in SP time ("recorded" might be more than that due to Mono/LP2/LP4).
+    int percentage_used = (total_capacity != 0) ? (100 * (total_capacity - available_capacity) / total_capacity) : 0;
+
+    netmd_time_double(&capacity.available);
+    char *available_lp2_mono = netmd_time_to_string(&capacity.available);
+
+    netmd_time_double(&capacity.available);
+    char *available_lp4 = netmd_time_to_string(&capacity.available);
+
+    printf("\n");
+    printf("  NetMD device: %s\n", netmd->model);
+    printf("  Disc title:   %s\n", netmd_minidisc_get_disc_name(ctx->md));
+    printf("  Recorded:     %s (%3d %% of %s used)\n", recorded, percentage_used, total);
+    printf("  Available:    %s (SP) / %s (LP2/Mono) / %s (LP4)\n", available, available_lp2_mono, available_lp4);
+    printf("\n");
+
+    netmd_free_string(recorded);
+    netmd_free_string(total);
+    netmd_free_string(available);
+    netmd_free_string(available_lp2_mono);
+    netmd_free_string(available_lp4);
+
+    printf("%s  Trk Name                                               Flags  Mode  MM:SS.tt%s\n",
+            ansi_header_begin, ansi_end);
 
     for(i = 0; ; i++) {
         netmd_error res = netmd_get_track_info(devh, i, &info);
@@ -293,6 +351,7 @@ cmd_discinfo(struct netmdcli_context *ctx)
         }
 
         int group = netmd_minidisc_get_track_group(md, i);
+        int next_group = netmd_minidisc_get_track_group(md, i+1);
 
         /* Different to the last group? */
         if( group != lastgroup )
@@ -300,36 +359,53 @@ cmd_discinfo(struct netmdcli_context *ctx)
             lastgroup = group;
             if( group )			/* Group 0 is 'no group' */
             {
-                printf("Group: %s\n", netmd_minidisc_get_group_name(md, group));
+                printf("%s%s (group %d)%s\n", ansi_grp_begin, netmd_minidisc_get_group_name(md, group), group, ansi_end);
             }
-        }
-        /* Indent tracks which are in a group */
-        if( group )
-        {
-            printf("  ");
         }
 
         char *duration = netmd_track_duration_to_string(&info.duration);
 
-        printf("Track %2i: %-6s %6s - %s - %s\n",
-               i,
+        const char *ansi_encoding_begin = ansi_sp_begin;
+
+        if (info.channels == NETMD_CHANNELS_MONO) {
+            ansi_encoding_begin = ansi_mono_begin;
+        } else if (info.encoding == NETMD_ENCODING_LP2) {
+            ansi_encoding_begin = ansi_lp2_begin;
+        } else if (info.encoding == NETMD_ENCODING_LP4) {
+            ansi_encoding_begin = ansi_lp4_begin;
+        }
+
+        const char *ansi_title_begin = "";
+        const char *ansi_title_end = "";
+        if (strlen(info.title) == 0) {
+            info.title = "<no title>";
+            ansi_title_begin = ansi_no_title_begin;
+            ansi_title_end = ansi_end;
+        }
+
+        // TODO: Take COLUMNS into account, do not hardcode 50-character title width
+        printf("%s%s%s %s%02i%s %s%-50s%s %-6s %s%-4s%s %9s\n",
+               ansi_grp_begin, (group != 0) ? ((next_group != group) ? "|_" : "| ") : "  ", ansi_end,
+               ansi_trk_begin, i, ansi_end,
+               ansi_title_begin, info.title, ansi_title_end,
                netmd_track_flags_to_string(info.protection),
-               netmd_get_encoding_name(info.encoding),
-               duration,
-               info.title);
+               ansi_encoding_begin, netmd_get_encoding_name(info.encoding, info.channels), ansi_end,
+               duration);
 
         netmd_free_string(duration);
     }
 
-    printf("\n--Empty Groups--\n");
     for (int group=1; group < md->group_count; group++)
     {
         if (netmd_minidisc_is_group_empty(md, group)) {
-            printf("Group: %s\n", netmd_minidisc_get_group_name(md, group));
+            printf("%s%s (group %d, empty)%s\n",
+                    ansi_grp_begin,
+                    netmd_minidisc_get_group_name(md, group), group,
+                    ansi_end);
         }
     }
 
-    printf("\n\n");
+    printf("\n");
 
     return 0;
 }
@@ -598,6 +674,20 @@ CMDS[] = {
     { NULL,          NULL,            NULL,                            NULL },
 };
 
+static void
+disable_colors(void)
+{
+    ansi_grp_begin = "";
+    ansi_trk_begin = "";
+    ansi_sp_begin = "";
+    ansi_mono_begin = "";
+    ansi_lp2_begin = "";
+    ansi_lp4_begin = "";
+    ansi_no_title_begin = "";
+    ansi_header_begin = "";
+    ansi_end = "";
+}
+
 int main(int argc, char* argv[])
 {
     netmd_dev_handle* devh;
@@ -613,7 +703,7 @@ int main(int argc, char* argv[])
 
     /* parse options */
     while (1) {
-        c = getopt(argc, argv, "tv");
+        c = getopt(argc, argv, "tvn");
         if (c == -1) {
             break;
         }
@@ -624,10 +714,17 @@ int main(int argc, char* argv[])
         case 'v':
             netmd_set_log_level(NETMD_LOG_VERBOSE);
             break;
+        case 'n':
+            disable_colors();
+            break;
         default:
             fprintf(stderr, "Unknown option '%c'\n", c);
             break;
         }
+    }
+
+    if (!isatty(STDOUT_FILENO)) {
+        disable_colors();
     }
 
     /* update argv and argc after parsing options */
@@ -853,6 +950,7 @@ void usage()
     puts("Usage: netmd [options] command args\n");
     puts("Options:");
     puts("      -v show debug messages");
+    puts("      -n [n]o color output");
     puts("      -t enable tracing of USB command and response data\n");
     puts("Commands:\n");
 

@@ -223,3 +223,10 @@ Instead of doing custom formatting in multiple places and accessing the structs,
 `netmd_track_duration_to_string()` and `netmd_time_to_string()` are now available
 that format a custom structure into a C string. The returned string can be free'd
 with `netmd_free_string()`.
+
+
+## Redesigned `discinfo` output (with ANSI colors) for `netmdcli`
+
+The disc information sub-command of `netmdcli` has been overhauled and now features
+fancy ANSI colors (can be disabled with `-n`, and will be automatically disabled
+if standard output is not a TTY, e.g. if you pipe the output into `less`).
