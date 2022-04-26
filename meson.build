@@ -34,6 +34,7 @@ libnetmd_sources = [
   'libnetmd/trackinformation.c',
   'libnetmd/utils.c',
   'libnetmd/send.c',
+  'libnetmd/recv.c',
 ]
 
 # TODO: Make the "surface area" of publicly exposed headers smaller,

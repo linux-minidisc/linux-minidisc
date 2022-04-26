@@ -169,3 +169,10 @@ with other calls that take a zero-based track ID. This change also applies to th
 Instead of hardcoding string comparisons with "Sony MZ-RH1 (NetMD)", add a utility
 function that can query whether or not a NetMD-capable device can upload. Right now,
 this is restricted to the MZ-RH1 only, but allows for more semantic features in the future.
+
+
+## Automatic filename generation in `netmdcli recv`
+
+The `filename` parameter to `netmdcli recv` is now optional. If not supplied, a filename
+will be generated based on the track title (or number if the title is empty) and file
+type (.aea for SP-mode tracks, .wav for LP2/LP4-mode tracks).

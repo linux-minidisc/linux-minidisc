@@ -518,13 +518,15 @@ static int
 cmd_recv(struct netmdcli_context *ctx)
 {
     int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
-    const char *filename = netmdcli_context_get_string_arg(ctx, "filename");
+    const char *filename = netmdcli_context_get_optional_string_arg(ctx, "filename");
 
-    FILE *f = fopen(filename, "wb");
-    netmd_secure_recv_track(ctx->devh, track_id & 0xffff, f);
-    fclose(f);
+    int result = netmd_recv_track(ctx->devh, track_id, filename);
 
-    return 0;
+    if (result != NETMD_NO_ERROR) {
+        fprintf(stderr, "Error: %s\n", netmd_strerror(result));
+    }
+
+    return (result == NETMD_NO_ERROR) ? 0 : 1;
 }
 
 static int
@@ -581,7 +583,7 @@ CMDS[] = {
     { "delete",      cmd_delete,      "<track_id> [end_track_id]",     "Delete track <track_id>, or a range (if [end_track_id] is given)" },
     { "---",         NULL,            NULL,                            NULL },
     { "send",        cmd_send,        "<filename> [title]",            "Send WAV (16-bit, 44.1 kHz -or- ATRAC3 LP2/LP4) audio to device" },
-    { "recv",        cmd_recv,        "<track_id> <filename>",         "Upload a track from the NetMD device to a file (MZ-RH1 only)" },
+    { "recv",        cmd_recv,        "<track_id> [filename]",         "Upload a track from the NetMD device to a file (MZ-RH1 only)" },
     { "---",         NULL,            NULL,                            NULL },
     { "play",        cmd_play,        "[track_id]",                    "Start/resume playback (from [track_id] if set)" },
     { "pause",       cmd_pause,       "",                              "Pause playback" },

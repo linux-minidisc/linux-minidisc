@@ -32,6 +32,9 @@ static struct error_description const descriptions[] = {
     {NETMD_NO_ERROR, "No error"},
     {NETMD_NOT_IMPLEMENTED, "Not implemented"},
 
+    {NETMD_TRACK_DOES_NOT_EXIST, "Track does not exist"},
+    {NETMD_UNSUPPORTED_FEATURE, "Device does not support this feature"},
+
     {NETMD_USB_OPEN_ERROR, "Error while opening the USB device"},
     {NETMD_USB_ERROR, "Generic USB error"},
 
