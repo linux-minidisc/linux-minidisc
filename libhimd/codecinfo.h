@@ -1,3 +1,5 @@
+/** \file codecinfo.h */
+
 #ifndef ATRAC_H
 #define ATRAC_H
 

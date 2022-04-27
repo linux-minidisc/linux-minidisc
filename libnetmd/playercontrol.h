@@ -1,6 +1,8 @@
 #ifndef LIBNETMD_PLAYERCONTROL_H
 #define LIBNETMD_PLAYERCONTROL_H
 
+/** \file playercontrol.h */
+
 #include <stdint.h>
 #include "common.h"
 #include "error.h"

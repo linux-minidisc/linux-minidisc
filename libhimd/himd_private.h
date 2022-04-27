@@ -1,3 +1,5 @@
+#pragma once
+
 static inline unsigned int beword16(const unsigned char * c)
 {
     return c[0]*256+c[1];

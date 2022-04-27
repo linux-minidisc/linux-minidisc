@@ -253,3 +253,9 @@ Some files were deleted:
  * `libnetmd/LICENCE.TXT`: Older version of the GPL2, already exists as `COPYING`
  * Moved `README.vuori` and `README.fedora` to `docs`/
  * `.cdtproject`, `.project`, `Doxyfile`: Deleted
+
+
+## Whole-project Doxygen tooling
+
+You can run `doxygen` in the project root to get browsable documentation (for the
+most part).

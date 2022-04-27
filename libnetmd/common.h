@@ -1,6 +1,8 @@
 #ifndef LIBNETMD_COMMON_H
 #define LIBNETMD_COMMON_H
 
+/** \file common.h */
+
 #include <stddef.h>
 
 /**

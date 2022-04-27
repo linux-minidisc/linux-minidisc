@@ -1,6 +1,8 @@
 #ifndef LIBNETMD_DEV_H
 #define LIBNETMD_DEV_H
 
+/** \file netmd_dev.h */
+
 #include "error.h"
 #include "common.h"
 #include <stdbool.h>
@@ -16,7 +18,7 @@ typedef struct netmd_device {
   supported devices.
 
   @param device_list Linked list of netmd_device_t structures to fill.
-  @param libusb_context of a running instance of libusb
+  @param libusb_context of a running instance of libusb, or NULL
 */
 netmd_error netmd_init(netmd_device **device_list, libusb_context * hctx);
 

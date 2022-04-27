@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+/** \file utils.h */
+
 #include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>

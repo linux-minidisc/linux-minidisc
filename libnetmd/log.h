@@ -1,6 +1,8 @@
 #ifndef LIBNETMD_TRACE_H
 #define LIBNETMD_TRACE_H
 
+/** \file log.h */
+
 /**
    log level
 */

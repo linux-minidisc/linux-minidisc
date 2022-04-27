@@ -1,6 +1,8 @@
 #ifndef CONST_H
 #define CONST_H
 
+/** \file const.h */
+
 /**
    Error codes of the USB transport layer
 */
@@ -55,20 +57,29 @@
 #define NETMD_STATUS_CHANGED 0x0d
 #define NETMD_STATUS_INTERIM 0x0f
 
+/**
+ * Codec used for the track.
+ */
 enum NetMDEncoding {
-    NETMD_ENCODING_SP = 0x90,
-    NETMD_ENCODING_LP2 = 0x92,
-    NETMD_ENCODING_LP4 = 0x93,
+    NETMD_ENCODING_SP = 0x90, /*!< ATRAC1 292 kbit/s, stereo or mono */
+    NETMD_ENCODING_LP2 = 0x92, /*!< ATRAC3 LP2, 132 kbit/s, stereo  */
+    NETMD_ENCODING_LP4 = 0x93, /*!< ATRAC3 LP4, 66 kbit/s, joint stereo */
 };
 
+/**
+ * Protection flags for upload (MZ-RH1 only) or deletion.
+ */
 enum NetMDTrackFlags {
-    NETMD_TRACK_FLAG_UNPROTECTED = 0x00,
-    NETMD_TRACK_FLAG_PROTECTED = 0x03,
+    NETMD_TRACK_FLAG_UNPROTECTED = 0x00, /*!< Track is not protected from upload/deletion. */
+    NETMD_TRACK_FLAG_PROTECTED = 0x03, /*!< Track cannot be uploaded or deleted. */
 };
 
+/**
+ * Number of channels.
+ */
 enum NetMDChannels {
-    NETMD_CHANNELS_MONO = 0x01,
-    NETMD_CHANNELS_STEREO = 0x00,
+    NETMD_CHANNELS_MONO = 0x01, /*!< Mono mode */
+    NETMD_CHANNELS_STEREO = 0x00, /*!< Stereo modes (SP, LP2, LP4) */
 };
 
 #define NETMD_OPERATING_STATUS_USB_RECORDING 0x56ff

@@ -1,3 +1,5 @@
+/** \file himd.h */
+
 /*
  * himd.h
  *

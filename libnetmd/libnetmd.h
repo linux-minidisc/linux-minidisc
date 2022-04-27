@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file libnetmd.h */
+
 /*
  * libnetmd.h
  *
@@ -149,14 +151,13 @@ const char *netmd_track_flags_to_string(enum NetMDTrackFlags flags);
  * Struct filled in by netmd_get_track_info(), see there.
  */
 struct netmd_track_info {
-    const char *title; // With any "LP:" prefix stripped for LP2/LP4 tracks
-    struct netmd_track duration;
-    enum NetMDEncoding encoding;
-    enum NetMDChannels channels;
-    enum NetMDTrackFlags protection;
+    const char *title; /*!< User-visible track title, with any "LP:" prefix stripped for LP2/LP4 tracks */
+    struct netmd_track duration; /*!< Duration of the track (in wall time) */
+    enum NetMDEncoding encoding; /*!< Encoding used (SP, LP2, LP4) */
+    enum NetMDChannels channels; /*!< For SP tracks, whether it is encoded as Mono or Stereo */
+    enum NetMDTrackFlags protection; /*!< DRM status of the track (for upload and deletion) */
 
-    // Storage for the actual title as present on disk
-    char raw_title[256];
+    char raw_title[256]; /*!< Storage for the actual title (including any "LP:" prefixes) as present on disk */
 };
 
 

@@ -1,6 +1,8 @@
 #ifndef LIBNETMD_ERROR_H
 #define LIBNETMD_ERROR_H
 
+/** \file error.h */
+
 /**
    Enum with possible error codes the netmd_* functions could return.
 

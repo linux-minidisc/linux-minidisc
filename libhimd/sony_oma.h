@@ -1,3 +1,5 @@
+/** \file sony_oma.h */
+
 #ifndef INCLUDED_LIBHIMD_OMA_H
 #define INCLUDED_LIBHIMD_OMA_H
 

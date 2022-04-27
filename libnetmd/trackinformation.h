@@ -1,6 +1,8 @@
 #ifndef LIBNETMD_TRACKINFORMATION_H
 #define LIBNETMD_TRACKINFORMATION_H
 
+/** \file trackinformation.h */
+
 #include <stdint.h>
 
 #include "common.h"

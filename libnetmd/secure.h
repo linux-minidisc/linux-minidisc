@@ -1,6 +1,8 @@
 #ifndef LIBNETMD_SECURE_H
 #define LIBNETMD_SECURE_H
 
+/** \file secure.h */
+
 #include <stdint.h>
 #include <stdio.h>
 
