@@ -165,6 +165,8 @@ if get_option('with_gui')
     qhimdtransfer_sources += 'qhimdtransfer/qhimdwindetection.cpp'
     compiler = meson.get_compiler('c')
     additional_dependencies += compiler.find_library('cfgmgr32')
+    windows = import('windows')
+    qhimdtransfer_sources += windows.compile_resources('qhimdtransfer/qhimdtransfer.rc')
   elif get_option('target_os') == 'macos'
     qhimdtransfer_sources += 'qhimdtransfer/qhimdmacdetection.cpp'
   else
