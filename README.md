@@ -277,3 +277,10 @@ a single `netmd_time` data type used for both the track length and disc capacity
 For Windows 10 v1511 and newer, special code has been added to enable support for
 ANSI colors in conhost.exe / cmd.exe. The Windows Terminal already supports ANSI
 escape sequences out of the box (for the `discinfo` color output).
+
+
+## Removal of `netmd_get_devname()`
+
+Instead of accessing the generic USB device name (e.g. "Net MD Walkman"), the
+`device_name` member of `struct netmd_device` (returned by `netmd_init()`)
+should be used instead, which contains proper model names from `libusbmd`.

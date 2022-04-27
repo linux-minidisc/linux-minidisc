@@ -725,7 +725,6 @@ int main(int argc, char* argv[])
     netmd_dev_handle* devh;
     minidisc my_minidisc, *md = &my_minidisc;
     netmd_device *device_list, *netmd;
-    char name[16];
     int c;
     netmd_error error;
     int exit_code = 0;
@@ -813,13 +812,6 @@ int main(int argc, char* argv[])
     if(error != NETMD_NO_ERROR)
     {
         printf("Error opening netmd\n%s\n", netmd_strerror(error));
-        return 1;
-    }
-
-    error = netmd_get_devname(devh, name, 16);
-    if (error != NETMD_NO_ERROR)
-    {
-        printf("Could not get device name\n%s\n", netmd_strerror(error));
         return 1;
     }
 

@@ -33,15 +33,6 @@ netmd_error netmd_init(netmd_device **device_list, libusb_context * hctx);
 netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle);
 
 /**
-  Get the device name stored in USB device.
-
-  @param devh Pointer to device, returned by netmd_open.
-  @param buf Buffer to hold the name.
-  @param buffsize Available size in buf.
-*/
-netmd_error netmd_get_devname(netmd_dev_handle* devh, char *buf, size_t buffsize);
-
-/**
  * Check if the device can upload audio from MD to PC.
  *
  * Basically this returns true for the MZ-RH1, false otherwise.

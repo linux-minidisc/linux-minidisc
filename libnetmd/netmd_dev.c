@@ -92,20 +92,6 @@ netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
     }
 }
 
-netmd_error netmd_get_devname(netmd_dev_handle* devh, char *buf, size_t buffsize)
-{
-    int result;
-
-    result = libusb_get_string_descriptor_ascii((libusb_device_handle *)devh, 2, (unsigned char *)buf, buffsize);
-    if (result < 0) {
-        netmd_log(NETMD_LOG_ERROR, "libusb_get_string_descriptor_asci failed, %s (%d)\n", strerror(errno), errno);
-        buf[0] = 0;
-        return NETMD_USB_ERROR;
-    }
-
-    return NETMD_NO_ERROR;
-}
-
 bool netmd_dev_can_upload(netmd_dev_handle *devh)
 {
     struct libusb_device_descriptor desc = {0};
