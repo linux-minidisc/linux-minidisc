@@ -51,12 +51,6 @@ extern "C" {
 #include "groups.h"
 
 /**
-   Global variable containing netmd_group data for each group. There will be
-   enough for group_count total in the alloced memory
-*/
-extern struct netmd_group* groups;
-
-/**
  * Return a string representation of the encoding name.
  *
  * @param encoding The encoding, NETMD_ENCODING_SP, NETMD_ENCODING_LP2 or NETMD_ENCODING_LP4
