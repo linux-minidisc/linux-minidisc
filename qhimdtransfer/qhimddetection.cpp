@@ -265,7 +265,7 @@ void QHiMDDetection::add_netmddevice(libusb_device * dev, QString name)
     mddev = new QNetMDDevice();
     new_dev = static_cast<netmd_device *>(malloc(sizeof(netmd_device)));
     new_dev->usb_dev = dev;
-    new_dev->link = NULL;
+    new_dev->next = NULL;
     mddev->setName(name);
     mddev->setUsbDevice(new_dev);
     mddev->setLibusbDevice(dev);
@@ -303,7 +303,6 @@ void QHiMDDetection::scan_for_netmd_devices()
 {
     netmd_device * md;
     netmd_error error = netmd_init(&dev_list, ctx);
-    struct libusb_device_descriptor desc;
     QNetMDDevice * mddev;
 
     /* skip enumeration when using libusb hotplug feature
@@ -314,13 +313,12 @@ void QHiMDDetection::scan_for_netmd_devices()
     md = dev_list;  // pick first device
 
     while( md != NULL) {
-        libusb_get_device_descriptor(md->usb_dev, &desc);
         mddev = new QNetMDDevice();
-        mddev->setName(identify_usb_device(desc.idVendor, desc.idProduct));
+        mddev->setName(md->device_name);
         mddev->setUsbDevice(md);
         dlist.append(mddev);
         emit deviceListChanged(dlist);
-        md = md->link;  // pick next device
+        md = md->next;  // pick next device
     }
 }
 

@@ -6,20 +6,10 @@
 #include <stdbool.h>
 
 typedef struct netmd_device {
-    struct netmd_device *link;
-    char name[32];
-    char *model;
+    struct netmd_device *next;
+    const char *device_name;
     struct libusb_device *usb_dev;
 } netmd_device;
-
-/**
-  Struct to hold the vendor and product id's for each unit.
-*/
-struct netmd_devices {
-    int	idVendor;
-    int	idProduct;
-    char *model;
-};
 
 /**
   Intialises the netmd device layer, scans the USB and fills in a list of

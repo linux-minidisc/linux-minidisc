@@ -62,8 +62,8 @@ netmd_error netmd_init(netmd_device **device_list, libusb_context *hctx)
       if (info != NULL && info->device_type == MINIDISC_USB_DEVICE_TYPE_NETMD) {
           new_device = malloc(sizeof(netmd_device));
           new_device->usb_dev = list[i];
-          new_device->link = *device_list;
-          new_device->model = info->name;
+          new_device->next = *device_list;
+          new_device->device_name = info->name;
           *device_list = new_device;
       }
 
@@ -146,7 +146,7 @@ void netmd_clean(netmd_device **device_list)
 
     device = *device_list;
     while (device != NULL) {
-        tmp = device->link;
+        tmp = device->next;
         free(device);
         device = tmp;
     }

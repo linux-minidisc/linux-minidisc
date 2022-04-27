@@ -265,7 +265,7 @@ static int
 cmd_json(struct netmdcli_context *ctx)
 {
     json_object *json = json_object_new_object();
-    json_object_object_add(json, "device",  json_object_new_string(ctx->netmd->model));
+    json_object_object_add(json, "device",  json_object_new_string(ctx->netmd->device_name));
     json_object_object_add(json, "title",   json_object_new_string(netmd_minidisc_get_disc_name(ctx->md)));
     print_disc_info(ctx->devh, ctx->md, json);
 
@@ -326,7 +326,7 @@ cmd_discinfo(struct netmdcli_context *ctx)
     char *available_lp4 = netmd_time_to_string(&capacity.available);
 
     printf("\n");
-    printf("  NetMD device: %s\n", netmd->model);
+    printf("  NetMD device: %s\n", netmd->device_name);
     printf("  Disc title:   %s\n", netmd_minidisc_get_disc_name(ctx->md));
     printf("  Recorded:     %s (%3d %% of %s used)\n", recorded, percentage_used, total);
     printf("  Available:    %s (SP) / %s (LP2/Mono) / %s (LP4)\n", available, available_lp2_mono, available_lp4);
