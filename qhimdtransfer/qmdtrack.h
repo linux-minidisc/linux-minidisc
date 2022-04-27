@@ -12,9 +12,7 @@
     #define WINVER 0x500
 #endif
 
-extern "C" {
-#include <libnetmd_extended.h>
-}
+#include "libnetmd.h"
 
 /* define buffer size for netmd uploads */
 #define NETMD_RECV_BUF_SIZE 0x10000

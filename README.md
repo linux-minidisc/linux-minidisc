@@ -236,3 +236,9 @@ if standard output is not a TTY, e.g. if you pipe the output into `less`).
 
 The CI scripts now live in `scripts/` instead of `build/`. Travis CI support has
 been removed, and replaced with Github Actions. The CI scripts have been simplified.
+
+
+## Removed `libnetmd_extended.h` header
+
+This was used by QHiMDTransfer's copies of internal functions, but since we have
+now moved those back into the library, there's no need to expose those details.

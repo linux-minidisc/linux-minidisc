@@ -24,6 +24,10 @@
  *
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -380,3 +384,7 @@ char *netmd_time_to_string(const netmd_time *time);
  * @param string An allocated string to be free'd
  */
 void netmd_free_string(char *string);
+
+#ifdef __cplusplus
+}
+#endif

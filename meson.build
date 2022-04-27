@@ -47,7 +47,6 @@ libnetmd_headers = [
   'libnetmd/common.h',
   'libnetmd/const.h',
   'libnetmd/error.h',
-  'libnetmd/libnetmd_extended.h',
   'libnetmd/libnetmd.h',
   'libnetmd/log.h',
   'libnetmd/netmd_dev.h',
