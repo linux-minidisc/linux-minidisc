@@ -34,7 +34,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - run: git fetch --prune --tags
       - name: Install dependencies
         run: sh scripts/install_dependencies.sh
       - name: Configure, make, package

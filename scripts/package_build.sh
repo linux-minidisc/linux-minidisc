@@ -11,7 +11,7 @@ PACKAGE="minidisc-ffwd"
 get_version() {
     set +e
 
-    GIT_VERSION="$(git describe --always 2>/dev/null)"
+    GIT_VERSION="$(git describe --tags 2>/dev/null)"
     SRCDIR="$( cd "$( dirname "$0" )" && pwd )"
 
     if [ -n "$GIT_VERSION" ] ; then
