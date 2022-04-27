@@ -105,7 +105,7 @@ netmd_error netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_
    @param buffer buffer to hold the name.
    @return returns 0 for fail 1 for success.
 */
-int netmd_set_track_title(netmd_dev_handle* dev, netmd_track_index track, const char* const buffer);
+int netmd_set_track_title(netmd_dev_handle* dev, netmd_track_index track, const char *buffer);
 
 /**
    Moves track around the disc.

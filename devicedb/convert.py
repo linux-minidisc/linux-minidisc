@@ -88,9 +88,9 @@ with open('../libusbmd/libusbmd_data.h', 'w') as fp:
     print('#include <stddef.h>', file=fp)
     print('', file=fp)
     print(f'/* {AUTOGEN_INFO} */', file=fp)
-    print('static const struct minidisc_usb_device_info const KNOWN_DEVICES[] = {', file=fp)
+    print('static const struct minidisc_usb_device_info KNOWN_DEVICES[] = {', file=fp)
     for mode, devices in sorted(models_by_mode.items()):
         for vid, pid, name in devices:
             print(f'    {{ MINIDISC_USB_DEVICE_TYPE_{mode.upper()}, 0x{vid:04x}, 0x{pid:04x}, "{name}" }},', file=fp)
-    print(f"    {{ 0, 0, NULL }}, /* sentinel */", file=fp)
+    print(f"    {{ 0, 0, 0, NULL }}, /* sentinel */", file=fp)
     print('};', file=fp)
