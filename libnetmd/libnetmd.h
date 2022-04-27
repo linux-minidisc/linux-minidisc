@@ -153,16 +153,6 @@ int netmd_delete_track(netmd_dev_handle* dev, netmd_track_index track);
 */
 int netmd_erase_disc(netmd_dev_handle* dev);
 
-/**
-   Writes atrac file to device
-
-   @param dev pointer to device returned by netmd_open
-   @param szFile Full path to file to write.
-   @return < 0 on fail else 1
-   @bug doesnt work yet
-*/
-int netmd_write_track(netmd_dev_handle* dev, char* szFile);
-
 int netmd_cache_toc(netmd_dev_handle* dev);
 int netmd_sync_toc(netmd_dev_handle* dev);
 int netmd_acquire_dev(netmd_dev_handle* dev);

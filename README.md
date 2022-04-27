@@ -259,3 +259,8 @@ Some files were deleted:
 
 You can run `doxygen` in the project root to get browsable documentation (for the
 most part).
+
+
+## Remove `netmd_write_track()` in favor of `netmd_send_track()`
+
+The old function wasn't used/tested, and the new function is.
