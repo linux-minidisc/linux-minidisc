@@ -166,7 +166,7 @@ if get_option('with_gui')
     compiler = meson.get_compiler('c')
     additional_dependencies += compiler.find_library('cfgmgr32')
   elif get_option('target_os') == 'macos'
-    qhimdtransfer_sources += 'qhimdtransfer/qhimdmacosdetection.cpp'
+    qhimdtransfer_sources += 'qhimdtransfer/qhimdmacdetection.cpp'
   else
     qhimdtransfer_sources += 'qhimdtransfer/qhimddummydetection.cpp'
   endif
