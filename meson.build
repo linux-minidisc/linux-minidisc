@@ -1,4 +1,5 @@
-project('minidisc', ['c', 'cpp'])
+project('minidisc', ['c', 'cpp'],
+  default_options: ['c_std=c11', 'cpp_std=c++11'])
 
 libusb = dependency('libusb-1.0')
 gcrypt = dependency('libgcrypt')
@@ -20,6 +21,8 @@ install_headers(libusbmd_headers, subdir: 'libusbmd')
 
 libusbmd = library('usbmd',
   libusbmd_sources,
+  soversion: '0',
+  version: '0.0.1',
   install: true,
 )
 
@@ -61,6 +64,8 @@ libnetmd = library('netmd',
   dependencies: [libusb, gcrypt],
   link_with: [libusbmd],
   include_directories: ['libusbmd'],
+  soversion: '0',
+  version: '0.0.1',
   install: true,
 )
 
@@ -110,6 +115,8 @@ libhimd = library('himd',
   libhimd_sources,
   dependencies: [glib, id3tag, gcrypt, mad],
   link_with: [libusbmd],
+  soversion: '0',
+  version: '0.0.1',
   install: true,
 )
 
@@ -135,6 +142,7 @@ endif
 if get_option('with_gui')
   qt5 = import('qt5')
   qt5_dep = dependency('qt5', modules: ['Core', 'Gui', 'Widgets', 'DBus'])
+  additional_dependencies = []
 
   qhimdtransfer_sources = [
     'qhimdtransfer/main.cpp',
@@ -155,7 +163,9 @@ if get_option('with_gui')
       'qhimdtransfer/qhimdlinuxdetection.h',
     ])
   elif get_option('target_os') == 'windows'
-    qhimdtransfer_sources += 'qhimdtransfer/qhimdwindowsdetection.cpp'
+    qhimdtransfer_sources += 'qhimdtransfer/qhimdwindetection.cpp'
+    compiler = meson.get_compiler('c')
+    additional_dependencies += compiler.find_library('cfgmgr32')
   elif get_option('target_os') == 'macos'
     qhimdtransfer_sources += 'qhimdtransfer/qhimdmacosdetection.cpp'
   else
@@ -211,9 +221,10 @@ if get_option('with_gui')
 
   executable('qhimdtransfer',
     qhimdtransfer_sources,
-    dependencies: [qt5_dep, libusb, taglib],
+    dependencies: [qt5_dep, libusb, taglib] + additional_dependencies,
     link_with: [libusbmd, libnetmd, libhimd],
     include_directories: ['libusbmd', 'libnetmd', 'libhimd', 'qhimdtransfer'],
+    gui_app: true,
     install: true,
   )
 endif

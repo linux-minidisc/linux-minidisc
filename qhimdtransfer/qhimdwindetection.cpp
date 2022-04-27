@@ -158,7 +158,7 @@ static bool is_himddevice(QString devID, QString & name)
 
     CM_Get_Device_ID_Size(&buflen, devinstparent, 0);
     wchar_t *buffer = new wchar_t[buflen];
-    CM_Get_Device_ID(devinstparent, buffer, buflen, 0);
+    CM_Get_Device_IDW(devinstparent, buffer, buflen, 0);
     devicepath = QString::fromWCharArray(buffer);
     delete[] buffer;
 

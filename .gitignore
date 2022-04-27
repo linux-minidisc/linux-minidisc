@@ -13,7 +13,12 @@ __pycache__
 Info.plist
 Makefile*
 *.user
-/builddir
+/build
+/dist
+/dist-tmp
+/build-x86_64-linux-gnu
+/build-i686-w64-mingw32
+/build-x86_64-w64-mingw32
 /basictools/minikey
 /basictools/mp3key
 /basictools/himdformat

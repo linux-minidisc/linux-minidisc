@@ -57,16 +57,16 @@ Building with Meson is simple, it always builds out-of-source-tree (here,
 `build` is used as the build folder, and `ninja` is the build system):
 
 ```
-meson builddir
-ninja -C builddir
+meson build
+ninja -C build
 ```
 
 To build `libnetmd` and `libhimd` as static libraries (e.g. so that
 `netmdcli` and `himdcli` can be used standalone):
 
 ```
-meson builddir -Ddefault_library=static
-ninja -C builddir
+meson build -Ddefault_library=static
+ninja -C build
 ```
 
 As part of this modification, the `libnetmd` public headers do not depend
@@ -117,9 +117,9 @@ all the `qmake`-related cruft. By default the GUI building is disabled, but you
 can enable it with:
 
 ```
-meson builddir -Dwith_gui=true
-ninja -C builddir
-builddir/qhimdtransfer
+meson build -Dwith_gui=true
+ninja -C build
+build/qhimdtransfer
 ```
 
 Some things might have been broken during the build system transition, let me know
@@ -230,3 +230,9 @@ with `netmd_free_string()`.
 The disc information sub-command of `netmdcli` has been overhauled and now features
 fancy ANSI colors (can be disabled with `-n`, and will be automatically disabled
 if standard output is not a TTY, e.g. if you pipe the output into `less`).
+
+
+## Cleaned up CI scripts, Github Actions
+
+The CI scripts now live in `scripts/` instead of `build/`. Travis CI support has
+been removed, and replaced with Github Actions. The CI scripts have been simplified.

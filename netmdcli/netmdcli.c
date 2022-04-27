@@ -22,6 +22,7 @@
 
 #include <json.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include "libnetmd.h"
 #include "libusbmd.h"
