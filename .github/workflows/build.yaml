@@ -1,0 +1,61 @@
+name: Build from source
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.build_host }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build_host:
+          - ubuntu-latest
+        build_type:
+          - linux
+          - mingw32
+          - mingw64
+        include:
+           - build_host: macos-latest
+             build_type: macos
+    env:
+      BUILD_TYPE: ${{ matrix.build_type }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Install dependencies
+        run: sh build/install_dependencies.sh
+      - name: Build (native)
+        if: "!contains(matrix.build_type, 'mingw')"
+        run: |
+          qmake
+          make
+          sh build/package_build.sh
+      - name: Build (cross-compile)
+        if: "contains(matrix.build_type, 'mingw')"
+        run: |
+          docker run -e BUILD_TYPE -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh sh build/cross_qmake.sh
+          docker run -e BUILD_TYPE -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh make
+          docker run -e BUILD_TYPE -v $(pwd):/build/ --rm linux-minidisc-mingw-docker sh build/cross_wrapper_mingw.sh sh build/package_build.sh
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-result
+          path: dist/*
+          if-no-files-found: ignore
+      - name: Upload release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release create "${GITHUB_REF#refs/tags/}" || true
+          gh release upload "${GITHUB_REF#refs/tags/}" dist/* || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

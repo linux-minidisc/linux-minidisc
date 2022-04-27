@@ -10,25 +10,23 @@ PACKAGE="qhimdtransfer"
 VERSION="$(sh build/get_version.sh)"
 
 case "$BUILD_TYPE" in
-    linux-cross-mingw32)
+    mingw32)
         PLATFORM="win32"
         ARCHIVE="zip"
-        MINGW_BUNDLEDLLS_SEARCH_PATH=/opt/mingw32/bin:/usr/lib/gcc/i686-w64-mingw32/4.8:/usr/i686-w64-mingw32/lib
+        MINGW_ARCH="i686-w64-mingw32"
+        MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/$MINGW_ARCH/bin:/usr/$MINGW_ARCH/lib:/usr/$MINGW_ARCH/sys-root/mingw/bin
         ;;
-    linux-cross-mingw64)
+    mingw64)
         PLATFORM="win64"
         ARCHIVE="zip"
-        MINGW_BUNDLEDLLS_SEARCH_PATH=/opt/mingw64/bin:/usr/lib/gcc/x86_64-w64-mingw32/4.8:/usr/x86_64-w64-mingw32/lib
+        MINGW_ARCH="x86_64-w64-mingw32"
+        MINGW_BUNDLEDLLS_SEARCH_PATH=/usr/$MINGW_ARCH/bin:/usr/$MINGW_ARCH/lib:/usr/$MINGW_ARCH/sys-root/mingw/bin
         ;;
-    linux-native-clang)
-        PLATFORM="linux-clang"
+    linux)
+        PLATFORM="linux"
         ARCHIVE="tar"
         ;;
-    linux-native-gcc)
-        PLATFORM="linux-gcc"
-        ARCHIVE="tar"
-        ;;
-    osx-native-clang)
+    macos)
         PLATFORM="macos"
         ARCHIVE="zip"
         ;;
@@ -49,8 +47,16 @@ mkdir -p "$TMP_OUT"
 cp -rpv COPYING COPYING.LIB README docs "$TMP_OUT"
 
 case "$BUILD_TYPE" in
-    linux-cross-mingw*)
+    mingw32|mingw64)
         export MINGW_BUNDLEDLLS_SEARCH_PATH
+
+        (
+            cd "$TMP_OUT"
+            cp -v /usr/$MINGW_ARCH/sys-root/mingw/lib/qt5/plugins/platforms/qwindows.dll .
+            python3 "$HERE/build/mingw-bundledlls" --copy qwindows.dll
+            mkdir -p platforms
+            mv -v qwindows.dll platforms/
+        )
 
         for filename in himdcli/release/himdcli.exe netmdcli/release/netmdcli.exe qhimdtransfer/release/QHiMDTransfer.exe; do
             basename="$(basename "$filename")"
@@ -59,11 +65,11 @@ case "$BUILD_TYPE" in
             python3 build/mingw-bundledlls --copy "$target"
         done
         ;;
-    linux-native-*)
+    linux)
         mkdir -p "$TMP_OUT/bin"
         cp -rpv himdcli/himdcli netmdcli/netmdcli qhimdtransfer/qhimdtransfer "$TMP_OUT/bin"
         ;;
-    osx-native-clang)
+    macos)
         cp -rpv qhimdtransfer/QHiMDTransfer.app "$TMP_OUT"
         macdeployqt "$TMP_OUT/QHiMDTransfer.app"
         mkdir -p "$TMP_OUT/bin"
