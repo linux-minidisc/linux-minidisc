@@ -1,5 +1,5 @@
 project('minidisc', ['c', 'cpp'],
-  default_options: ['c_std=c11', 'cpp_std=c++11'])
+  default_options: ['c_std=gnu11', 'cpp_std=c++11'])
 
 libusb = dependency('libusb-1.0')
 gcrypt = dependency('libgcrypt')
