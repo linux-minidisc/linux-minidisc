@@ -29,13 +29,6 @@
 static const size_t
 TIME_STRING_MAX_LEN = 16;
 
-char *netmd_track_duration_to_string(const struct netmd_track *duration)
-{
-    char *result = malloc(TIME_STRING_MAX_LEN);
-    snprintf(result, TIME_STRING_MAX_LEN, "%02i:%02i.%02i", duration->minute, duration->second, duration->tenth);
-    return result;
-}
-
 char *netmd_time_to_string(const netmd_time *time)
 {
     char *result = malloc(TIME_STRING_MAX_LEN);

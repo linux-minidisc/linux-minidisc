@@ -7,13 +7,6 @@
 #include "common.h"
 #include "error.h"
 
-typedef struct {
-    uint16_t hour;
-    uint8_t minute;
-    uint8_t second;
-    uint8_t frame;
-} netmd_time;
-
 /**
  * Double a netmd_time (for SP/LP2/LP4 duration)
  *

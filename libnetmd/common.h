@@ -21,6 +21,17 @@ typedef uint16_t netmd_track_index;
  */
 typedef int netmd_group_id;
 
+
+/**
+ * Time duration value.
+ */
+typedef struct netmd_time {
+    uint16_t hour;
+    uint8_t minute;
+    uint8_t second;
+    uint8_t frame;
+} netmd_time;
+
 /**
  * Forward-declaration of opaque libusb structures
  */

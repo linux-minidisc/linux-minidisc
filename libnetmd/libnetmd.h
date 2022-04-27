@@ -79,7 +79,7 @@ const char *netmd_track_flags_to_string(enum NetMDTrackFlags flags);
  */
 struct netmd_track_info {
     const char *title; /*!< User-visible track title, with any "LP:" prefix stripped for LP2/LP4 tracks */
-    struct netmd_track duration; /*!< Duration of the track (in wall time) */
+    netmd_time duration; /*!< Duration of the track (in wall time) */
     enum NetMDEncoding encoding; /*!< Encoding used (SP, LP2, LP4) */
     enum NetMDChannels channels; /*!< For SP tracks, whether it is encoded as Mono or Stereo */
     enum NetMDTrackFlags protection; /*!< DRM status of the track (for upload and deletion) */
@@ -184,15 +184,6 @@ netmd_error netmd_send_track(netmd_dev_handle *devh, const char *filename, const
 netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *filename,
         netmd_recv_progress_func recv_progress, void *recv_progress_user_data);
 
-
-
-/**
- * Format a netmd_track duration to a string.
- *
- * @param duration Pointer to a netmd_track duration struct
- * @return Newly-allocated string, free with netmd_free_string()
- */
-char *netmd_track_duration_to_string(const struct netmd_track *duration);
 
 
 /**

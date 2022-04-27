@@ -364,7 +364,7 @@ cmd_discinfo(struct netmdcli_context *ctx)
             }
         }
 
-        char *duration = netmd_track_duration_to_string(&info.duration);
+        char *duration = netmd_time_to_string(&info.duration);
 
         const char *ansi_encoding_begin = ansi_sp_begin;
 
@@ -834,7 +834,7 @@ void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
         }
 
         // Format track time
-        char *duration = netmd_track_duration_to_string(&info.duration);
+        char *duration = netmd_time_to_string(&info.duration);
 
         // Create JSON track object and add to array
         json_object* track = json_object_new_object();

@@ -264,3 +264,9 @@ most part).
 ## Remove `netmd_write_track()` in favor of `netmd_send_track()`
 
 The old function wasn't used/tested, and the new function is.
+
+
+## Combine the two time/duration structs in `libnetmd`
+
+Instead of having two slightly incompatible structs for the same thing, have only
+a single `netmd_time` data type used for both the track length and disc capacity.

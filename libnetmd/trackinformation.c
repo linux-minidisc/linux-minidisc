@@ -73,7 +73,6 @@ int netmd_request_track_bitrate(netmd_dev_handle*dev, netmd_track_index track,
     unsigned char *buf;
     unsigned char info[8] = { 0 };
     unsigned char flags;
-    struct netmd_track time;
 
     msleep(5); // Sleep fixes 'unknown' bitrate being returned on many devices.
 
@@ -153,7 +152,7 @@ int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* bu
     return required_size;
 }
 
-int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, struct netmd_track* buffer)
+int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, netmd_time *time)
 {
     int ret = 0;
     unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x10, 0x01, 0x01, 0x00};
@@ -174,12 +173,10 @@ int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, str
         return 0;
     }
 
-    // TODO: Could add "hour" to netmd_track struct later, but all consumers need to be updated then
-    int hours = bcd_to_proper(time_request + 27, 1) & 0xff;
-
-    buffer->minute = (bcd_to_proper(time_request + 28, 1) & 0xff) + hours * 60;
-    buffer->second = bcd_to_proper(time_request + 29, 1) & 0xff;
-    buffer->tenth = bcd_to_proper(time_request + 30, 1) & 0xff;
+    time->hour = bcd_to_proper(time_request + 27, 1) & 0xff;
+    time->minute = (bcd_to_proper(time_request + 28, 1) & 0xff);
+    time->second = bcd_to_proper(time_request + 29, 1) & 0xff;
+    time->frame = bcd_to_proper(time_request + 30, 1) & 0xff;
 
     return 1;
 }
