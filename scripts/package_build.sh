@@ -67,7 +67,7 @@ rm -rf dist-tmp
 mkdir -p "$TMP_OUT"
 
 # Copy documentation and platform independent stuff
-cp -rpv COPYING COPYING.LIB README docs "$TMP_OUT"
+cp -rpv COPYING COPYING.LIB README.md docs "$TMP_OUT"
 
 case "$BUILD_TYPE" in
     mingw32|mingw64)
