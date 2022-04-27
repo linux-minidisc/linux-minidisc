@@ -477,7 +477,7 @@ int netmd_create_group(netmd_dev_handle* dev, minidisc* md, const char* name)
     return 0;
 }
 
-int netmd_set_disc_title(netmd_dev_handle* dev, const char* title, size_t title_length)
+int netmd_set_disc_title(netmd_dev_handle* dev, const char* title)
 {
     unsigned char *request, *p;
     unsigned char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
@@ -495,6 +495,8 @@ int netmd_set_disc_title(netmd_dev_handle* dev, const char* title, size_t title_
     oldsize = request_disc_title(dev, (char *)reply, sizeof(reply));
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
+
+    size_t title_length = strlen(title);
 
     request = malloc(21 + title_length);
     memset(request, 0, 21 + title_length);

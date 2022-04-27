@@ -136,7 +136,16 @@ int netmd_set_title(netmd_dev_handle* dev, netmd_track_index track, const char* 
 */
 int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t finish);
 
-int netmd_set_disc_title(netmd_dev_handle* dev, const char* title, size_t title_length);
+/**
+ * Set the complete (raw) title of the disc.
+ *
+ * Any custom group information will be overwritten. To set the disc title
+ * without affecting groups, use netmd_set_group_title() with group 0.
+ *
+ * @param dev Handle to the device
+ * @param title The new title
+ */
+int netmd_set_disc_title(netmd_dev_handle* dev, const char* title);
 
 /**
    Deletes track from disc (does not update groups)

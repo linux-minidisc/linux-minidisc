@@ -463,7 +463,7 @@ cmd_settitle(struct netmdcli_context *ctx)
     const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
 
     netmd_cache_toc(ctx->devh);
-    netmd_set_disc_title(ctx->devh, new_title, strlen(new_title));
+    netmd_set_disc_title(ctx->devh, new_title);
     netmd_sync_toc(ctx->devh);
 
     return 0;
