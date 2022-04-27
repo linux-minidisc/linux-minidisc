@@ -51,17 +51,6 @@ extern "C" {
 #include "groups.h"
 
 /**
-   Basic track data.
-*/
-struct netmd_track
-{
-    netmd_track_index track_id;
-    int minute;
-    int second;
-    int tenth;
-};
-
-/**
    Global variable containing netmd_group data for each group. There will be
    enough for group_count total in the alloced memory
 */
@@ -111,8 +100,6 @@ struct netmd_track_info {
  */
 netmd_error netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct netmd_track_info *info);
 
-
-int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, struct netmd_track* buffer);
 
 /**
    Sets title for the specified track. If making multiple changes,

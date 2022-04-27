@@ -129,38 +129,6 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
     return (int)title_size - 25;
 }
 
-int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, struct netmd_track* buffer)
-{
-    int ret = 0;
-    unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x10, 0x01, 0x01, 0x00};
-    unsigned char request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x10,
-                               0x01, 0x00, 0x01, 0x30, 0x00, 0x01,
-                               0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
-                               0x00};
-    unsigned char time_request[255];
-    unsigned char *buf;
-
-    buf = request + 7;
-    netmd_copy_word_to_buffer(&buf, track, 0);
-    netmd_exch_message(dev, hs, 8, time_request);
-    ret = netmd_exch_message(dev, request, 0x13, time_request);
-    if(ret < 0)
-    {
-        fprintf(stderr, "bad ret code, returning early\n");
-        return 0;
-    }
-
-    // TODO: Could add "hour" to netmd_track struct later, but all consumers need to be updated then
-    int hours = bcd_to_proper(time_request + 27, 1) & 0xff;
-
-    buffer->minute = (bcd_to_proper(time_request + 28, 1) & 0xff) + hours * 60;
-    buffer->second = bcd_to_proper(time_request + 29, 1) & 0xff;
-    buffer->tenth = bcd_to_proper(time_request + 30, 1) & 0xff;
-    buffer->track_id = track;
-
-    return 1;
-}
-
 int netmd_set_title(netmd_dev_handle* dev, netmd_track_index track, const char* const buffer)
 {
     int ret = 1;

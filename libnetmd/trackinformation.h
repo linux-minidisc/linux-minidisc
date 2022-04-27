@@ -38,4 +38,17 @@ int netmd_request_track_flags(netmd_dev_handle* dev, netmd_track_index track, un
 */
 int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* buffer, const size_t size);
 
+/**
+   Basic track data.
+*/
+struct netmd_track
+{
+    netmd_track_index track_id;
+    int minute;
+    int second;
+    int tenth;
+};
+
+int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, struct netmd_track* buffer);
+
 #endif
