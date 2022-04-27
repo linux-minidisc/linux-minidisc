@@ -48,13 +48,35 @@ int netmd_request_track_bitrate(netmd_dev_handle*dev, netmd_track_index track,
     //send request to device
     int length = netmd_exch_message(dev, cmd, sizeof(cmd), rsp);
 
+    // AV/C MD Audio 1.0, Table 7-3 audio_recording_parameters_info_block
+    // AV/C Disc Subunit 1.0, Table 11.7 (page 134) "Audio Recording Parameters Info Block"
+    struct audio_recording_parameters_info_block {
+        uint16_t compound_length; // 8 (big endian)
+        uint16_t info_block_type; // 0x8007 (audio_recording_parameters_info_block, big endian)
+        uint16_t primary_fields_length; // 4 (big endian)
+        uint8_t audio_recording_sample_rate; // 0x01 = 44100 Hz
+        uint8_t audio_recording_sample_size; // 0x10 = 16-bit
+        uint8_t audio_compression_mode; // 0x90 = ATRAC1
+        uint8_t audio_recording_channel_mode; // 0x00 = stereo, 0x01 = mono
+    };
+
     // pull encoding and channel from response
-    if (length >= 29) {
-      memcpy(encoding, rsp + 27, 1);
-      memcpy(channel, rsp + 28, 1);
+    if (length >= sizeof(cmd) + sizeof(struct audio_recording_parameters_info_block)) {
+        const struct audio_recording_parameters_info_block *info = (void *)(rsp + sizeof(cmd));
+
+        netmd_log(NETMD_LOG_DEBUG, "compound_length: 0x%04x\n", netmd_convert_word(info->compound_length));
+        netmd_log(NETMD_LOG_DEBUG, "info_block_type: 0x%04x\n", netmd_convert_word(info->info_block_type));
+        netmd_log(NETMD_LOG_DEBUG, "primary_fields_length: 0x%04x\n", netmd_convert_word(info->primary_fields_length));
+        netmd_log(NETMD_LOG_DEBUG, "audio_recording_sample_rate: 0x%02x\n", info->audio_recording_sample_rate);
+        netmd_log(NETMD_LOG_DEBUG, "audio_recording_sample_size: 0x%02x\n", info->audio_recording_sample_size);
+        netmd_log(NETMD_LOG_DEBUG, "audio_compression_mode: 0x%02x\n", info->audio_compression_mode);
+        netmd_log(NETMD_LOG_DEBUG, "audio_recording_channel_mode: 0x%02x\n", info->audio_recording_channel_mode);
+
+        *encoding = info->audio_compression_mode;
+        *channel = info->audio_recording_channel_mode;
     } else {
-      memset(encoding, 0, 1);
-      memset(channel, 0, 1);
+        *encoding = 0;
+        *channel = 0;
     }
 
     return 2;

@@ -932,6 +932,8 @@ int netmd_sync_toc(netmd_dev_handle* dev)
 /* Calls need for Sharp devices */
 int netmd_acquire_dev(netmd_dev_handle* dev)
 {
+    // Unit command: "subunit_type = 0x1F, subunit_id = 7 -> 0xFF"
+    // AVC Digital Interface Commands 3.0, 9. Unit commands"
     unsigned char request[] = {0x00, 0xff, 0x01, 0x0c, 0xff, 0xff, 0xff, 0xff,
                                0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     unsigned char reply[255];
@@ -947,13 +949,13 @@ int netmd_acquire_dev(netmd_dev_handle* dev)
 
 int netmd_release_dev(netmd_dev_handle* dev)
 {
-    int ret = 0;
+    // Unit command: "subunit_type = 0x1F, subunit_id = 7 -> 0xFF"
+    // AVC Digital Interface Commands 3.0, 9. Unit commands"
     unsigned char request[] = {0x00, 0xff, 0x01, 0x00, 0xff, 0xff, 0xff, 0xff,
                                0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     unsigned char reply[255];
 
-    ret = netmd_exch_message(dev, request, sizeof(request), reply);
-    return ret;
+    return netmd_exch_message(dev, request, sizeof(request), reply);
 }
 
 netmd_error netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct netmd_track_info *info)

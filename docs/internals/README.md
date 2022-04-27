@@ -30,7 +30,20 @@ xx = USB framing bytes, not relevant
 
 CT = command type (ctype): usually 0 for commands from the host (Digital Interface Commands 5.1)
      (this field will be the response code in messages from the devices, usually 9 for success)
+
+  lower 4 bits of first byte (upper 4 bits always zero), 0 = CONTROL
+
 SU = "subunit" aka target device for this command, generally 0x18 for MD (Digital Interface Commands 5.3.3)
+
+  0x18 means "subunit type 3, subunit ID 0"
+
+           __ subunit ID, here 0b000 = 0 (0..4 = instance number, see "Subunit ID encoding")
+          /
+         / \
+  0b00011000 = 0x18
+    \___/
+      \__ subunit_type, here 0b00011 = 3 = disc recorder/player (audio or video)
+
 OP = top-level opcode: WRITE INFO BLOCK (Descriptor Mechanism 9.9)
 
 The following fields describe the target of the operation viz. the

@@ -262,6 +262,12 @@ uint16_t netmd_read_word(netmd_response *response)
     return value;
 }
 
+uint16_t netmd_convert_word(uint16_t value)
+{
+    const uint8_t *d = (void *)&value;
+    return (d[0] << 8) | d[1];
+}
+
 uint32_t netmd_read_doubleword(netmd_response *response)
 {
     int i;

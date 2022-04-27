@@ -54,4 +54,6 @@ uint16_t netmd_read_word(netmd_response *response);
 uint32_t netmd_read_doubleword(netmd_response *response);
 uint64_t netmd_read_quadword(netmd_response *response);
 
+uint16_t netmd_convert_word(uint16_t value);
+
 #endif

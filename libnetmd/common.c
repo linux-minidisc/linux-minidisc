@@ -86,18 +86,36 @@ static int netmd_poll(libusb_device_handle *dev, unsigned char *buf, int tries)
 }
 
 
+static const char *
+netmd_response_code_name(uint8_t code)
+{
+    switch (code) {
+        // AVC Digital Interface Commands 3.0, "5.3.2 Response code"
+        case 0x8: return "NOT IMPLEMENTED";
+        case 0x9: return "ACCEPTED";
+        case 0xA: return "REJECTED";
+        case 0xB: return "IN TRANSITION";
+        case 0xC: return "IMPLEMENTED / STABLE";
+        case 0xD: return "CHANGED";
+        case 0xE: return "Reserved";
+        case 0xF: return "INTERIM";
+        default: return "unknown";
+    }
+}
+
+
 int netmd_exch_message(netmd_dev_handle *devh, unsigned char *cmd,
                        const size_t cmdlen, unsigned char *rsp)
 {
     int len;
     netmd_send_message(devh, cmd, cmdlen);
     len = netmd_recv_message(devh, rsp);
-    netmd_log(NETMD_LOG_DEBUG, "Response code:\n");
+    netmd_log(NETMD_LOG_DEBUG, "Response code: %d [%s]\n", rsp[0], netmd_response_code_name(rsp[0]));
     netmd_log_hex(NETMD_LOG_DEBUG, &rsp[0], 1);
     if (rsp[0] == NETMD_STATUS_INTERIM) {
       netmd_log(NETMD_LOG_DEBUG, "Re-reading:\n");
       len = netmd_recv_message(devh, rsp);
-      netmd_log(NETMD_LOG_DEBUG, "Response code:\n");
+      netmd_log(NETMD_LOG_DEBUG, "Response code: %s [%s]\n", rsp[0], netmd_response_code_name(rsp[0]));
       netmd_log_hex(NETMD_LOG_DEBUG, &rsp[0], 1);
     }
     return len;
