@@ -78,7 +78,8 @@ void himd_trackdump(struct himd * himd, int verbose)
         if(himd_get_track_info(himd, i, &t, NULL)  >= 0)
         {
             // TODO: malloc name in case of long title
-            char *title, *artist, *album, *codec, name[255], time[12];
+            char *title, *artist, *album, name[255], time[12];
+            const char *codec;
             json_object* track = json_object_new_object();
             title = get_locale_str(himd, t.title);
             artist = get_locale_str(himd, t.artist);

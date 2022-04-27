@@ -643,7 +643,8 @@ netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length, FILE *file,
                                     netmd_recv_progress_func recv_progress,
                                     void *recv_progress_user_data)
 {
-    uint32_t done = 0, transferred = 0;
+    uint32_t done = 0;
+    int transferred = 0;
     unsigned char *data;
     int status;
     netmd_error error = NETMD_NO_ERROR;

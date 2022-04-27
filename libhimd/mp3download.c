@@ -13,7 +13,7 @@
 
 void block_init(struct blockinfo * b, short int nframes, short int lendata, unsigned int serial_number, unsigned char * cid)
 {
-    strncpy((char*)&b->type, "SMPA", 4);
+    memcpy((char*)&b->type, "SMPA", 4);
     b->nframes       = nframes;
     b->mcode         = 3;
     b->lendata       = lendata;

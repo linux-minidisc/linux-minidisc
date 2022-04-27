@@ -164,7 +164,6 @@ bool QHiMDDetection::start_hotplug()
 /* only needed if hotplug support is disabled */
 void QHiMDDetection::rescan_netmd_devices()
 {
-    QNetMDDevice * dev;
     int i = 0;
 
     // find and remove netmd devices

@@ -68,31 +68,6 @@ netmd_track_flags_to_string(enum NetMDTrackFlags flags)
     }
 }
 
-static unsigned char* sendcommand(netmd_dev_handle* devh, unsigned char* str, const size_t len, unsigned char* response, int rlen)
-{
-    int i, ret, size = 0;
-    static unsigned char buf[256];
-
-    ret = netmd_exch_message(devh, str, len, buf);
-    if (ret < 0) {
-        fprintf(stderr, "bad ret code, returning early\n");
-        return NULL;
-    }
-
-    /* Calculate difference to expected response */
-    if (response != NULL) {
-        int c=0;
-        for (i=0; i < min(rlen, size); i++) {
-            if (response[i] != buf[i]) {
-                c++;
-            }
-        }
-        fprintf(stderr, "Differ: %d\n",c);
-    }
-
-    return buf;
-}
-
 static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
 {
     int ret = -1;
@@ -855,7 +830,6 @@ int netmd_write_disc_header(netmd_dev_handle* devh, minidisc* md)
     char* header = 0;
     unsigned char* request = 0;
     unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x03, 0x00};
-    unsigned char hs2[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x00, 0x00};
     unsigned char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
                                  0x01, 0x00, 0x00, 0x30, 0x00, 0x0a,
                                  0x00, 0x50, 0x00, 0x00, 0x00, 0x00,
@@ -958,12 +932,12 @@ int netmd_sync_toc(netmd_dev_handle* dev)
 /* Calls need for Sharp devices */
 int netmd_acquire_dev(netmd_dev_handle* dev)
 {
-    int ret = 0;
     unsigned char request[] = {0x00, 0xff, 0x01, 0x0c, 0xff, 0xff, 0xff, 0xff,
                                0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     unsigned char reply[255];
 
-    ret = netmd_exch_message(dev, request, sizeof(request), reply);
+    // TODO: Check return value
+    netmd_exch_message(dev, request, sizeof(request), reply);
     if (reply[0] == NETMD_STATUS_ACCEPTED){
       return NETMD_NO_ERROR;
     } else {

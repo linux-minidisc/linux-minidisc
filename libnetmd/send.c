@@ -68,7 +68,7 @@ static size_t wav_data_position(const unsigned char * data, size_t offset, size_
     size_t i = offset, pos = 0;
 
     while (i < len - 4) {
-        if(strncmp("data", data+i, 4) == 0) {
+        if(strncmp("data", (const char *)data+i, 4) == 0) {
             pos = i;
             break;
         }
@@ -80,7 +80,7 @@ static size_t wav_data_position(const unsigned char * data, size_t offset, size_
 
 static int audio_supported(const unsigned char * file, netmd_wireformat * wireformat, unsigned char * diskformat, int * conversion, size_t * channels, size_t * headersize)
 {
-    if(strncmp("RIFF", file, 4) != 0 || strncmp("WAVE", file+8, 4) != 0 || strncmp("fmt ", file+12, 4) != 0)
+    if(strncmp("RIFF", (const char *)file, 4) != 0 || strncmp("WAVE", (const char *)file+8, 4) != 0 || strncmp("fmt ", (const char *)file+12, 4) != 0)
         return 0;                                             /* no valid WAV file or fmt chunk missing*/
 
     if(leword16(file+20) == 1)                                /* PCM */

@@ -32,38 +32,6 @@
 
 #include <stdlib.h>
 
-void netmd_get_track_information(netmd_dev_handle *dev, netmd_track_index track,
-                                uint16_t p1, uint16_t p2,
-                                unsigned char *data, size_t data_length)
-{
-    unsigned char cmd[] = { 0x00, 0x18, 0x06, 0x02, 0x20, 0x10, 0x01,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,
-                            0xff, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    unsigned char rsp[255];
-    unsigned char *buf;
-    int length;
-    uint16_t real_data_length;
-    size_t size;
-
-    buf = cmd + 7;
-    netmd_copy_word_to_buffer(&buf, track, 0);
-    netmd_copy_word_to_buffer(&buf, p1, 0);
-    netmd_copy_word_to_buffer(&buf, p2, 0);
-
-
-    if (length > 0) {
-        uint32_t tmp = (unsigned int)data[19] << 8;
-        real_data_length = (tmp + data[20]) & 0xffffU;
-        if (real_data_length > data_length) {
-            size = data_length;
-        }
-        else {
-            size = real_data_length;
-        }
-
-        memcpy(data, rsp + 21, size);
-    }
-}
-
 int netmd_request_track_bitrate(netmd_dev_handle*dev, netmd_track_index track,
                                 unsigned char* encoding, unsigned char *channel)
 {
@@ -71,8 +39,6 @@ int netmd_request_track_bitrate(netmd_dev_handle*dev, netmd_track_index track,
                             0xff, 0x00, 0x00, 0x00, 0x00, 0x00 };
     unsigned char rsp[255];
     unsigned char *buf;
-    unsigned char info[8] = { 0 };
-    unsigned char flags;
 
     msleep(5); // Sleep fixes 'unknown' bitrate being returned on many devices.
 
@@ -119,12 +85,12 @@ int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* bu
                                      0x02, 0x00, 0x00, 0x30, 0x00, 0xa,
                                      0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
                                      0x00};
-    unsigned char title[255];
+    char title[255];
     unsigned char *buf;
 
     buf = title_request + 7;
     netmd_copy_word_to_buffer(&buf, track, 0);
-    ret = netmd_exch_message(dev, title_request, 0x13, title);
+    ret = netmd_exch_message(dev, title_request, 0x13, (unsigned char *)title);
     if(ret < 0)
     {
         fprintf(stderr, "bad ret code, returning early\n");

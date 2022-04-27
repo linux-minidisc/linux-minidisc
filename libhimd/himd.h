@@ -123,7 +123,7 @@ struct fraginfo {
 
 /* a block in the audio file */
 struct blockinfo {
-  unsigned int type;          	     // "LPCM" or "A3D " or "ATX" or "SPMA"
+  unsigned int type;          	     // "LPCM" or "A3D " or "ATX" or "SMPA"
   short int nframes;
   short int mcode;
   short int lendata;
