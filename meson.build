@@ -214,7 +214,6 @@ if get_option('with_gui')
   # TODO: Fallback to reading from VERSION and stuff
   qhimdtransfer_config = configuration_data()
   qhimdtransfer_config_h = vcs_tag(
-    command: ['git', 'describe', '--tags'],
     input: 'qhimdtransfer/qhimdtransfer_config.h.in',
     output: 'qhimdtransfer_config.h',
   )
