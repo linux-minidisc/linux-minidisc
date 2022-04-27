@@ -550,7 +550,7 @@ cmd_setplaymode(struct netmdcli_context *ctx)
 static int
 cmd_status(struct netmdcli_context *ctx)
 {
-    uint16_t track;
+    netmd_track_index track;
     char buffer[256];
     netmd_time time;
 

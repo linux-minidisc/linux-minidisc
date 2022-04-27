@@ -32,7 +32,7 @@
 
 #include <stdlib.h>
 
-void netmd_get_track_information(netmd_dev_handle *dev, uint16_t track,
+void netmd_get_track_information(netmd_dev_handle *dev, netmd_track_index track,
                                 uint16_t p1, uint16_t p2,
                                 unsigned char *data, size_t data_length)
 {
@@ -64,7 +64,7 @@ void netmd_get_track_information(netmd_dev_handle *dev, uint16_t track,
     }
 }
 
-int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint16_t track,
+int netmd_request_track_bitrate(netmd_dev_handle*dev, netmd_track_index track,
                                 unsigned char* encoding, unsigned char *channel)
 {
     unsigned char cmd[] = { 0x00, 0x18, 0x06, 0x02, 0x20, 0x10, 0x01,  0x00, 0x00,  0x30, 0x80,  0x07, 0x00,
@@ -95,7 +95,7 @@ int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint16_t track,
     return 2;
 }
 
-int netmd_request_track_flags(netmd_dev_handle*dev, const uint16_t track, unsigned char* data)
+int netmd_request_track_flags(netmd_dev_handle*dev, netmd_track_index track, unsigned char* data)
 {
     int ret = 0;
     unsigned char request[] = {0x00, 0x18, 0x06, 0x01, 0x20, 0x10,
@@ -112,7 +112,7 @@ int netmd_request_track_flags(netmd_dev_handle*dev, const uint16_t track, unsign
     return ret;
 }
 
-int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffer, const size_t size)
+int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* buffer, const size_t size)
 {
     int ret = -1;
     size_t title_size = 0;

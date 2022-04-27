@@ -129,7 +129,7 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
     return (int)title_size - 25;
 }
 
-int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer)
+int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, struct netmd_track* buffer)
 {
     int ret = 0;
     unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x10, 0x01, 0x01, 0x00};
@@ -156,12 +156,12 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
     buffer->minute = (bcd_to_proper(time_request + 28, 1) & 0xff) + hours * 60;
     buffer->second = bcd_to_proper(time_request + 29, 1) & 0xff;
     buffer->tenth = bcd_to_proper(time_request + 30, 1) & 0xff;
-    buffer->track = track;
+    buffer->track_id = track;
 
     return 1;
 }
 
-int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+int netmd_set_title(netmd_dev_handle* dev, netmd_track_index track, const char* const buffer)
 {
     int ret = 1;
     unsigned char *title_request = NULL;
@@ -1128,7 +1128,7 @@ int netmd_write_track(netmd_dev_handle* devh, char* szFile)
 
 /* AV/C Disc Subunit Specification ERASE (0x40),
  * subfunction "specific_object" (0x01) */
-int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track)
+int netmd_delete_track(netmd_dev_handle* dev, netmd_track_index track)
 {
     int ret = 0;
     unsigned char request[] = {0x00, 0x18, 0x40, 0xff, 0x01, 0x00,
@@ -1220,7 +1220,7 @@ int netmd_release_dev(netmd_dev_handle* dev)
     return ret;
 }
 
-netmd_error netmd_get_track_info(netmd_dev_handle *dev, uint16_t track_id, struct netmd_track_info *info)
+netmd_error netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct netmd_track_info *info)
 {
     unsigned char flags, bitrate_id, channel;
 
@@ -1241,12 +1241,12 @@ netmd_error netmd_get_track_info(netmd_dev_handle *dev, uint16_t track_id, struc
     info->channels = (enum NetMDChannels)channel;
     info->protection = (enum NetMDTrackFlags)flags;
 
-    /**
+    /*
      * Skip 'LP:' prefix, but only on tracks that are actually LP-encoded,
      * since a SP track might be titled beginning with "LP:" on purpose.
      * Note that since the MZ-R909 the "LP Stamp" can be disabled, so we
      * must check for the existence of the "LP:" prefix before skipping.
-     **/
+     */
     if ((info->encoding == NETMD_ENCODING_LP2 || info->encoding == NETMD_ENCODING_LP4) && strncmp(info->title, "LP:", 3) == 0) {
         info->title += 3;
     }
@@ -1260,8 +1260,8 @@ netmd_minidisc_get_disc_name(const minidisc *md)
     return md->groups[0].name;
 }
 
-int
-netmd_minidisc_get_track_group(const minidisc *md, uint16_t track_id)
+netmd_group_id
+netmd_minidisc_get_track_group(const minidisc *md, netmd_track_index track_id)
 {
     // Tracks in the groups are 1-based
     track_id += 1;
@@ -1276,7 +1276,7 @@ netmd_minidisc_get_track_group(const minidisc *md, uint16_t track_id)
 }
 
 const char *
-netmd_minidisc_get_group_name(const minidisc *md, int group)
+netmd_minidisc_get_group_name(const minidisc *md, netmd_group_id group)
 {
     if (group == 0 || group >= md->group_count) {
         return NULL;
@@ -1286,7 +1286,7 @@ netmd_minidisc_get_group_name(const minidisc *md, int group)
 }
 
 bool
-netmd_minidisc_is_group_empty(const minidisc *md, int group)
+netmd_minidisc_is_group_empty(const minidisc *md, netmd_group_id group)
 {
     // Non-existent groups are always considered "empty"
     if (group == 0 || group >= md->group_count) {

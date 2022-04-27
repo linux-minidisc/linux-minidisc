@@ -6,6 +6,17 @@
 #include <stddef.h>
 
 /**
+ * A zero-based track index.
+ */
+typedef uint16_t netmd_track_index;
+
+
+/**
+ * Group index (1-based).
+ */
+typedef int netmd_group_id;
+
+/**
  * Forward-declaration of opaque libusb structures
  */
 typedef struct libusb_context libusb_context;

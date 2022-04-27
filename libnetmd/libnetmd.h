@@ -55,7 +55,7 @@ extern "C" {
 */
 struct netmd_track
 {
-    int track;
+    netmd_track_index track_id;
     int minute;
     int second;
     int tenth;
@@ -109,10 +109,10 @@ struct netmd_track_info {
  * @param info Pointer to struct that will be filled
  * @return NETMD_NO_ERROR on success, or an error code on failure
  */
-netmd_error netmd_get_track_info(netmd_dev_handle *dev, uint16_t track_id, struct netmd_track_info *info);
+netmd_error netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct netmd_track_info *info);
 
 
-int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer);
+int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, struct netmd_track* buffer);
 
 /**
    Sets title for the specified track. If making multiple changes,
@@ -124,7 +124,7 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
    @param buffer buffer to hold the name.
    @return returns 0 for fail 1 for success.
 */
-int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer);
+int netmd_set_title(netmd_dev_handle* dev, netmd_track_index track, const char* const buffer);
 
 /**
    Moves track around the disc.
@@ -144,7 +144,7 @@ int netmd_set_disc_title(netmd_dev_handle* dev, const char* title, size_t title_
    @param dev pointer to device returned by netmd_open
    @param track Zero based track to delete
 */
-int netmd_delete_track(netmd_dev_handle* dev, const uint16_t track);
+int netmd_delete_track(netmd_dev_handle* dev, netmd_track_index track);
 
 /**
    Erase all disc contents

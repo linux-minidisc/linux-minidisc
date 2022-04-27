@@ -14,7 +14,7 @@
    @param track Zero based index of track your requesting.
    @param data pointer to store the hex code representing the bitrate.
 */
-int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint16_t track,
+int netmd_request_track_bitrate(netmd_dev_handle*dev, netmd_track_index track,
                                 unsigned char* encoding, unsigned char* channel);
 
 /**
@@ -24,7 +24,7 @@ int netmd_request_track_bitrate(netmd_dev_handle*dev, const uint16_t track,
    @param track Zero based index of track your requesting.
    @param data pointer to store the hex code representing the codec.
 */
-int netmd_request_track_flags(netmd_dev_handle* dev, const uint16_t track, unsigned char* data);
+int netmd_request_track_flags(netmd_dev_handle* dev, netmd_track_index track, unsigned char* data);
 
 /**
    Get the title for a specific track.
@@ -36,6 +36,6 @@ int netmd_request_track_flags(netmd_dev_handle* dev, const uint16_t track, unsig
    @return Actual size of buffer, if your buffer is too small resize buffer and
            recall function.
 */
-int netmd_request_title(netmd_dev_handle* dev, const uint16_t track, char* buffer, const size_t size);
+int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* buffer, const size_t size);
 
 #endif

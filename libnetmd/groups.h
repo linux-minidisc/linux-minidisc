@@ -30,6 +30,7 @@
 extern "C" {
 #endif
 
+#include "common.h"
 #include <stdint.h>
 
 /**
@@ -38,8 +39,8 @@ extern "C" {
 */
 typedef struct netmd_group
 {
-    uint16_t start;
-    uint16_t finish;
+    netmd_track_index start;
+    netmd_track_index finish;
     char* name;
 } netmd_group_t;
 
@@ -69,8 +70,8 @@ netmd_minidisc_get_disc_name(const minidisc *md);
  * @param track_id Zero-based track number.
  * @return 0 if the track is in no group, or the group number (1-based).
  */
-int
-netmd_minidisc_get_track_group(const minidisc *md, uint16_t track_id);
+netmd_group_id
+netmd_minidisc_get_track_group(const minidisc *md, netmd_track_index track_id);
 
 
 /**
@@ -81,7 +82,7 @@ netmd_minidisc_get_track_group(const minidisc *md, uint16_t track_id);
  * @return The name of the group, or NULL if the group does not exist
  */
 const char *
-netmd_minidisc_get_group_name(const minidisc *md, int group);
+netmd_minidisc_get_group_name(const minidisc *md, netmd_group_id group);
 
 
 /**
@@ -92,7 +93,7 @@ netmd_minidisc_get_group_name(const minidisc *md, int group);
  * @return true if the group contains no tracks, false otherwise
  */
 bool
-netmd_minidisc_is_group_empty(const minidisc *md, int group);
+netmd_minidisc_is_group_empty(const minidisc *md, netmd_group_id group);
 
 
 /**
