@@ -322,7 +322,7 @@ void QHiMDMainWindow::device_list_changed(QMDDevicePtrList dplist)
         device = dev->name();
         if(dev->deviceType() == HIMD_DEVICE && !dev->path().isEmpty())
             device.append(" at " + dev->path());
-        ui->himd_devices->addItem(device, qVariantFromValue((void *)dev));
+        ui->himd_devices->addItem(device, QVariant::fromValue((void *)dev));
         if(!dev->name().contains("disc image"))
             devices << dev->name();
     }
