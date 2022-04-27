@@ -30,6 +30,10 @@
 
 #include "cmds.h"
 
+#if defined(_WIN32)
+#include "windows.h"
+#endif /* _WIN32 */
+
 
 void usage();
 
@@ -690,6 +694,32 @@ disable_colors(void)
     ansi_end = "";
 }
 
+#if defined(_WIN32)
+// https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+bool EnableVTMode()
+{
+    // Set output mode to handle virtual terminal sequences
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(hOut, &dwMode))
+    {
+        return false;
+    }
+
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    if (!SetConsoleMode(hOut, dwMode))
+    {
+        return false;
+    }
+    return true;
+}
+#endif /* _WIN32 */
+
 int main(int argc, char* argv[])
 {
     netmd_dev_handle* devh;
@@ -728,6 +758,12 @@ int main(int argc, char* argv[])
     if (!isatty(STDOUT_FILENO)) {
         disable_colors();
     }
+
+#if defined(_WIN32)
+    if (!EnableVTMode()) {
+        disable_colors();
+    }
+#endif /* _WIN32 */
 
     /* update argv and argc after parsing options */
     argv = &argv[optind - 1];

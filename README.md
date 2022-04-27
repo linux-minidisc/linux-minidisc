@@ -270,3 +270,10 @@ The old function wasn't used/tested, and the new function is.
 
 Instead of having two slightly incompatible structs for the same thing, have only
 a single `netmd_time` data type used for both the track length and disc capacity.
+
+
+## ANSI Colors in `netmdcli` on Windows
+
+For Windows 10 v1511 and newer, special code has been added to enable support for
+ANSI colors in conhost.exe / cmd.exe. The Windows Terminal already supports ANSI
+escape sequences out of the box (for the `discinfo` color output).
