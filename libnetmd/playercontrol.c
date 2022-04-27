@@ -180,7 +180,7 @@ netmd_error netmd_track_restart(netmd_dev_handle* dev)
     return netmd_change_track(dev, NETMD_TRACK_RESTART);
 }
 
-netmd_error netmd_set_time(netmd_dev_handle* dev, netmd_track_index track, const netmd_time* time)
+netmd_error netmd_set_playback_position(netmd_dev_handle* dev, netmd_track_index track, const netmd_time* time)
 {
     unsigned char request[] = {0x00, 0x18, 0x50, 0xff, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -209,7 +209,7 @@ const netmd_time* netmd_parse_time(unsigned char* src, netmd_time* time)
     return time;
 }
 
-netmd_error netmd_get_position(netmd_dev_handle* dev, netmd_time* time)
+netmd_error netmd_get_playback_position(netmd_dev_handle* dev, netmd_time* time)
 {
     unsigned char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04,
                                0x30, 0x88, 0x02, 0x00, 0x30, 0x88,

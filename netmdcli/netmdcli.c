@@ -555,7 +555,7 @@ cmd_status(struct netmdcli_context *ctx)
     netmd_time time;
 
     /* TODO: error checking */
-    netmd_get_position(ctx->devh, &time);
+    netmd_get_playback_position(ctx->devh, &time);
     track = netmd_get_current_track(ctx->devh);
     if (track != NETMD_INVALID_TRACK) {
         netmd_request_title(ctx->devh, track, buffer, sizeof(buffer));
@@ -628,7 +628,7 @@ cmd_settime(struct netmdcli_context *ctx)
     time.second = second;
     time.frame = frame;
 
-    netmd_set_time(ctx->devh, track_id, &time);
+    netmd_set_playback_position(ctx->devh, track_id, &time);
 
     return 0;
 }

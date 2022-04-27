@@ -153,7 +153,7 @@ netmd_error netmd_track_restart(netmd_dev_handle* dev);
    @param track Track, where to jump to the given time.
    @param time Time to jump to.
 */
-netmd_error netmd_set_time(netmd_dev_handle* dev, netmd_track_index track,
+netmd_error netmd_set_playback_position(netmd_dev_handle* dev, netmd_track_index track,
                            const netmd_time* time);
 
 /**
@@ -162,7 +162,7 @@ netmd_error netmd_set_time(netmd_dev_handle* dev, netmd_track_index track,
    @param dev Handle to the open minidisc player.
    @param time Pointer to save the current time to.
 */
-netmd_error netmd_get_position(netmd_dev_handle* dev, netmd_time* time);
+netmd_error netmd_get_playback_position(netmd_dev_handle* dev, netmd_time* time);
 
 /**
    Gets the used, total and available disc capacity (total and available
