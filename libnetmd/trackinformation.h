@@ -43,7 +43,6 @@ int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* bu
 */
 struct netmd_track
 {
-    netmd_track_index track_id;
     int minute;
     int second;
     int tenth;
