@@ -129,7 +129,7 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
     return (int)title_size - 25;
 }
 
-int netmd_set_title(netmd_dev_handle* dev, netmd_track_index track, const char* const buffer)
+int netmd_set_track_title(netmd_dev_handle* dev, netmd_track_index track, const char* const buffer)
 {
     int ret = 1;
     unsigned char *title_request = NULL;

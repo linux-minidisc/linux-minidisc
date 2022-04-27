@@ -118,7 +118,7 @@ cmd_rename(struct netmdcli_context *ctx)
     const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
 
     netmd_cache_toc(ctx->devh);
-    netmd_set_title(ctx->devh, track_id, new_title);
+    netmd_set_track_title(ctx->devh, track_id, new_title);
     netmd_sync_toc(ctx->devh);
 
     return 0;
@@ -911,7 +911,7 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
                 {
                     s++;
                     printf( "Title track %d - %s\n", track, s );
-                    netmd_set_title(devh, track, s); /* XXX Handle errors */
+                    netmd_set_track_title(devh, track, s); /* XXX Handle errors */
                     discard = 1;	/* don't fallback to titling by filename */
                 }
             }
@@ -939,7 +939,7 @@ void import_m3u_playlist(netmd_dev_handle* devh, const char *file)
                     s++;
 
                 printf( "Title track %d - %s\n", track, s );
-                netmd_set_title(devh, track, s); /* XXX Handle errors */
+                netmd_set_track_title(devh, track, s); /* XXX Handle errors */
             }
             track++;
         }

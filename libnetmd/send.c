@@ -350,7 +350,7 @@ netmd_send_track(netmd_dev_handle *devh, const char *filename, const char *in_ti
 
         netmd_log(NETMD_LOG_VERBOSE, "New Track: %d\n", track);
         netmd_cache_toc(devh);
-        netmd_set_title(devh, track, titlep);
+        netmd_set_track_title(devh, track, titlep);
         netmd_sync_toc(devh);
 
         /* commit track */
