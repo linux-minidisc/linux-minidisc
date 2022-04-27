@@ -112,7 +112,16 @@ netmd_error netmd_set_playmode(netmd_dev_handle* dev, const uint16_t playmode);
    @param dev Handle to the open minidisc player.
    @param track Number of the track to jump to.
 */
-netmd_error netmd_set_track(netmd_dev_handle* dev, netmd_track_index track);
+netmd_error netmd_set_current_track(netmd_dev_handle* dev, netmd_track_index track);
+
+/**
+   Gets the currently playing track.
+
+   @param dev Handle to the open minidisc player.
+   @return The current track, or NETMD_INVALID_TRACK on error.
+*/
+netmd_track_index netmd_get_current_track(netmd_dev_handle* dev);
+
 
 /**
    Jump to the next track. If you currently playing the last track, nothing
@@ -146,14 +155,6 @@ netmd_error netmd_track_restart(netmd_dev_handle* dev);
 */
 netmd_error netmd_set_time(netmd_dev_handle* dev, netmd_track_index track,
                            const netmd_time* time);
-
-/**
-   Gets the currently playing track.
-
-   @param dev Handle to the open minidisc player.
-   @param track Pointer where to save the current track.
-*/
-netmd_error netmd_get_track(netmd_dev_handle* dev, netmd_track_index *track);
 
 /**
    Gets the position within the currently playing track

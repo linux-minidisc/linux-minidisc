@@ -131,7 +131,7 @@ cmd_play(struct netmdcli_context *ctx)
 
     if (track_id != -1) {
         track_id &= 0xffff;
-        netmd_set_track(ctx->devh, track_id);
+        netmd_set_current_track(ctx->devh, track_id);
     }
 
     netmd_play(ctx->devh);
@@ -556,10 +556,11 @@ cmd_status(struct netmdcli_context *ctx)
 
     /* TODO: error checking */
     netmd_get_position(ctx->devh, &time);
-    netmd_get_track(ctx->devh, &track);
-    netmd_request_title(ctx->devh, track, buffer, sizeof(buffer));
-
-    printf("Current track: %s \n", buffer);
+    track = netmd_get_current_track(ctx->devh);
+    if (track != NETMD_INVALID_TRACK) {
+        netmd_request_title(ctx->devh, track, buffer, sizeof(buffer));
+        printf("Current track: %s \n", buffer);
+    }
 
     char *time_str = netmd_time_to_string(&time);
     printf("Current playback position: %s\n", time_str);

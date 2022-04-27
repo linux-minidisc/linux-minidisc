@@ -10,6 +10,11 @@
  */
 typedef uint16_t netmd_track_index;
 
+/**
+ * Invalid track ID, returned by some functions.
+ */
+#define NETMD_INVALID_TRACK ((netmd_track_index)-1)
+
 
 /**
  * Group index (1-based).
