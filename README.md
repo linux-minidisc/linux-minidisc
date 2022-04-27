@@ -242,3 +242,14 @@ been removed, and replaced with Github Actions. The CI scripts have been simplif
 
 This was used by QHiMDTransfer's copies of internal functions, but since we have
 now moved those back into the library, there's no need to expose those details.
+
+
+## Moved non-source files out of `libnetmd` into `docs` (or deleted)
+
+The `libnetmd` folder contained lots of non-source files, move those to `docs/`.
+Some files were deleted:
+
+ * `libnetmd/documentation/index_files`: No useful content
+ * `libnetmd/LICENCE.TXT`: Older version of the GPL2, already exists as `COPYING`
+ * Moved `README.vuori` and `README.fedora` to `docs`/
+ * `.cdtproject`, `.project`, `Doxyfile`: Deleted

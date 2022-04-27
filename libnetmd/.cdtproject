@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cdtproject id="org.eclipse.cdt.core.make">
-    <extension id="org.eclipse.cdt.core.makeBuilder" point="org.eclipse.cdt.core.CBuildModel">
-        <attribute key="command" value="make"/>
-    </extension>
-</cdtproject>
