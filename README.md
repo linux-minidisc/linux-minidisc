@@ -299,3 +299,11 @@ interact with the group code, but it's already better than before.
 
 As a side effect of this change, `netmd_get_track_count()` has been added based
 on code from `libnetmd.py` and `netmd-js`.
+
+
+### 1-based indexes for `netmdcli`
+
+To make group-related features less confusing, the user-facing part of `netmdcli`
+now deals with 1-based track indexes. The library `libnetmd` itself usually
+deals with zero-based track IDs. The groups code is slightly different, because
+zero has a special meaning for groups.
