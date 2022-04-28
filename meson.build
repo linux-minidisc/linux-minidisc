@@ -55,6 +55,7 @@ libnetmd_headers = [
   'libnetmd/secure.h',
   'libnetmd/trackinformation.h',
   'libnetmd/utils.h',
+  'libnetmd/groups.h',
 ]
 
 install_headers(libnetmd_headers, subdir: 'libnetmd')
