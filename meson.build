@@ -1,5 +1,5 @@
 project('minidisc', ['c', 'cpp'],
-  default_options: ['c_std=gnu11', 'cpp_std=c++11'])
+  default_options: ['c_std=gnu11', 'cpp_std=c++11', 'werror=true'])
 
 libusb = dependency('libusb-1.0')
 gcrypt = dependency('libgcrypt')
@@ -226,6 +226,8 @@ if get_option('with_gui')
     qhimdtransfer_sources,
     dependencies: [qt5_dep, libusb, taglib] + additional_dependencies,
     link_with: [libusbmd, libnetmd, libhimd],
+    # Workaround for taglib: class TagLib::FileRef::FileTypeResolver has virtual functions and accessible non-virtual destructor
+    cpp_args: ['-Wno-non-virtual-dtor'],
     include_directories: ['libusbmd', 'libnetmd', 'libhimd', 'qhimdtransfer'],
     gui_app: true,
     install: true,
