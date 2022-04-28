@@ -39,6 +39,7 @@ libnetmd_sources = [
   'libnetmd/send.c',
   'libnetmd/recv.c',
   'libnetmd/timeformat.c',
+  'libnetmd/groups.c',
 ]
 
 # TODO: Make the "surface area" of publicly exposed headers smaller,

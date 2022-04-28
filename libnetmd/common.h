@@ -4,6 +4,8 @@
 /** \file common.h */
 
 #include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 /**
  * A zero-based track index.

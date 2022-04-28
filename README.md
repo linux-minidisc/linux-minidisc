@@ -284,3 +284,18 @@ escape sequences out of the box (for the `discinfo` color output).
 Instead of accessing the generic USB device name (e.g. "Net MD Walkman"), the
 `device_name` member of `struct netmd_device` (returned by `netmd_init()`)
 should be used instead, which contains proper model names from `libusbmd`.
+
+
+## Reworked group handling code
+
+The previous group handling code was buggy and hard to maintain. Reworked most
+of the code in a new module `groups.c` based on the existing handling code.
+Removed some hard-to-get-right commands (`group`, `groupmove`) in `netmdcli`
+and replaced them with a new `group` command that just specifies the range, and
+will bail out if the new group would overlap with existing groups.
+
+More could be done in this area, and deleting and moving tracks does not yet
+interact with the group code, but it's already better than before.
+
+As a side effect of this change, `netmd_get_track_count()` has been added based
+on code from `libnetmd.py` and `netmd-js`.

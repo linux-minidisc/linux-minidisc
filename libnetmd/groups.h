@@ -31,27 +31,47 @@ extern "C" {
 #endif
 
 #include "common.h"
-#include <stdint.h>
+#include "error.h"
 
 /**
    Data about a group, start track, finish track and name. Used to generate disc
    header info.
 */
-typedef struct netmd_group
-{
-    netmd_track_index start;
-    netmd_track_index finish;
-    char* name;
+typedef struct netmd_group {
+    int first; /*!< First track index, 1-based; 0 for disc title and empty groups */
+    int last; /*!< First track index, 1-based, 0 for disc title and empty groups */
+    char *name;
 } netmd_group_t;
 
 /**
    stores misc data for a minidisc
 */
 typedef struct {
-    size_t header_length;
     struct netmd_group *groups;
-    unsigned int group_count;
+    size_t group_count;
 } minidisc;
+
+
+/**
+ * Load disc title and group information from disc.
+ *
+ * This loads the disc title and parses it into groups.
+ *
+ * @param dev Handle to netmd device
+ * @return A newly-allocated Minidisc object, or NULL if parsing failed.
+ * Free the returned value with netmd_minidisc_free() once you are done with it.
+ */
+minidisc *
+netmd_minidisc_load(netmd_dev_handle *dev);
+
+/**
+ * Free a minidisc object obtained via netmd_minidisc_load().
+ *
+ * @param md Minidisc object
+ */
+void
+netmd_minidisc_free(minidisc *md);
+
 
 /**
  * Get the disc name of a minidisc.
@@ -97,51 +117,26 @@ netmd_minidisc_is_group_empty(const minidisc *md, netmd_group_id group);
 
 
 /**
-   sets up buffer containing group info.
-
-  @param dev pointer to device returned by netmd_open
-  @param md pointer to minidisc structure
-  @return total size of disc header Group[0] is disc name.  You need to make
-          sure you call clean_disc_info before recalling
-*/
-int netmd_initialize_disc_info(netmd_dev_handle* dev, minidisc* md);
-
-void netmd_parse_disc_title(minidisc* md, char* title, size_t title_length);
-
-void netmd_parse_group(minidisc* md, char* group, int* group_count);
-
-void netmd_parse_trackinformation(minidisc* md, char* group_name, int* group_count, char* tracks);
-
-int netmd_create_group(netmd_dev_handle* dev, minidisc* md, const char* name);
+ * Create a new empty group at the end of the disc.
+ *
+ * @param dev Device handle
+ * @param md Minidisc object
+ * @param name Name of the group to create
+ * @return NETMD_NO_ERROR on success, or error code otherwise
+ */
+netmd_error
+netmd_create_group(netmd_dev_handle *dev, minidisc *md, const char *name);
 
 
 /**
-   Creates disc header out of groups and writes it to disc
-
-   @param devh pointer to device returned by netmd_open
-   @param md pointer to minidisc structure
-*/
-int netmd_write_disc_header(netmd_dev_handle* devh, minidisc *md);
-
-/**
-   Moves track into group
-
-   @param dev pointer to device returned by netmd_open
-   @param md pointer to minidisc structure
-   @param track Zero based track to add to group.
-   @param group number of group (0 is title group).
-*/
-int netmd_put_track_in_group(netmd_dev_handle* dev, minidisc* md, const uint16_t track, const unsigned int group);
-
-/**
-   Moves group around the disc.
-
-   @param dev pointer to device returned by netmd_open
-   @param md pointer to minidisc structure
-   @param track Zero based track to make group start at.
-   @param group number of group (0 is title group).
-*/
-int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const uint16_t track, const unsigned int group);
+ * Creates disc header out of groups and writes it to disc
+ *
+ * @param devh pointer to device returned by netmd_open
+ * @param md pointer to minidisc structure
+ * @return NETMD_NO_ERROR on success, or an error code
+ */
+netmd_error
+netmd_write_disc_header(netmd_dev_handle* devh, const minidisc *md);
 
 /**
    Deletes group from disc (but not the tracks in it)
@@ -150,7 +145,8 @@ int netmd_move_group(netmd_dev_handle* dev, minidisc* md, const uint16_t track, 
    @param md pointer to minidisc structure
    @param group Zero based track to delete
 */
-int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, const unsigned int group);
+netmd_error
+netmd_delete_group(netmd_dev_handle *dev, minidisc *md, netmd_group_id group);
 
 /**
    Sets title for the specified track.
@@ -159,19 +155,24 @@ int netmd_delete_group(netmd_dev_handle* dev, minidisc* md, const unsigned int g
    @param md pointer to minidisc structure
    @param group Zero based index of group your renaming (zero is disc title).
    @param title buffer holding the name.
-   @return returns 0 for fail 1 for success.
+   @return NETMD_NO_ERROR on success, or an error code
 */
-int netmd_set_group_title(netmd_dev_handle* dev, minidisc* md, unsigned int group, const char* title);
-
+netmd_error
+netmd_set_group_title(netmd_dev_handle *dev, minidisc *md, netmd_group_id group, const char *title);
 
 /**
-   Cleans memory allocated for the name of each group, then cleans groups
-   pointer
-
-   @param md pointer to minidisc structure
-*/
-void netmd_clean_disc_info(minidisc* md);
-
+ * Update the track range of a group.
+ *
+ * The new group range must not overlap any existing groups.
+ *
+ * @param dev Device handle
+ * @param md Minidisc object
+ * @param first 1-based track index of first track in group, or 0 to make the group empty
+ * @param last 1-based track index of last track in group (ignored if first == 0)
+ * @return NETMD_NO_ERROR on success, or an error code
+ */
+netmd_error
+netmd_update_group_range(netmd_dev_handle *dev, minidisc *md, netmd_group_id group, int first, int last);
 
 #ifdef __cplusplus
 }

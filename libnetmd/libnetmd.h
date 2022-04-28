@@ -108,7 +108,7 @@ netmd_error netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_
 int netmd_set_track_title(netmd_dev_handle* dev, netmd_track_index track, const char *buffer);
 
 /**
-   Moves track around the disc.
+   Moves track around the disc. (does not update groups)
 
    @param dev pointer to device returned by netmd_open
    @param start Zero based index of track to move
@@ -127,6 +127,29 @@ int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t
  * @param title The new title
  */
 int netmd_set_disc_title(netmd_dev_handle* dev, const char* title);
+
+/**
+ * Get the number of tracks on the disc.
+ *
+ * @param dev Handle to the device
+ * @return Number of tracks, or -1 on error
+ */
+int
+netmd_get_track_count(netmd_dev_handle *dev);
+
+/**
+ * Get the complete (raw) title of the disc.
+ *
+ * To get the parsed title of the disc, taking groups into account,
+ * use netmd_minidisc_get_disc_name().
+ *
+ * @param dev Handle to the device
+ * @param buffer Buffer to store the title
+ * @param size Size of the buffer
+ * @return Number of bytes written to buffer, or -1
+ */
+ssize_t
+netmd_get_disc_title(netmd_dev_handle* dev, char* buffer, size_t size);
 
 /**
    Deletes track from disc (does not update groups)

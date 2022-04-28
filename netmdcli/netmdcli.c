@@ -118,7 +118,7 @@ struct json_object* json_time(const netmd_time *time)
 static int
 cmd_rename(struct netmdcli_context *ctx)
 {
-    int track_id = netmdcli_context_get_int_arg(ctx, "track_id") & 0xffff;
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id") - 1;
     const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
 
     netmd_cache_toc(ctx->devh);
@@ -134,8 +134,7 @@ cmd_play(struct netmdcli_context *ctx)
     int track_id = netmdcli_context_get_optional_int_arg(ctx, "track_id");
 
     if (track_id != -1) {
-        track_id &= 0xffff;
-        netmd_set_current_track(ctx->devh, track_id);
+        netmd_set_current_track(ctx->devh, track_id - 1);
     }
 
     netmd_play(ctx->devh);
@@ -146,21 +145,10 @@ cmd_play(struct netmdcli_context *ctx)
 static int
 cmd_move(struct netmdcli_context *ctx)
 {
-    int from_track_id = netmdcli_context_get_int_arg(ctx, "from_track_id");
-    int to_track_id = netmdcli_context_get_int_arg(ctx, "to_track_id");
+    int from_track_id = netmdcli_context_get_int_arg(ctx, "from_track_id") - 1;
+    int to_track_id = netmdcli_context_get_int_arg(ctx, "to_track_id") - 1;
 
     netmd_move_track(ctx->devh, from_track_id & 0xffff, to_track_id & 0xffff);
-
-    return 0;
-}
-
-static int
-cmd_groupmove(struct netmdcli_context *ctx)
-{
-    int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
-    int start_track_id = netmdcli_context_get_int_arg(ctx, "start_track_id");
-
-    netmd_move_group(ctx->devh, ctx->md, group_id & 0xffff, start_track_id & 0xffff);
 
     return 0;
 }
@@ -170,18 +158,9 @@ cmd_deletegroup(struct netmdcli_context *ctx)
 {
     int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
 
-    netmd_delete_group(ctx->devh, ctx->md, group_id & 0xffff);
-
-    return 0;
-}
-
-static int
-cmd_group(struct netmdcli_context *ctx)
-{
-    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
-    int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
-
-    if (!netmd_put_track_in_group(ctx->devh, ctx->md, track_id & 0xffff, group_id & 0xffff)) {
+    netmd_error res = netmd_delete_group(ctx->devh, ctx->md, group_id & 0xffff);
+    if (res != NETMD_NO_ERROR) {
+        fprintf(stderr, "Could not delete group %d: %s\n", group_id, netmd_strerror(res));
         return 1;
     }
 
@@ -194,6 +173,26 @@ cmd_newgroup(struct netmdcli_context *ctx)
     const char *group_name = netmdcli_context_get_string_arg(ctx, "group_name");
 
     netmd_create_group(ctx->devh, ctx->md, group_name);
+
+    return 0;
+}
+
+static int
+cmd_group(struct netmdcli_context *ctx)
+{
+    int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
+    int first_track_id = netmdcli_context_get_int_arg(ctx, "first");
+    int last_track_id = netmdcli_context_get_optional_int_arg(ctx, "last");
+
+    if (last_track_id == -1) {
+        last_track_id = first_track_id;
+    }
+
+    netmd_error res = netmd_update_group_range(ctx->devh, ctx->md, group_id, first_track_id, last_track_id);
+    if (res != NETMD_NO_ERROR) {
+        fprintf(stderr, "Could not update group: %s\n", netmd_strerror(res));
+        return 1;
+    }
 
     return 0;
 }
@@ -329,10 +328,21 @@ cmd_discinfo(struct netmdcli_context *ctx)
     netmd_time_double(&capacity.available);
     char *available_lp4 = netmd_time_to_string(&capacity.available);
 
+    const char *disc_title = netmd_minidisc_get_disc_name(ctx->md);
+    const char *ansi_disc_title_begin = "";
+    const char *ansi_disc_title_end = "";
+    if (strlen(disc_title) == 0) {
+        disc_title = "<no title>";
+        ansi_disc_title_begin = ansi_no_title_begin;
+        ansi_disc_title_end = ansi_end;
+    }
+
+    int ntracks = netmd_get_track_count(devh);
+
     printf("\n");
     printf("  NetMD device: %s\n", netmd->device_name);
-    printf("  Disc title:   %s\n", netmd_minidisc_get_disc_name(ctx->md));
-    printf("  Recorded:     %s (%3d %% of %s used)\n", recorded, percentage_used, total);
+    printf("  Disc title:   %s%s%s\n", ansi_disc_title_begin, disc_title, ansi_disc_title_end);
+    printf("  Recorded:     %s in %d tracks (%3d %% of %s used)\n", recorded, ntracks, percentage_used, total);
     printf("  Available:    %s (SP) / %s (LP2/Mono) / %s (LP4)\n", available, available_lp2_mono, available_lp4);
     printf("\n");
 
@@ -391,7 +401,7 @@ cmd_discinfo(struct netmdcli_context *ctx)
         // TODO: Take COLUMNS into account, do not hardcode 50-character title width
         printf("%s%s%s %s%02i%s %s%-50s%s %-6s %s%-4s%s %9s\n",
                ansi_grp_begin, (group != 0) ? ((next_group != group) ? "|_" : "| ") : "  ", ansi_end,
-               ansi_trk_begin, i, ansi_end,
+               ansi_trk_begin, i + 1, ansi_end,
                ansi_title_begin, info.title, ansi_title_end,
                netmd_track_flags_to_string(info.protection),
                ansi_encoding_begin, netmd_get_encoding_name(info.encoding, info.channels), ansi_end,
@@ -418,11 +428,13 @@ cmd_discinfo(struct netmdcli_context *ctx)
 static int
 cmd_delete(struct netmdcli_context *ctx)
 {
-    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id") - 1;
     int end_track_id = netmdcli_context_get_optional_int_arg(ctx, "end_track_id");
 
     if (end_track_id == -1) {
         end_track_id = track_id;
+    } else {
+        end_track_id--;
     }
 
     if (end_track_id < track_id || track_id >= 0xffff || end_track_id >= 0xffff) {
@@ -583,7 +595,7 @@ on_recv_progress(struct netmd_recv_progress *recv_progress)
 static int
 cmd_recv(struct netmdcli_context *ctx)
 {
-    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id") - 1;
     const char *filename = netmdcli_context_get_optional_string_arg(ctx, "filename");
 
     int result = netmd_recv_track(ctx->devh, track_id, filename, on_recv_progress, NULL);
@@ -609,7 +621,7 @@ cmd_leave(struct netmdcli_context *ctx)
 static int
 cmd_settime(struct netmdcli_context *ctx)
 {
-    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id") - 1;
     int hour = 0;
     int minute = netmdcli_context_get_int_arg(ctx, "min");
     int second = netmdcli_context_get_optional_int_arg(ctx, "sec");
@@ -668,9 +680,8 @@ CMDS[] = {
     { "---",         NULL,            NULL,                            NULL },
     { "newgroup",    cmd_newgroup,    "<group_name>",                  "Create a new group named <group_name>" },
     { "retitle",     cmd_retitle,     "<group_id> <new_title>",        "Rename group <group_id> to <new_title>" },
+    { "group",       cmd_group,       "<group_id> <first> [last]",     "Make <group_id> contain track <first> (to [last])" },
     { "deletegroup", cmd_deletegroup, "<group_id>",                    "Delete group <group_id>, but not the tracks in it" },
-    { "groupmove",   cmd_groupmove,   "<group_id> <start_track_id>",   "Make <group_id> start at track <start_track_id>" },
-    { "group",       cmd_group,       "<track_id> <group_id>",         "Put track <track_id> into group <group_id>" },
     { "---",         NULL,            NULL,                            NULL },
     { "m3uimport",   cmd_m3uimport,   "<filename>",                    "Import track title info from M3U file <filename>" },
     { "json",        cmd_json,        "",                              "Output current disc information as JSON" },
@@ -723,7 +734,7 @@ bool EnableVTMode()
 int main(int argc, char* argv[])
 {
     netmd_dev_handle* devh;
-    minidisc my_minidisc, *md = &my_minidisc;
+    minidisc *md;
     netmd_device *device_list, *netmd;
     int c;
     netmd_error error;
@@ -815,7 +826,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    netmd_initialize_disc_info(devh, md);
+    md = netmd_minidisc_load(devh);
 
     /* parse commands */
     enum NetMDCLIHandleResult res = netmdcli_handle(CMDS, argc, argv, netmd, devh, md);
@@ -829,8 +840,7 @@ int main(int argc, char* argv[])
     }
 
 
-
-    netmd_clean_disc_info(md);
+    netmd_minidisc_free(md);
     netmd_close(devh);
     netmd_clean(&device_list);
 
@@ -993,7 +1003,5 @@ void usage()
     puts("");
     puts("    usbids                                   Output NetMD USB ID list in JSON format");
     puts("    help                                     Show this message\n");
-
-    puts("\nNote: Track numbers are currently zero-based.\n");
 
 }
