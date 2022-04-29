@@ -589,18 +589,63 @@ on_recv_progress(struct netmd_recv_progress *recv_progress)
     fflush(stderr);
 }
 
-static int
-cmd_recv(struct netmdcli_context *ctx)
+static netmd_error
+recv_track(struct netmdcli_context *ctx, netmd_track_index track_id, const char *filename)
 {
-    int track_id = netmdcli_context_get_int_arg(ctx, "track_id") - 1;
-    const char *filename = netmdcli_context_get_optional_string_arg(ctx, "filename");
+    char *tmp_filename = NULL;
 
-    int result = netmd_recv_track(ctx->devh, track_id, filename, on_recv_progress, NULL);
+    if (filename == NULL) {
+        struct netmd_track_info info;
+        netmd_error res = netmd_get_track_info(ctx->devh, track_id, &info);
+        if (res != NETMD_NO_ERROR) {
+            fprintf(stderr, "Could not get track info for track %d.\n", track_id);
+            return res;
+        }
+
+        tmp_filename = netmd_recv_get_default_filename(&info);
+        if (tmp_filename == NULL) {
+            fprintf(stderr, "Could not generate filename.\n");
+            return NETMD_ERROR;
+        }
+
+        // Inform the user about the generated filename
+        printf("%s\n", tmp_filename);
+
+        filename = tmp_filename;
+    }
+
+    netmd_error result = netmd_recv_track(ctx->devh, track_id, filename, on_recv_progress, NULL);
 
     if (result == NETMD_NO_ERROR) {
         fprintf(stderr, "\r\033[KUpload completed successfully.\n");
     } else {
         fprintf(stderr, "\r\033[Knetmd_recv_track() failed: %s (%d)\n", netmd_strerror(result), result);
+    }
+
+    netmd_free_string(tmp_filename);
+
+    return result;
+}
+
+static int
+cmd_recv(struct netmdcli_context *ctx)
+{
+    int track_id = netmdcli_context_get_optional_int_arg(ctx, "track_id");
+    const char *filename = netmdcli_context_get_optional_string_arg(ctx, "filename");
+
+    netmd_error result = NETMD_NO_ERROR;
+
+    if (track_id == -1) {
+        int ntracks = netmd_get_track_count(ctx->devh);
+
+        for (netmd_track_index i=0; i<ntracks; ++i) {
+            netmd_error track_result = recv_track(ctx, i, NULL);
+            if (track_result != NETMD_NO_ERROR) {
+                result = track_result;
+            }
+        }
+    } else {
+        result = recv_track(ctx, track_id - 1, filename);
     }
 
     return (result == NETMD_NO_ERROR) ? 0 : 1;
@@ -660,7 +705,7 @@ CMDS[] = {
     { "delete",      cmd_delete,      "<track_id> [end_track_id]",     "Delete track <track_id>, or a range (if [end_track_id] is given)" },
     { "---",         NULL,            NULL,                            NULL },
     { "send",        cmd_send,        "<filename> [title]",            "Send WAV (16-bit, 44.1 kHz -or- ATRAC3 LP2/LP4) audio to device" },
-    { "recv",        cmd_recv,        "<track_id> [filename]",         "Upload a track from the NetMD device to a file (MZ-RH1 only)" },
+    { "recv",        cmd_recv,        "[track_id] [filename]",         "Upload one or all tracks from an MZ-RH1 to a file" },
     { "---",         NULL,            NULL,                            NULL },
     { "play",        cmd_play,        "[track_id]",                    "Start/resume playback (from [track_id] if set)" },
     { "pause",       cmd_pause,       "",                              "Pause playback" },

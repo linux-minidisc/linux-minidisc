@@ -307,3 +307,10 @@ To make group-related features less confusing, the user-facing part of `netmdcli
 now deals with 1-based track indexes. The library `libnetmd` itself usually
 deals with zero-based track IDs. The groups code is slightly different, because
 zero has a special meaning for groups.
+
+
+## Split out upload-related functions to smaller pieces for easier reuse
+
+New functions for `libnetmd/recv.h` for filename generation and file extensions.
+Also, `netmdcli`'s `recv` can now transfer all the files at once by not passing
+in the track ID, this allows `netmdcli recv` to upload the whole disc in one go.

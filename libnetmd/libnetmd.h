@@ -49,6 +49,7 @@ extern "C" {
 #include "netmd_dev.h"
 #include "trackinformation.h"
 #include "groups.h"
+#include "recv.h"
 
 /**
  * Return a string representation of the encoding name.
@@ -162,19 +163,6 @@ int netmd_release_dev(netmd_dev_handle* dev);
  */
 netmd_error netmd_send_track(netmd_dev_handle *devh, const char *filename, const char *in_title,
         netmd_send_progress_func send_progress, void *send_progress_user_data);
-
-/**
- * Upload an audio file from a MZ-RH1 in NetMD mode.
- *
- * @param devh A handle to the USB device
- * @param track_id Zero-based track index
- * @param filename Target filename, or NULL to generate a filename based on track title and format
- * @param recv_progress A callback for progress updates, or NULL
- * @param recv_progress_user_data An opaque pointer for recv_progress() (closure), or NULL
- */
-netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *filename,
-        netmd_recv_progress_func recv_progress, void *recv_progress_user_data);
-
 
 
 /**

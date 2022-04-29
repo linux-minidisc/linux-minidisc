@@ -253,14 +253,22 @@ void QNetMDDevice::upload(unsigned int trackidx, QString path)
     upload_reported_track_blocks = 0;
     upload_total_track_blocks = track.blockcount();
 
-    netmd_error result = netmd_recv_track(devh, trackidx, NULL, on_recv_progress, this);
+    struct netmd_track_info info;
+    netmd_error err = netmd_get_track_info(devh, trackidx, &info);
 
-    onUploadProgress(1.f);
+    if (err == NETMD_NO_ERROR) {
+        char *filename = netmd_recv_get_default_filename(&info);
 
-    if (result == NETMD_NO_ERROR) {
+        err = netmd_recv_track(devh, trackidx, filename, on_recv_progress, this);
+        onUploadProgress(1.f);
+
+        netmd_free_string(filename);
+    }
+
+    if (err == NETMD_NO_ERROR) {
         uploadDialog.trackSucceeded();
     } else {
-        uploadDialog.trackFailed(netmd_strerror(result));
+        uploadDialog.trackFailed(netmd_strerror(err));
     }
 
     QDir::setCurrent(oldcwd);

@@ -23,6 +23,30 @@
 
 #include "libnetmd.h"
 
+const char *
+netmd_recv_get_file_extension(const struct netmd_track_info *info)
+{
+    if (info->encoding == NETMD_ENCODING_SP) {
+        return ".aea";
+    } else {
+        return ".wav";
+    }
+}
+
+char *
+netmd_recv_get_default_filename(const struct netmd_track_info *info)
+{
+    const char *ext = netmd_recv_get_file_extension(info);
+
+    char buf[256];
+    if (strlen(info->title) != 0) {
+        snprintf(buf, sizeof(buf), "%02d %s%s", info->track_id + 1, info->title, ext);
+    } else {
+        snprintf(buf, sizeof(buf), "%02d Track %d%s", info->track_id + 1, info->track_id + 1, ext);
+    }
+
+    return strdup(buf);
+}
 
 netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *filename,
         netmd_recv_progress_func recv_progress, void *recv_progress_user_data)
@@ -31,38 +55,11 @@ netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *f
         return NETMD_UNSUPPORTED_FEATURE;
     }
 
-    struct netmd_track_info info;
-
-    netmd_error res = netmd_get_track_info(devh, track_id, &info);
-    if (res != NETMD_NO_ERROR) {
-        return res;
-    }
-
-    char buf[256];
-
     if (filename == NULL) {
-        if (strlen(info.title) == 0) {
-            // Use 1-based track ID for "user-visible" track number here
-            snprintf(buf, sizeof(buf), "Track %d", track_id + 1);
-        } else {
-            strncpy(buf, info.title, sizeof(buf)-1);
-        }
-    } else {
-        strncpy(buf, filename, sizeof(buf)-1);
+        return NETMD_ERROR;
     }
 
-    if (info.encoding == NETMD_ENCODING_SP) {
-        strncat(buf, ".aea", sizeof(buf)-1);
-    } else {
-        strncat(buf, ".wav", sizeof(buf)-1);
-    }
-
-    if (filename == NULL) {
-        // Inform the user about the generated filename
-        printf("%s\n", buf);
-    }
-
-    FILE *fp = fopen(buf, "wb");
+    FILE *fp = fopen(filename, "wb");
     int result = netmd_secure_recv_track(devh, track_id, fp,
             recv_progress, recv_progress_user_data);
     fclose(fp);

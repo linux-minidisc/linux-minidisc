@@ -43,6 +43,7 @@ netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct n
         return NETMD_TRACK_DOES_NOT_EXIST;
     }
 
+    info->track_id = track_id;
     info->title = info->raw_title;
 
     // TODO: All these calls need proper error handling

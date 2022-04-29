@@ -13,6 +13,8 @@
  * Struct filled in by netmd_get_track_info(), see there.
  */
 struct netmd_track_info {
+    netmd_track_index track_id; /*!< 0-based track index on the disc */
+
     const char *title; /*!< User-visible track title, with any "LP:" prefix stripped for LP2/LP4 tracks */
     netmd_time duration; /*!< Duration of the track (in wall time) */
     enum NetMDEncoding encoding; /*!< Encoding used (SP, LP2, LP4) */
