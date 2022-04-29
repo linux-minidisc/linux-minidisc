@@ -42,7 +42,8 @@ netmd_error netmd_recv_track(netmd_dev_handle *devh, int track_id, const char *f
 
     if (filename == NULL) {
         if (strlen(info.title) == 0) {
-            snprintf(buf, sizeof(buf), "Track %d", track_id);
+            // Use 1-based track ID for "user-visible" track number here
+            snprintf(buf, sizeof(buf), "Track %d", track_id + 1);
         } else {
             strncpy(buf, info.title, sizeof(buf)-1);
         }
