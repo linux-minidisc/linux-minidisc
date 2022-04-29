@@ -24,15 +24,12 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include "common.h"
 #include "libnetmd.h"
 #include "libusbmd.h"
 #include "utils.h"
 
 #include "cmds.h"
-
-#if defined(_WIN32)
-#include "windows.h"
-#endif /* _WIN32 */
 
 
 void usage();

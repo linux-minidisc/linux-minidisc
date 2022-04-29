@@ -31,15 +31,18 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <libusb.h>
-#include <errno.h>
-#include <gcrypt.h>
+
+#include "common.h"
 
 #include "secure.h"
 #include "const.h"
 #include "utils.h"
 #include "log.h"
 #include "trackinformation.h"
+
+#include <libusb.h>
+#include <errno.h>
+#include <gcrypt.h>
 
 
 static const unsigned char secure_header[] = { 0x18, 0x00, 0x08, 0x00, 0x46,

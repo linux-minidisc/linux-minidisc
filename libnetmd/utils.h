@@ -19,7 +19,8 @@ typedef struct {
     #define min(a,b) ((a)<(b)?(a):(b))
 #endif
 
-#ifdef WIN32
+#if defined(_WIN32)
+    #include <winsock2.h>
     #include <windows.h>
     #define msleep(x) Sleep(x)
 #else

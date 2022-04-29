@@ -25,12 +25,13 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <libusb.h>
-
 #include "common.h"
+
 #include "const.h"
 #include "log.h"
 #include "utils.h"
+
+#include <libusb.h>
 
 #define NETMD_POLL_TIMEOUT 1000	/* miliseconds */
 #define NETMD_SEND_TIMEOUT 1000

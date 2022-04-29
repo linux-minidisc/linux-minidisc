@@ -25,10 +25,10 @@
 
 #include <unistd.h>
 
-#include <libusb.h>
-
 #include "libnetmd.h"
 #include "utils.h"
+
+#include <libusb.h>
 
 const char *
 netmd_get_encoding_name(enum NetMDEncoding encoding, enum NetMDChannels channels)

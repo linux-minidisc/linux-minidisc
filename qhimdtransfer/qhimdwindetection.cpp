@@ -121,7 +121,7 @@ static QString get_deviceID_from_driveletter(char i)
     QString devname;
 
     subkey[12] = i;
-    res = RegOpenKeyExA( HKEY_LOCAL_MACHINE, "SYSTEM\\MountedDevices", NULL, KEY_QUERY_VALUE, &key);
+    res = RegOpenKeyExA( HKEY_LOCAL_MACHINE, "SYSTEM\\MountedDevices", 0, KEY_QUERY_VALUE, &key);
     if(res != ERROR_SUCCESS)
         return QString();
 
@@ -150,11 +150,11 @@ static bool is_himddevice(QString devID, QString & name)
     unsigned long buflen;
     QString recname, devicepath;
 
-    CM_Locate_DevNodeA(&devinst, devID.toLatin1().data(), NULL);
-    CM_Get_Parent(&devinstparent, devinst, NULL);
+    CM_Locate_DevNodeA(&devinst, devID.toLatin1().data(), 0);
+    CM_Get_Parent(&devinstparent, devinst, 0);
 
     if(devID.contains("RemovableMedia", Qt::CaseInsensitive))    // on Windows XP: get next parent device instance
-        CM_Get_Parent(&devinstparent, devinstparent, NULL);
+        CM_Get_Parent(&devinstparent, devinstparent, 0);
 
     CM_Get_Device_ID_Size(&buflen, devinstparent, 0);
     wchar_t *buffer = new wchar_t[buflen];
@@ -205,7 +205,7 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name, libusb_device
 
     drv[4] = path.at(0).toLatin1();
 
-    hdev = CreateFileA(drv, NULL , FILE_SHARE_READ, NULL,
+    hdev = CreateFileA(drv, 0, FILE_SHARE_READ, NULL,
                                            OPEN_EXISTING, 0, NULL);
     if(hdev == INVALID_HANDLE_VALUE)
         return;
@@ -213,9 +213,9 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name, libusb_device
     k = DeviceIoControl(hdev, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0, &sdn, sizeof(sdn), &retbytes, NULL);
     CloseHandle(hdev);
     if(k != 0)
-        device.append(QString::number(sdn.DeviceNumber));
+        device.append(QString::number(sdn.DeviceNumber).toLocal8Bit());
 
-    ddev = CreateFileA(device.data(), NULL , FILE_SHARE_READ, NULL,
+    ddev = CreateFileA(device.data(), 0, FILE_SHARE_READ, NULL,
                                            OPEN_EXISTING, 0, NULL);
     if(ddev == INVALID_HANDLE_VALUE)
         return;
