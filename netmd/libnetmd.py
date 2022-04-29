@@ -605,11 +605,7 @@ class NetMDInterface(object):
         """
         query = self.formatQuery('1806 02101001 3000 1000 ff00 00000000')
         reply = self.send_query(query)
-        data = self.scanQuery(reply, '1806 02101001 %?%? %?%? 1000 00%?0000 ' \
-                              '%x')[0]
-        assert len(data) == 6, len(data)
-        assert data[:5] == '\x00\x10\x00\x02\x00', data[:5]
-        return ord(data[5])
+        return self.scanQuery(reply, '1806 02101001 %?%? %?%? 1000 00%?0000 0006 0010000200%b')[0]
 
     def _getDiscTitle(self, wchar=False):
         # XXX: long title support untested.
