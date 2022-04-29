@@ -156,14 +156,6 @@ int main()
     }
 
     {
-        // format byte
-        struct netmd_bytebuffer *query = netmd_format_query("00 00 00 %b", 0xff);
-        const char result[] = {0x00, 0x00, 0x00, 0xff};
-        EXPECT_BUFFER_EQUAL(query, result);
-        netmd_bytebuffer_free(query);
-    }
-
-    {
         // format word
         struct netmd_bytebuffer *query = netmd_format_query("00 00 00 %w", 0xff01);
         const char result[] = {0x00, 0x00, 0x00, 0xff, 0x01};
@@ -181,8 +173,8 @@ int main()
 
     {
         // format quad word
-        struct netmd_bytebuffer *query = netmd_format_query("00 00 00 %q", 0xff019922229901ffull);
-        const char result[] = {0x00, 0x00, 0x00, 0xff, 0x01, 0x99, 0x22, 0x22, 0x99, 0x01, 0xff};
+        struct netmd_bytebuffer *query = netmd_format_query("00 00 00 %q", 0xaabbccdd11223344ull);
+        const char result[] = {0x00, 0x00, 0x00, 0xaa, 0xbb, 0xcc, 0xdd, 0x11, 0x22, 0x33, 0x44};
         EXPECT_BUFFER_EQUAL(query, result);
         netmd_bytebuffer_free(query);
     }
