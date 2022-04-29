@@ -6,6 +6,35 @@
 #include <stdint.h>
 
 #include "common.h"
+#include "const.h"
+#include "error.h"
+
+/**
+ * Struct filled in by netmd_get_track_info(), see there.
+ */
+struct netmd_track_info {
+    const char *title; /*!< User-visible track title, with any "LP:" prefix stripped for LP2/LP4 tracks */
+    netmd_time duration; /*!< Duration of the track (in wall time) */
+    enum NetMDEncoding encoding; /*!< Encoding used (SP, LP2, LP4) */
+    enum NetMDChannels channels; /*!< For SP tracks, whether it is encoded as Mono or Stereo */
+    enum NetMDTrackFlags protection; /*!< DRM status of the track (for upload and deletion) */
+
+    char raw_title[256]; /*!< Storage for the actual title (including any "LP:" prefixes) as present on disk */
+};
+
+
+/**
+ * Query track information for a track.
+ *
+ * This queries all track infos in one go, and fills a netmd_track_info struct.
+ *
+ * @param dev Handle to the NetMD device
+ * @param track_id Zero-based track number
+ * @param info Pointer to struct that will be filled
+ * @return NETMD_NO_ERROR on success, or an error code on failure
+ */
+netmd_error
+netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct netmd_track_info *info);
 
 /**
    Get the bitrate used to encode a specific track.
