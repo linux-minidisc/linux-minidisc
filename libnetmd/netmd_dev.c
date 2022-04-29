@@ -83,7 +83,7 @@ netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
         result = libusb_claim_interface(dh, 0);
 
     if (result == 0) {
-        *dev_handle = (netmd_dev_handle*)dh;
+        *dev_handle = dh;
         return NETMD_NO_ERROR;
     }
     else {
@@ -96,7 +96,7 @@ bool netmd_dev_can_upload(netmd_dev_handle *devh)
 {
     struct libusb_device_descriptor desc = {0};
 
-    libusb_device *device = libusb_get_device(*devh);
+    libusb_device *device = libusb_get_device(devh);
 
     int rc = libusb_get_device_descriptor(device, &desc);
     if (rc == 0) {
