@@ -40,6 +40,7 @@ libnetmd_sources = [
   'libnetmd/recv.c',
   'libnetmd/timeformat.c',
   'libnetmd/groups.c',
+  'libnetmd/query.c',
 ]
 
 # TODO: Make the "surface area" of publicly exposed headers smaller,
@@ -56,6 +57,7 @@ libnetmd_headers = [
   'libnetmd/trackinformation.h',
   'libnetmd/utils.h',
   'libnetmd/groups.h',
+  'libnetmd/query.h',
 ]
 
 install_headers(libnetmd_headers, subdir: 'libnetmd')
@@ -68,6 +70,12 @@ libnetmd = library('netmd',
   soversion: '0',
   version: '0.0.1',
   install: true,
+)
+
+executable('libnetmd_test_query',
+  'libnetmd/test_query.c',
+  link_with: [libnetmd],
+  include_directories: ['libnetmd'],
 )
 
 netmdcli_sources = [

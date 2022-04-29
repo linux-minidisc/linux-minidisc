@@ -50,6 +50,7 @@ extern "C" {
 #include "trackinformation.h"
 #include "groups.h"
 #include "recv.h"
+#include "query.h"
 
 /**
  * Return a string representation of the encoding name.
@@ -180,6 +181,20 @@ char *netmd_time_to_string(const netmd_time *time);
  * @param string An allocated string to be free'd
  */
 void netmd_free_string(char *string);
+
+
+/**
+ * Send a query to the device and read the response.
+ *
+ * Ownership of the query object will be taken over by this function, so
+ * you must not free the query object separately.
+ *
+ * @param dev USB device handle
+ * @param query The query to send to the device
+ * @return A byte buffer containing the reponse, or NULL if there was an error
+ */
+struct netmd_bytebuffer *
+netmd_send_query(netmd_dev_handle *dev, struct netmd_bytebuffer *query);
 
 #ifdef __cplusplus
 }

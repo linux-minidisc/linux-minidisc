@@ -314,3 +314,12 @@ zero has a special meaning for groups.
 New functions for `libnetmd/recv.h` for filename generation and file extensions.
 Also, `netmdcli`'s `recv` can now transfer all the files at once by not passing
 in the track ID, this allows `netmdcli recv` to upload the whole disc in one go.
+
+
+## "Backport" the formatQuery / scanQuery functions from libnetmd.py / netmd-js
+
+In order to easily port things from libnetmd.py and netmd-js, its format string-
+based request/response methods are now available in libnetmd using the new
+`netmd_format_query()` and `netmd_scan_query()` functions, adopted slightly to
+be more C-like compared to the Python and JavaScript implementations. The
+`netmd_get_track_count()` function is the first one to use this new feature.

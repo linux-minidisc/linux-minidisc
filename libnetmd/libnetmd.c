@@ -21,6 +21,23 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ *
+ * Portions based on netmd-js:
+ * https://github.com/cybercase/netmd-js
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <unistd.h>
@@ -29,6 +46,63 @@
 #include "utils.h"
 
 #include <libusb.h>
+
+
+// Taken from "export enum Descriptor" and "export enum DescriptorAction":
+// https://github.com/cybercase/netmd-js/blob/master/src/netmd-interface.ts
+
+// "TD" stands for "text database"
+
+#if 0
+static const char *
+DESCRIPTOR_DISC_TITLE_TD = "10 1801";
+
+static const char *
+DESCRIPTOR_AUDIO_UTOC1_TD = "10 1802";
+
+static const char *
+DESCRIPTOR_AUDIO_UTOC4_TD = "10 1803";
+
+static const char *
+DESCRIPTOR_DSI_TD = "10 1804";
+#endif
+
+static const char *
+DESCRIPTOR_AUDIO_CONTENTS_TD = "10 1001";
+
+#if 0
+static const char *
+DESCRIPTOR_ROOT_TD = "10 1000";
+
+static const char *
+DESCRIPTOR_DISC_SUBUNIT_IDENTIFIER = "00";
+
+static const char *
+DESCRIPTOR_OPERATING_STATUS_BLOCK = "80 00"; // real name unknown
+#endif
+
+static const char *
+DESCRIPTOR_ACTION_OPEN_READ = "01";
+
+#if 0
+static const char *
+DESCRIPTOR_ACTION_OPEN_WRITE = "03";
+#endif
+
+static const char *
+DESCRIPTOR_ACTION_CLOSE = "00";
+
+static void
+change_descriptor_state(netmd_dev_handle *dev, const char *descriptor, const char *action)
+{
+    char format_string[32];
+    snprintf(format_string, sizeof(format_string), "1808 %s %s 00", descriptor, action);
+
+    struct netmd_bytebuffer *query = netmd_format_query(format_string);
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
+    netmd_bytebuffer_free(reply);
+}
+
 
 const char *
 netmd_get_encoding_name(enum NetMDEncoding encoding, enum NetMDChannels channels)
@@ -357,46 +431,66 @@ netmd_minidisc_is_group_empty(const minidisc *md, netmd_group_id group)
     return (md->groups[group].first == 0 && md->groups[group].last == 0);
 }
 
+struct netmd_bytebuffer *
+netmd_send_query(netmd_dev_handle *dev, struct netmd_bytebuffer *query)
+{
+    uint8_t response[255];
+
+    size_t request_len = query->size + 1;
+    uint8_t *request = malloc(request_len);
+    request[0] = NETMD_STATUS_CONTROL;
+    memcpy(request + 1, query->data, query->size);
+
+    int ret = netmd_exch_message(dev, request, request_len, response);
+    free(request);
+
+    if (ret > 0) {
+        uint8_t response_code = response[0];
+        if (response_code == NETMD_STATUS_NOT_IMPLEMENTED) {
+            // Not implemented
+        } else if (response_code == NETMD_STATUS_REJECTED) {
+            // Rejected
+        } else if (response_code != NETMD_STATUS_ACCEPTED &&
+                   response_code != NETMD_STATUS_IMPLEMENTED &&
+                   response_code != NETMD_STATUS_INTERIM) {
+            // Unknown return status code
+        } else {
+            // Re-use the query object for the response, instead of free'ing
+            // it and then re-allocating a new buffer for the reply
+            query->size = 0;
+
+            // Skip the first (status) byte when creating the reply
+            return netmd_bytebuffer_append(query, (const char *)response + 1, ret - 1);
+        }
+    }
+
+    netmd_bytebuffer_free(query);
+    return NULL;
+}
+
+// Based on netmd-js / libnetmd.py
 int
 netmd_get_track_count(netmd_dev_handle *dev)
 {
-    // See libnetmd.py, getTrackCount()
-    // TODO: Figure out the corresponding AV/C structures
-    uint8_t request[] = {
-        0x00, 0x18, 0x06,
-        0x02, 0x10, 0x10, 0x01,
-        0x30, 0x00,
-        0x10, 0x00,
-        0xff, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-    };
+    int result = -1;
 
-    uint8_t response[255];
+    change_descriptor_state(dev, DESCRIPTOR_AUDIO_CONTENTS_TD, DESCRIPTOR_ACTION_OPEN_READ);
 
-    static const uint8_t expected_payload_length = 6;
-    static const uint8_t expected_payload_prefix[] = {
-        0x00, 0x10, 0x00, 0x02, 0x00,
-    };
+    struct netmd_bytebuffer *query = netmd_format_query("1806 02101001 3000 1000 ff00 00000000");
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    int ret = netmd_exch_message(dev, request, sizeof(request), response);
-    if (ret != sizeof(request) + sizeof(uint16_t) + expected_payload_length) {
-        netmd_log(NETMD_LOG_WARNING, "Could not retrieve number of tracks\n");
+    if (reply == NULL) {
         return -1;
     }
 
-    // Response data begins after query data
-    const uint8_t *resp = response + sizeof(request);
-
-    uint16_t payload_length = netmd_convert_word(*((const uint16_t *)resp));
-    if (payload_length != expected_payload_length) {
-        return -1;
+    uint8_t num_tracks = 0;
+    if (netmd_scan_query(reply->data, reply->size, "1806 02101001 %?%? %?%? 1000 00%?0000 0006 0010000200%b", &num_tracks)) {
+        result = num_tracks;
     }
 
-    const uint8_t *payload = resp + sizeof(uint16_t);
+    netmd_bytebuffer_free(reply);
 
-    if (memcmp(payload, expected_payload_prefix, sizeof(expected_payload_prefix)) == 0) {
-        return payload[payload_length-1];
-    }
+    change_descriptor_state(dev, DESCRIPTOR_AUDIO_CONTENTS_TD, DESCRIPTOR_ACTION_CLOSE);
 
-    return -1;
+    return result;
 }
