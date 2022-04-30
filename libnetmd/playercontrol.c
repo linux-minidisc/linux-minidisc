@@ -130,7 +130,6 @@ netmd_error netmd_set_current_track(netmd_dev_handle* dev, netmd_track_index tra
                                0x00, 0x00, 0x00, 0x00, 0x00};
     unsigned char buf[255];
 
-    /* proper_to_bcd(track, request + 9, 2); */
     request[10] = track & 0xff;
 
     /* TODO: error checking */
@@ -170,23 +169,27 @@ netmd_error netmd_track_restart(netmd_dev_handle* dev)
     return netmd_change_track(dev, NETMD_TRACK_RESTART);
 }
 
-netmd_error netmd_set_playback_position(netmd_dev_handle* dev, netmd_track_index track, const netmd_time* time)
+netmd_error
+netmd_set_playback_position(netmd_dev_handle *dev, netmd_track_index track, const netmd_time *time)
 {
-    unsigned char request[] = {0x00, 0x18, 0x50, 0xff, 0x00, 0x00,
-                               0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                               0x00, 0x00, 0x00};
-    unsigned char buf[255];
+    struct netmd_bytebuffer *query = netmd_format_query("1850 ff000000 0000 %w %B%B%B%B",
+            track, (uint8_t)time->hour, time->minute, time->second, time->frame);
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    proper_to_bcd(track, request + 9, 2);
-    proper_to_bcd(time->hour, request + 11, 1);
-    proper_to_bcd(time->minute, request + 12, 1);
-    proper_to_bcd(time->second, request + 13, 1);
-    proper_to_bcd(time->frame, request + 14, 1);
+    uint16_t new_track;
+    netmd_time new_time;
+    uint8_t new_hour;
 
-    /* TODO: error checking */
-    netmd_exch_message(dev, request, sizeof(request), buf);
+    if (netmd_scan_query_buffer(reply, "1850 00000000 %?%? %w %B%B%B%B",
+                &new_track, &new_hour, &new_time.minute, &new_time.second, &new_time.frame)) {
+        new_time.hour = new_hour;
 
-    return NETMD_NO_ERROR;
+        // TODO: Could check if new_track/new_time have sane values
+
+        return NETMD_NO_ERROR;
+    }
+
+    return NETMD_ERROR;
 }
 
 netmd_track_index

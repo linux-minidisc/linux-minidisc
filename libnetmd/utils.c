@@ -26,27 +26,6 @@
 #include "utils.h"
 #include "log.h"
 
-inline unsigned char proper_to_bcd_single(unsigned char value)
-{
-    unsigned char high, low;
-
-    low = (value % 10) & 0xf;
-    high = (((value / 10) % 10) * 0x10U) & 0xf0;
-
-    return high | low;
-}
-
-inline unsigned char* proper_to_bcd(unsigned int value, unsigned char* target, size_t len)
-{
-    while (value > 0 && len > 0) {
-        target[len - 1] = proper_to_bcd_single(value & 0xff);
-        value /= 100;
-        len--;
-    }
-
-    return target;
-}
-
 inline unsigned char bcd_to_proper_single(unsigned char value)
 {
     unsigned char high, low;
