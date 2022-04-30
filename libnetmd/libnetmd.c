@@ -423,16 +423,12 @@ netmd_get_track_count(netmd_dev_handle *dev)
     struct netmd_bytebuffer *query = netmd_format_query("1806 02101001 3000 1000 ff00 00000000");
     struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    if (reply == NULL) {
-        return -1;
-    }
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
 
     uint8_t num_tracks = 0;
     if (netmd_scan_query_buffer(reply, "1806 02101001 %?%? %?%? 1000 00%?0000 0006 0010000200%b", &num_tracks)) {
         result = num_tracks;
     }
-
-    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
 
     return result;
 }
