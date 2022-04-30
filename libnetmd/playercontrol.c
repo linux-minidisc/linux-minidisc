@@ -3,6 +3,7 @@
  *
  * This file is part of libnetmd, a library for accessing Sony NetMD devices.
  *
+ * Copyright (C) 2022 Thomas Perl <m@thp.io>
  * Copyright (C) 2004 Bertrik Sikken
  * Copyright (C) 2011 Alexander Sulfrian
  *
@@ -25,6 +26,9 @@
 #include "playercontrol.h"
 #include "utils.h"
 #include "const.h"
+#include "query.h"
+#include "descriptor.h"
+#include "libnetmd.h"
 
 
 void netmd_time_double(netmd_time *time)
@@ -199,16 +203,6 @@ netmd_error netmd_set_playback_position(netmd_dev_handle* dev, netmd_track_index
     return NETMD_NO_ERROR;
 }
 
-const netmd_time* netmd_parse_time(unsigned char* src, netmd_time* time)
-{
-    time->hour = bcd_to_proper(src, 2) & 0xffff;
-    time->minute = bcd_to_proper(src + 2, 1) & 0xff;
-    time->second = bcd_to_proper(src + 3, 1) & 0xff;
-    time->frame = bcd_to_proper(src + 4, 1) & 0xff;
-
-    return time;
-}
-
 netmd_error netmd_get_playback_position(netmd_dev_handle* dev, netmd_time* time)
 {
     unsigned char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04,
@@ -228,20 +222,29 @@ netmd_error netmd_get_playback_position(netmd_dev_handle* dev, netmd_time* time)
     return NETMD_NO_ERROR;
 }
 
-netmd_error netmd_get_disc_capacity(netmd_dev_handle* dev, netmd_disc_capacity* capacity)
+netmd_error
+netmd_get_disc_capacity(netmd_dev_handle *dev, netmd_disc_capacity *capacity)
 {
-    unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x10, 0x00, 0x01, 0x00};
-    unsigned char request[] = {0x00, 0x18, 0x06, 0x02, 0x10, 0x10,
-                               0x00, 0x30, 0x80, 0x03, 0x00, 0xff,
-                               0x00, 0x00, 0x00, 0x00, 0x00};
-    unsigned char buf[255];
+    netmd_error result = NETMD_NO_ERROR;
 
-    /* TODO: error checking */
-    netmd_exch_message(dev, hs, sizeof(hs), buf);
-    netmd_exch_message(dev, request, sizeof(request), buf);
-    netmd_parse_time(buf + 27, &capacity->recorded);
-    netmd_parse_time(buf + 34, &capacity->total);
-    netmd_parse_time(buf + 41, &capacity->available);
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_ROOT_TD, NETMD_DESCRIPTOR_ACTION_OPEN_READ);
 
-    return NETMD_NO_ERROR;
+    struct netmd_bytebuffer *query = netmd_format_query("1806 02101000 3080 0300 ff00 00000000");
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
+
+    if (!netmd_scan_query(reply->data, reply->size,
+                // 8003 changed to %?03 - Panasonic returns 0803 instead. This byte's meaning is unknown (asivery from netmd-js)
+                //                                          vvvv
+                "1806 02101000 3080 0300 1000 001d0000 001b %?03 0017 8000 0005 %W %B %B %B 0005 %W %B %B %B 0005 %W %B %B %B",
+                &capacity->recorded.hour, &capacity->recorded.minute, &capacity->recorded.second, &capacity->recorded.frame,
+                &capacity->total.hour, &capacity->total.minute, &capacity->total.second, &capacity->total.frame,
+                &capacity->available.hour, &capacity->available.minute, &capacity->available.second, &capacity->available.frame)) {
+        result = NETMD_ERROR;
+    }
+
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_ROOT_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+
+    netmd_bytebuffer_free(reply);
+
+    return result;
 }
