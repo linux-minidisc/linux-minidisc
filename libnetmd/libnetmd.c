@@ -48,62 +48,6 @@
 #include <libusb.h>
 
 
-// Taken from "export enum Descriptor" and "export enum DescriptorAction":
-// https://github.com/cybercase/netmd-js/blob/master/src/netmd-interface.ts
-
-// "TD" stands for "text database"
-
-#if 0
-static const char *
-DESCRIPTOR_DISC_TITLE_TD = "10 1801";
-
-static const char *
-DESCRIPTOR_AUDIO_UTOC1_TD = "10 1802";
-
-static const char *
-DESCRIPTOR_AUDIO_UTOC4_TD = "10 1803";
-
-static const char *
-DESCRIPTOR_DSI_TD = "10 1804";
-#endif
-
-static const char *
-DESCRIPTOR_AUDIO_CONTENTS_TD = "10 1001";
-
-#if 0
-static const char *
-DESCRIPTOR_ROOT_TD = "10 1000";
-
-static const char *
-DESCRIPTOR_DISC_SUBUNIT_IDENTIFIER = "00";
-
-static const char *
-DESCRIPTOR_OPERATING_STATUS_BLOCK = "80 00"; // real name unknown
-#endif
-
-static const char *
-DESCRIPTOR_ACTION_OPEN_READ = "01";
-
-#if 0
-static const char *
-DESCRIPTOR_ACTION_OPEN_WRITE = "03";
-#endif
-
-static const char *
-DESCRIPTOR_ACTION_CLOSE = "00";
-
-static void
-change_descriptor_state(netmd_dev_handle *dev, const char *descriptor, const char *action)
-{
-    char format_string[32];
-    snprintf(format_string, sizeof(format_string), "1808 %s %s 00", descriptor, action);
-
-    struct netmd_bytebuffer *query = netmd_format_query(format_string);
-    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
-    netmd_bytebuffer_free(reply);
-}
-
-
 const char *
 netmd_get_encoding_name(enum NetMDEncoding encoding, enum NetMDChannels channels)
 {
@@ -474,7 +418,7 @@ netmd_get_track_count(netmd_dev_handle *dev)
 {
     int result = -1;
 
-    change_descriptor_state(dev, DESCRIPTOR_AUDIO_CONTENTS_TD, DESCRIPTOR_ACTION_OPEN_READ);
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_OPEN_READ);
 
     struct netmd_bytebuffer *query = netmd_format_query("1806 02101001 3000 1000 ff00 00000000");
     struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
@@ -490,7 +434,7 @@ netmd_get_track_count(netmd_dev_handle *dev)
 
     netmd_bytebuffer_free(reply);
 
-    change_descriptor_state(dev, DESCRIPTOR_AUDIO_CONTENTS_TD, DESCRIPTOR_ACTION_CLOSE);
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
 
     return result;
 }

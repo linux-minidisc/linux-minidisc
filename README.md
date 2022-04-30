@@ -330,3 +330,9 @@ be more C-like compared to the Python and JavaScript implementations. The
 Add support for querying and printing the UUID of a track via `netmdcli`. This
 also introduces the `netmd_uuid` type, `netmd_uuid_to_string()` function and an
 updated `netmd_secure_get_track_uuid()`, making use of new typedefs and query.
+
+
+## Expanded descriptor state handling (`descriptor.h` / `descriptor.c`)
+
+Moved the descriptor state handling into its own module within libnetmd. The
+code is baed on from asivery's AV/C improvements to `netmd-js`.

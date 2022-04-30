@@ -41,6 +41,7 @@ libnetmd_sources = [
   'libnetmd/timeformat.c',
   'libnetmd/groups.c',
   'libnetmd/query.c',
+  'libnetmd/descriptor.c',
 ]
 
 # TODO: Make the "surface area" of publicly exposed headers smaller,
@@ -58,6 +59,7 @@ libnetmd_headers = [
   'libnetmd/utils.h',
   'libnetmd/groups.h',
   'libnetmd/query.h',
+  'libnetmd/descriptor.h',
 ]
 
 install_headers(libnetmd_headers, subdir: 'libnetmd')

@@ -51,6 +51,7 @@ extern "C" {
 #include "groups.h"
 #include "recv.h"
 #include "query.h"
+#include "descriptor.h"
 
 /**
  * Return a string representation of the encoding name.
