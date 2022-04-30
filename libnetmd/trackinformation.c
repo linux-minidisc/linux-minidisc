@@ -46,10 +46,16 @@ netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct n
     info->track_id = track_id;
     info->title = info->raw_title;
 
-    // TODO: All these calls need proper error handling
-    netmd_request_track_time(dev, track_id, &info->duration);
+    if (!netmd_request_track_time(dev, track_id, &info->duration)) {
+        return NETMD_ERROR;
+    }
+
+    // TODO: proper error handling
     netmd_request_track_flags(dev, track_id, &flags);
-    netmd_request_track_bitrate(dev, track_id, &bitrate_id, &channel);
+
+    if (!netmd_request_track_encoding(dev, track_id, &bitrate_id, &channel)) {
+        return NETMD_ERROR;
+    }
 
     info->encoding = (enum NetMDEncoding)bitrate_id;
     info->channels = (enum NetMDChannels)channel;
@@ -68,56 +74,6 @@ netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct n
     return NETMD_NO_ERROR;
 }
 
-
-int netmd_request_track_bitrate(netmd_dev_handle*dev, netmd_track_index track,
-                                unsigned char* encoding, unsigned char *channel)
-{
-    unsigned char cmd[] = { 0x00, 0x18, 0x06, 0x02, 0x20, 0x10, 0x01,  0x00, 0x00,  0x30, 0x80,  0x07, 0x00,
-                            0xff, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    unsigned char rsp[255];
-    unsigned char *buf;
-
-    msleep(5); // Sleep fixes 'unknown' bitrate being returned on many devices.
-
-    // Copy the track number into the request
-    buf = cmd + 7;
-    netmd_copy_word_to_buffer(&buf, track, 0);
-    //send request to device
-    int length = netmd_exch_message(dev, cmd, sizeof(cmd), rsp);
-
-    // AV/C MD Audio 1.0, Table 7-3 audio_recording_parameters_info_block
-    // AV/C Disc Subunit 1.0, Table 11.7 (page 134) "Audio Recording Parameters Info Block"
-    struct audio_recording_parameters_info_block {
-        uint16_t compound_length; // 8 (big endian)
-        uint16_t info_block_type; // 0x8007 (audio_recording_parameters_info_block, big endian)
-        uint16_t primary_fields_length; // 4 (big endian)
-        uint8_t audio_recording_sample_rate; // 0x01 = 44100 Hz
-        uint8_t audio_recording_sample_size; // 0x10 = 16-bit
-        uint8_t audio_compression_mode; // 0x90 = ATRAC1
-        uint8_t audio_recording_channel_mode; // 0x00 = stereo, 0x01 = mono
-    };
-
-    // pull encoding and channel from response
-    if (length >= sizeof(cmd) + sizeof(struct audio_recording_parameters_info_block)) {
-        const struct audio_recording_parameters_info_block *info = (void *)(rsp + sizeof(cmd));
-
-        netmd_log(NETMD_LOG_DEBUG, "compound_length: 0x%04x\n", netmd_convert_word(info->compound_length));
-        netmd_log(NETMD_LOG_DEBUG, "info_block_type: 0x%04x\n", netmd_convert_word(info->info_block_type));
-        netmd_log(NETMD_LOG_DEBUG, "primary_fields_length: 0x%04x\n", netmd_convert_word(info->primary_fields_length));
-        netmd_log(NETMD_LOG_DEBUG, "audio_recording_sample_rate: 0x%02x\n", info->audio_recording_sample_rate);
-        netmd_log(NETMD_LOG_DEBUG, "audio_recording_sample_size: 0x%02x\n", info->audio_recording_sample_size);
-        netmd_log(NETMD_LOG_DEBUG, "audio_compression_mode: 0x%02x\n", info->audio_compression_mode);
-        netmd_log(NETMD_LOG_DEBUG, "audio_recording_channel_mode: 0x%02x\n", info->audio_recording_channel_mode);
-
-        *encoding = info->audio_compression_mode;
-        *channel = info->audio_recording_channel_mode;
-    } else {
-        *encoding = 0;
-        *channel = 0;
-    }
-
-    return 2;
-}
 
 int netmd_request_track_flags(netmd_dev_handle*dev, netmd_track_index track, unsigned char* data)
 {
@@ -177,31 +133,39 @@ int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* bu
     return required_size;
 }
 
-int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, netmd_time *time)
+// Based on https://github.com/cybercase/netmd-js/blob/master/src/netmd-interface.ts
+static struct netmd_bytebuffer *
+get_track_info(netmd_dev_handle *dev, netmd_track_index track, uint16_t p1, uint16_t p2)
 {
-    int ret = 0;
-    unsigned char hs[] = {0x00, 0x18, 0x08, 0x10, 0x10, 0x01, 0x01, 0x00};
-    unsigned char request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x10,
-                               0x01, 0x00, 0x01, 0x30, 0x00, 0x01,
-                               0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
-                               0x00};
-    unsigned char time_request[255];
-    unsigned char *buf;
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_OPEN_READ);
 
-    buf = request + 7;
-    netmd_copy_word_to_buffer(&buf, track, 0);
-    netmd_exch_message(dev, hs, 8, time_request);
-    ret = netmd_exch_message(dev, request, 0x13, time_request);
-    if(ret < 0)
-    {
-        fprintf(stderr, "bad ret code, returning early\n");
-        return 0;
+    struct netmd_bytebuffer *query = netmd_format_query("1806 02201001 %w %w %w ff00 00000000", track, p1, p2);
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
+
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+
+    struct netmd_bytebuffer *result = netmd_bytebuffer_new();
+
+    if (!netmd_scan_query_buffer(reply, "1806 02201001 %?%? %?%? %?%? 1000 00%?0000 %x", &result)) {
+        netmd_bytebuffer_free(result);
+        return NULL;
     }
 
-    time->hour = bcd_to_proper(time_request + 27, 1) & 0xff;
-    time->minute = (bcd_to_proper(time_request + 28, 1) & 0xff);
-    time->second = bcd_to_proper(time_request + 29, 1) & 0xff;
-    time->frame = bcd_to_proper(time_request + 30, 1) & 0xff;
+    return result;
+}
 
-    return 1;
+bool
+netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, netmd_time *time)
+{
+    return netmd_scan_query_buffer(get_track_info(dev, track, 0x3000, 0x0100),
+            "0001 0006 0000 %B %B %B %B",
+            &time->hour, &time->minute, &time->second, &time->frame);
+}
+
+bool
+netmd_request_track_encoding(netmd_dev_handle *dev, netmd_track_index track,
+        unsigned char *encoding, unsigned char *channel)
+{
+    return netmd_scan_query_buffer(get_track_info(dev, track, 0x3080, 0x0700),
+            "8007 0004 0110 %b %b", encoding, channel);
 }

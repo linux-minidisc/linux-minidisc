@@ -801,7 +801,7 @@ netmd_error netmd_secure_recv_track(netmd_dev_handle *dev, uint16_t track_id,
     buf += sizeof(cmdhdr);
     netmd_copy_word_to_buffer(&buf, track_id + 1, 0);
 
-    netmd_request_track_bitrate(dev, track_id, &encoding, &channel);
+    netmd_request_track_encoding(dev, track_id, &encoding, &channel);
 
     if (encoding == NETMD_ENCODING_SP) {
         netmd_request_title(dev, track_id, name, sizeof(name) - 1);

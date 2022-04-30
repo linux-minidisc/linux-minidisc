@@ -173,17 +173,14 @@ netmd_error
 netmd_set_playback_position(netmd_dev_handle *dev, netmd_track_index track, const netmd_time *time)
 {
     struct netmd_bytebuffer *query = netmd_format_query("1850 ff000000 0000 %w %B%B%B%B",
-            track, (uint8_t)time->hour, time->minute, time->second, time->frame);
+            track, time->hour, time->minute, time->second, time->frame);
     struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
     uint16_t new_track;
     netmd_time new_time;
-    uint8_t new_hour;
 
     if (netmd_scan_query_buffer(reply, "1850 00000000 %?%? %w %B%B%B%B",
-                &new_track, &new_hour, &new_time.minute, &new_time.second, &new_time.frame)) {
-        new_time.hour = new_hour;
-
+                &new_track, &new_time.hour, &new_time.minute, &new_time.second, &new_time.frame)) {
         // TODO: Could check if new_track/new_time have sane values
 
         return NETMD_NO_ERROR;
@@ -203,12 +200,10 @@ netmd_get_playback_position(netmd_dev_handle *dev, netmd_time *time)
     netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_OPERATING_STATUS_BLOCK, NETMD_DESCRIPTOR_ACTION_CLOSE);
 
     netmd_track_index track_id = NETMD_INVALID_TRACK;
-    uint8_t hour = 0;
 
     if (netmd_scan_query_buffer(reply,
                 "1809 8001 0430 %?%? %?%? %?%? %?%? %?%? %?%? %?%? %? %?00 00%?0000 000b 0002 0007 00 %w %B %B %B %B",
-                &track_id, &hour, &time->minute, &time->second, &time->frame)) {
-        time->hour = hour;
+                &track_id, &time->hour, &time->minute, &time->second, &time->frame)) {
         return track_id;
     }
 

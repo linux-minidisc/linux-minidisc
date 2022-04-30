@@ -39,14 +39,17 @@ netmd_error
 netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct netmd_track_info *info);
 
 /**
-   Get the bitrate used to encode a specific track.
+   Get the encoding used to encode a specific track.
 
    @param dev pointer to device returned by netmd_open
    @param track Zero based index of track your requesting.
-   @param data pointer to store the hex code representing the bitrate.
+   @param encoding Pointer to store the codec
+   @param channel Pointer to store the channel mode
+   @return true on success, false on error
 */
-int netmd_request_track_bitrate(netmd_dev_handle*dev, netmd_track_index track,
-                                unsigned char* encoding, unsigned char* channel);
+bool
+netmd_request_track_encoding(netmd_dev_handle *dev, netmd_track_index track,
+        unsigned char *encoding, unsigned char *channel);
 
 /**
    Get the flags used for a specific track.
@@ -69,6 +72,7 @@ int netmd_request_track_flags(netmd_dev_handle* dev, netmd_track_index track, un
 */
 int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* buffer, const size_t size);
 
-int netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, netmd_time *time);
+bool
+netmd_request_track_time(netmd_dev_handle* dev, netmd_track_index track, netmd_time *time);
 
 #endif

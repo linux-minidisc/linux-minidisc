@@ -28,7 +28,7 @@ typedef int netmd_group_id;
  * Time duration value.
  */
 typedef struct netmd_time {
-    uint16_t hour;
+    uint8_t hour;
     uint8_t minute;
     uint8_t second;
     uint8_t frame; // "Frames per second = 86 for MD audio", a "sound group" (AV/C MD Audio 1.0)
