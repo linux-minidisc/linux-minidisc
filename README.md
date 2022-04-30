@@ -336,3 +336,10 @@ updated `netmd_secure_get_track_uuid()`, making use of new typedefs and query.
 
 Moved the descriptor state handling into its own module within libnetmd. The
 code is baed on from asivery's AV/C improvements to `netmd-js`.
+
+
+## Query formatting and scanning: Support for 8-bit and 16-bit BCD
+
+The query formatting and scanning gets two new escapes: `%B` and `%W` for
+writing and reading 2-digit and 4-digit BCD values directly, avoiding the
+need to convert BCD explicitly before/after.

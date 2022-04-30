@@ -55,6 +55,8 @@ struct netmd_bytebuffer {
  *   - \%x ... Write the bytes contained in the "struct netmd_bytebuffer *" argument (with 16-bit length prefixed in big-endian)
  *   - \%s ... Write a C string ("const char *" argument) as bytes (with 16-bit length prefixed in big-endian, including '\0'-terminator)
  *   - \%* ... Write the bytes contained in the "struct netmd_bytebuffer *" argument directly (no length prefix, no '\0'-terminator)
+ *   - \%B ... Write a single byte as 2-digit BCD
+ *   - \%W ... Write a "uint16_t" argument as 4-digit BCD (in big-endian byte order)
  *
  * @param fmt Format string
  * @param ... Values for the format string to consume
@@ -80,6 +82,8 @@ netmd_format_query(const char *fmt, ...);
  *   - \%x ... Read bytes with 16-bit length prefix, place it in the "struct netmd_bytebuffer **" out parameter
  *   - \%s ... Read a C string with 16-bit length prefix, place it in the "const char **" out parameter (will point into the input buffer)
  *   - \%* ... Put all remaining bytes into a "struct netmd_bytebuffer **" out parameter (can appear at most once, at the end of the format string)
+ *   - \%B ... Read a single byte as 2-digit BCD and place it into the "uint8_t *" out parameter
+ *   - \%W ... Read a 2-byte value in big-endian as 4-digit BCD and place it into the "uint16_t *" out parameter
  *
  * @param data The data to scan
  * @param size Number of bytes in data
@@ -150,6 +154,34 @@ netmd_bytebuffer_as_string(struct netmd_bytebuffer **buffer);
  */
 void
 netmd_bytebuffer_free(struct netmd_bytebuffer *buffer);
+
+
+/**
+ * Convert an 8-bit unsigned integer to 2-digit BCD value.
+ *
+ * Valid ranges are 0-99, 100's are cut off.
+ */
+uint8_t uint8_to_bcd(uint8_t value);
+
+
+/**
+ * Convert a 2-digit BCD value to an 8-bit unsigned integer.
+ */
+uint8_t bcd_to_uint8(uint8_t bcd);
+
+
+/**
+ * Convert a 16-bit unsigned value to 4-digit BCD value.
+ *
+ * Valid ranges are 0-9999, 10000's are cut off.
+ */
+uint16_t uint16_to_bcd(uint16_t value);
+
+
+/**
+ * Convert a 4-digit BCD value to a 16-bit unsigned integer.
+ */
+uint16_t bcd_to_uint16(uint16_t bcd);
 
 #ifdef __cplusplus
 }

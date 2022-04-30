@@ -151,6 +151,21 @@ netmd_format_query(const char *fmt, ...)
                 struct netmd_bytebuffer *buf = va_arg(args, struct netmd_bytebuffer *);
 
                 query = netmd_bytebuffer_append(query, buf->data, buf->size);
+            } else if (ch == 'B') {
+                // 2-digit BCD
+                uint8_t value = va_arg(args, int);
+
+                value = uint8_to_bcd(value);
+
+                query = netmd_bytebuffer_append_byte(query, value);
+            } else if (ch == 'W') {
+                // 4-digit BCD
+                uint16_t value = va_arg(args, int);
+
+                value = uint16_to_bcd(value);
+
+                query = netmd_bytebuffer_append_byte(query, (value >> 8) & 0xFF);
+                query = netmd_bytebuffer_append_byte(query, value & 0xFF);
             } else {
                 netmd_log(NETMD_LOG_ERROR, "Invalid query format: '%s', ch == '%c'\n", fmt, ch);
                 exit(1);
@@ -251,6 +266,21 @@ netmd_scan_query(const char *data, size_t size, const char *fmt, ...)
                     *value <<= 8;
                     *value |= *read_ptr++;
                 }
+            } else if (ch == 'B') {
+                uint8_t *value = va_arg(args, uint8_t *);
+
+                *value = bcd_to_uint8(*read_ptr++);
+            } else if (ch == 'W') {
+                uint16_t *value = va_arg(args, uint16_t *);
+
+                if (read_ptr + 2 > end_ptr) {
+                    netmd_log(NETMD_LOG_ERROR, "Data underrun while reading word\n");
+                    return false;
+                }
+
+                *value = bcd_to_uint16((read_ptr[0] << 8) | read_ptr[1]);
+
+                read_ptr += 2;
             } else if (ch == 'x') {
                 struct netmd_bytebuffer **buf = va_arg(args, struct netmd_bytebuffer **);
 
@@ -371,4 +401,39 @@ void
 netmd_bytebuffer_free(struct netmd_bytebuffer *buffer)
 {
     free(buffer);
+}
+
+uint8_t uint8_to_bcd(uint8_t value)
+{
+    return (((value / 10) % 10) << 4) |
+             (value % 10);
+}
+
+uint8_t bcd_to_uint8(uint8_t bcd)
+{
+    return 10 * ((bcd >> 4) & 0xF) +
+                 (bcd & 0xF);
+}
+
+uint16_t uint16_to_bcd(uint16_t value)
+{
+    return (((value / 1000) % 10) << 12) |
+           (((value / 100) % 10) << 8) |
+           (((value / 10) % 10) << 4) |
+             (value % 10);
+
+    uint16_t result = 0;
+    for (int i=0; i<4; ++i) {
+        result |= (value % 10) << (i * 4);
+        value /= 10;
+    }
+    return result;
+}
+
+uint16_t bcd_to_uint16(uint16_t bcd)
+{
+    return 1000 * ((bcd >> 12) & 0xF) +
+            100 * ((bcd >> 8) & 0xF) +
+             10 * ((bcd >> 4) & 0xF) +
+                   (bcd & 0xF);
 }

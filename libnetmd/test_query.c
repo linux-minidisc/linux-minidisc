@@ -19,6 +19,8 @@
  */
 
 #include "query.h"
+#include "log.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -59,10 +61,28 @@ dump_buffer(const struct netmd_bytebuffer *buffer)
         exit(1); \
     }
 
+#define EXPECT_EQUAL(a, b) \
+    if ((a) == (b)) { \
+        printf("%s == %s\n", #a, #b); \
+    } else { \
+        printf("%s != %s\n", #a, #b); \
+        exit(1); \
+    }
+
 int main()
 {
     // Test cases adapted from netmd-js
     // https://github.com/cybercase/netmd-js/blob/master/src/query-utils.test.ts
+
+    netmd_set_log_level(NETMD_LOG_ALL);
+
+    // BCD encoding/decoding new
+
+    EXPECT_EQUAL(uint8_to_bcd(98), 0x98);
+    EXPECT_EQUAL(bcd_to_uint8(0x98), 98);
+
+    EXPECT_EQUAL(uint16_to_bcd(1234), 0x1234);
+    EXPECT_EQUAL(bcd_to_uint16(0x1234), 1234);
 
     // netmd_format_query
 
@@ -175,6 +195,22 @@ int main()
         // format quad word
         struct netmd_bytebuffer *query = netmd_format_query("00 00 00 %q", 0xaabbccdd11223344ull);
         const char result[] = {0x00, 0x00, 0x00, 0xaa, 0xbb, 0xcc, 0xdd, 0x11, 0x22, 0x33, 0x44};
+        EXPECT_BUFFER_EQUAL(query, result);
+        netmd_bytebuffer_free(query);
+    }
+
+    {
+        // format 2-digit BCD
+        struct netmd_bytebuffer *query = netmd_format_query("00 00 00 %B", 89);
+        const char result[] = {0x00, 0x00, 0x00, 0x89};
+        EXPECT_BUFFER_EQUAL(query, result);
+        netmd_bytebuffer_free(query);
+    }
+
+    {
+        // format 4-digit BCD
+        struct netmd_bytebuffer *query = netmd_format_query("00 00 00 %W", 9876);
+        const char result[] = {0x00, 0x00, 0x00, 0x98, 0x76};
         EXPECT_BUFFER_EQUAL(query, result);
         netmd_bytebuffer_free(query);
     }
@@ -309,6 +345,33 @@ int main()
             exit(1);
         }
     }
+
+    {
+        // parse 2-digit BCD
+        const char query[] = {0x00, 0x00, 0x59};
+
+        uint8_t byte = 0;
+        EXPECT_SCAN_QUERY_OK(netmd_scan_query(query, sizeof(query), "00 00 %B", &byte));
+
+        if (byte != 59) {
+            printf("Unexpected data\n");
+            exit(1);
+        }
+    }
+
+    {
+        // parse 4-digit BCD
+        const char query[] = {0x00, 0x00, 0x13, 0x37};
+
+        uint16_t word = 0;
+        EXPECT_SCAN_QUERY_OK(netmd_scan_query(query, sizeof(query), "00 00 %W", &word));
+
+        if (word != 1337) {
+            printf("Unexpected data\n");
+            exit(1);
+        }
+    }
+
 
     printf("All tests successful.\n");
 
