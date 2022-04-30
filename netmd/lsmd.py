@@ -41,6 +41,8 @@ def listMD(md, show_uuids):
     print 'Disk (%s) %s %s' % (
         ', '.join(flags), md_iface.getDiscTitle(),
         md_iface.getDiscTitle(True).decode('shift_jis_2004'))
+    rec_codec, rec_channel = md_iface.getRecordingParameters()
+    print 'Current recording parameters:', codec_name_dict[rec_codec], channel_count_dict[rec_channel]
     disc_used, disc_total, disc_left = md_iface.getDiscCapacity()
     disc_total = timeToFrames(disc_total)
     disc_left = timeToFrames(disc_left)
