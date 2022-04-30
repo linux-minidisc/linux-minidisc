@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,6 +94,30 @@ netmd_format_query(const char *fmt, ...);
  */
 bool
 netmd_scan_query(const char *data, size_t size, const char *fmt, ...);
+
+
+/**
+ * Varargs version of netmd_scan_query(), see there.
+ */
+bool
+netmd_scan_queryv(const char *data, size_t size, const char *fmt, va_list args);
+
+
+/**
+ * Scan bytes using a query, consume the supplied buffer.
+ *
+ * This is a convenience method to scan a query from a buffer and free the
+ * buffer automatically after it has been scanned. See netmd_scan_query().
+ *
+ * If buffer is NULL, returns false.
+ *
+ * @param buffer A buffer to scan for data
+ * @param fmt Format string (see netmd_scan_query())
+ * @param ... Out parameters (see netmd_scan_query())
+ * @return true if the scan was successful, false if there was an error
+ */
+bool
+netmd_scan_query_buffer(struct netmd_bytebuffer *buffer, const char *fmt, ...);
 
 
 /**

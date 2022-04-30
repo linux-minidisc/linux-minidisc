@@ -428,11 +428,9 @@ netmd_get_track_count(netmd_dev_handle *dev)
     }
 
     uint8_t num_tracks = 0;
-    if (netmd_scan_query(reply->data, reply->size, "1806 02101001 %?%? %?%? 1000 00%?0000 0006 0010000200%b", &num_tracks)) {
+    if (netmd_scan_query_buffer(reply, "1806 02101001 %?%? %?%? 1000 00%?0000 0006 0010000200%b", &num_tracks)) {
         result = num_tracks;
     }
-
-    netmd_bytebuffer_free(reply);
 
     netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
 

@@ -202,42 +202,35 @@ netmd_get_playback_position(netmd_dev_handle *dev, netmd_time *time)
     netmd_track_index track_id = NETMD_INVALID_TRACK;
     uint8_t hour = 0;
 
-    if (netmd_scan_query(reply->data, reply->size,
+    if (netmd_scan_query_buffer(reply,
                 "1809 8001 0430 %?%? %?%? %?%? %?%? %?%? %?%? %?%? %? %?00 00%?0000 000b 0002 0007 00 %w %B %B %B %B",
                 &track_id, &hour, &time->minute, &time->second, &time->frame)) {
         time->hour = hour;
-    } else {
-        track_id = NETMD_INVALID_TRACK;
+        return track_id;
     }
 
-    netmd_bytebuffer_free(reply);
-
-    return track_id;
+    return NETMD_INVALID_TRACK;
 }
 
 netmd_error
 netmd_get_disc_capacity(netmd_dev_handle *dev, netmd_disc_capacity *capacity)
 {
-    netmd_error result = NETMD_NO_ERROR;
-
     netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_ROOT_TD, NETMD_DESCRIPTOR_ACTION_OPEN_READ);
 
     struct netmd_bytebuffer *query = netmd_format_query("1806 02101000 3080 0300 ff00 00000000");
     struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    if (!netmd_scan_query(reply->data, reply->size,
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_ROOT_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+
+    if (!netmd_scan_query_buffer(reply,
                 // 8003 changed to %?03 - Panasonic returns 0803 instead. This byte's meaning is unknown (asivery from netmd-js)
                 //                                          vvvv
                 "1806 02101000 3080 0300 1000 001d0000 001b %?03 0017 8000 0005 %W %B %B %B 0005 %W %B %B %B 0005 %W %B %B %B",
                 &capacity->recorded.hour, &capacity->recorded.minute, &capacity->recorded.second, &capacity->recorded.frame,
                 &capacity->total.hour, &capacity->total.minute, &capacity->total.second, &capacity->total.frame,
                 &capacity->available.hour, &capacity->available.minute, &capacity->available.second, &capacity->available.frame)) {
-        result = NETMD_ERROR;
+        return NETMD_ERROR;
     }
 
-    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_ROOT_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
-
-    netmd_bytebuffer_free(reply);
-
-    return result;
+    return NETMD_NO_ERROR;
 }

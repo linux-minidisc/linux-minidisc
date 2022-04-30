@@ -205,11 +205,8 @@ netmd_format_query(const char *fmt, ...)
 }
 
 bool
-netmd_scan_query(const char *data, size_t size, const char *fmt, ...)
+netmd_scan_queryv(const char *data, size_t size, const char *fmt, va_list args)
 {
-    va_list args;
-    va_start(args, fmt);
-
     int half = -1;
     bool escaped = false;
 
@@ -375,9 +372,35 @@ netmd_scan_query(const char *data, size_t size, const char *fmt, ...)
         }
     }
 
+    return (read_ptr == end_ptr && *cur == '\0');
+}
+
+bool
+netmd_scan_query(const char *data, size_t size, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    bool result = netmd_scan_queryv(data, size, fmt, args);
+
     va_end(args);
 
-    return (read_ptr == end_ptr && *cur == '\0');
+    return result;
+}
+
+bool
+netmd_scan_query_buffer(struct netmd_bytebuffer *buffer, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    bool result = buffer ? netmd_scan_queryv(buffer->data, buffer->size, fmt, args) : false;
+
+    netmd_bytebuffer_free(buffer);
+
+    va_end(args);
+
+    return result;
 }
 
 const char *
