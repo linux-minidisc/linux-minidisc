@@ -56,9 +56,10 @@ netmd_request_track_encoding(netmd_dev_handle *dev, netmd_track_index track,
 
    @param dev pointer to device returned by netmd_open
    @param track Zero based index of track your requesting.
-   @param data pointer to store the hex code representing the codec.
+   @param data pointer to store the flags
 */
-int netmd_request_track_flags(netmd_dev_handle* dev, netmd_track_index track, unsigned char* data);
+bool
+netmd_request_track_flags(netmd_dev_handle *dev, netmd_track_index track, unsigned char *data);
 
 /**
    Get the title for a specific track.

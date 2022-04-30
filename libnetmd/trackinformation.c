@@ -50,8 +50,9 @@ netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct n
         return NETMD_ERROR;
     }
 
-    // TODO: proper error handling
-    netmd_request_track_flags(dev, track_id, &flags);
+    if (!netmd_request_track_flags(dev, track_id, &flags)) {
+        return NETMD_ERROR;
+    }
 
     if (!netmd_request_track_encoding(dev, track_id, &bitrate_id, &channel)) {
         return NETMD_ERROR;
@@ -74,22 +75,18 @@ netmd_get_track_info(netmd_dev_handle *dev, netmd_track_index track_id, struct n
     return NETMD_NO_ERROR;
 }
 
-
-int netmd_request_track_flags(netmd_dev_handle*dev, netmd_track_index track, unsigned char* data)
+// Based on netmd-js / libnetmd.py
+bool
+netmd_request_track_flags(netmd_dev_handle *dev, netmd_track_index track, unsigned char *data)
 {
-    int ret = 0;
-    unsigned char request[] = {0x00, 0x18, 0x06, 0x01, 0x20, 0x10,
-                               0x01, 0x00, 0x00, 0xff, 0x00, 0x00,
-                               0x01, 0x00, 0x08};
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_OPEN_READ);
 
-    unsigned char *buf;
-    unsigned char reply[255];
+    struct netmd_bytebuffer *query = netmd_format_query("1806 01201001 %w ff00 00010008", track);
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    buf = request + 7;
-    netmd_copy_word_to_buffer(&buf, track, 0);
-    ret = netmd_exch_message(dev, request, sizeof(request), reply);
-    *data = reply[ret - 1];
-    return ret;
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_CONTENTS_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+
+    return netmd_scan_query_buffer(reply, "1806 01201001 %?%? 10 00 00010008 %b", data);
 }
 
 int netmd_request_title(netmd_dev_handle* dev, netmd_track_index track, char* buffer, const size_t size)
