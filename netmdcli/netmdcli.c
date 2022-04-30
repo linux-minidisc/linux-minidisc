@@ -582,17 +582,17 @@ cmd_setplaymode(struct netmdcli_context *ctx)
 static int
 cmd_status(struct netmdcli_context *ctx)
 {
-    netmd_track_index track;
-    char buffer[256];
     netmd_time time;
+    netmd_track_index track_id = netmd_get_playback_position(ctx->devh, &time);
 
-    /* TODO: error checking */
-    netmd_get_playback_position(ctx->devh, &time);
-    track = netmd_get_current_track(ctx->devh);
-    if (track != NETMD_INVALID_TRACK) {
-        netmd_request_title(ctx->devh, track, buffer, sizeof(buffer));
-        printf("Current track: %s \n", buffer);
+    if (track_id == NETMD_INVALID_TRACK) {
+        fprintf(stderr, "Could not get current playback position\n");
+        return 1;
     }
+
+    char buffer[256];
+    netmd_request_title(ctx->devh, track_id, buffer, sizeof(buffer));
+    printf("Current track: %02d %s\n", track_id + 1, buffer);
 
     char *time_str = netmd_time_to_string(&time);
     printf("Current playback position: %s\n", time_str);

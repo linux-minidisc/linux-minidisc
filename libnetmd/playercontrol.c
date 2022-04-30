@@ -155,20 +155,6 @@ netmd_error netmd_change_track(netmd_dev_handle* dev, const uint16_t direction)
     return NETMD_NO_ERROR;
 }
 
-netmd_track_index netmd_get_current_track(netmd_dev_handle* dev)
-{
-    unsigned char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04,
-                               0x30, 0x88, 0x02, 0x00, 0x30, 0x88,
-                               0x05, 0x00, 0x30, 0x00, 0x03, 0x00,
-                               0x30, 0x00, 0x02, 0x00, 0xff, 0x00,
-                               0x00, 0x00, 0x00, 0x00};
-    unsigned char buf[255];
-
-    /* TODO: error checking */
-    netmd_exch_message(dev, request, 28, buf);
-    return bcd_to_proper(buf + 35, 2) & 0xffff;
-}
-
 netmd_error netmd_track_next(netmd_dev_handle* dev)
 {
     return netmd_change_track(dev, NETMD_TRACK_NEXT);
@@ -203,23 +189,30 @@ netmd_error netmd_set_playback_position(netmd_dev_handle* dev, netmd_track_index
     return NETMD_NO_ERROR;
 }
 
-netmd_error netmd_get_playback_position(netmd_dev_handle* dev, netmd_time* time)
+netmd_track_index
+netmd_get_playback_position(netmd_dev_handle *dev, netmd_time *time)
 {
-    unsigned char request[] = {0x00, 0x18, 0x09, 0x80, 0x01, 0x04,
-                               0x30, 0x88, 0x02, 0x00, 0x30, 0x88,
-                               0x05, 0x00, 0x30, 0x00, 0x03, 0x00,
-                               0x30, 0x00, 0x02, 0x00, 0xff, 0x00,
-                               0x00, 0x00, 0x00, 0x00};
-    unsigned char buf[255];
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_OPERATING_STATUS_BLOCK, NETMD_DESCRIPTOR_ACTION_OPEN_READ);
 
-    /* TODO: error checking */
-    netmd_exch_message(dev, request, sizeof(request), buf);
-    time->hour = bcd_to_proper(buf + 37, 1) & 0xff;
-    time->minute = bcd_to_proper(buf + 38, 1) & 0xff;
-    time->second = bcd_to_proper(buf + 39, 1) & 0xff;
-    time->frame = bcd_to_proper(buf + 40, 1) & 0xff;
+    struct netmd_bytebuffer *query = netmd_format_query("1809 8001 0430 8802 0030 8805 0030 0003 0030 0002 00 ff00 00000000");
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    return NETMD_NO_ERROR;
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_OPERATING_STATUS_BLOCK, NETMD_DESCRIPTOR_ACTION_CLOSE);
+
+    netmd_track_index track_id = NETMD_INVALID_TRACK;
+    uint8_t hour = 0;
+
+    if (netmd_scan_query(reply->data, reply->size,
+                "1809 8001 0430 %?%? %?%? %?%? %?%? %?%? %?%? %?%? %? %?00 00%?0000 000b 0002 0007 00 %w %B %B %B %B",
+                &track_id, &hour, &time->minute, &time->second, &time->frame)) {
+        time->hour = hour;
+    } else {
+        track_id = NETMD_INVALID_TRACK;
+    }
+
+    netmd_bytebuffer_free(reply);
+
+    return track_id;
 }
 
 netmd_error

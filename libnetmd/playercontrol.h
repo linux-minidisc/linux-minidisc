@@ -107,14 +107,6 @@ netmd_error netmd_set_playmode(netmd_dev_handle* dev, const uint16_t playmode);
 */
 netmd_error netmd_set_current_track(netmd_dev_handle* dev, netmd_track_index track);
 
-/**
-   Gets the currently playing track.
-
-   @param dev Handle to the open minidisc player.
-   @return The current track, or NETMD_INVALID_TRACK on error.
-*/
-netmd_track_index netmd_get_current_track(netmd_dev_handle* dev);
-
 
 /**
    Jump to the next track. If you currently playing the last track, nothing
@@ -154,8 +146,10 @@ netmd_error netmd_set_playback_position(netmd_dev_handle* dev, netmd_track_index
 
    @param dev Handle to the open minidisc player.
    @param time Pointer to save the current time to.
+   @return The currently-playing track ID, or NETMD_INVALID_TRACK on error
 */
-netmd_error netmd_get_playback_position(netmd_dev_handle* dev, netmd_time* time);
+netmd_track_index
+netmd_get_playback_position(netmd_dev_handle* dev, netmd_time* time);
 
 /**
    Gets the used, total and available disc capacity (total and available

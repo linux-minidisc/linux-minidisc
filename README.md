@@ -343,3 +343,10 @@ code is baed on from asivery's AV/C improvements to `netmd-js`.
 The query formatting and scanning gets two new escapes: `%B` and `%W` for
 writing and reading 2-digit and 4-digit BCD values directly, avoiding the
 need to convert BCD explicitly before/after.
+
+
+## Merge `netmd_get_current_track()` into `netmd_get_playback_position()`
+
+Those two functions use the same underlying query, so it makes sense to combine
+them, so that only a single query is done. Also backported the descriptor state
+changes from netmd-js for the playback position query.
