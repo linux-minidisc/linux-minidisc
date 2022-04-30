@@ -35,6 +35,13 @@ typedef struct netmd_time {
 } netmd_time;
 
 /**
+ * 8-byte track UUID
+ */
+typedef struct netmd_uuid {
+    uint8_t uuid[8];
+} netmd_uuid;
+
+/**
  * Forward-declaration of opaque libusb structures
  */
 typedef struct libusb_context libusb_context;

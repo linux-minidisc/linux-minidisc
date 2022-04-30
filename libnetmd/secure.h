@@ -225,12 +225,13 @@ netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
    ID) stored on the MD medium. This is used to verify the identity of a track
    when checking in.
 
+   @param dev Handle to the USB device
    @param track The track number
-   @param uuid  Pointer to the memory, where the 8-byte uuid of the track sould
-                be saved.
+   @param uuid Pointer to the netmd_uuid to store the 8-byte uuid of the track
+   @return NETMD_NO_ERROR on success, or an error code
 */
-netmd_error netmd_secure_get_track_uuid(netmd_dev_handle *dev, uint16_t track,
-                                        unsigned char *uuid);
+netmd_error
+netmd_secure_get_track_uuid(netmd_dev_handle *dev, netmd_track_index track, netmd_uuid *uuid);
 
 /**
    Secure delete with 8-byte signature?

@@ -323,3 +323,10 @@ based request/response methods are now available in libnetmd using the new
 `netmd_format_query()` and `netmd_scan_query()` functions, adopted slightly to
 be more C-like compared to the Python and JavaScript implementations. The
 `netmd_get_track_count()` function is the first one to use this new feature.
+
+
+## `netmdcli uuid <track_id>`
+
+Add support for querying and printing the UUID of a track via `netmdcli`. This
+also introduces the `netmd_uuid` type, `netmd_uuid_to_string()` function and an
+updated `netmd_secure_get_track_uuid()`, making use of new typedefs and query.

@@ -494,3 +494,13 @@ netmd_get_track_count(netmd_dev_handle *dev)
 
     return result;
 }
+
+char *
+netmd_uuid_to_string(const netmd_uuid *uuid)
+{
+    char *buf = malloc(sizeof(uuid->uuid) * 2 + 1);
+    for (int i=0; i<sizeof(uuid->uuid); ++i) {
+        sprintf(buf + i*2, "%02x", ((int)uuid->uuid[i]) & 0xFF);
+    }
+    return buf;
+}

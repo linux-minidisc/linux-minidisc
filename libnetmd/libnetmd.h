@@ -176,6 +176,16 @@ char *netmd_time_to_string(const netmd_time *time);
 
 
 /**
+ * Format a NetMD UUID to a string.
+ *
+ * @param uuid A pointer to a netmd_uuid structure
+ * @return A newly-allocated string, free with netmd_free_string()
+ */
+char *
+netmd_uuid_to_string(const netmd_uuid *uuid);
+
+
+/**
  * Free a string previously returned.
  *
  * @param string An allocated string to be free'd

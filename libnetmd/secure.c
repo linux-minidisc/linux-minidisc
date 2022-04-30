@@ -39,6 +39,7 @@
 #include "utils.h"
 #include "log.h"
 #include "trackinformation.h"
+#include "query.h"
 
 #include <libusb.h>
 #include <errno.h>
@@ -874,24 +875,17 @@ netmd_error netmd_secure_commit_track(netmd_dev_handle *dev, uint16_t track,
     return error;
 }
 
-netmd_error netmd_secure_get_track_uuid(netmd_dev_handle *dev, uint16_t track,
-                                        unsigned char *uuid)
+netmd_error
+netmd_secure_get_track_uuid(netmd_dev_handle *dev, netmd_track_index track, netmd_uuid *uuid)
 {
-    unsigned char cmdhdr[] = {0x10, 0x01};
-    unsigned char cmd[sizeof(cmdhdr) + sizeof(track)];
+    struct netmd_bytebuffer *cmd = netmd_format_query("10 01 %w", track);
 
     netmd_response response;
-    netmd_error error;
+    netmd_error error = netmd_exch_secure_msg(dev, 0x23, (unsigned char *)cmd->data, cmd->size, &response);
+    netmd_check_response_bulk(&response, (unsigned char *)cmd->data, cmd->size, &error);
+    netmd_read_response_bulk(&response, (unsigned char *)uuid, sizeof(*uuid), &error);
 
-    memcpy(cmd, cmdhdr, sizeof(cmdhdr));
-
-    uint16_t tmp = track >> 8;
-    cmd[sizeof(cmdhdr)] = tmp & 0xffU;
-    cmd[sizeof(cmdhdr) + 1] = track & 0xffU;
-
-    error = netmd_exch_secure_msg(dev, 0x23, cmd, sizeof(cmd), &response);
-    netmd_check_response_bulk(&response, cmd, sizeof(cmd), &error);
-    netmd_read_response_bulk(&response, uuid, 8, &error);
+    netmd_bytebuffer_free(cmd);
 
     return error;
 }

@@ -527,6 +527,25 @@ cmd_raw(struct netmdcli_context *ctx)
 }
 
 static int
+cmd_uuid(struct netmdcli_context *ctx)
+{
+    int track_id = netmdcli_context_get_int_arg(ctx, "track_id");
+
+    netmd_uuid uuid;
+
+    netmd_error res = netmd_secure_get_track_uuid(ctx->devh, track_id - 1, &uuid);
+
+    if (res == NETMD_NO_ERROR) {
+        char *uuid_str = netmd_uuid_to_string(&uuid);
+        printf("%s\n", uuid_str);
+        netmd_free_string(uuid_str);
+    } else {
+        fprintf(stderr, "netmd_secure_get_track_uuid() failed: %s\n", netmd_strerror(res));
+    }
+
+    return (res == NETMD_NO_ERROR) ? 0 : 1;
+}
+static int
 cmd_setplaymode(struct netmdcli_context *ctx)
 {
     const char *playmode = netmdcli_context_get_string_arg(ctx, "playmode");
@@ -729,6 +748,7 @@ CMDS[] = {
     { "json",        cmd_json,        "",                              "Output current disc information as JSON" },
     { "---",         NULL,            NULL,                            NULL },
     { "raw",         cmd_raw,         "<hex_string>",                  "Send raw command to player (hex string)" },
+    { "uuid",        cmd_uuid,        "<track_id>",                    "Print the 8-byte UUID of a track as hex string" },
     { "leave",       cmd_leave,       "",                              "Call netmd_secure_leave_session()" },
     { NULL,          NULL,            NULL,                            NULL },
 };
