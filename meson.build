@@ -159,7 +159,6 @@ if get_option('with_gui')
     'qhimdtransfer/main.cpp',
     'qhimdtransfer/qhimdaboutdialog.cpp',
     'qhimdtransfer/qhimddetection.cpp',
-    'qhimdtransfer/qhimdformatdialog.cpp',
     'qhimdtransfer/qhimdmainwindow.cpp',
     'qhimdtransfer/qhimduploaddialog.cpp',
     'qhimdtransfer/qmddevice.cpp',
@@ -187,12 +186,10 @@ if get_option('with_gui')
 
   qhimdtransfer_sources += qt5.preprocess(ui_files: [
     'qhimdtransfer/qhimdaboutdialog.ui',
-    'qhimdtransfer/qhimdformatdialog.ui',
     'qhimdtransfer/qhimdmainwindow.ui',
     'qhimdtransfer/qhimduploaddialog.ui',
   ], moc_headers: [
     'qhimdtransfer/qhimdaboutdialog.h',
-    'qhimdtransfer/qhimdformatdialog.h',
     'qhimdtransfer/qhimdmainwindow.h',
     'qhimdtransfer/qhimduploaddialog.h',
 

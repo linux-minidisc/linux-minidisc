@@ -169,7 +169,6 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
 {
     aboutDialog = new QHiMDAboutDialog;
-    formatDialog = new QHiMDFormatDialog;
     current_device = NULL;
     detect = createDetection(this);
     ui->setupUi(this);
@@ -271,7 +270,7 @@ void QHiMDMainWindow::on_action_Delete_triggered()
 
 void QHiMDMainWindow::on_action_Format_triggered()
 {
-    formatDialog->show();
+    QMessageBox::information(this, "Not implemented", "This feature is not implemented yet");
 }
 
 void QHiMDMainWindow::on_action_Connect_triggered()
