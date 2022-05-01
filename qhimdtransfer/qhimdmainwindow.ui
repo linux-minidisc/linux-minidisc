@@ -21,7 +21,7 @@
    <property name="autoFillBackground">
     <bool>false</bool>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,0,1">
+   <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
@@ -52,18 +52,18 @@
        </layout>
       </item>
       <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item>
-        <widget class="QLabel" name="disc_title_text">
-         <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;disc title:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="DiscTitle"/>
-       </item>
-      </layout>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="disc_title_text">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;disc title:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="DiscTitle"/>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QTreeView" name="TrackList">
@@ -84,99 +84,8 @@
         </attribute>
        </widget>
       </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QPushButton" name="upload_button">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>80</width>
-          <height>40</height>
-         </size>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/arrow_upload.png</normaloff>:/icons/arrow_upload.png</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>60</width>
-          <height>30</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="download_button">
-        <property name="minimumSize">
-         <size>
-          <width>80</width>
-          <height>40</height>
-         </size>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/icons/arrow_download.png</normaloff>:/icons/arrow_download.png</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>60</width>
-          <height>30</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
-        <item>
-         <widget class="QLabel" name="updir_text">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>local directory</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="updir">
-          <property name="text">
-           <string notr="true">/tmp</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QTreeView" name="localScan">
-        <attribute name="headerVisible">
-         <bool>false</bool>
-        </attribute>
-        <attribute name="headerCascadingSectionResizes">
-         <bool>true</bool>
-        </attribute>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_2"/>
       </item>
      </layout>
     </item>
@@ -188,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>784</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_Action">
@@ -200,8 +109,6 @@
     <addaction name="action_Download"/>
     <addaction name="action_Upload"/>
     <addaction name="separator"/>
-    <addaction name="action_Delete"/>
-    <addaction name="action_Rename"/>
     <addaction name="separator"/>
     <addaction name="action_Format"/>
     <addaction name="separator"/>
@@ -214,7 +121,15 @@
     <addaction name="action_Help"/>
     <addaction name="action_About"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="action_Delete"/>
+    <addaction name="action_Rename"/>
+   </widget>
    <addaction name="menu_Action"/>
+   <addaction name="menuEdit"/>
    <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -267,7 +182,7 @@
     <string>Re&amp;name</string>
    </property>
    <property name="toolTip">
-    <string>Rename selected</string>
+    <string>Rename</string>
    </property>
   </action>
   <action name="action_Delete">
@@ -276,7 +191,7 @@
      <normaloff>:/icons/delete.png</normaloff>:/icons/delete.png</iconset>
    </property>
    <property name="text">
-    <string>D&amp;elete selected</string>
+    <string>D&amp;elete</string>
    </property>
   </action>
   <action name="action_Help">

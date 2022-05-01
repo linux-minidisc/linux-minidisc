@@ -111,17 +111,6 @@ libusb_device *QMDDevice::libusbDevice()
 }
 
 
-QStringList QMDDevice::downloadableFileExtensions() const
-{
-    if(dev_type == NETMD_DEVICE)
-        return QStringList() << "wav";
-
-    if(dev_type == HIMD_DEVICE)
-        return QStringList() << "mp3";
-
-    return QStringList();
-}
-
 void QMDDevice::checkfile(QString UploadDirectory, QString &filename, QString extension)
 {
     QFile f;
@@ -220,6 +209,10 @@ bool QNetMDDevice::canUpload()
     return netmd_dev_can_upload(devh);
 }
 
+QStringList QNetMDDevice::downloadableFileExtensions() const
+{
+    return QStringList() << "wav";
+}
 
 static void
 on_recv_progress(struct netmd_recv_progress *recv_progress)
@@ -615,4 +608,17 @@ void QHiMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
 bool QHiMDDevice::download(const QString &filename)
 {
     return (himd_writemp3(himd, filename.toUtf8().data()) == 0);
+}
+
+bool QHiMDDevice::canUpload()
+{
+    // Every Hi-MD device has the possiblity to upload tracks in Hi-MD mode,
+    // only the NetMD uploads are restricted to the MZ-RH1 (whether a single
+    // track is uploadable or not due to DRM will be checked separately)
+    return true;
+}
+
+QStringList QHiMDDevice::downloadableFileExtensions() const
+{
+    return QStringList() << "mp3";
 }

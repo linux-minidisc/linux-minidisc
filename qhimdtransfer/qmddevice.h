@@ -55,11 +55,12 @@ public:
     virtual void setLibusbDevice(libusb_device * dev);
     virtual libusb_device * libusbDevice();
     virtual int trackCount() {return trk_count;}
-    virtual QStringList downloadableFileExtensions() const;
+    virtual QStringList downloadableFileExtensions() const = 0;
     virtual void checkfile(QString UploadDirectory, QString &filename, QString extension);
     virtual void batchUpload(QMDTrackIndexList tlist, QString path) = 0;
     virtual void upload(unsigned int trackidx, QString path) = 0;
     virtual bool download(const QString &filename) = 0;
+    virtual bool canUpload() = 0;
 
 signals:
     void opened();
@@ -86,8 +87,9 @@ public:
     virtual void batchUpload(QMDTrackIndexList tlist, QString path);
     virtual void upload(unsigned int trackidx, QString path);
     virtual bool download(const QString &filename);
+    virtual bool canUpload();
+    virtual QStringList downloadableFileExtensions() const;
 
-    bool canUpload();
     void onUploadProgress(float progress);
 };
 
@@ -107,7 +109,8 @@ public:
     virtual void upload(unsigned int trackidx, QString path);
     virtual void batchUpload(QMDTrackIndexList tlist, QString path);
     virtual bool download(const QString &filename);
-
+    virtual bool canUpload();
+    virtual QStringList downloadableFileExtensions() const;
 };
 
 #endif // QMDDEVICE_H

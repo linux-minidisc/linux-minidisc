@@ -5,55 +5,44 @@
 #include <QApplication>
 #include <QDesktopServices>
 
-void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit)
+void QHiMDMainWindow::set_buttons_enable()
 {
-    ui->action_Connect->setEnabled(connect);
-    ui->action_Download->setEnabled(download);
-    ui->action_Upload->setEnabled(upload);
-    ui->action_Rename->setEnabled(rename);
-    ui->action_Delete->setEnabled(del);
-    ui->action_Format->setEnabled(format);
-    ui->action_Quit->setEnabled(quit);
-    ui->upload_button->setEnabled(upload);
-    ui->download_button->setEnabled(download);
+    bool have_device = (current_device != nullptr);
+    auto *model = ui->TrackList->selectionModel();
+    bool minidisc_tracks_selected = model != nullptr && model->selectedRows(0).length() != 0;
+    bool can_upload = have_device && current_device->canUpload() && minidisc_tracks_selected;
+
+    ui->action_Connect->setEnabled(!have_device);
+    ui->action_Download->setEnabled(have_device);
+    ui->action_Upload->setEnabled(can_upload);
+    ui->action_Rename->setEnabled(minidisc_tracks_selected);
+    ui->action_Delete->setEnabled(minidisc_tracks_selected);
+    ui->action_Format->setEnabled(have_device);
+    ui->action_Quit->setEnabled(true);
+}
+
+static QString
+browser_for_device_type(device_type type)
+{
+    return type == NETMD_DEVICE ? "netmd_browser" : "himd_browser";
 }
 
 void QHiMDMainWindow::init_himd_browser(QMDTracksModel * model)
 {
     int i, width;
-    QString browser = current_device->deviceType() == NETMD_DEVICE ? "netmd_browser" : "himd_browser";
     ui->TrackList->setModel(model);
 
     QObject::connect(ui->TrackList->selectionModel(), SIGNAL(selectionChanged (const QItemSelection &, const QItemSelection &)),
                      this, SLOT(handle_himd_selection_change(const QItemSelection&, const QItemSelection&)));
 
     // read saved column width for this model
+    QString browser = browser_for_device_type(current_device->deviceType());
     for(i = 0; i < ui->TrackList->model()->columnCount(); i++)
     {
         width = settings.value(browser + QString::number(i), 0).toInt();
         if(width != 0)
             ui->TrackList->setColumnWidth(i, width);
     }
-}
-
-void QHiMDMainWindow::init_local_browser()
-{
-    QStringList DownloadFileList;
-    localmodel.setFilter(QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot);
-    localmodel.setNameFilters(QStringList() << "*.mp3" << "*.wav" << "*.oma" << "*.aea");
-    localmodel.setNameFilterDisables(false);
-    localmodel.setReadOnly(false);
-    localmodel.setRootPath("/");
-    ui->localScan->setModel(&localmodel);
-    QModelIndex curdir = localmodel.index(ui->updir->text());
-    ui->localScan->expand(curdir);
-    ui->localScan->setCurrentIndex(curdir);
-    ui->localScan->scrollTo(curdir,QAbstractItemView::PositionAtTop);
-    ui->localScan->hideColumn(2);
-    ui->localScan->hideColumn(3);
-    ui->localScan->setColumnWidth(0, 350);
-    QObject::connect(ui->localScan->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
-                     this, SLOT(handle_local_selection_change(const QItemSelection&, const QItemSelection&)));
 }
 
 void QHiMDMainWindow::save_window_settings()
@@ -129,9 +118,10 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
         /* ask for mountpoint if autodetection fails */
         if(path.isEmpty())
         {
+            // XXX: Duplicate code with on_action_Connect_triggered()
             path = QFileDialog::getExistingDirectory(this,
                                                      tr("Select mountpath for %1").arg(dev->name()),
-                                                     settings.value("lastImageDirectory", QDir::rootPath()).toString(),
+                                                     settings.value("lastImageDirectory", QDir::currentPath()).toString(),
                                                      QFileDialog::ShowDirsOnly
                                                      | QFileDialog::DontResolveSymlinks);
         }
@@ -155,17 +145,14 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
     {
         mdStatus.setText(tr("Error opening minidisc device (") + current_device->name() + "):\n" + error);
         mdStatus.exec();
-        set_buttons_enable(1,0,0,0,0,0,1);
+        // TODO: make sure current_device is nullptr
+        set_buttons_enable();
         ui->himd_devices->setCurrentIndex(0);
         return;
      }
 
-    localmodel.setSelectableExtensions(current_device->downloadableFileExtensions());
-    QModelIndex curdir = localmodel.index(ui->updir->text());
-    ui->localScan->expand(curdir);
-    ui->localScan->setCurrentIndex(curdir);
     ui->DiscTitle->setText(current_device->discTitle());
-    set_buttons_enable(1,0,0,1,1,1,1);
+    set_buttons_enable();
 }
 
 void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
@@ -186,10 +173,7 @@ QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     current_device = NULL;
     detect = createDetection(this);
     ui->setupUi(this);
-    ui->updir->setText(settings.value("lastUploadDirectory",
-                                         QDir::homePath()).toString());
-    set_buttons_enable(1,0,0,0,0,0,1);
-    init_local_browser();
+    set_buttons_enable();
     read_window_settings();
     ui->himdpath->hide();   // not needed, replaced by combo box
     if(!autodetect_init())
@@ -209,15 +193,39 @@ QHiMDMainWindow::~QHiMDMainWindow()
 
 void QHiMDMainWindow::on_action_Download_triggered()
 {
+    if (!current_device) {
+        return;
+    }
+
     QStringList DownloadFileList;
 
+    QString extensions = "";
+    for (const auto &extension: current_device->downloadableFileExtensions()) {
+        if (!extensions.isEmpty()) {
+            extensions += " ";
+        }
+        extensions += "*." + extension;
+    }
 
     DownloadFileList = QFileDialog::getOpenFileNames(
                          this,
-                         tr("Select MP3s for download"),
-                         "/",
-                         "MP3-files (*.mp3)");
+                         tr("Select files for download"),
+                         QDir::currentPath(),
+                         tr("Supported files") + " (" + extensions + ")");
 
+    QApplication::processEvents();
+
+    for (auto &fileName: DownloadFileList) {
+        // TODO: Show UI progress while download is taking place (right now, UI freezes)
+        if (current_device->download(fileName)) {
+            // Open device again to refresh the UI
+            open_device(current_device);
+        } else {
+            QMessageBox errormsg;
+            errormsg.setText(tr("Downloading of files failed."));
+            errormsg.exec();
+        }
+    }
 }
 
 void QHiMDMainWindow::on_action_Upload_triggered()
@@ -251,6 +259,16 @@ void QHiMDMainWindow::on_action_Help_triggered()
     QDesktopServices::openUrl(QUrl("https://github.com/thp/linux-minidisc"));
 }
 
+void QHiMDMainWindow::on_action_Rename_triggered()
+{
+    QMessageBox::information(this, "Not implemented", "This feature is not implemented yet");
+}
+
+void QHiMDMainWindow::on_action_Delete_triggered()
+{
+    QMessageBox::information(this, "Not implemented", "This feature is not implemented yet");
+}
+
 void QHiMDMainWindow::on_action_Format_triggered()
 {
     formatDialog->show();
@@ -261,7 +279,7 @@ void QHiMDMainWindow::on_action_Connect_triggered()
     int index;
     QHiMDDevice *dev;
     QString HiMDDirectory;
-    HiMDDirectory = settings.value("lastImageDirectory", QDir::rootPath()).toString();
+    HiMDDirectory = settings.value("lastImageDirectory", QDir::currentPath()).toString();
     HiMDDirectory = QFileDialog::getExistingDirectory(this,
                                                  tr("Select directory of HiMD Medium"),
                                                  HiMDDirectory,
@@ -279,35 +297,10 @@ void QHiMDMainWindow::on_action_Connect_triggered()
     open_device(dev);
 }
 
-void QHiMDMainWindow::on_upload_button_clicked()
-{
-    upload_to(ui->updir->text());
-}
-
 void QHiMDMainWindow::handle_himd_selection_change(const QItemSelection&, const QItemSelection&)
 {
-    bool nonempty = ui->TrackList->selectionModel()->selectedRows(0).length() != 0;
-
-    ui->action_Upload->setEnabled(nonempty);
-    ui->upload_button->setEnabled(nonempty);
-}
-
-void QHiMDMainWindow::handle_local_selection_change(const QItemSelection&, const QItemSelection&)
-{
-    QModelIndex index = ui->localScan->currentIndex();
-    bool download_possible = false;
-
-    if(localmodel.fileInfo(index).isDir())
-    {
-        ui->updir->setText(localmodel.filePath(index));
-        settings.setValue("lastUploadDirectory", localmodel.filePath(index));
-    }
-
-    if(localmodel.fileInfo(index).isFile())
-        download_possible = current_device && current_device->isOpen();
-
-    ui->action_Download->setEnabled(download_possible);
-    ui->download_button->setEnabled(download_possible);
+    // Re-evaluate which buttons are enabled
+    set_buttons_enable();
 }
 
 void QHiMDMainWindow::device_list_changed(QMDDevicePtrList dplist)
@@ -374,35 +367,19 @@ void QHiMDMainWindow::current_device_closed()
     if(!current_device)
         return;
 
-    QString browser = current_device->deviceType() == NETMD_DEVICE ? "netmd_browser" : "himd_browser";
     QMDTracksModel * mod = (QMDTracksModel *)ui->TrackList->model();
 
     QObject::disconnect(current_device, SIGNAL(closed()), this, SLOT(current_device_closed()));
 
     // save column width for this model first
-    for(i = 0;i < mod->columnCount(); i++)
+    QString browser = browser_for_device_type(current_device->deviceType());
+    for(i = 0;i < mod->columnCount(); i++) {
         settings.setValue(browser + QString::number(i), ui->TrackList->columnWidth(i));
+    }
 
     mod->close();
     current_device = NULL;
     ui->DiscTitle->setText(QString());
     ui->himd_devices->setCurrentIndex(0);
-    set_buttons_enable(1,0,0,0,0,0,1);
-}
-
-void QHiMDMainWindow::on_download_button_clicked()
-{
-    if (!current_device) {
-        return;
-    }
-
-    // TODO: Show UI progress while download is taking place (right now, UI freezes)
-    if (current_device->download(localmodel.filePath(ui->localScan->currentIndex()))) {
-        // Open device again to refresh the UI
-        open_device(current_device);
-    } else {
-        QMessageBox errormsg;
-        errormsg.setText(tr("Downloading of files failed."));
-        errormsg.exec();
-    }
+    set_buttons_enable();
 }

@@ -315,21 +315,3 @@ void QHiMDTracksModel::close()
 
     endResetModel();	/* inform views that the model contents changed */
 }
-
-
-/* QFileSystemModel stuff */
-
-Qt::ItemFlags QHiMDFileSystemModel::flags(const QModelIndex &index) const
-{
-    if(!isDir(index) && !selectableExtensions.contains((fileInfo(index).suffix()), Qt::CaseInsensitive))
-        return Qt::NoItemFlags;   //not selectable, not enabled (grayed out in the browser)
-
-    return QFileSystemModel::flags(index);
-}
-
-void QHiMDFileSystemModel::setSelectableExtensions(QStringList extensions)
-{
-    beginResetModel();
-    selectableExtensions = extensions;
-    endResetModel();
-}

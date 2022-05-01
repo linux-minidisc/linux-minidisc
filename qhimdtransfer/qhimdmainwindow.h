@@ -29,12 +29,11 @@ private:
     QHiMDDetection * detect;
     QNetMDTracksModel ntmodel;
     QHiMDTracksModel htmodel;
-    QHiMDFileSystemModel localmodel;
     QSettings settings;
     QMDDevice * current_device;
-    void set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit);
+
+    void set_buttons_enable();
     void init_himd_browser(QMDTracksModel *model);
-    void init_local_browser();
     void save_window_settings();
     void read_window_settings();
     bool autodetect_init();
@@ -50,13 +49,12 @@ private slots:
     void on_action_Quit_triggered();
     void on_action_About_triggered();
     void on_action_Help_triggered();
-    void on_upload_button_clicked();
+    void on_action_Rename_triggered();
+    void on_action_Delete_triggered();
     void handle_himd_selection_change(const QItemSelection&, const QItemSelection&);
-    void handle_local_selection_change(const QItemSelection&, const QItemSelection&);
     void device_list_changed(QMDDevicePtrList dplist);
     void on_himd_devices_activated(QString device);
     void current_device_closed();
-    void on_download_button_clicked();
 };
 
 #endif // QHIMDMAINWINDOW_H

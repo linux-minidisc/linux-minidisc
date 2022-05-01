@@ -357,3 +357,13 @@ changes from netmd-js for the playback position query.
 The QHiMDTransfer app does have a help button in the toolbar and in the menu,
 but it didn't do anything. Hook it up and for now, open the Github page of
 this fork in the system web browser.
+
+
+## Initial cleanup of QHiMDTransfer
+
+Instead of having a two-pane browser and some redundant information, only have
+a single-pane view, and handle upload and download file selection via dialogs
+and toolbar/menu items. Some menu items (e.g. "Rename" and "Delete") were never
+working, so hook them up for now and show a message until we implement it.
+
+Other initial fixes to the UI and code of QHiMDTransfer, check the diff.

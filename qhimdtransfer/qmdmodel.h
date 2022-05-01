@@ -5,7 +5,6 @@
 
 #include <QList>
 #include <QStringList>
-#include <QFileSystemModel>
 #include <qmddevice.h>
 
 class QMDTracksModel : public QAbstractListModel {
@@ -54,15 +53,6 @@ public:
     virtual QString open(QMDDevice *device);	/* returns null if OK, error message otherwise */
     virtual bool is_open();
     virtual void close();
-};
-
-class QHiMDFileSystemModel : public QFileSystemModel {
-    Q_OBJECT
-
-    QStringList selectableExtensions;
-public:
-    virtual Qt::ItemFlags flags(const QModelIndex &index) const;
-    void setSelectableExtensions(QStringList extensions);
 };
 
 #endif // QMDMODEL_H
