@@ -59,6 +59,20 @@
        </layout>
       </item>
       <item>
+       <widget class="QLabel" name="LabelRecorded">
+        <property name="text">
+         <string>Recorded: ...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="LabelAvailable">
+        <property name="text">
+         <string>Available: ...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QTreeView" name="TrackList">
         <property name="editTriggers">
          <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>

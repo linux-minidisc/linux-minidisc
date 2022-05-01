@@ -64,6 +64,8 @@ public:
     virtual bool isWritable() = 0;
     virtual bool canFormatDisk() = 0;
     virtual bool formatDisk() = 0;
+    virtual QString getRecordedLabelText() = 0;
+    virtual QString getAvailableLabelText() = 0;
 
 signals:
     void opened();
@@ -78,6 +80,9 @@ class QNetMDDevice : public QMDDevice {
 
     int upload_reported_track_blocks;
     int upload_total_track_blocks;
+
+    QString recordedLabelText;
+    QString availableLabelText;
 public:
     explicit QNetMDDevice();
     virtual ~QNetMDDevice();
@@ -96,6 +101,9 @@ public:
     virtual bool isWritable();
     virtual bool canFormatDisk();
     virtual bool formatDisk();
+
+    virtual QString getRecordedLabelText();
+    virtual QString getAvailableLabelText();
 
     void onUploadProgress(float progress);
 };
@@ -122,6 +130,9 @@ public:
     virtual bool isWritable();
     virtual bool canFormatDisk();
     virtual bool formatDisk();
+
+    virtual QString getRecordedLabelText();
+    virtual QString getAvailableLabelText();
 };
 
 #endif // QMDDEVICE_H

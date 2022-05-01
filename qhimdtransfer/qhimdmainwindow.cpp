@@ -27,6 +27,10 @@ void QHiMDMainWindow::set_buttons_enable()
 
     ui->DiscTitle->setEnabled(have_device);
     ui->TrackList->setEnabled(have_device);
+
+    // TODO: Implement those two labels for Hi-MD as well
+    ui->LabelRecorded->setVisible(have_device && current_device->deviceType() == NETMD_DEVICE);
+    ui->LabelAvailable->setVisible(have_device && current_device->deviceType() == NETMD_DEVICE);
 }
 
 static QString
@@ -178,9 +182,8 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
         return;
      }
 
-    if (!current_device->isWritable()) {
-        ui->statusBar->showMessage(tr("MiniDisc is write-protected, download and edit disabled"), 10000);
-    }
+    ui->LabelRecorded->setText(dev->getRecordedLabelText());
+    ui->LabelAvailable->setText(dev->getAvailableLabelText());
 
     ui->DiscTitle->setText(current_device->discTitle());
     set_buttons_enable();

@@ -153,9 +153,7 @@ void QNetMDDevice::setUsbDevice(netmd_device * dev)
 
 QString QNetMDDevice::open()
 {
-    uint8_t i = 0;
     netmd_error error;
-    char buffer[256];
 
     if(!netmd)
         return tr("netmd_device not set, use setUsbDevice() function first");
@@ -165,11 +163,53 @@ QString QNetMDDevice::open()
 
     current_md = netmd_minidisc_load(devh);
 
-    /* generate track count first, needed by QNetMDTracksModel */
-    while(netmd_request_title(devh, i, buffer, sizeof(buffer)) >= 0)
-        i++;
+    trk_count = netmd_get_track_count(devh);
 
-    trk_count = i;
+    {
+        // TODO: This block has some overlap with netmdcli. We either want to
+        // make a "nice" UI with progress bars and stuff for usage, or we want
+        // to maybe move some of these as convenience helpers into libnetmd.
+
+        netmd_disc_capacity capacity;
+        netmd_get_disc_capacity(devh, &capacity);
+
+        char *recorded = netmd_time_to_string(&capacity.recorded);
+        char *total = netmd_time_to_string(&capacity.total);
+        char *available = netmd_time_to_string(&capacity.available);
+
+        int total_capacity = netmd_time_to_seconds(&capacity.total);
+        int available_capacity = netmd_time_to_seconds(&capacity.available);
+
+        // Need to calculate it like this, because only "total" and "available" are
+        // calculated in SP time ("recorded" might be more than that due to Mono/LP2/LP4).
+        int percentage_used = (total_capacity != 0) ? (100 * (total_capacity - available_capacity) / total_capacity) : 0;
+
+        netmd_time_double(&capacity.available);
+        char *available_lp2_mono = netmd_time_to_string(&capacity.available);
+
+        netmd_time_double(&capacity.available);
+        char *available_lp4 = netmd_time_to_string(&capacity.available);
+
+        int ntracks = netmd_get_track_count(devh);
+
+        recordedLabelText = QString("%1 in %2 tracks (%3% of %4 used, %5)")
+            .arg(recorded)
+            .arg(ntracks)
+            .arg(percentage_used)
+            .arg(total)
+            .arg(netmd_is_disc_writable(devh) ? "writable" : "write-protected");
+
+        availableLabelText = QString("%1 (SP) / %2 (LP2/Mono) / %3 (LP4)")
+            .arg(available)
+            .arg(available_lp2_mono)
+            .arg(available_lp4);
+
+        netmd_free_string(recorded);
+        netmd_free_string(total);
+        netmd_free_string(available);
+        netmd_free_string(available_lp2_mono);
+        netmd_free_string(available_lp4);
+    }
 
     is_open = true;
     md_inserted = true;
@@ -333,6 +373,18 @@ bool QNetMDDevice::formatDisk()
     error = netmd_secure_leave_session(devh);
 
     return error == NETMD_NO_ERROR;
+}
+
+QString
+QNetMDDevice::getRecordedLabelText()
+{
+    return "Recorded: " + recordedLabelText;
+}
+
+QString
+QNetMDDevice::getAvailableLabelText()
+{
+    return "Available: " + availableLabelText;
 }
 
 /* himd device members */
@@ -662,4 +714,16 @@ bool QHiMDDevice::formatDisk()
 {
     // Not implemented yet, see basictools/himdformat.c
     return false;
+}
+
+QString
+QHiMDDevice::getRecordedLabelText()
+{
+    return "Recorded: ...";
+}
+
+QString
+QHiMDDevice::getAvailableLabelText()
+{
+    return "Available: ...";
 }
