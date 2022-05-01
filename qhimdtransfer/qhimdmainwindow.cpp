@@ -13,7 +13,7 @@ void QHiMDMainWindow::set_buttons_enable()
 
     bool is_writable = have_device && current_device->isWritable();
     bool can_download = have_device && is_writable;
-    bool can_upload = have_device && is_writable && current_device->canUpload() && minidisc_tracks_selected;
+    bool can_upload = have_device && current_device->canUpload() && minidisc_tracks_selected;
     bool can_edit = have_device && minidisc_tracks_selected;
     bool can_format = have_device && is_writable && current_device->canFormatDisk();
 
