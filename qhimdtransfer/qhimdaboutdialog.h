@@ -14,6 +14,9 @@ public:
     explicit QHiMDAboutDialog(QWidget *parent = 0);
     virtual ~QHiMDAboutDialog();
 
+public slots:
+    void onLinkActivated(const QString &);
+
 protected:
     virtual void changeEvent(QEvent *e);
 

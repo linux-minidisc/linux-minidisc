@@ -40,13 +40,11 @@ private:
     void upload_to(const QString & path);
 
 private slots:
-    void on_action_Connect_triggered();
     void on_action_Format_triggered();
     void on_action_Upload_triggered();
     void on_action_Download_triggered();
     void on_action_Quit_triggered();
     void on_action_About_triggered();
-    void on_action_Help_triggered();
     void on_action_Rename_triggered();
     void on_action_Delete_triggered();
     void handle_himd_selection_change(const QItemSelection&, const QItemSelection&);

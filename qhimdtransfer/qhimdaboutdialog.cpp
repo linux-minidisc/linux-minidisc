@@ -3,6 +3,8 @@
 
 #include "qhimdtransfer_config.h"
 
+#include <QDesktopServices>
+
 QHiMDAboutDialog::QHiMDAboutDialog(QWidget *parent) :
     QDialog(parent),
     m_ui(new Ui::QHiMDAboutDialog)
@@ -25,4 +27,9 @@ void QHiMDAboutDialog::changeEvent(QEvent *e)
     default:
         break;
     }
+}
+
+void QHiMDAboutDialog::onLinkActivated(const QString &url)
+{
+    QDesktopServices::openUrl(url);
 }

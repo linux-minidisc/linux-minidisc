@@ -122,16 +122,23 @@ QHiMDDetection::~QHiMDDetection()
         netmd_clean(&dev_list);
 }
 
+
+QString
+QHiMDDetection::getDefaultLabel()
+{
+    return tr("Hi-MD folder");
+}
+
 bool QHiMDDetection::start_hotplug()
 {
     int reg_hotplug;
 
     libusb_init(&ctx);
 
-    /* create device entry for disc images first, should be the first entry */
+    /* create device entry for folder paths first, should be the first entry */
     QHiMDDevice * mddev = new QHiMDDevice();
     mddev->setMdInserted(false);
-    mddev->setName("disc image");
+    mddev->setName(getDefaultLabel());
     dlist.append(mddev);
     emit deviceListChanged(dlist);
 

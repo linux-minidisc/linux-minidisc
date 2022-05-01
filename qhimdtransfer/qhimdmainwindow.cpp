@@ -17,13 +17,15 @@ void QHiMDMainWindow::set_buttons_enable()
     bool can_edit = have_device && minidisc_tracks_selected;
     bool can_format = have_device && is_writable && current_device->canFormatDisk();
 
-    ui->action_Connect->setEnabled(!have_device);
     ui->action_Download->setEnabled(can_download);
     ui->action_Upload->setEnabled(can_upload);
     ui->action_Rename->setEnabled(can_edit);
     ui->action_Delete->setEnabled(can_edit);
     ui->action_Format->setEnabled(can_format);
     ui->action_Quit->setEnabled(true);
+
+    ui->DiscTitle->setEnabled(have_device);
+    ui->TrackList->setEnabled(have_device);
 }
 
 static QString
@@ -106,12 +108,31 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
         ui->himd_devices->setCurrentIndex(index);  // set correct device index in the combo box
     }
 
-    /* handle disc images, use previously choosen image path if availlable else ask for path
-     * user can use connect button to choose another imape path */
-    if(dev->deviceType() == HIMD_DEVICE && dev->path().isEmpty() && dev->name().contains("disc image"))
-    {
+    /* handle folders, use previously chosen folder if available or ask for path
+     * user can use connect button to choose another image path */
+    if(dev->deviceType() == HIMD_DEVICE && dev->path().isEmpty() && dev->name().contains(detect->getDefaultLabel())) {
         ui->himd_devices->setCurrentIndex(0);
-        on_action_Connect_triggered();
+
+        int index;
+        QHiMDDevice *dev;
+        QString HiMDDirectory;
+        HiMDDirectory = settings.value("lastImageDirectory", QDir::currentPath()).toString();
+        HiMDDirectory = QFileDialog::getExistingDirectory(this,
+                                                     tr("Select directory of HiMD Medium"),
+                                                     HiMDDirectory,
+                                                     QFileDialog::ShowDirsOnly
+                                                     | QFileDialog::DontResolveSymlinks);
+        if(HiMDDirectory.isEmpty())
+            return;
+
+        index = ui->himd_devices->findText(detect->getDefaultLabel(), Qt::MatchContains);
+        ui->himd_devices->setCurrentIndex(index);   // index of disk image device
+        dev = (QHiMDDevice *)ui->himd_devices->itemData(index).value<void *>();
+        dev->setPath(HiMDDirectory);
+        ui->himd_devices->setItemText(index, QString((dev->name() + " at " + dev->path() )));
+
+        open_device(dev);
+
         return;
     }
 
@@ -177,13 +198,12 @@ void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::QHiMDMainWindowClass)
 {
-    aboutDialog = new QHiMDAboutDialog;
+    aboutDialog = new QHiMDAboutDialog(this);
     current_device = NULL;
     detect = createDetection(this);
     ui->setupUi(this);
     set_buttons_enable();
     read_window_settings();
-    ui->himdpath->hide();   // not needed, replaced by combo box
     if(!autodetect_init())
         ui->statusBar->showMessage(" autodetection disabled", 10000);
 }
@@ -261,12 +281,6 @@ void QHiMDMainWindow::on_action_About_triggered()
     aboutDialog->show();
 }
 
-void QHiMDMainWindow::on_action_Help_triggered()
-{
-    // TODO: Change this once changes are merged upstream
-    QDesktopServices::openUrl(QUrl("https://github.com/thp/linux-minidisc"));
-}
-
 void QHiMDMainWindow::on_action_Rename_triggered()
 {
     QMessageBox::information(this, "Not implemented", "This feature is not implemented yet");
@@ -295,29 +309,6 @@ void QHiMDMainWindow::on_action_Format_triggered()
     }
 }
 
-void QHiMDMainWindow::on_action_Connect_triggered()
-{
-    int index;
-    QHiMDDevice *dev;
-    QString HiMDDirectory;
-    HiMDDirectory = settings.value("lastImageDirectory", QDir::currentPath()).toString();
-    HiMDDirectory = QFileDialog::getExistingDirectory(this,
-                                                 tr("Select directory of HiMD Medium"),
-                                                 HiMDDirectory,
-                                                 QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks);
-    if(HiMDDirectory.isEmpty())
-        return;
-
-    index = ui->himd_devices->findText("disc image", Qt::MatchContains);
-    ui->himd_devices->setCurrentIndex(index);   // index of disk image device
-    dev = (QHiMDDevice *)ui->himd_devices->itemData(index).value<void *>();
-    dev->setPath(HiMDDirectory);
-    ui->himd_devices->setItemText(index, QString((dev->name() + " at " + dev->path() )));
-
-    open_device(dev);
-}
-
 void QHiMDMainWindow::handle_himd_selection_change(const QItemSelection&, const QItemSelection&)
 {
     // Re-evaluate which buttons are enabled
@@ -344,7 +335,7 @@ void QHiMDMainWindow::device_list_changed(QMDDevicePtrList dplist)
         if(dev->deviceType() == HIMD_DEVICE && !dev->path().isEmpty())
             device.append(" at " + dev->path());
         ui->himd_devices->addItem(device, QVariant::fromValue((void *)dev));
-        if(!dev->name().contains("disc image"))
+        if(!dev->name().contains(detect->getDefaultLabel()))
             devices << dev->name();
     }
 
@@ -403,4 +394,5 @@ void QHiMDMainWindow::current_device_closed()
     ui->DiscTitle->setText(QString());
     ui->himd_devices->setCurrentIndex(0);
     set_buttons_enable();
+    ui->TrackList->setModel(nullptr);
 }

@@ -255,7 +255,7 @@ void QHiMDWinDetection::remove_himddevice(QString path, libusb_device * dev)
     if(hdev->isOpen())
         hdev->close();
 
-    if(hdev->name() != "disc image")
+    if(hdev->name() != getDefaultLabel())
     {
         if(hdev->MdChange() != NULL)
             unregister_mediaChange((HDEVNOTIFY)hdev->MdChange());

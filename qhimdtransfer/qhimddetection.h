@@ -57,6 +57,7 @@ public:
     QMDDevice *find_by_name(QString name);
     QMDDevice *find_by_libusbDevice(libusb_device * dev);
     virtual QString mountpoint(QMDDevice *dev);
+    QString getDefaultLabel();
 private:
     virtual void add_himddevice(QString path, QString name, libusb_device * dev) {}
     virtual void remove_himddevice(QString path, libusb_device * dev = NULL);

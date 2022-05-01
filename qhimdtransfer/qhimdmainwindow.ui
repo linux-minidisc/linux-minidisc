@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>784</width>
-    <height>539</height>
+    <width>615</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,1">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
         <item>
          <widget class="QLabel" name="himd_mountpoint">
           <property name="font">
@@ -35,14 +35,7 @@
            </font>
           </property>
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;minidisc device (path):&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="himdpath">
-          <property name="text">
-           <string>(disconnected)</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Device:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -56,7 +49,7 @@
         <item>
          <widget class="QLabel" name="disc_title_text">
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;disc title:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Disc title:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -96,7 +89,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>784</width>
+     <width>615</width>
      <height>22</height>
     </rect>
    </property>
@@ -104,7 +97,6 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="action_Connect"/>
     <addaction name="separator"/>
     <addaction name="action_Download"/>
     <addaction name="action_Upload"/>
@@ -116,9 +108,8 @@
    </widget>
    <widget class="QMenu" name="menu">
     <property name="title">
-     <string>&amp;?</string>
+     <string>&amp;Help</string>
     </property>
-    <addaction name="action_Help"/>
     <addaction name="action_About"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -143,8 +134,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_Connect"/>
-   <addaction name="separator"/>
    <addaction name="action_Download"/>
    <addaction name="action_Upload"/>
    <addaction name="separator"/>
@@ -152,7 +141,8 @@
    <addaction name="action_Delete"/>
    <addaction name="action_Format"/>
    <addaction name="separator"/>
-   <addaction name="action_Help"/>
+   <addaction name="action_About"/>
+   <addaction name="separator"/>
    <addaction name="action_Quit"/>
   </widget>
   <action name="action_Download">
@@ -194,15 +184,6 @@
     <string>D&amp;elete</string>
    </property>
   </action>
-  <action name="action_Help">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/help.png</normaloff>:/icons/help.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Help</string>
-   </property>
-  </action>
   <action name="action_About">
    <property name="icon">
     <iconset resource="icons.qrc">
@@ -231,15 +212,6 @@
    </property>
    <property name="text">
     <string>&amp;Quit</string>
-   </property>
-  </action>
-  <action name="action_Connect">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/icons/connect.png</normaloff>:/icons/connect.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Connect</string>
    </property>
   </action>
  </widget>
