@@ -3,6 +3,7 @@
 #include "qhimdaboutdialog.h"
 #include <QMessageBox>
 #include <QApplication>
+#include <QDesktopServices>
 
 void QHiMDMainWindow::set_buttons_enable(bool connect, bool download, bool upload, bool rename, bool del, bool format, bool quit)
 {
@@ -242,6 +243,12 @@ void QHiMDMainWindow::on_action_Quit_triggered()
 void QHiMDMainWindow::on_action_About_triggered()
 {
     aboutDialog->show();
+}
+
+void QHiMDMainWindow::on_action_Help_triggered()
+{
+    // TODO: Change this once changes are merged upstream
+    QDesktopServices::openUrl(QUrl("https://github.com/thp/linux-minidisc"));
 }
 
 void QHiMDMainWindow::on_action_Format_triggered()

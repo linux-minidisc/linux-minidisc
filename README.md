@@ -350,3 +350,10 @@ need to convert BCD explicitly before/after.
 Those two functions use the same underlying query, so it makes sense to combine
 them, so that only a single query is done. Also backported the descriptor state
 changes from netmd-js for the playback position query.
+
+
+## Hook up "Help" action in QHiMDTransfer
+
+The QHiMDTransfer app does have a help button in the toolbar and in the menu,
+but it didn't do anything. Hook it up and for now, open the Github page of
+this fork in the system web browser.

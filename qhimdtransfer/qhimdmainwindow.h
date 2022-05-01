@@ -49,6 +49,7 @@ private slots:
     void on_action_Download_triggered();
     void on_action_Quit_triggered();
     void on_action_About_triggered();
+    void on_action_Help_triggered();
     void on_upload_button_clicked();
     void handle_himd_selection_change(const QItemSelection&, const QItemSelection&);
     void handle_local_selection_change(const QItemSelection&, const QItemSelection&);
