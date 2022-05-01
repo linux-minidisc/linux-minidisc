@@ -125,53 +125,41 @@ netmd_get_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
     return title_size - 25;
 }
 
-int netmd_set_track_title(netmd_dev_handle* dev, netmd_track_index track, const char *buffer)
+netmd_error
+netmd_set_track_title(netmd_dev_handle *dev, netmd_track_index track, const char *buffer)
 {
-    int ret = 1;
-    unsigned char *title_request = NULL;
-    /* handshakes for 780/980/etc */
-    unsigned char hs2[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02, 0x00, 0x00};
-    unsigned char hs3[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02, 0x03, 0x00};
+    // Based on netmd-js
 
-    unsigned char title_header[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
-                                    0x02, 0x00, 0x00, 0x30, 0x00, 0x0a,
-                                    0x00, 0x50, 0x00, 0x00, 0x0a, 0x00,
-                                    0x00, 0x00, 0x0d};
-    unsigned char reply[255];
-    unsigned char *buf;
-    size_t size;
-    int oldsize;
+    unsigned char old_title[255];
 
-    /* the title update command wants to now how many bytes to replace */
-    oldsize = netmd_request_title(dev, track, (char *)reply, sizeof(reply));
-    if(oldsize == -1)
-        oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
-
-    size = strlen(buffer);
-    title_request = malloc(sizeof(char) * (0x15 + size));
-    memcpy(title_request, title_header, 0x15);
-    memcpy((title_request + 0x15), buffer, size);
-
-    buf = title_request + 7;
-    netmd_copy_word_to_buffer(&buf, track, 0);
-    title_request[16] = size & 0xff;
-    title_request[20] = oldsize & 0xff;
-
-
-    /* send handshakes */
-    netmd_exch_message(dev, hs2, 8, reply);
-    netmd_exch_message(dev, hs3, 8, reply);
-
-    ret = netmd_exch_message(dev, title_request, 0x15 + size, reply);
-    free(title_request);
-
-    if(ret < 0)
-    {
-        netmd_log(NETMD_LOG_WARNING, "netmd_set_title: exchange failed, ret=%d\n", ret);
-        return 0;
+    /* the title update command wants to now know many bytes to replace */
+    int oldLen = netmd_request_title(dev, track, (char *)old_title, sizeof(old_title));
+    if (oldLen == -1) {
+        oldLen = 0; /* Reading failed -> no title at all, replace 0 bytes */
     }
 
-    return 1;
+    // TODO: Wide char support
+    uint8_t wcharValue = 2;
+
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_UTOC1_TD, NETMD_DESCRIPTOR_ACTION_OPEN_WRITE);
+
+    // TODO: Sanitize title
+    struct netmd_bytebuffer *encoded = netmd_bytebuffer_new_from_string(buffer);
+    uint16_t newLen = encoded->size;
+
+    struct netmd_bytebuffer *query = netmd_format_query("1807 022018%b %w 3000 0a00 5000 %w 0000 %w %*",
+            wcharValue, track, newLen, oldLen, encoded);
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
+
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_UTOC1_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+
+    netmd_bytebuffer_free(encoded);
+
+    if (!netmd_scan_query_buffer(reply, "1807 022018%? %?%? 3000 0a00 5000 %?%? 0000 %?%?")) {
+        return NETMD_ERROR;
+    }
+
+    return NETMD_NO_ERROR;
 }
 
 int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t finish)

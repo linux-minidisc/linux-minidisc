@@ -73,16 +73,15 @@ const char *netmd_track_flags_to_string(enum NetMDTrackFlags flags);
 
 
 /**
-   Sets title for the specified track. If making multiple changes,
-   call netmd_cache_toc before netmd_set_title and netmd_sync_toc
-   afterwards.
+   Sets title for the specified track.
 
    @param dev pointer to device returned by netmd_open
    @param track Zero based index of track your requesting.
-   @param buffer buffer to hold the name.
-   @return returns 0 for fail 1 for success.
+   @param buffer String containing the new track name.
+   @return NETMD_NO_ERROR on success, or an error code
 */
-int netmd_set_track_title(netmd_dev_handle* dev, netmd_track_index track, const char *buffer);
+netmd_error
+netmd_set_track_title(netmd_dev_handle* dev, netmd_track_index track, const char *buffer);
 
 /**
    Moves track around the disc. (does not update groups)

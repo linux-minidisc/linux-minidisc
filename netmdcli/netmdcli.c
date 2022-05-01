@@ -118,11 +118,7 @@ cmd_rename(struct netmdcli_context *ctx)
     int track_id = netmdcli_context_get_int_arg(ctx, "track_id") - 1;
     const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
 
-    netmd_cache_toc(ctx->devh);
-    netmd_set_track_title(ctx->devh, track_id, new_title);
-    netmd_sync_toc(ctx->devh);
-
-    return 0;
+    return (netmd_set_track_title(ctx->devh, track_id, new_title) == NETMD_NO_ERROR) ? 0 : 0;
 }
 
 static int
