@@ -214,3 +214,9 @@ int QNetMDTrack::blockcount() const
     // relative track durations in the QHiMDUploadDialog currently.
     return 100 * (info.duration.minute * 60 + info.duration.second);
 }
+
+bool
+QNetMDTrack::rename(const QString &name)
+{
+    return netmd_set_track_title(devh, trkindex, name.toUtf8().data()) == NETMD_NO_ERROR;
+}

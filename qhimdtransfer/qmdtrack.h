@@ -31,6 +31,7 @@ public:
     virtual QTime duration() const {return QTime();}
     virtual bool copyprotected() const {return true;}
     virtual int blockcount() const {return 0;}
+    virtual bool rename(const QString &) {return false;}
 };
 
 class QHiMDTrack : public QMDTrack{
@@ -74,6 +75,7 @@ public:
     virtual QTime duration() const;
     virtual bool copyprotected() const;
     virtual int blockcount() const;
+    virtual bool rename(const QString &);
 };
 
 typedef QList<QMDTrack> QMDTrackList;

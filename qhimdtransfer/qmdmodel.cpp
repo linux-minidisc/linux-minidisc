@@ -12,6 +12,18 @@ enum ncolumnum {
   LAST_ncolumnnum = CoUploadable
 };
 
+QMDTrack *
+QNetMDTracksModel::getTrack(int index)
+{
+    return &allTracks[index];
+}
+
+QMDTrack *
+QHiMDTracksModel::getTrack(int index)
+{
+    // TODO
+    return nullptr;
+}
 
 /* netmd tracks model */
 QVariant QNetMDTracksModel::headerData(int section, Qt::Orientation orientation, int role) const

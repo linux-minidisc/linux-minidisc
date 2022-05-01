@@ -39,6 +39,8 @@ private:
     void open_device(QMDDevice * dev);
     void upload_to(const QString & path);
 
+    QMDTrackIndexList getSelectedTrackIndexList();
+
 private slots:
     void on_action_Format_triggered();
     void on_action_Upload_triggered();

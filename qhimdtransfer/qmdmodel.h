@@ -18,6 +18,7 @@ public:
     virtual QString open(QMDDevice *device = NULL) = 0;
     virtual bool is_open() {return false;}
     virtual void close() {}
+    virtual QMDTrack *getTrack(int index) = 0;
 };
 
 class QNetMDTracksModel : public QMDTracksModel {
@@ -36,6 +37,7 @@ public:
     QString open(QMDDevice *device);	/* returns null if OK, error message otherwise */
     virtual bool is_open();
     void close();
+    virtual QMDTrack *getTrack(int index);
 };
 
 class QHiMDTracksModel : public QMDTracksModel {
@@ -53,6 +55,7 @@ public:
     virtual QString open(QMDDevice *device);	/* returns null if OK, error message otherwise */
     virtual bool is_open();
     virtual void close();
+    virtual QMDTrack *getTrack(int index);
 };
 
 #endif // QMDMODEL_H

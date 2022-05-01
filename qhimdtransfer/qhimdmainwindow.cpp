@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QDesktopServices>
+#include <QInputDialog>
 
 void QHiMDMainWindow::set_buttons_enable()
 {
@@ -14,7 +15,7 @@ void QHiMDMainWindow::set_buttons_enable()
     bool is_writable = have_device && current_device->isWritable();
     bool can_download = have_device && is_writable;
     bool can_upload = have_device && current_device->canUpload() && minidisc_tracks_selected;
-    bool can_edit = have_device && minidisc_tracks_selected;
+    bool can_edit = have_device && minidisc_tracks_selected && current_device->deviceType() == NETMD_DEVICE;
     bool can_format = have_device && is_writable && current_device->canFormatDisk();
 
     ui->action_Download->setEnabled(can_download);
@@ -185,14 +186,21 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
     set_buttons_enable();
 }
 
-void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
+QMDTrackIndexList
+QHiMDMainWindow::getSelectedTrackIndexList()
 {
     QMDTrackIndexList tlist;
 
-    foreach(QModelIndex index, ui->TrackList->selectionModel()->selectedRows(0))
+    for (auto &index: ui->TrackList->selectionModel()->selectedRows(0)) {
         tlist.append(index.row());
+    }
 
-    current_device->batchUpload(tlist, UploadDirectory);
+    return tlist;
+}
+
+void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
+{
+    current_device->batchUpload(getSelectedTrackIndexList(), UploadDirectory);
 }
 
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
@@ -283,7 +291,48 @@ void QHiMDMainWindow::on_action_About_triggered()
 
 void QHiMDMainWindow::on_action_Rename_triggered()
 {
-    QMessageBox::information(this, "Not implemented", "This feature is not implemented yet");
+    // TODO: For Hi-MD, have a nice metadata edit dialog
+
+    bool changed = false;
+
+    QMDTrackIndexList tracks = getSelectedTrackIndexList();
+    auto *model = static_cast<QMDTracksModel *>(ui->TrackList->model());
+    for (auto index: tracks) {
+        auto *track = model->getTrack(index);
+
+        // Just in case we hit this with QHiMDTracksModel
+        if (track == nullptr) {
+            continue;
+        }
+
+        QInputDialog dlg(this);
+        dlg.setInputMode(QInputDialog::TextInput);
+        dlg.setWindowTitle(tr("Rename track"));
+        dlg.setLabelText(tr("New title:"));
+        dlg.setTextValue(track->title());
+        dlg.resize(480, 100);
+        if (!dlg.exec()) {
+            break;
+        }
+
+        if (dlg.textValue() == track->title()) {
+            continue;
+        }
+
+        if (track->rename(dlg.textValue())) {
+            changed = true;
+        } else {
+            QMessageBox::information(this,
+                    tr("Error"),
+                    tr("Track rename failed"));
+            break;
+        }
+    }
+
+    if (changed) {
+        // Reload track list
+        open_device(current_device);
+    }
 }
 
 void QHiMDMainWindow::on_action_Delete_triggered()
