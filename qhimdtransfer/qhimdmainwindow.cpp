@@ -10,14 +10,19 @@ void QHiMDMainWindow::set_buttons_enable()
     bool have_device = (current_device != nullptr);
     auto *model = ui->TrackList->selectionModel();
     bool minidisc_tracks_selected = model != nullptr && model->selectedRows(0).length() != 0;
-    bool can_upload = have_device && current_device->canUpload() && minidisc_tracks_selected;
+
+    bool is_writable = have_device && current_device->isWritable();
+    bool can_download = have_device && is_writable;
+    bool can_upload = have_device && is_writable && current_device->canUpload() && minidisc_tracks_selected;
+    bool can_edit = have_device && minidisc_tracks_selected;
+    bool can_format = have_device && is_writable && current_device->canFormatDisk();
 
     ui->action_Connect->setEnabled(!have_device);
-    ui->action_Download->setEnabled(have_device);
+    ui->action_Download->setEnabled(can_download);
     ui->action_Upload->setEnabled(can_upload);
-    ui->action_Rename->setEnabled(minidisc_tracks_selected);
-    ui->action_Delete->setEnabled(minidisc_tracks_selected);
-    ui->action_Format->setEnabled(have_device);
+    ui->action_Rename->setEnabled(can_edit);
+    ui->action_Delete->setEnabled(can_edit);
+    ui->action_Format->setEnabled(can_format);
     ui->action_Quit->setEnabled(true);
 }
 
@@ -151,6 +156,10 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
         return;
      }
 
+    if (!current_device->isWritable()) {
+        ui->statusBar->showMessage(tr("MiniDisc is write-protected, download and edit disabled"), 10000);
+    }
+
     ui->DiscTitle->setText(current_device->discTitle());
     set_buttons_enable();
 }
@@ -270,7 +279,20 @@ void QHiMDMainWindow::on_action_Delete_triggered()
 
 void QHiMDMainWindow::on_action_Format_triggered()
 {
-    QMessageBox::information(this, "Not implemented", "This feature is not implemented yet");
+    if (!current_device) {
+        return;
+    }
+
+    if (QMessageBox::question(this,
+                tr("Format medium"),
+                tr("Really format MiniDisc (all tracks and data will be lost)?")) == QMessageBox::Yes) {
+        if (!current_device->formatDisk()) {
+            QMessageBox::information(this, tr("Operation failed"), tr("Could not format medium."));
+        } else {
+            // Open device again to refresh the UI
+            open_device(current_device);
+        }
+    }
 }
 
 void QHiMDMainWindow::on_action_Connect_triggered()

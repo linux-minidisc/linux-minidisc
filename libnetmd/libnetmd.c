@@ -267,17 +267,42 @@ int netmd_delete_track(netmd_dev_handle* dev, netmd_track_index track)
     return ret;
 }
 
-/* AV/C Disc Subunit Specification ERASE (0x40),
- * subfunction "complete" (0x00) */
-int netmd_erase_disc(netmd_dev_handle* dev)
+bool
+netmd_is_disc_writable(netmd_dev_handle *dev)
 {
-    int ret = 0;
-    unsigned char request[] = {0x00, 0x18, 0x40, 0xff, 0x00, 0x00};
-    unsigned char reply[255];
+    // Based on netmd-js / libnetmd.py code
 
-    ret = netmd_exch_message(dev, request, 11, reply);
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_ROOT_TD, NETMD_DESCRIPTOR_ACTION_OPEN_READ);
 
-    return ret;
+    struct netmd_bytebuffer *query = netmd_format_query("1806 01101000 ff00 0001000b");
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
+
+    netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_ROOT_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+
+    uint8_t flags = 0;
+    if (netmd_scan_query_buffer(reply, "1806 01101000 1000 0001000b %b", &flags)) {
+        if (flags == NETMD_DISC_FLAG_WRITABLE) {
+            return true;
+        } else if (flags == NETMD_DISC_FLAG_WRITE_PROTECTED) {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+netmd_error
+netmd_erase_disc(netmd_dev_handle *dev)
+{
+    /* AV/C Disc Subunit Specification ERASE (0x40),
+     * subfunction "complete" (0x00) */
+
+    // Based on netmd-js / libnetmd.py code
+
+    struct netmd_bytebuffer *query = netmd_format_query("1840 ff 0000");
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
+
+    return netmd_scan_query_buffer(reply, "1840 00 0000") ? NETMD_NO_ERROR : NETMD_ERROR;
 }
 
 /* AV/C Description Spefication OPEN DESCRIPTOR (0x08),

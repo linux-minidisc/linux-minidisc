@@ -367,3 +367,7 @@ and toolbar/menu items. Some menu items (e.g. "Rename" and "Delete") were never
 working, so hook them up for now and show a message until we implement it.
 
 Other initial fixes to the UI and code of QHiMDTransfer, check the diff.
+
+Formatting of NetMD discs is now possible from the QHiMDTransfer GUI, and the
+write-protect status can be queried with `netmd_is_disc_writable()` (the GUI
+takes care of disabling write features if the disc is write-protected).

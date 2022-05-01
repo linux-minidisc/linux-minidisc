@@ -339,7 +339,8 @@ cmd_discinfo(struct netmdcli_context *ctx)
     printf("\n");
     printf("  NetMD device: %s\n", netmd->device_name);
     printf("  Disc title:   %s%s%s\n", ansi_disc_title_begin, disc_title, ansi_disc_title_end);
-    printf("  Recorded:     %s in %d tracks (%3d %% of %s used)\n", recorded, ntracks, percentage_used, total);
+    printf("  Recorded:     %s in %d tracks (%3d %% of %s used, %s)\n", recorded, ntracks, percentage_used, total,
+            netmd_is_disc_writable(devh) ? "writable" : "write-protected");
     printf("  Available:    %s (SP) / %s (LP2/Mono) / %s (LP4)\n", available, available_lp2_mono, available_lp4);
     printf("\n");
 

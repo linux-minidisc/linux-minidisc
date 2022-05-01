@@ -312,6 +312,29 @@ bool QNetMDDevice::download(const QString &filename)
     return result == NETMD_NO_ERROR;
 }
 
+bool QNetMDDevice::isWritable()
+{
+    return netmd_is_disc_writable(devh);
+}
+
+bool QNetMDDevice::canFormatDisk()
+{
+    return isWritable();
+}
+
+bool QNetMDDevice::formatDisk()
+{
+    netmd_error error = netmd_erase_disc(devh);
+    if (error != NETMD_NO_ERROR) {
+        return false;
+    }
+
+    // This should commit the changes to disk
+    error = netmd_secure_leave_session(devh);
+
+    return error == NETMD_NO_ERROR;
+}
+
 /* himd device members */
 
 QHiMDDevice::QHiMDDevice()
@@ -621,4 +644,22 @@ bool QHiMDDevice::canUpload()
 QStringList QHiMDDevice::downloadableFileExtensions() const
 {
     return QStringList() << "mp3";
+}
+
+bool QHiMDDevice::isWritable()
+{
+    // TODO: Check if it's mounted read-only
+    return true;
+}
+
+bool QHiMDDevice::canFormatDisk()
+{
+    // Not implemented yet, see basictools/himdformat.c
+    return false;
+}
+
+bool QHiMDDevice::formatDisk()
+{
+    // Not implemented yet, see basictools/himdformat.c
+    return false;
 }

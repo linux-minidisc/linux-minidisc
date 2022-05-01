@@ -61,6 +61,9 @@ public:
     virtual void upload(unsigned int trackidx, QString path) = 0;
     virtual bool download(const QString &filename) = 0;
     virtual bool canUpload() = 0;
+    virtual bool isWritable() = 0;
+    virtual bool canFormatDisk() = 0;
+    virtual bool formatDisk() = 0;
 
 signals:
     void opened();
@@ -90,6 +93,10 @@ public:
     virtual bool canUpload();
     virtual QStringList downloadableFileExtensions() const;
 
+    virtual bool isWritable();
+    virtual bool canFormatDisk();
+    virtual bool formatDisk();
+
     void onUploadProgress(float progress);
 };
 
@@ -111,6 +118,10 @@ public:
     virtual bool download(const QString &filename);
     virtual bool canUpload();
     virtual QStringList downloadableFileExtensions() const;
+
+    virtual bool isWritable();
+    virtual bool canFormatDisk();
+    virtual bool formatDisk();
 };
 
 #endif // QMDDEVICE_H

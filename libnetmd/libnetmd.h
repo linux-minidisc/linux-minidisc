@@ -137,11 +137,25 @@ netmd_get_disc_title(netmd_dev_handle* dev, char* buffer, size_t size);
 int netmd_delete_track(netmd_dev_handle* dev, netmd_track_index track);
 
 /**
+ * Check if the inserted disc is writable or not.
+ *
+ * @param dev USB device handle
+ * @return true if the disc is writable, false otherwise
+ */
+bool
+netmd_is_disc_writable(netmd_dev_handle *dev);
+
+/**
    Erase all disc contents
 
+   Call netmd_secure_leave_session() afterwards
+   to let the recorder commit the changes to disc.
+
    @param dev pointer to device returned by netmd_open
+   @return NETMD_NO_ERROR on success, or an error code
 */
-int netmd_erase_disc(netmd_dev_handle* dev);
+netmd_error
+netmd_erase_disc(netmd_dev_handle *dev);
 
 int netmd_cache_toc(netmd_dev_handle* dev);
 int netmd_sync_toc(netmd_dev_handle* dev);
