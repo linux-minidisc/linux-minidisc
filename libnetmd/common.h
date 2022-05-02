@@ -74,6 +74,8 @@ struct netmd_groups {
 typedef struct netmd_dev_handle {
     struct libusb_device_handle *usb; /*!< USB device handle */
     struct netmd_groups groups; /*!< Parsed group information (disc title) */
+    uint16_t vendor_id; /*!< USB vendor ID for vendor-specific behavior */
+    uint16_t product_id; /*!< USB product ID for device-specific behavior */
 } netmd_dev_handle;
 
 /**

@@ -193,47 +193,54 @@ int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t
     return 1;
 }
 
-int netmd_set_raw_disc_title(netmd_dev_handle* dev, const char* title)
+netmd_error
+netmd_set_raw_disc_title(netmd_dev_handle *dev, const char *title)
 {
-    unsigned char *request, *p;
-    unsigned char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
-                                 0x01, 0x00, 0x00, 0x30, 0x00, 0x0a,
-                                 0x00, 0x50, 0x00, 0x00};
-    unsigned char hs1[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x01, 0x00};
-    unsigned char hs2[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x00, 0x00};
-    unsigned char hs3[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x03, 0x00};
-    unsigned char hs4[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x01, 0x00, 0x00};
-    unsigned char reply[256];
-    int result;
+    // From netmd-js
 
-    /* the title update command wants to now how many bytes to replace */
-    ssize_t oldsize = netmd_get_raw_disc_title(dev, (char *)reply, sizeof(reply));
-    if (oldsize == -1) {
-        oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
+    // TODO: Support for full-width characters
+    uint8_t wcharValue = 0;
+
+    /* the title update command wants to know how many bytes to replace */
+    unsigned char old_title[256];
+    ssize_t len = netmd_get_raw_disc_title(dev, (char *)old_title, sizeof(old_title));
+    if (len == -1) {
+        len = 0; /* Reading failed -> no title at all, replace 0 bytes */
+    }
+    uint16_t oldLen = len;
+
+    // TODO: Sanitize title
+    struct netmd_bytebuffer *encoded = netmd_bytebuffer_new_from_string(title);
+    uint16_t newLength = encoded->size;
+
+    if (dev->vendor_id == NETMD_VENDOR_ID_SHARP) {
+        // Sharp disc rename (https://github.com/cybercase/webminidisc/issues/67)
+        netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_UTOC1_TD, NETMD_DESCRIPTOR_ACTION_OPEN_WRITE);
+    } else {
+        netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_DISC_TITLE_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+        netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_DISC_TITLE_TD, NETMD_DESCRIPTOR_ACTION_OPEN_WRITE);
     }
 
-    netmd_log(NETMD_LOG_VERBOSE, "netmd_set_disc_title(title=\"%s\")\n", title);
+    struct netmd_bytebuffer *query = netmd_format_query("1807 02201801 00%b 3000 0a00 5000 %w 0000 %w %*",
+            wcharValue, newLength, oldLen, encoded);
 
-    size_t title_length = strlen(title);
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    request = malloc(21 + title_length);
-    memset(request, 0, 21 + title_length);
+    if (dev->vendor_id == NETMD_VENDOR_ID_SHARP) {
+        netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_AUDIO_UTOC1_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+    } else {
+        netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_DISC_TITLE_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+        netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_DISC_TITLE_TD, NETMD_DESCRIPTOR_ACTION_OPEN_READ);
+        netmd_change_descriptor_state(dev, NETMD_DESCRIPTOR_DISC_TITLE_TD, NETMD_DESCRIPTOR_ACTION_CLOSE);
+    }
 
-    memcpy(request, write_req, 16);
-    request[16] = title_length & 0xff;
-    request[20] = oldsize & 0xff;
+    netmd_bytebuffer_free(encoded);
 
-    p = request + 21;
-    memcpy(p, title, title_length);
+    if (netmd_scan_query_buffer(reply, "1807 02201801 00%? 3000 0a00 5000 %?%? 0000 %?%?")) {
+        return NETMD_NO_ERROR;
+    }
 
-    /* send handshakes */
-    netmd_exch_message(dev, hs1, sizeof(hs1), reply);
-    netmd_exch_message(dev, hs2, sizeof(hs2), reply);
-    netmd_exch_message(dev, hs3, sizeof(hs3), reply);
-    result = netmd_exch_message(dev, request, 0x15 + title_length, reply);
-    /* send handshake to write */
-    netmd_exch_message(dev, hs4, sizeof(hs4), reply);
-    return result;
+    return NETMD_ERROR;
 }
 
 /* AV/C Disc Subunit Specification ERASE (0x40),

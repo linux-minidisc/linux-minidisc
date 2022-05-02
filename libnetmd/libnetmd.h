@@ -103,8 +103,10 @@ int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t
  *
  * @param dev Handle to the device
  * @param title The new title
+ * @return NETMD_NO_ERROR on success, or an error code
  */
-int netmd_set_raw_disc_title(netmd_dev_handle* dev, const char* title);
+netmd_error
+netmd_set_raw_disc_title(netmd_dev_handle *dev, const char *title);
 
 /**
  * Get the complete (raw) title of the disc.

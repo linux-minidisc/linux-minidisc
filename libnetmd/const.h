@@ -105,4 +105,23 @@ enum NetMDChannels {
 #define NETMD_DATA_BLOCK_SIZE_LP2 384
 #define NETMD_DATA_BLOCK_SIZE_LP4 192
 
+/**
+ * Well-known Vendor IDs for NetMD devices
+ *
+ * See libusbmd for a full list of vendors.
+ */
+enum NetMDVendor {
+    NETMD_VENDOR_ID_SONY = 0x054c, /*!< Sony */
+    NETMD_VENDOR_ID_SHARP = 0x04dd, /*!< Sharp */
+};
+
+/**
+ * Well-known Product IDs for NetMD devices
+ *
+ * See libusbmd for a full list of products.
+ */
+enum NetMDProduct {
+    NETMD_PRODUCT_ID_MZ_RH1 = 0x0286, /*!< Sony MZ-RH1 */
+};
+
 #endif
