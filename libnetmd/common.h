@@ -48,12 +48,32 @@ typedef struct libusb_context libusb_context;
 typedef struct libusb_device libusb_device;
 
 /**
+   Data about a group, start track, finish track and name. Used to generate disc
+   header info.
+*/
+struct netmd_group {
+    int first; /*!< First track index, 1-based; 0 for disc title and empty groups */
+    int last; /*!< First track index, 1-based, 0 for disc title and empty groups */
+    char *name; /*!< Group name */
+};
+
+/**
+ * Group data and disc title.
+ */
+struct netmd_groups {
+    bool valid; /*!< true if the group data has been loaded, false otherwise */
+    struct netmd_group *groups; /*!< Array of groups (index zero = disc title) */
+    size_t count; /*!< Number of groups (at least 1, the disc title) */
+};
+
+/**
    Typedef that nearly all netmd_* functions use to identify the USB connection
    with the minidisc player.
 */
 
 typedef struct netmd_dev_handle {
-    struct libusb_device_handle *usb;
+    struct libusb_device_handle *usb; /*!< USB device handle */
+    struct netmd_groups groups; /*!< Parsed group information (disc title) */
 } netmd_dev_handle;
 
 /**

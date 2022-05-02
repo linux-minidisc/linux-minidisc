@@ -161,8 +161,6 @@ QString QNetMDDevice::open()
     if((error = netmd_open(netmd, &devh)) != NETMD_NO_ERROR)
         return tr("Error opening netmd: %1").arg(netmd_strerror(error));
 
-    current_md = netmd_minidisc_load(devh);
-
     trk_count = netmd_get_track_count(devh);
 
     {
@@ -222,9 +220,6 @@ void QNetMDDevice::close()
     if(!devh)
         return;
 
-    netmd_minidisc_free(current_md);
-    current_md = NULL;
-
     netmd_close(devh);
     devh = NULL;
 
@@ -236,12 +231,12 @@ void QNetMDDevice::close()
 
 QString QNetMDDevice::discTitle()
 {
-    return QString(netmd_minidisc_get_disc_name(current_md));
+    return QString(netmd_get_disc_title(devh));
 }
 
 QNetMDTrack QNetMDDevice::netmdTrack(unsigned int trkindex)
 {
-    return QNetMDTrack(devh, current_md, trkindex);
+    return QNetMDTrack(devh, trkindex);
 }
 
 bool QNetMDDevice::canUpload()

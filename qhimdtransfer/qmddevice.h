@@ -76,7 +76,6 @@ class QNetMDDevice : public QMDDevice {
 
     netmd_device * netmd;
     netmd_dev_handle * devh;
-    minidisc *current_md;
 
     int upload_reported_track_blocks;
     int upload_total_track_blocks;

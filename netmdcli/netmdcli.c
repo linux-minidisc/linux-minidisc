@@ -34,7 +34,7 @@
 
 void usage();
 
-void print_disc_info(netmd_dev_handle* devh, minidisc *md, json_object *json);
+void print_disc_info(netmd_dev_handle *devh, json_object *json);
 void import_m3u_playlist(netmd_dev_handle* devh, const char *file);
 
 /* Max line length we support in M3U files... should match MD TOC max */
@@ -151,7 +151,7 @@ cmd_deletegroup(struct netmdcli_context *ctx)
 {
     int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
 
-    netmd_error res = netmd_delete_group(ctx->devh, ctx->md, group_id & 0xffff);
+    netmd_error res = netmd_delete_group(ctx->devh, group_id & 0xffff);
     if (res != NETMD_NO_ERROR) {
         fprintf(stderr, "Could not delete group %d: %s\n", group_id, netmd_strerror(res));
         return 1;
@@ -165,7 +165,7 @@ cmd_newgroup(struct netmdcli_context *ctx)
 {
     const char *group_name = netmdcli_context_get_string_arg(ctx, "group_name");
 
-    netmd_create_group(ctx->devh, ctx->md, group_name);
+    netmd_create_group(ctx->devh, group_name);
 
     return 0;
 }
@@ -181,7 +181,7 @@ cmd_group(struct netmdcli_context *ctx)
         last_track_id = first_track_id;
     }
 
-    netmd_error res = netmd_update_group_range(ctx->devh, ctx->md, group_id, first_track_id, last_track_id);
+    netmd_error res = netmd_update_group_range(ctx->devh, group_id, first_track_id, last_track_id);
     if (res != NETMD_NO_ERROR) {
         fprintf(stderr, "Could not update group: %s\n", netmd_strerror(res));
         return 1;
@@ -196,7 +196,7 @@ cmd_retitle(struct netmdcli_context *ctx)
     int group_id = netmdcli_context_get_int_arg(ctx, "group_id");
     const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
 
-    netmd_set_group_title(ctx->devh, ctx->md, (unsigned int)group_id, new_title);
+    netmd_set_group_title(ctx->devh, (unsigned int)group_id, new_title);
 
     return 0;
 }
@@ -262,8 +262,8 @@ cmd_json(struct netmdcli_context *ctx)
 {
     json_object *json = json_object_new_object();
     json_object_object_add(json, "device",  json_object_new_string(ctx->netmd->device_name));
-    json_object_object_add(json, "title",   json_object_new_string(netmd_minidisc_get_disc_name(ctx->md)));
-    print_disc_info(ctx->devh, ctx->md, json);
+    json_object_object_add(json, "title",   json_object_new_string(netmd_get_disc_title(ctx->devh)));
+    print_disc_info(ctx->devh, json);
 
     return 0;
 }
@@ -293,7 +293,6 @@ static int
 cmd_discinfo(struct netmdcli_context *ctx)
 {
     netmd_device *netmd = ctx->netmd;
-    minidisc *md = ctx->md;
     netmd_dev_handle *devh = ctx->devh;
 
     struct netmd_track_info info;
@@ -321,7 +320,7 @@ cmd_discinfo(struct netmdcli_context *ctx)
     netmd_time_double(&capacity.available);
     char *available_lp4 = netmd_time_to_string(&capacity.available);
 
-    const char *disc_title = netmd_minidisc_get_disc_name(ctx->md);
+    const char *disc_title = netmd_get_disc_title(ctx->devh);
     const char *ansi_disc_title_begin = "";
     const char *ansi_disc_title_end = "";
     if (strlen(disc_title) == 0) {
@@ -359,8 +358,8 @@ cmd_discinfo(struct netmdcli_context *ctx)
             continue;
         }
 
-        int group = netmd_minidisc_get_track_group(md, i);
-        int next_group = netmd_minidisc_get_track_group(md, i+1);
+        int group = netmd_get_track_group(devh, i);
+        int next_group = netmd_get_track_group(devh, i+1);
 
         /* Different to the last group? */
         if( group != lastgroup )
@@ -368,7 +367,7 @@ cmd_discinfo(struct netmdcli_context *ctx)
             lastgroup = group;
             if( group )			/* Group 0 is 'no group' */
             {
-                printf("%s%s (group %d)%s\n", ansi_grp_begin, netmd_minidisc_get_group_name(md, group), group, ansi_end);
+                printf("%s%s (group %d)%s\n", ansi_grp_begin, netmd_get_group_name(devh, group), group, ansi_end);
             }
         }
 
@@ -404,12 +403,12 @@ cmd_discinfo(struct netmdcli_context *ctx)
         netmd_free_string(duration);
     }
 
-    for (int group=1; group < md->group_count; group++)
+    for (int group=1; group < devh->groups.count; group++)
     {
-        if (netmd_minidisc_is_group_empty(md, group)) {
+        if (netmd_is_group_empty(devh, group)) {
             printf("%s%s (group %d, empty)%s\n",
                     ansi_grp_begin,
-                    netmd_minidisc_get_group_name(md, group), group,
+                    netmd_get_group_name(devh, group), group,
                     ansi_end);
         }
     }
@@ -473,7 +472,7 @@ cmd_settitle(struct netmdcli_context *ctx)
     const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
 
     netmd_cache_toc(ctx->devh);
-    netmd_set_disc_title(ctx->devh, new_title);
+    netmd_set_raw_disc_title(ctx->devh, new_title);
     netmd_sync_toc(ctx->devh);
 
     return 0;
@@ -793,7 +792,6 @@ bool EnableVTMode()
 int main(int argc, char* argv[])
 {
     netmd_dev_handle* devh;
-    minidisc *md;
     netmd_device *device_list, *netmd;
     int c;
     netmd_error error;
@@ -885,10 +883,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    md = netmd_minidisc_load(devh);
-
     /* parse commands */
-    enum NetMDCLIHandleResult res = netmdcli_handle(CMDS, argc, argv, netmd, devh, md);
+    enum NetMDCLIHandleResult res = netmdcli_handle(CMDS, argc, argv, netmd, devh);
     if (res == NETMDCLI_HANDLED) {
         exit_code = 0;
     } else if (res == NETMDCLI_ERROR) {
@@ -899,14 +895,13 @@ int main(int argc, char* argv[])
     }
 
 
-    netmd_minidisc_free(md);
     netmd_close(devh);
     netmd_clean(&device_list);
 
     return exit_code;
 }
 
-void print_disc_info(netmd_dev_handle* devh, minidisc* md, json_object *json)
+void print_disc_info(netmd_dev_handle *devh, json_object *json)
 {
     uint8_t i = 0;
 

@@ -194,14 +194,13 @@ netmdcli_free_context(struct netmdcli_context *ctx)
 
 static struct netmdcli_context *
 netmdcli_create_context(int argc, char *argv[],
-        netmd_device *netmd, netmd_dev_handle *devh, minidisc *md,
+        netmd_device *netmd, netmd_dev_handle *devh,
         const struct netmdcli_subcommand *cmd)
 {
     struct netmdcli_context *ctx = malloc(sizeof(struct netmdcli_context));
 
     ctx->netmd = netmd;
     ctx->devh = devh;
-    ctx->md = md;
 
     ctx->argc = argc - 2;
     ctx->argv = argv + 2;
@@ -234,12 +233,12 @@ netmdcli_create_context(int argc, char *argv[],
 
 enum NetMDCLIHandleResult
 netmdcli_handle(const struct netmdcli_subcommand *first_cmd, int argc, char *argv[],
-        netmd_device *netmd, netmd_dev_handle *devh, minidisc *md)
+        netmd_device *netmd, netmd_dev_handle *devh)
 {
     const struct netmdcli_subcommand *cmd = first_cmd;
     while (cmd->name != NULL) {
         if (cmd->command != NULL && strcmp(cmd->name, argv[1]) == 0) {
-            struct netmdcli_context *ctx = netmdcli_create_context(argc, argv, netmd, devh, md, cmd);
+            struct netmdcli_context *ctx = netmdcli_create_context(argc, argv, netmd, devh, cmd);
 
             if (ctx == NULL) {
                 return NETMDCLI_ERROR;

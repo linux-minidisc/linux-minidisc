@@ -87,7 +87,7 @@ netmd_track_flags_to_string(enum NetMDTrackFlags flags)
 }
 
 ssize_t
-netmd_get_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
+netmd_get_raw_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
 {
     int ret = -1;
     size_t title_size = 0;
@@ -100,7 +100,7 @@ netmd_get_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
     ret = netmd_exch_message(dev, title_request, 0x13, title);
     if(ret < 0)
     {
-        netmd_log(NETMD_LOG_WARNING, "netmd_get_disc_title(): bad ret code, returning early\n");
+        netmd_log(NETMD_LOG_WARNING, "netmd_get_raw_disc_title(): bad ret code, returning early\n");
         return 0;
     }
 
@@ -111,7 +111,7 @@ netmd_get_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
 
     if((title_size - 25) >= size)
     {
-        netmd_log(NETMD_LOG_WARNING, "netmd_get_disc_title(): title too large for buffer\n");
+        netmd_log(NETMD_LOG_WARNING, "netmd_get_raw_disc_title(): title too large for buffer\n");
     }
     else
     {
@@ -120,7 +120,7 @@ netmd_get_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
         buffer[title_size - 25] = 0;
     }
 
-    netmd_log(NETMD_LOG_VERBOSE, "netmd_get_disc_title() -> \"%s\"\n", buffer);
+    netmd_log(NETMD_LOG_VERBOSE, "netmd_get_raw_disc_title() -> \"%s\"\n", buffer);
 
     return title_size - 25;
 }
@@ -193,7 +193,7 @@ int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t
     return 1;
 }
 
-int netmd_set_disc_title(netmd_dev_handle* dev, const char* title)
+int netmd_set_raw_disc_title(netmd_dev_handle* dev, const char* title)
 {
     unsigned char *request, *p;
     unsigned char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
@@ -207,7 +207,7 @@ int netmd_set_disc_title(netmd_dev_handle* dev, const char* title)
     int result;
 
     /* the title update command wants to now how many bytes to replace */
-    ssize_t oldsize = netmd_get_disc_title(dev, (char *)reply, sizeof(reply));
+    ssize_t oldsize = netmd_get_raw_disc_title(dev, (char *)reply, sizeof(reply));
     if (oldsize == -1) {
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
     }
@@ -290,7 +290,13 @@ netmd_erase_disc(netmd_dev_handle *dev)
     struct netmd_bytebuffer *query = netmd_format_query("1840 ff 0000");
     struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    return netmd_scan_query_buffer(reply, "1840 00 0000") ? NETMD_NO_ERROR : NETMD_ERROR;
+    netmd_error error = netmd_scan_query_buffer(reply, "1840 00 0000") ? NETMD_NO_ERROR : NETMD_ERROR;
+
+    if (error == NETMD_NO_ERROR) {
+        netmd_clear_disc_header(dev);
+    }
+
+    return error;
 }
 
 /* AV/C Description Spefication OPEN DESCRIPTOR (0x08),
@@ -344,48 +350,6 @@ int netmd_release_dev(netmd_dev_handle* dev)
     unsigned char reply[255];
 
     return netmd_exch_message(dev, request, sizeof(request), reply);
-}
-
-const char *
-netmd_minidisc_get_disc_name(const minidisc *md)
-{
-    return md->groups[0].name;
-}
-
-netmd_group_id
-netmd_minidisc_get_track_group(const minidisc *md, netmd_track_index track_id)
-{
-    // Tracks in the groups are 1-based
-    track_id += 1;
-
-    for (int group = 1; group < md->group_count; group++) {
-        if ((md->groups[group].first <= track_id) && (md->groups[group].last >= track_id)) {
-            return group;
-        }
-    }
-
-    return 0;
-}
-
-const char *
-netmd_minidisc_get_group_name(const minidisc *md, netmd_group_id group)
-{
-    if (group == 0 || group >= md->group_count) {
-        return NULL;
-    }
-
-    return md->groups[group].name;
-}
-
-bool
-netmd_minidisc_is_group_empty(const minidisc *md, netmd_group_id group)
-{
-    // Non-existent groups are always considered "empty"
-    if (group == 0 || group >= md->group_count) {
-        return true;
-    }
-
-    return (md->groups[group].first == 0 && md->groups[group].last == 0);
 }
 
 struct netmd_bytebuffer *

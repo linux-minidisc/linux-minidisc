@@ -96,13 +96,31 @@ int netmd_move_track(netmd_dev_handle* dev, const uint16_t start, const uint16_t
 /**
  * Set the complete (raw) title of the disc.
  *
- * Any custom group information will be overwritten. To set the disc title
- * without affecting groups, use netmd_set_group_title() with group 0.
+ * Any custom group information will be overwritten.
+ *
+ * You usually want to use netmd_set_disc_title() instead, which will
+ * retain the group information on the disc.
  *
  * @param dev Handle to the device
  * @param title The new title
  */
-int netmd_set_disc_title(netmd_dev_handle* dev, const char* title);
+int netmd_set_raw_disc_title(netmd_dev_handle* dev, const char* title);
+
+/**
+ * Get the complete (raw) title of the disc.
+ *
+ * This includes any group information stored on the disc.
+ *
+ * You usually want to use netmd_get_disc_title() instead, which
+ * will return only the disc title portion without groups.
+ *
+ * @param dev Handle to the device
+ * @param buffer Buffer to store the title
+ * @param size Size of the buffer
+ * @return Number of bytes written to buffer, or -1
+ */
+ssize_t
+netmd_get_raw_disc_title(netmd_dev_handle* dev, char* buffer, size_t size);
 
 /**
  * Get the number of tracks on the disc.
@@ -112,20 +130,6 @@ int netmd_set_disc_title(netmd_dev_handle* dev, const char* title);
  */
 int
 netmd_get_track_count(netmd_dev_handle *dev);
-
-/**
- * Get the complete (raw) title of the disc.
- *
- * To get the parsed title of the disc, taking groups into account,
- * use netmd_minidisc_get_disc_name().
- *
- * @param dev Handle to the device
- * @param buffer Buffer to store the title
- * @param size Size of the buffer
- * @return Number of bytes written to buffer, or -1
- */
-ssize_t
-netmd_get_disc_title(netmd_dev_handle* dev, char* buffer, size_t size);
 
 /**
    Deletes track from disc (does not update groups)

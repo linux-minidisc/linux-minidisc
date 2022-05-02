@@ -371,3 +371,10 @@ Other initial fixes to the UI and code of QHiMDTransfer, check the diff.
 Formatting of NetMD discs is now possible from the QHiMDTransfer GUI, and the
 write-protect status can be queried with `netmd_is_disc_writable()` (the GUI
 takes care of disabling write features if the disc is write-protected).
+
+
+## Group information moved into `netmd_dev_handle`
+
+Because certain operations need to update group information, it makes sense
+that group information is treated as part of the NetMD device handle. This
+should allow for easy invalidation and update of group information.

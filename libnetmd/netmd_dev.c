@@ -28,6 +28,7 @@
 
 #include "netmd_dev.h"
 #include "libusbmd.h"
+#include "groups.h"
 
 #include "log.h"
 #include "const.h"
@@ -84,6 +85,7 @@ netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
 
     if (result == 0) {
         *dev_handle = malloc(sizeof(netmd_dev_handle));
+        memset(*dev_handle, 0, sizeof(**dev_handle));
         (*dev_handle)->usb = dh;
         return NETMD_NO_ERROR;
     }
@@ -114,6 +116,7 @@ netmd_error netmd_close(netmd_dev_handle* devh)
 {
     if (libusb_release_interface(devh->usb, 0) == 0) {
         libusb_close(devh->usb);
+        netmd_clear_disc_header(devh);
         free(devh);
     } else {
         return NETMD_USB_ERROR;

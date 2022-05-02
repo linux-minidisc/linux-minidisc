@@ -30,7 +30,6 @@ struct netmdcli_subcommand;
 struct netmdcli_context {
     netmd_device *netmd;
     netmd_dev_handle *devh;
-    minidisc *md;
 
     // passed-in command line arguments
     int argc;
@@ -79,4 +78,4 @@ enum NetMDCLIHandleResult {
 
 enum NetMDCLIHandleResult
 netmdcli_handle(const struct netmdcli_subcommand *first_cmd, int argc, char *argv[],
-        netmd_device *netmd, netmd_dev_handle *devh, minidisc *md);
+        netmd_device *netmd, netmd_dev_handle *devh);

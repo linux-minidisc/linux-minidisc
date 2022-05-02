@@ -32,22 +32,13 @@
 #include <string.h>
 
 
-netmd_error
-netmd_set_group_title(netmd_dev_handle *dev, minidisc *md, netmd_group_id group, const char *title)
-{
-    free(md->groups[group].name);
-    md->groups[group].name = strdup(title);
-
-    return netmd_write_disc_header(dev, md);
-}
-
 static void
-netmd_append_group(minidisc *md, const char *name, int first, int last)
+netmd_append_group(struct netmd_groups *md, const char *name, int first, int last)
 {
-    md->group_count++;
-    md->groups = realloc(md->groups, sizeof(struct netmd_group) * md->group_count);
+    md->count++;
+    md->groups = realloc(md->groups, sizeof(struct netmd_group) * md->count);
 
-    netmd_group_t *group = &md->groups[md->group_count - 1];
+    struct netmd_group *group = &md->groups[md->count - 1];
 
     group->name = strdup(name);
     group->first = first;
@@ -65,7 +56,7 @@ netmd_append_group(minidisc *md, const char *name, int first, int last)
  */
 
 static void
-netmd_parse_group(minidisc *md, char *group)
+netmd_parse_group(struct netmd_groups *md, char *group)
 {
     char *sep = strchr(group, ';');
 
@@ -95,7 +86,7 @@ netmd_parse_group(minidisc *md, char *group)
 }
 
 static void
-netmd_parse_disc_title(minidisc *md, char *title)
+netmd_parse_disc_title(struct netmd_groups *md, char *title)
 {
     size_t title_length = strlen(title);
 
@@ -116,75 +107,86 @@ netmd_parse_disc_title(minidisc *md, char *title)
         cur = delim + 2;
     }
 
-    if (md->group_count == 0) {
+    if (md->count == 0) {
         // No group data found, title is disc title
         netmd_append_group(md, cur, 0, 0);
     }
 }
 
-minidisc *
-netmd_minidisc_load(netmd_dev_handle *devh)
+netmd_error
+netmd_load_disc_header(netmd_dev_handle *dev)
 {
-    minidisc *md = calloc(1, sizeof(minidisc));
-
     char disc[7*255 + 1];
 
-    if (netmd_get_disc_title(devh, disc, sizeof(disc)) > 0) {
-        netmd_parse_disc_title(md, disc);
+    netmd_clear_disc_header(dev);
+
+    if (netmd_get_raw_disc_title(dev, disc, sizeof(disc)) > 0) {
+        netmd_parse_disc_title(&dev->groups, disc);
     } else {
         // Create empty disc title on error
-        netmd_parse_disc_title(md, "");
+        netmd_parse_disc_title(&dev->groups, "");
     }
 
-    return md;
+    dev->groups.valid = true;
+    return NETMD_NO_ERROR;
 }
 
 void
-netmd_minidisc_free(minidisc *md)
+netmd_clear_disc_header(netmd_dev_handle *dev)
 {
-    for (unsigned int i = 0; i < md->group_count; i++) {
-        free(md->groups[i].name);
+    for (unsigned int i = 0; i < dev->groups.count; i++) {
+        free(dev->groups.groups[i].name);
     }
 
-    free(md->groups);
-    free(md);
+    free(dev->groups.groups);
+    dev->groups.groups = NULL;
+    dev->groups.count = 0;
+    dev->groups.valid = false;
 }
 
 netmd_error
-netmd_create_group(netmd_dev_handle *dev, minidisc *md, const char *name)
+netmd_create_group(netmd_dev_handle *dev, const char *name)
 {
-    netmd_append_group(md, name, 0, 0);
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
 
-    return netmd_write_disc_header(dev, md);
+    netmd_append_group(&dev->groups, name, 0, 0);
+
+    return netmd_write_disc_header(dev);
 }
 
 netmd_error
-netmd_delete_group(netmd_dev_handle *dev, minidisc *md, netmd_group_id group)
+netmd_delete_group(netmd_dev_handle *dev, netmd_group_id group)
 {
-    if (group < 1 || group >= md->group_count) {
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
+
+    if (group < 1 || group >= dev->groups.count) {
         return NETMD_GROUP_DOES_NOT_EXIST;
     }
 
-    free(md->groups[group].name);
-    for (int i=group; i<md->group_count-1; ++i) {
-        md->groups[i] = md->groups[i+1];
+    free(dev->groups.groups[group].name);
+    for (int i=group; i<dev->groups.count-1; ++i) {
+        dev->groups.groups[i] = dev->groups.groups[i+1];
     }
 
-    md->group_count--;
+    dev->groups.count--;
 
-    return netmd_write_disc_header(dev, md);
+    return netmd_write_disc_header(dev);
 }
 
 static netmd_error
-netmd_generate_disc_title(const minidisc *md, char *title, size_t title_length)
+netmd_generate_disc_title(const struct netmd_groups *md, char *title, size_t title_length)
 {
     char *write_ptr = title;
     char *end_ptr = title + title_length;
 
     int written;
 
-    for (int i=0; i<md->group_count && write_ptr < end_ptr; ++i) {
-        netmd_group_t *group = &md->groups[i];
+    for (int i=0; i<md->count && write_ptr < end_ptr; ++i) {
+        struct netmd_group *group = &md->groups[i];
 
         if (i == 0) {
             // disc title
@@ -221,25 +223,36 @@ netmd_generate_disc_title(const minidisc *md, char *title, size_t title_length)
 }
 
 netmd_error
-netmd_write_disc_header(netmd_dev_handle *devh, const minidisc *md)
+netmd_write_disc_header(netmd_dev_handle *dev)
 {
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
+
     // Maximum number of characters in the UTOC + 1
     char title[7*255 + 1];
     memset(title, 0, sizeof(title));
 
-    netmd_error err = netmd_generate_disc_title(md, title, sizeof(title));
+    netmd_error err = netmd_generate_disc_title(&dev->groups, title, sizeof(title));
     if (err != NETMD_NO_ERROR) {
         return err;
     }
 
-    netmd_set_disc_title(devh, title);
+    netmd_set_raw_disc_title(dev, title);
+
+    /* Force reload on next get */
+    dev->groups.valid = false;
 
     return NETMD_NO_ERROR;
 }
 
 netmd_error
-netmd_update_group_range(netmd_dev_handle *dev, minidisc *md, netmd_group_id group, int first, int last)
+netmd_update_group_range(netmd_dev_handle *dev, netmd_group_id group, int first, int last)
 {
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
+
     if (first == 0) {
         // Make group empty, last is ignored (set to zero)
         last = 0;
@@ -249,15 +262,17 @@ netmd_update_group_range(netmd_dev_handle *dev, minidisc *md, netmd_group_id gro
         return NETMD_TRACK_DOES_NOT_EXIST;
     }
 
+    struct netmd_groups *md = &dev->groups;
+
     int n_tracks = netmd_get_track_count(dev);
 
     if (first < 0 || first > n_tracks || last > n_tracks) {
         return NETMD_TRACK_DOES_NOT_EXIST;
     }
 
-    for (int i=0; i<md->group_count; ++i) {
+    for (int i=0; i<md->count; ++i) {
         if (i != group && first != 0) {
-            netmd_group_t *grp = &md->groups[i];
+            struct netmd_group *grp = &md->groups[i];
 
             if (grp->first == 0 || last < grp->first) {
                 // No overlap, new group comes before this group
@@ -273,5 +288,82 @@ netmd_update_group_range(netmd_dev_handle *dev, minidisc *md, netmd_group_id gro
     md->groups[group].first = first;
     md->groups[group].last = last;
 
-    return netmd_write_disc_header(dev, md);
+    return netmd_write_disc_header(dev);
+}
+
+const char *
+netmd_get_disc_title(netmd_dev_handle *dev)
+{
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
+
+    return dev->groups.groups[0].name;
+}
+
+netmd_group_id
+netmd_get_track_group(netmd_dev_handle *dev, netmd_track_index track_id)
+{
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
+
+    // Tracks in the groups are 1-based
+    track_id += 1;
+
+    for (int group = 1; group < dev->groups.count; group++) {
+        if ((dev->groups.groups[group].first <= track_id) && (dev->groups.groups[group].last >= track_id)) {
+            return group;
+        }
+    }
+
+    return 0;
+}
+
+const char *
+netmd_get_group_name(netmd_dev_handle *dev, netmd_group_id group)
+{
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
+
+    if (group == 0 || group >= dev->groups.count) {
+        return NULL;
+    }
+
+    return dev->groups.groups[group].name;
+}
+
+bool
+netmd_is_group_empty(netmd_dev_handle *dev, netmd_group_id group)
+{
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
+
+    // Non-existent groups are always considered "empty"
+    if (group == 0 || group >= dev->groups.count) {
+        return true;
+    }
+
+    return (dev->groups.groups[group].first == 0 && dev->groups.groups[group].last == 0);
+}
+
+netmd_error
+netmd_set_group_title(netmd_dev_handle *dev, netmd_group_id group, const char *title)
+{
+    if (!dev->groups.valid) {
+        netmd_load_disc_header(dev);
+    }
+
+    free(dev->groups.groups[group].name);
+    dev->groups.groups[group].name = strdup(title);
+
+    return netmd_write_disc_header(dev);
+}
+
+netmd_error
+netmd_set_disc_title(netmd_dev_handle *dev, const char *title)
+{
+    return netmd_set_group_title(dev, 0, title);
 }

@@ -130,10 +130,9 @@ QByteArray QHiMDTrack::makeEA3Header() const
 }
 
 
-QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int trackindex)
+QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, int trackindex)
 {
     devh = deviceh;
-    md = my_md;
     trkindex = trackindex;
 
     netmd_error res = netmd_get_track_info(deviceh, trackindex, &info);
@@ -146,9 +145,9 @@ QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int track
         return;  // error retrieving track information
     }
 
-    int group = netmd_minidisc_get_track_group(md, trkindex);
+    int group = netmd_get_track_group(deviceh, trkindex);
     if (group != 0) {
-        groupstring = QString(netmd_minidisc_get_group_name(md, group));
+        groupstring = QString(netmd_get_group_name(deviceh, group));
     }
 
     titlestring = QString(info.title);
@@ -158,7 +157,6 @@ QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, minidisc * my_md, int track
 QNetMDTrack::~QNetMDTrack()
 {
     devh = NULL;
-    md = NULL;
 }
 
 unsigned int QNetMDTrack::tracknum() const

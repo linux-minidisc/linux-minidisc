@@ -59,14 +59,13 @@ public:
 
 class QNetMDTrack : public QMDTrack {
     netmd_dev_handle * devh;
-    minidisc * md;
     int8_t trkindex;
     struct netmd_track_info info;
     QString groupstring;
     QString titlestring;
     QString codecstring;
 public:
-    QNetMDTrack(netmd_dev_handle *deviceh, minidisc * my_md, int trackindex);
+    QNetMDTrack(netmd_dev_handle *deviceh, int trackindex);
     virtual ~QNetMDTrack();
     virtual unsigned int tracknum() const;
     virtual QString group() const;
