@@ -471,10 +471,30 @@ cmd_settitle(struct netmdcli_context *ctx)
 {
     const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
 
-    netmd_cache_toc(ctx->devh);
-    netmd_set_raw_disc_title(ctx->devh, new_title);
-    netmd_sync_toc(ctx->devh);
+    netmd_set_disc_title(ctx->devh, new_title);
 
+    return 0;
+}
+
+static int
+cmd_set_raw_title(struct netmdcli_context *ctx)
+{
+    const char *new_title = netmdcli_context_get_string_arg(ctx, "new_title");
+
+    return (netmd_set_raw_disc_title(ctx->devh, new_title) == NETMD_NO_ERROR) ? 0 : 1;
+}
+
+static int
+cmd_get_raw_title(struct netmdcli_context *ctx)
+{
+    char buffer[512];
+    size_t len = netmd_get_raw_disc_title(ctx->devh, buffer, sizeof(buffer));
+
+    if (len < 0) {
+        return 1;
+    }
+
+    printf("%s\n", buffer);
     return 0;
 }
 
@@ -713,7 +733,7 @@ CMDS[] = {
     { "capacity",    cmd_capacity,    "",                              "Print disc used/available time info" },
     { "---",         NULL,            NULL,                            NULL },
     { "erase",       cmd_erase,       "<force>",                       "Erase the entire disc (pass in 'force' to actually do it)" },
-    { "settitle",    cmd_settitle,    "<new_title>",                   "Set the complete disc title (with group information)" },
+    { "settitle",    cmd_settitle,    "<new_title>",                   "Set the disc title" },
     { "---",         NULL,            NULL,                            NULL },
     { "rename",      cmd_rename,      "<track_id> <new_title>",        "Rename track <track_id> to <new_title>" },
     { "move",        cmd_move,        "<from_track_id> <to_track_id>", "Move <from_track_id> to <to_track_id>" },
@@ -742,6 +762,9 @@ CMDS[] = {
     { "---",         NULL,            NULL,                            NULL },
     { "m3uimport",   cmd_m3uimport,   "<filename>",                    "Import track title info from M3U file <filename>" },
     { "json",        cmd_json,        "",                              "Output current disc information as JSON" },
+    { "---",         NULL,            NULL,                            NULL },
+    { "set-raw-title", cmd_set_raw_title, "<new_title>",               "Set the raw disc title (overwriting group information)" },
+    { "get-raw-title", cmd_get_raw_title, "",                          "Get the raw disc title (including group information)" },
     { "---",         NULL,            NULL,                            NULL },
     { "raw",         cmd_raw,         "<hex_string>",                  "Send raw command to player (hex string)" },
     { "uuid",        cmd_uuid,        "<track_id>",                    "Print the 8-byte UUID of a track as hex string" },

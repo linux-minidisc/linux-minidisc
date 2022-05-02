@@ -378,3 +378,10 @@ takes care of disabling write features if the disc is write-protected).
 Because certain operations need to update group information, it makes sense
 that group information is treated as part of the NetMD device handle. This
 should allow for easy invalidation and update of group information.
+
+
+## `netmdcli`: `set-raw-title`, `get-raw-title` and `settitle`
+
+Now that the group information handling has been merged into the device handle,
+`settitle` can just set the normal title without affecting the groups. For
+advanced use cases, the user can still set and get the raw title.
