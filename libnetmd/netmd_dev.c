@@ -83,7 +83,8 @@ netmd_error netmd_open(netmd_device *dev, netmd_dev_handle **dev_handle)
         result = libusb_claim_interface(dh, 0);
 
     if (result == 0) {
-        *dev_handle = dh;
+        *dev_handle = malloc(sizeof(netmd_dev_handle));
+        (*dev_handle)->usb = dh;
         return NETMD_NO_ERROR;
     }
     else {
@@ -96,7 +97,7 @@ bool netmd_dev_can_upload(netmd_dev_handle *devh)
 {
     struct libusb_device_descriptor desc = {0};
 
-    libusb_device *device = libusb_get_device(devh);
+    libusb_device *device = libusb_get_device(devh->usb);
 
     int rc = libusb_get_device_descriptor(device, &desc);
     if (rc == 0) {
@@ -111,14 +112,10 @@ bool netmd_dev_can_upload(netmd_dev_handle *devh)
 
 netmd_error netmd_close(netmd_dev_handle* devh)
 {
-    int result;
-    libusb_device_handle *dev;
-
-    dev = (libusb_device_handle *)devh;
-    result = libusb_release_interface(dev, 0);
-    if (result == 0)
-      libusb_close(dev);
-    else{
+    if (libusb_release_interface(devh->usb, 0) == 0) {
+        libusb_close(devh->usb);
+        free(devh);
+    } else {
         return NETMD_USB_ERROR;
     }
 

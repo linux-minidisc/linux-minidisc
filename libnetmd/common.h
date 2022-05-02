@@ -52,7 +52,9 @@ typedef struct libusb_device libusb_device;
    with the minidisc player.
 */
 
-typedef struct libusb_device_handle netmd_dev_handle;
+typedef struct netmd_dev_handle {
+    struct libusb_device_handle *usb;
+} netmd_dev_handle;
 
 /**
   Function to exchange command/response buffer with minidisc player.

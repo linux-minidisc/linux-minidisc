@@ -128,9 +128,7 @@ int netmd_send_message(netmd_dev_handle *devh, unsigned char *cmd,
 {
     unsigned char pollbuf[4];
     int	len;
-    libusb_device_handle *dev;
-
-    dev = (libusb_device_handle *)devh;
+    libusb_device_handle *dev = devh->usb;
 
     /* poll to see if we can send data */
     len = netmd_poll(dev, pollbuf, 1);
@@ -156,9 +154,7 @@ int netmd_recv_message(netmd_dev_handle *devh, unsigned char* rsp)
 {
     int len;
     unsigned char pollbuf[4];
-    libusb_device_handle *dev;
-
-    dev = (libusb_device_handle *)devh;
+    libusb_device_handle *dev = devh->usb;
 
     /* poll for data that minidisc wants to send */
     len = netmd_poll(dev, pollbuf, NETMD_RECV_TRIES);
@@ -192,10 +188,8 @@ int netmd_wait_for_sync(netmd_dev_handle* devh)
 {
     unsigned char syncmsg[4];
     int tries = NETMD_SYNC_TRIES;
-    libusb_device_handle *dev;
+    libusb_device_handle *dev = devh->usb;
     int ret;
-    
-    dev = (libusb_device_handle *)devh;
 
     do {
         ret = libusb_control_transfer(dev, LIBUSB_ENDPOINT_IN |

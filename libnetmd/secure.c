@@ -401,7 +401,7 @@ static void netmd_transfer_song_packets(netmd_dev_handle *dev,
         }
 
         /* ... send it */
-        error = libusb_bulk_transfer((libusb_device_handle*)dev, 2, packet, (int)packet_size, &transferred, 80000);
+        error = libusb_bulk_transfer(dev->usb, 2, packet, (int)packet_size, &transferred, 80000);
         total_transferred += (size_t) transferred;
 
         if (error != LIBUSB_SUCCESS)
@@ -659,7 +659,7 @@ netmd_secure_real_recv_track(netmd_dev_handle *dev, uint32_t length, FILE *file,
             chunksize = length - done;
         }
 
-        status = libusb_bulk_transfer((libusb_device_handle*)dev, 0x81, data, (int)chunksize, &transferred, 10000);
+        status = libusb_bulk_transfer(dev->usb, 0x81, data, (int)chunksize, &transferred, 10000);
 
         if (status >= 0) {
             done += transferred;
