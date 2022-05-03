@@ -385,3 +385,9 @@ should allow for easy invalidation and update of group information.
 Now that the group information handling has been merged into the device handle,
 `settitle` can just set the normal title without affecting the groups. For
 advanced use cases, the user can still set and get the raw title.
+
+
+## `contrib/netmd-send-file`: Send any file format to a NetMD recorder
+
+Similar to what Platinum MD and netmd-js are doing, this script combines
+`ffmpeg`, `atracdenc` and `netmdcli` to send SP/LP2/LP4 to a NetMD unit.
