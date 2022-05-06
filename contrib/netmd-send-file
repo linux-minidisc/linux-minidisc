@@ -6,6 +6,8 @@
 # Uses ffmpeg and atracdenc, similar to what Platinum MD and
 # netmd-js are doing to send PCM (for SP) or ATRAC3 (for LP2/LP4).
 #
+# Can also use the atrac3.acm Windows codec via atracenc + wine.
+#
 
 import argparse
 import subprocess
@@ -16,56 +18,20 @@ import struct
 parser = argparse.ArgumentParser(description='Send audio files to a NetMD recorder, with conversion')
 parser.add_argument('filename', nargs='+', type=str, help='Audio file to send to the player')
 parser.add_argument('--format', default='sp', type=str, help='Format to send over (sp, lp2, lp4)')
+parser.add_argument('--use-sony-atrac3', action='store_true', help='Use atrac3.acm from Sony instead of atracdenc')
+
+HERE = os.path.dirname(__file__) or '.'
 
 # Paths to the tools may need to be adjusted
-NETMDCLI = 'build/netmdcli'
+NETMDCLI = os.path.join(HERE, '../build/netmdcli')
 FFMPEG = 'ffmpeg'
-ATRACDENC = '../atracdenc/build/src/atracdenc'
+ATRACDENC = os.path.join(HERE, '../../atracdenc/build/src/atracdenc')
+ATRACENC = os.path.join(HERE, 'atracenc/atracenc.exe')
 
 args = parser.parse_args()
 
 if args.format not in ('sp', 'lp2', 'lp4'):
     raise ValueError(f'Invalid format: {args.format}, only sp, lp2 and lp4 are supported')
-
-NETMD_RIFF_FORMAT_TAG_ATRAC3 = 0x270
-NETMD_DATA_BLOCK_SIZE_LP2 = 384
-NETMD_DATA_BLOCK_SIZE_LP4 = 192
-
-
-def make_wave_header(format, length):
-    # http://soundfile.sapp.org/doc/WaveFormat/
-    SubChunk1Size = 16
-    SubChunk2Size = length
-    AudioFormat = NETMD_RIFF_FORMAT_TAG_ATRAC3
-    NumChannels = 2
-    SampleRate = 44100
-    BitsPerSample = 16
-    ByteRate = SampleRate * NumChannels * int(BitsPerSample/8)
-    BlockAlign = {
-        'lp2': NETMD_DATA_BLOCK_SIZE_LP2,
-        'lp4': NETMD_DATA_BLOCK_SIZE_LP4,
-    }[format]
-
-    subchunk1 = struct.pack('<4sIHHIIHH',
-        b'fmt ',
-        SubChunk1Size,
-        AudioFormat,
-        NumChannels,
-        SampleRate,
-        ByteRate,
-        BlockAlign,
-        BitsPerSample)
-
-    subchunk2 = struct.pack('<4sI',
-        b'data',
-        SubChunk2Size)
-
-    wavhdr = struct.pack('<4sI4s',
-        b'RIFF',
-        4 + len(subchunk1) + len(subchunk2) + length,
-        b'WAVE')
-
-    return wavhdr + subchunk1 + subchunk2
 
 
 for filename in args.filename:
@@ -86,25 +52,20 @@ for filename in args.filename:
     if args.format != 'sp':
         temp_atrac_filename = tempfile.mktemp('.oma')
 
-        subprocess.check_call([ATRACDENC,
-            '-e', 'atrac3',
-            '--bitrate', {'lp2': '128', 'lp4': '64'}[args.format],
-            '-i', temp_filename,
-            '-o', temp_atrac_filename])
+        if args.use_sony_atrac3:
+            # ATRACENC supports reading/writing to the same file
+            subprocess.check_call(['wine', ATRACENC, args.format, temp_filename, temp_filename])
+        else:
+            subprocess.check_call([ATRACDENC,
+                '-e', 'atrac3',
+                '--bitrate', {'lp2': '128', 'lp4': '64'}[args.format],
+                '-i', temp_filename,
+                '-o', temp_atrac_filename])
 
-        # Use ffmpeg to put OMA -> WAV
-        subprocess.check_call([FFMPEG, '-y', '-i', temp_atrac_filename, '-c:a', 'copy', temp_filename])
+            # Use ffmpeg to put OMA -> WAV
+            subprocess.check_call([FFMPEG, '-y', '-i', temp_atrac_filename, '-c:a', 'copy', temp_filename])
 
-        # Alternative implementation, without ffmpeg:
-        #with open(temp_atrac_filename, 'rb') as fp:
-        #    oma_header = fp.read(96)
-        #    atrac3_data = fp.read()
-        #with open(temp_filename, 'wb') as fp:
-        #    fp.write(make_wave_header(args.format, len(atrac3_data)))
-        #    fp.write(atrac3_data)
-        #print(temp_filename)
-
-        os.unlink(temp_atrac_filename)
+            os.unlink(temp_atrac_filename)
 
     subprocess.check_call([NETMDCLI, '-v', 'send', temp_filename, title])
 
