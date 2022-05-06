@@ -50,12 +50,12 @@ for filename in args.filename:
         temp_filename])
 
     if args.format != 'sp':
-        temp_atrac_filename = tempfile.mktemp('.oma')
-
         if args.use_sony_atrac3:
             # ATRACENC supports reading/writing to the same file
             subprocess.check_call(['wine', ATRACENC, args.format, temp_filename, temp_filename])
         else:
+            temp_atrac_filename = tempfile.mktemp('.oma')
+
             subprocess.check_call([ATRACDENC,
                 '-e', 'atrac3',
                 '--bitrate', {'lp2': '128', 'lp4': '64'}[args.format],
@@ -63,6 +63,8 @@ for filename in args.filename:
                 '-o', temp_atrac_filename])
 
             # Use ffmpeg to put OMA -> WAV
+            # Eventually atracdenc should support this directly:
+            # https://github.com/dcherednik/atracdenc/pull/30
             subprocess.check_call([FFMPEG, '-y', '-i', temp_atrac_filename, '-c:a', 'copy', temp_filename])
 
             os.unlink(temp_atrac_filename)
