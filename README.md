@@ -391,3 +391,10 @@ advanced use cases, the user can still set and get the raw title.
 
 Similar to what Platinum MD and netmd-js are doing, this script combines
 `ffmpeg`, `atracdenc` and `netmdcli` to send SP/LP2/LP4 to a NetMD unit.
+
+
+## ATRAC3 encoding using `atrac3.acm`
+
+As an optional tool, `contrib/atracenc` contains code for a small CLI tool
+that can use the closed `atrac3.acm` file to convert a PCM WAV file into an
+ATRAC3 LP2/LP4 WAV file that can be used with `netmdcli send`.

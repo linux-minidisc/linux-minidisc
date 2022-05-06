@@ -24,3 +24,5 @@ Makefile*
 /basictools/himdformat
 /basictools/himddiskid
 /html
+/contrib/atracenc/atrac3.acm
+/contrib/atracenc/atracenc.exe
