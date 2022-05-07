@@ -426,3 +426,10 @@ This allows updating metadata on Hi-MDs. Also, `himd_remove_string()` and
 the changes to disk, `himd_write_tifdata()` should be called afterwards.
 
 The editing of track/artist/album in Hi-MDs is implemented in QHiMDTransfer.
+
+
+## Hi-MD MP3 downloading: Fall back to file basename for files without tags
+
+Instead of uploading an "empty" title, take the file basename as a title
+for MP3 downloads to Hi-MD media. With the new edit function, the user can
+then easily edit the track metadata in QHiMDTransfer.

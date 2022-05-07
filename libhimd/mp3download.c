@@ -263,6 +263,17 @@ int himd_writemp3(struct himd * h, const char *filepath)
     if(himd_get_songinfo(filepath, &artist, &title, &album, &status) < 0)
         printf("no tags\n");
 
+    // Fallback to filename for title
+    if (title == NULL) {
+        // Returned allocated string is free'd below
+        title = g_path_get_basename(filepath);
+
+        char *dot = strrchr(title, '.');
+        if (dot != NULL) {
+            *dot = '\0';
+        }
+    }
+
     // Load mp3 stream
     mp3file   = g_mapped_file_new(filepath, FALSE, NULL);
     mp3size   = g_mapped_file_get_length(mp3file);
