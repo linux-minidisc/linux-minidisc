@@ -12,13 +12,19 @@ class QHiMDUploadDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit QHiMDUploadDialog(QWidget *parent = 0);
+    enum Mode {
+        UPLOAD = 0,
+        DOWNLOAD = 1,
+    };
+
+    explicit QHiMDUploadDialog(QWidget *parent, enum Mode mode);
     virtual ~QHiMDUploadDialog();
-    bool upload_canceled() { return canceled; }
+    bool was_canceled() { return canceled; }
 
     void init(int trackcount, int totalblocks);
     void starttrack(const QMDTrack & trk, const QString & title);
-    void blockTransferred();
+    void starttrack(const QString &filename);
+    void blockTransferred(int count=1);
     void trackFailed(const QString & errmsg);
     void trackSucceeded();
     void finished();
@@ -30,6 +36,8 @@ private:
     int thisfileblocks, thisfilefinished;
     int scount, fcount;
     bool canceled;
+    enum Mode mode;
+    QString currentFilename;
 
 private slots:
     /* UI slots */

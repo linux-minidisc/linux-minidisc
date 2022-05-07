@@ -14,7 +14,10 @@
 #include <libusb.h>
 
 /* common device members */
-QMDDevice::QMDDevice() : dev_type(NO_DEVICE)
+QMDDevice::QMDDevice()
+    : dev_type(NO_DEVICE)
+    , uploadDialog(nullptr, QHiMDUploadDialog::UPLOAD)
+    , downloadDialog(nullptr, QHiMDUploadDialog::DOWNLOAD)
 {
 }
 
@@ -118,6 +121,30 @@ void QMDDevice::checkfile(QString UploadDirectory, QString &filename, QString ex
         filename = newname;
 }
 
+void QMDDevice::batchDownload(const QStringList &filenames)
+{
+    int allblocks = 0;
+
+    setBusy(true);
+
+    for (const QString &filename: filenames) {
+        allblocks += QFileInfo(filename).size();
+    }
+
+    downloadDialog.init(filenames.length(), allblocks);
+
+    for (const QString &filename: filenames) {
+        download(filename);
+
+        QApplication::processEvents();
+        if (downloadDialog.was_canceled()) {
+            break;
+        }
+    }
+
+    downloadDialog.finished();
+    setBusy(false);
+}
 
 /* netmd device members */
 QNetMDDevice::QNetMDDevice()
@@ -129,6 +156,9 @@ QNetMDDevice::QNetMDDevice()
 
     upload_reported_track_blocks = 0;
     upload_total_track_blocks = 0;
+
+    download_reported_file_blocks = 0;
+    download_total_file_blocks = 0;
 }
 
 QNetMDDevice::~QNetMDDevice()
@@ -251,10 +281,9 @@ void QNetMDDevice::onUploadProgress(float progress)
 {
     // This is weird due to the QHiMDUploadDialog API working only with "blocks"
     int progress_blocks = progress * upload_total_track_blocks;
-    while (upload_reported_track_blocks < progress_blocks) {
-        uploadDialog.blockTransferred();
-        ++upload_reported_track_blocks;
-    }
+
+    uploadDialog.blockTransferred(progress_blocks - upload_reported_track_blocks);
+    upload_reported_track_blocks = progress_blocks;
 
     QApplication::processEvents();
 }
@@ -308,7 +337,7 @@ void QNetMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
     for(int i = 0; i < tlist.length(); i++) {
         upload(tlist[i], path);
         QApplication::processEvents();
-        if(uploadDialog.upload_canceled())
+        if(uploadDialog.was_canceled())
             break;
     }
 
@@ -319,22 +348,38 @@ void QNetMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
 static void
 on_send_progress(struct netmd_send_progress *send_progress)
 {
-    QProgressDialog *dialog = static_cast<QProgressDialog *>(send_progress->user_data);
+    QNetMDDevice *self = static_cast<QNetMDDevice *>(send_progress->user_data);
 
-    dialog->setValue(100 * send_progress->progress);
-    dialog->setLabelText(send_progress->message);
+    self->onDownloadProgress(send_progress->progress);
+}
+
+void QNetMDDevice::onDownloadProgress(float progress)
+{
+    int progress_blocks = progress * download_total_file_blocks;
+    downloadDialog.blockTransferred(progress_blocks - download_reported_file_blocks);
+    download_reported_file_blocks = progress_blocks;
 
     QApplication::processEvents();
 }
 
 bool QNetMDDevice::download(const QString &filename)
 {
-    QProgressDialog progress("Please wait...", QString(), 0, 100);
-    progress.setWindowModality(Qt::WindowModal);
+    downloadDialog.starttrack(filename);
 
-    int result = netmd_send_track(devh, filename.toUtf8().data(), NULL, on_send_progress, &progress);
+    download_reported_file_blocks = 0;
+    download_total_file_blocks = QFileInfo(filename).size();
 
-    return result == NETMD_NO_ERROR;
+    int res = netmd_send_track(devh, filename.toUtf8().data(), NULL, on_send_progress, this);
+
+    onDownloadProgress(1.f);
+
+    if (res == NETMD_NO_ERROR) {
+        downloadDialog.trackSucceeded();
+        return true;
+    }
+
+    downloadDialog.trackFailed(QString("netmd_send_track() returned %1").arg(res));
+    return false;
 }
 
 bool QNetMDDevice::isWritable()
@@ -461,7 +506,7 @@ QString QHiMDDevice::dumpmp3(const QHiMDTrack &trk, QString file)
         }
         uploadDialog.blockTransferred();
         QApplication::processEvents();
-        if(uploadDialog.upload_canceled())
+        if(uploadDialog.was_canceled())
         {
             errmsg = tr("upload aborted by the user");
             goto clean;
@@ -531,7 +576,7 @@ QString QHiMDDevice::dumpoma(const QHiMDTrack &track, QString file)
         }
         uploadDialog.blockTransferred();
         QApplication::processEvents();
-        if(uploadDialog.upload_canceled())
+        if(uploadDialog.was_canceled())
         {
             errmsg = QString("upload aborted by the user");
             goto clean;
@@ -575,7 +620,7 @@ QString QHiMDDevice::dumppcm(const QHiMDTrack &track, QString file)
 
         uploadDialog.blockTransferred();
         QApplication::processEvents();
-        if (uploadDialog.upload_canceled()) {
+        if (uploadDialog.was_canceled()) {
             errmsg = QString("upload aborted by the user");
             goto clean;
         }
@@ -657,7 +702,7 @@ void QHiMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
     for(int i = 0; i < tlist.length(); i++) {
         upload(tlist[i], path);
         QApplication::processEvents();
-        if(uploadDialog.upload_canceled())
+        if(uploadDialog.was_canceled())
             break;
     }
 
@@ -667,7 +712,21 @@ void QHiMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
 
 bool QHiMDDevice::download(const QString &filename)
 {
-    return (himd_writemp3(himd, filename.toUtf8().data()) == 0);
+    downloadDialog.starttrack(filename);
+
+    int res = himd_writemp3(himd, filename.toUtf8().data());
+
+    // Until we have a progress callback for the himd_writemp3() function,
+    // just progress the whole file at once after the transfer is complete.
+    downloadDialog.blockTransferred(QFile(filename).size());
+
+    if (res == 0) {
+        downloadDialog.trackSucceeded();
+        return true;
+    }
+
+    downloadDialog.trackFailed(QString("himd_writemp3() returned %1").arg(res));
+    return false;
 }
 
 bool QHiMDDevice::canUpload()

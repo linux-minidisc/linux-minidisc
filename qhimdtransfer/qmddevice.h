@@ -28,6 +28,7 @@ protected:
     bool md_inserted;
     void * mdChange;
     QHiMDUploadDialog uploadDialog;
+    QHiMDUploadDialog downloadDialog;
     libusb_device * ldev;
 public:
     explicit QMDDevice();
@@ -57,6 +58,7 @@ public:
     virtual void batchUpload(QMDTrackIndexList tlist, QString path) = 0;
     virtual void upload(unsigned int trackidx, QString path) = 0;
     virtual bool download(const QString &filename) = 0;
+    virtual void batchDownload(const QStringList &filenames);
     virtual bool canUpload() = 0;
     virtual bool isWritable() = 0;
     virtual bool canFormatDisk() = 0;
@@ -76,6 +78,9 @@ class QNetMDDevice : public QMDDevice {
 
     int upload_reported_track_blocks;
     int upload_total_track_blocks;
+
+    int download_reported_file_blocks;
+    int download_total_file_blocks;
 
     QString recordedLabelText;
     QString availableLabelText;
@@ -102,6 +107,7 @@ public:
     virtual QString getAvailableLabelText();
 
     void onUploadProgress(float progress);
+    void onDownloadProgress(float progress);
 };
 
 class QHiMDDevice : public QMDDevice {

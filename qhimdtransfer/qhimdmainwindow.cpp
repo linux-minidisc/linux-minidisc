@@ -257,17 +257,10 @@ void QHiMDMainWindow::on_action_Download_triggered()
 
     QApplication::processEvents();
 
-    for (auto &fileName: DownloadFileList) {
-        // TODO: Show UI progress while download is taking place (right now, UI freezes)
-        if (current_device->download(fileName)) {
-            // Open device again to refresh the UI
-            open_device(current_device);
-        } else {
-            QMessageBox errormsg;
-            errormsg.setText(tr("Downloading of files failed."));
-            errormsg.exec();
-        }
-    }
+    current_device->batchDownload(DownloadFileList);
+
+    // Refresh the UI to show newly-downloaded tracks
+    open_device(current_device);
 }
 
 void QHiMDMainWindow::on_action_Upload_triggered()

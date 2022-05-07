@@ -1,18 +1,21 @@
 #include "qhimduploaddialog.h"
 #include "ui_qhimduploaddialog.h"
 
+#include <QFileInfo>
+
 void QHiMDUploadDialog::trackFailed(const QString & errmsg)
 {
     allfinished -= thisfilefinished;
     allfinished += thisfileblocks;
     m_ui->AllPBar->setValue(allfinished);
 
-    m_ui->failed_text->setText(tr("%1 track(s) could not be uploaded").arg(++fcount));
+    m_ui->failed_text->setText((mode == UPLOAD) ? tr("%1 track(s) could not be uploaded").arg(++fcount)
+                                                : tr("%1 track(s) could not be downloaded").arg(++fcount));
 
     QTreeWidgetItem * ErrorMsg;
     ErrorMsg = new QTreeWidgetItem(0);
 
-    ErrorMsg->setText(0, tr("Track %1").arg(tracknum));
+    ErrorMsg->setText(0, (mode == UPLOAD) ? tr("Track %1").arg(tracknum) : currentFilename);
     ErrorMsg->setText(1, errmsg);
     m_ui->ErrorList->insertTopLevelItem(0, ErrorMsg);
     m_ui->details_button->setEnabled(true);
@@ -25,7 +28,8 @@ void QHiMDUploadDialog::trackSucceeded()
     allfinished += thisfileblocks;
     m_ui->AllPBar->setValue(allfinished);
 
-    m_ui->success_text->setText(tr("%1 track(s) successfully uploaded").arg(++scount));
+    m_ui->success_text->setText((mode == UPLOAD) ? tr("%1 track(s) successfully uploaded").arg(++scount)
+                                                 : tr("%1 track(s) successfully downloaded").arg(++scount));
 }
 
 void QHiMDUploadDialog::finished()
@@ -60,10 +64,23 @@ void QHiMDUploadDialog::starttrack(const QMDTrack & trk, const QString & title)
     m_ui->TrkPBar->reset();
 }
 
-void QHiMDUploadDialog::blockTransferred()
+void QHiMDUploadDialog::starttrack(const QString &filename)
 {
-    m_ui->TrkPBar->setValue(++thisfilefinished);
-    m_ui->AllPBar->setValue(++allfinished);
+    QFileInfo info(filename);
+
+    tracknum = 0;
+    currentFilename = filename;
+    m_ui->curtrack_label->setText(tr("current file: %1").arg(info.fileName()));
+    thisfileblocks = info.size();
+    thisfilefinished = 0;
+    m_ui->TrkPBar->setRange(0, thisfileblocks);
+    m_ui->TrkPBar->reset();
+}
+
+void QHiMDUploadDialog::blockTransferred(int count)
+{
+    m_ui->TrkPBar->setValue((thisfilefinished += count));
+    m_ui->AllPBar->setValue((allfinished += count));
 }
 
 void QHiMDUploadDialog::init(int trackcount, int totalblocks)
@@ -85,7 +102,12 @@ void QHiMDUploadDialog::init(int trackcount, int totalblocks)
     }
     else
     {
-        m_ui->alltrack_label->setText(tr("please wait while uploading %1 track(s)").arg(trackcount));
+        if (mode == UPLOAD) {
+            m_ui->alltrack_label->setText(tr("please wait while uploading %1 track(s)").arg(trackcount));
+        } else {
+            m_ui->alltrack_label->setText(tr("please wait while downloading %1 track(s)").arg(trackcount));
+        }
+
         /* undo QHiMDUploadDialog::finished */
         m_ui->TrkPBar->show();
         m_ui->curtrack_label->show();
@@ -103,12 +125,19 @@ void QHiMDUploadDialog::init(int trackcount, int totalblocks)
     resize(size().width(), sizeHint().height());
 }
 
-QHiMDUploadDialog::QHiMDUploadDialog(QWidget *parent) :
-    QDialog(parent),
-    m_ui(new Ui::QHiMDUploadDialog),
-    canceled(false)
+QHiMDUploadDialog::QHiMDUploadDialog(QWidget *parent, enum Mode mode)
+    : QDialog(parent)
+    , m_ui(new Ui::QHiMDUploadDialog)
+    , canceled(false)
+    , mode(mode)
 {
     m_ui->setupUi(this);
+
+    setWindowTitle((mode == UPLOAD) ? tr("Track upload") : tr("Track download"));
+
+    if (mode == DOWNLOAD) {
+        m_ui->icon->setPixmap(QPixmap(":/icons/download_to_md.png"));
+    }
 }
 
 QHiMDUploadDialog::~QHiMDUploadDialog()
@@ -141,6 +170,6 @@ void QHiMDUploadDialog::on_close_button_clicked()
 
 void QHiMDUploadDialog::on_cancel_button_clicked()
 {
-    m_ui->alltrack_label->setText(tr("upload aborted by the user"));
+    m_ui->alltrack_label->setText((mode == UPLOAD) ? tr("upload aborted by the user") : tr("download aborted by the user"));
     canceled = true;
 }

@@ -433,3 +433,11 @@ The editing of track/artist/album in Hi-MDs is implemented in QHiMDTransfer.
 Instead of uploading an "empty" title, take the file basename as a title
 for MP3 downloads to Hi-MD media. With the new edit function, the user can
 then easily edit the track metadata in QHiMDTransfer.
+
+
+## Download dialog with progress for QHiMDTransfer
+
+Re-purpose the upload dialog for download progress information. For NetMD,
+download progress is quite fine-grained, for Hi-MD (MP3 download), it also
+works, but the granularity is on the level of files due to missing progress
+callbacks.
