@@ -1,7 +1,5 @@
 #include "qmdtrack.h"
 
-#include <QDebug>
-
 static QString get_himd_str(struct himd * himd, int idx)
 {
     QString outstr;
@@ -134,11 +132,25 @@ QByteArray QHiMDTrack::makeEA3Header() const
 bool
 QHiMDTrack::updateMetadata(const QString &title, const QString &artist, const QString &album)
 {
-    qDebug() << "updateMetadata:" << himd << trknum << title << artist << album;
+    struct himderrinfo status;
 
-    // TODO: Implement updating of metadata
+    if (himd_track_set_string(himd, trackslot, &ti, STRING_TYPE_TITLE, title.toUtf8().data(), &status) != 0) {
+        return false;
+    }
 
-    return false;
+    if (himd_track_set_string(himd, trackslot, &ti, STRING_TYPE_ARTIST, artist.toUtf8().data(), &status) != 0) {
+        return false;
+    }
+
+    if (himd_track_set_string(himd, trackslot, &ti, STRING_TYPE_ALBUM, album.toUtf8().data(), &status) != 0) {
+        return false;
+    }
+
+    if (himd_write_tifdata(himd, &status) != 0) {
+        return false;
+    }
+
+    return true;
 }
 
 

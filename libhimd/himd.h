@@ -166,7 +166,8 @@ int himd_open(struct himd * himd, const char * himdroot, struct himderrinfo * st
 void himd_close(struct himd * himd);
 char* himd_get_string_raw(struct himd * himd, unsigned int idx, int*type, int* length, struct himderrinfo * status);
 char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struct himderrinfo * status);
-int himd_add_string(struct himd * himd, char *string, int type, struct himderrinfo * status);
+int himd_add_string(struct himd * himd, const char *string, int type, struct himderrinfo * status);
+int himd_remove_string(struct himd * himd, unsigned int idx, struct himderrinfo * status);
 void himd_free(void * p);
 const unsigned char * himd_get_discid(struct himd * himd, struct himderrinfo * status);
 FILE * himd_open_file(struct himd * himd, const char * fileid, enum himd_rw_mode mode);
@@ -175,9 +176,11 @@ unsigned int himd_track_count(struct himd * himd);
 unsigned int himd_get_trackslot(struct himd * himd, int unsigned idx, struct himderrinfo * status);
 
 int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo * track, struct himderrinfo * status);
+int himd_update_track_info(struct himd * himd, unsigned int idx, const struct trackinfo * track, struct himderrinfo * status);
 int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo * f, struct himderrinfo * status);
 int himd_track_uploadable(struct himd * himd, const struct trackinfo * track);
 int himd_track_blocks(struct himd * himd, const struct trackinfo * track, struct himderrinfo * status);
+int himd_track_set_string(struct himd * himd, unsigned int idx, struct trackinfo * track, int string_type, const char * new_string_utf8, struct himderrinfo * status);
 
 int himd_get_free_trackindex(struct himd * himd);
 int himd_add_track_info(struct himd * himd, struct trackinfo * track, struct himderrinfo * status);

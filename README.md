@@ -417,3 +417,12 @@ album). While the UI is fully functional, saving isn't implemented yet.
 
 For debugging and experimenting, this script based on libhimd can be used
 to dump all parts of the track index file.
+
+
+## libhimd: Add `himd_track_set_string()` and helper functions
+
+This allows updating metadata on Hi-MDs. Also, `himd_remove_string()` and
+`himd_update_track_info()` have been added (and are used by it). To write
+the changes to disk, `himd_write_tifdata()` should be called afterwards.
+
+The editing of track/artist/album in Hi-MDs is implemented in QHiMDTransfer.

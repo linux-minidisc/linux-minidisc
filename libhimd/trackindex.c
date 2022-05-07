@@ -131,7 +131,7 @@ static void dos_settime(unsigned char * buffer, const struct tm * tm)
    }
 }
 
-static void settrack(struct trackinfo *t, unsigned char * trackbuffer)
+static void settrack(const struct trackinfo *t, unsigned char * trackbuffer)
 {
   dos_settime(trackbuffer+0,  &t->recordingtime);
   setbeword32(trackbuffer+4,  t->ekbnum);
@@ -237,6 +237,19 @@ int himd_get_track_info(struct himd * himd, unsigned int idx, struct trackinfo *
     return 0;
 }
 
+int himd_update_track_info(struct himd * himd, unsigned int idx, const struct trackinfo * track, struct himderrinfo * status)
+{
+    (void) status;
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(idx >= HIMD_FIRST_TRACK, -1);
+    g_return_val_if_fail(idx <= HIMD_LAST_TRACK, -1);
+    g_return_val_if_fail(track != NULL, -1);
+
+    settrack(track, get_track(himd, idx));
+
+    return 0;
+}
 
 int himd_add_track_info(struct himd * himd, struct trackinfo * t, struct himderrinfo * status)
 {
@@ -485,7 +498,7 @@ char* himd_get_string_utf8(struct himd * himd, unsigned int idx, int*type, struc
 }
 
 
-int himd_add_string(struct himd * himd, char *string, int type, struct himderrinfo * status)
+int himd_add_string(struct himd * himd, const char * string, int type, struct himderrinfo * status)
 {
     int curidx, curtype, i, nextidx;
     int nslots;
@@ -578,4 +591,84 @@ int himd_add_string(struct himd * himd, char *string, int type, struct himderrin
     g_free(convertedstring);
 
     return idx_firstslot;
+}
+
+int himd_remove_string(struct himd * himd, unsigned int idx, struct himderrinfo * status)
+{
+    (void)status;
+
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(idx < 4096, -1);
+
+    unsigned char * freelist = get_strchunk(himd, 0);
+
+    // Freelist points to the next free chunk
+    int next_free_chunk = strlink(freelist);
+
+    // Insert the current string into the beginning of the freelist
+    set_strlink(freelist, idx);
+
+    while (idx != 0) {
+        unsigned char * curchunk = get_strchunk(himd, idx);
+
+        // Clear the chunk
+        memset(curchunk, 0, 14);
+        set_strtype(curchunk, STRING_TYPE_UNUSED);
+
+        idx = strlink(curchunk);
+
+        if (idx == 0) {
+            // Add the tail of the free list
+            set_strlink(curchunk, next_free_chunk);
+        }
+    }
+
+    return 0;
+}
+
+int himd_track_set_string(struct himd * himd, unsigned int idx, struct trackinfo * track, int string_type, const char * new_string_utf8, struct himderrinfo * status)
+{
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(idx >= HIMD_FIRST_TRACK, -1);
+    g_return_val_if_fail(idx <= HIMD_LAST_TRACK, -1);
+    g_return_val_if_fail(track != NULL, -1);
+
+    int *pidx;
+
+    switch (string_type) {
+        case STRING_TYPE_TITLE:
+            pidx = &track->title;
+            break;
+        case STRING_TYPE_ARTIST:
+            pidx = &track->artist;
+            break;
+        case STRING_TYPE_ALBUM:
+            pidx = &track->album;
+            break;
+        default:
+            set_status_printf(status, HIMD_ERROR_STRING_ENCODING_ERROR, _("String type not supported"));
+            return -1;
+    }
+
+    // Remove old string
+    if (*pidx != 0) {
+        int res = himd_remove_string(himd, *pidx, status);
+        if (res == 0) {
+            *pidx = 0;
+        } else {
+            return -1;
+        }
+    }
+
+    // Add new string (if it's non-empty, otherwise just leave it at zero0
+    if (new_string_utf8 != NULL && new_string_utf8[0] != '\0') {
+        int res = himd_add_string(himd, new_string_utf8, string_type, status);
+        if (res >= 0) {
+            *pidx = res;
+        } else {
+            return -1;
+        }
+    }
+
+    return himd_update_track_info(himd, idx, track, status);
 }
