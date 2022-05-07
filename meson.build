@@ -165,6 +165,7 @@ if get_option('with_gui')
     'qhimdtransfer/qmdmodel.cpp',
     'qhimdtransfer/qmdtrack.cpp',
     'qhimdtransfer/wavefilewriter.cpp',
+    'qhimdtransfer/editmetadatadialog.cpp',
   ]
 
   if get_option('target_os') == 'linux'
@@ -188,10 +189,12 @@ if get_option('with_gui')
     'qhimdtransfer/qhimdaboutdialog.ui',
     'qhimdtransfer/qhimdmainwindow.ui',
     'qhimdtransfer/qhimduploaddialog.ui',
+    'qhimdtransfer/editmetadatadialog.ui',
   ], moc_headers: [
     'qhimdtransfer/qhimdaboutdialog.h',
     'qhimdtransfer/qhimdmainwindow.h',
     'qhimdtransfer/qhimduploaddialog.h',
+    'qhimdtransfer/editmetadatadialog.h',
 
     'qhimdtransfer/qhimddetection.h',
     'qhimdtransfer/qmdmodel.h',

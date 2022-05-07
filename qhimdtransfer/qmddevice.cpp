@@ -80,16 +80,6 @@ bool QMDDevice::mdInserted()
     return md_inserted;
 }
 
-void QMDDevice::setDeviceHandle(void * devicehandle)
-{
-    devhandle = devicehandle;
-}
-
-void * QMDDevice::deviceHandle()
-{
-    return devhandle;
-}
-
 void QMDDevice::registerMdChange(void * regMdChange)
 {
     mdChange = regMdChange;

@@ -21,8 +21,7 @@ QNetMDTracksModel::getTrack(int index)
 QMDTrack *
 QHiMDTracksModel::getTrack(int index)
 {
-    // TODO
-    return nullptr;
+    return &allTracks[index];
 }
 
 /* netmd tracks model */
@@ -307,6 +306,10 @@ QString QHiMDTracksModel::open(QMDDevice * device)
     if(!ret.isEmpty())
         close();
 
+    for (int i=0; i < hdev->trackCount(); i++) {
+        allTracks.append(QHiMDTrack(hdev->deviceHandle(), i));
+    }
+
     endResetModel();	/* inform views that the model contents changed */
     return ret;
 }
@@ -325,5 +328,6 @@ void QHiMDTracksModel::close()
 
     hdev = NULL;
 
+    allTracks.clear();
     endResetModel();	/* inform views that the model contents changed */
 }

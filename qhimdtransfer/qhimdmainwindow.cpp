@@ -1,10 +1,13 @@
 #include "qhimdmainwindow.h"
 #include "ui_qhimdmainwindow.h"
-#include "qhimdaboutdialog.h"
+
 #include <QMessageBox>
 #include <QApplication>
 #include <QDesktopServices>
 #include <QInputDialog>
+
+#include "qhimdaboutdialog.h"
+#include "editmetadatadialog.h"
 
 void QHiMDMainWindow::set_buttons_enable()
 {
@@ -15,7 +18,7 @@ void QHiMDMainWindow::set_buttons_enable()
     bool is_writable = have_device && current_device->isWritable();
     bool can_download = have_device && is_writable;
     bool can_upload = have_device && current_device->canUpload() && minidisc_tracks_selected;
-    bool can_edit = have_device && minidisc_tracks_selected && current_device->deviceType() == NETMD_DEVICE;
+    bool can_edit = have_device && minidisc_tracks_selected;
     bool can_format = have_device && is_writable && current_device->canFormatDisk();
 
     ui->action_Download->setEnabled(can_download);
@@ -303,33 +306,58 @@ void QHiMDMainWindow::on_action_Rename_triggered()
     for (auto index: tracks) {
         auto *track = model->getTrack(index);
 
-        // Just in case we hit this with QHiMDTracksModel
-        if (track == nullptr) {
-            continue;
-        }
+        if (current_device->deviceType() == NETMD_DEVICE) {
+            // NetMD device
 
-        QInputDialog dlg(this);
-        dlg.setInputMode(QInputDialog::TextInput);
-        dlg.setWindowTitle(tr("Rename track"));
-        dlg.setLabelText(tr("New title:"));
-        dlg.setTextValue(track->title());
-        dlg.resize(480, 100);
-        if (!dlg.exec()) {
-            break;
-        }
+            QInputDialog dlg(this);
+            dlg.setInputMode(QInputDialog::TextInput);
+            dlg.setWindowTitle(tr("Rename track"));
+            dlg.setLabelText(tr("New title:"));
+            dlg.setTextValue(track->title());
+            dlg.resize(480, 100);
+            if (!dlg.exec()) {
+                break;
+            }
 
-        if (dlg.textValue() == track->title()) {
-            continue;
-        }
+            if (dlg.textValue() == track->title()) {
+                continue;
+            }
 
-        if (track->rename(dlg.textValue())) {
-            changed = true;
+            if (track->rename(dlg.textValue())) {
+                changed = true;
+            } else {
+                QMessageBox::information(this,
+                        tr("Error"),
+                        tr("Track rename failed"));
+                break;
+            }
         } else {
-            QMessageBox::information(this,
-                    tr("Error"),
-                    tr("Track rename failed"));
-            break;
+            // Hi-MD device
+
+            EditMetadataDialog dlg(this, track);
+            if (!dlg.exec()) {
+                break;
+            }
+
+            QHiMDTrack *himdTrack = static_cast<QHiMDTrack *>(track);
+
+            if (dlg.getTitle() == track->title() &&
+                    dlg.getArtist() == track->artist() &&
+                    dlg.getAlbum() == track->album()) {
+                // No changes
+                continue;
+            }
+
+            if (himdTrack->updateMetadata(dlg.getTitle(), dlg.getArtist(), dlg.getAlbum())) {
+                changed = true;
+            } else {
+                QMessageBox::information(this,
+                        tr("Error"),
+                        tr("Updating metadata failed"));
+                break;
+            }
         }
+
     }
 
     if (changed) {

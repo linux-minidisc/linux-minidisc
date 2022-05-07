@@ -26,7 +26,6 @@ protected:
     bool is_open;
     unsigned int trk_count;
     bool md_inserted;
-    void * devhandle;
     void * mdChange;
     QHiMDUploadDialog uploadDialog;
     libusb_device * ldev;
@@ -48,8 +47,6 @@ public:
     virtual QString discTitle() {return QString();}
     virtual void setMdInserted(bool inserted);
     virtual bool mdInserted();
-    virtual void setDeviceHandle(void * devicehandle);
-    virtual void * deviceHandle();
     virtual void registerMdChange(void * regMdChange);
     virtual void * MdChange();
     virtual void setLibusbDevice(libusb_device * dev);
@@ -125,6 +122,8 @@ public:
     virtual bool download(const QString &filename);
     virtual bool canUpload();
     virtual QStringList downloadableFileExtensions() const;
+
+    struct himd *deviceHandle() { return himd; }
 
     virtual bool isWritable();
     virtual bool canFormatDisk();

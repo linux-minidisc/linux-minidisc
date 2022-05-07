@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EditMetadataDialog</class>
+ <widget class="QDialog" name="EditMetadataDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>175</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>175</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>400</width>
+    <height>175</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string/>
+  </property>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>130</y>
+     <width>361</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
+   </property>
+  </widget>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>361</width>
+     <height>103</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="0">
+     <widget class="QLabel" name="labelArtist">
+      <property name="text">
+       <string>Artist:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="labelTitle">
+      <property name="text">
+       <string>Title:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="labelAlbum">
+      <property name="text">
+       <string>Album:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLineEdit" name="editArtist"/>
+    </item>
+    <item row="2" column="1">
+     <widget class="QLineEdit" name="editAlbum"/>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="editTitle"/>
+    </item>
+    <item row="0" column="2">
+     <widget class="QPushButton" name="undoTitle">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset theme=":/icons/undo.png"/>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QPushButton" name="undoArtist">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset theme=":/icons/undo.png"/>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QPushButton" name="undoAlbum">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="icon">
+       <iconset theme=":/icons/undo.png"/>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <tabstops>
+  <tabstop>editTitle</tabstop>
+  <tabstop>editArtist</tabstop>
+  <tabstop>editAlbum</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>EditMetadataDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>EditMetadataDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>undoTitle</sender>
+   <signal>pressed()</signal>
+   <receiver>EditMetadataDialog</receiver>
+   <slot>reloadTitleText()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>368</x>
+     <y>36</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>324</x>
+     <y>12</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>undoArtist</sender>
+   <signal>pressed()</signal>
+   <receiver>EditMetadataDialog</receiver>
+   <slot>reloadArtistText()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>352</x>
+     <y>72</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>321</x>
+     <y>52</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>undoAlbum</sender>
+   <signal>pressed()</signal>
+   <receiver>EditMetadataDialog</receiver>
+   <slot>reloadAlbumText()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>367</x>
+     <y>102</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>323</x>
+     <y>86</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>reloadTitleText()</slot>
+  <slot>reloadArtistText()</slot>
+  <slot>reloadAlbumText()</slot>
+ </slots>
+</ui>

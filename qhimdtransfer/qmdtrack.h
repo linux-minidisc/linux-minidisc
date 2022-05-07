@@ -55,6 +55,8 @@ public:
     QString openMpegStream(struct himd_mp3stream * str) const;
     QString openNonMpegStream(struct himd_nonmp3stream * str) const;
     QByteArray makeEA3Header() const;
+
+    bool updateMetadata(const QString &title, const QString &artist, const QString &album);
 };
 
 class QNetMDTrack : public QMDTrack {

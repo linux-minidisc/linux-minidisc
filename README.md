@@ -405,3 +405,9 @@ ATRAC3 LP2/LP4 WAV file that can be used with `netmdcli send`.
 The `QHiMDMacDetection` class had code in its destructor that was already
 present in its superclass destructor. As the superclass destructor is run
 anyway, this duplicate code caused the app to crash (double free, etc...).
+
+
+## Hi-MD track metadata editor for QHiMDTransfer
+
+The GUI got a new GUI for editing the Hi-MD track metadata (title, artist,
+album). While the UI is fully functional, saving isn't implemented yet.

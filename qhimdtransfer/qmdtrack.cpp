@@ -1,5 +1,7 @@
 #include "qmdtrack.h"
 
+#include <QDebug>
+
 static QString get_himd_str(struct himd * himd, int idx)
 {
     QString outstr;
@@ -127,6 +129,16 @@ QByteArray QHiMDTrack::makeEA3Header() const
     char header[EA3_FORMAT_HEADER_SIZE];
     make_ea3_format_header(header, &ti.codec_info);
     return QByteArray(header,EA3_FORMAT_HEADER_SIZE);
+}
+
+bool
+QHiMDTrack::updateMetadata(const QString &title, const QString &artist, const QString &album)
+{
+    qDebug() << "updateMetadata:" << himd << trknum << title << artist << album;
+
+    // TODO: Implement updating of metadata
+
+    return false;
 }
 
 

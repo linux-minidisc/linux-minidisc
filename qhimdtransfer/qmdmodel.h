@@ -44,6 +44,7 @@ class QHiMDTracksModel : public QMDTracksModel {
     Q_OBJECT
 
     QHiMDDevice * hdev;
+    QHiMDTrackList allTracks;
 public:
     QHiMDTracksModel() {hdev = NULL;}
     /* QAbstractListModel stuff */
