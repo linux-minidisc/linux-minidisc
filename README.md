@@ -411,3 +411,9 @@ anyway, this duplicate code caused the app to crash (double free, etc...).
 
 The GUI got a new GUI for editing the Hi-MD track metadata (title, artist,
 album). While the UI is fully functional, saving isn't implemented yet.
+
+
+## `himd/himd.py`: Dump the track index in text form
+
+For debugging and experimenting, this script based on libhimd can be used
+to dump all parts of the track index file.
