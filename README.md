@@ -398,3 +398,10 @@ Similar to what Platinum MD and netmd-js are doing, this script combines
 As an optional tool, `contrib/atracenc` contains code for a small CLI tool
 that can use the closed `atrac3.acm` file to convert a PCM WAV file into an
 ATRAC3 LP2/LP4 WAV file that can be used with `netmdcli send`.
+
+
+## Fix crash on macOS shutdown
+
+The `QHiMDMacDetection` class had code in its destructor that was already
+present in its superclass destructor. As the superclass destructor is run
+anyway, this duplicate code caused the app to crash (double free, etc...).
