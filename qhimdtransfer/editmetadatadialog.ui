@@ -87,7 +87,8 @@
        <string/>
       </property>
       <property name="icon">
-       <iconset theme=":/icons/undo.png"/>
+       <iconset resource="icons.qrc">
+        <normaloff>:/icons/undo.png</normaloff>:/icons/undo.png</iconset>
       </property>
      </widget>
     </item>
@@ -97,7 +98,8 @@
        <string/>
       </property>
       <property name="icon">
-       <iconset theme=":/icons/undo.png"/>
+       <iconset resource="icons.qrc">
+        <normaloff>:/icons/undo.png</normaloff>:/icons/undo.png</iconset>
       </property>
      </widget>
     </item>
@@ -107,7 +109,8 @@
        <string/>
       </property>
       <property name="icon">
-       <iconset theme=":/icons/undo.png"/>
+       <iconset resource="icons.qrc">
+        <normaloff>:/icons/undo.png</normaloff>:/icons/undo.png</iconset>
       </property>
      </widget>
     </item>
@@ -119,7 +122,9 @@
   <tabstop>editArtist</tabstop>
   <tabstop>editAlbum</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>
