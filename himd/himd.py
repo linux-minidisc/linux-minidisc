@@ -21,18 +21,23 @@ import argparse
 import binascii
 import struct
 
+# See also: https://wiki.physik.fu-berlin.de/linux-minidisc/himddiskformat
 HIMD_MAGIC_OFFSET = 0x0  # file magic "TIF " + some other bytes (e.g. "01 00 01 25"?)
-HIMD_INDEX_OFFSET = 0x100  # until 0x1102 for 2048 tracks (2 + 2 * 2048)
-# there is a hole from 0x1102 until 0x8000 that is probably unused? (all zero'd out)
+HIMD_INDEX_OFFSET = 0x100  # until 0x1102 for 2048 tracks (2 + 2 * 2048)?
+# At offset 0x1100 is the "Programmed play order table" with 4K entries
+HIMD_GROUP_OFFSET = 0x2100  # until 0x2900 for 256 groups (256 * 8)
+# there is a hole from 0x2900 until 0x8000 that is presumed padding
 HIMD_TRACK_OFFSET = 0x8000  # until 0x30000 for 2048 tracks (0x50 * 2048)
 HIMD_FRAGMENT_OFFSET = 0x30000  # until 0x40000 for 4096 fragments (0x10 * 4096)
 HIMD_STRING_OFFSET = 0x40000  # until 0x50000 (=eof) for 4096 strings (0x10 * 4096)
 HIMD_TIF_SIZE = 0x50000
 
+SIZEOF_GROUP_CHUNK = 0x8
 SIZEOF_TRACK_CHUNK = 0x50
 SIZEOF_FRAGMENT_CHUNK = 0x10
 SIZEOF_STRING_CHUNK = 0x10
 
+HIMD_NUM_GROUPS = 256
 HIMD_NUM_TRACKS = 2048
 HIMD_NUM_FRAGMENTS = 4096
 HIMD_NUM_STRINGS = 4096
@@ -78,6 +83,7 @@ STRING_TYPES = {
 
 parser = argparse.ArgumentParser(description='Hi-MD Parsing Test')
 parser.add_argument('filename', metavar='TRKIDX00.HMA', type=str, help='Path to the track index file')
+parser.add_argument('--groups', action='store_true', help='Print group chunks')
 parser.add_argument('--tracks', action='store_true', help='Print track chunks')
 parser.add_argument('--fragments', action='store_true', help='Print fragment chunks')
 parser.add_argument('--strings', action='store_true', help='Print string chunks')
@@ -121,6 +127,20 @@ while i < num_tracks:
     (track_idx,) = struct.unpack('>H', tifdata[HIMD_INDEX_OFFSET+2+2*i:HIMD_INDEX_OFFSET+2+2*(i+1)])
     print(f'Track {i+1} is in track chunk {track_idx}')
     i += 1
+
+if args.groups:
+    grpoff = HIMD_GROUP_OFFSET
+    i = 0
+    while grpoff < HIMD_GROUP_OFFSET + HIMD_NUM_GROUPS * SIZEOF_GROUP_CHUNK:
+        chunk = tifdata[grpoff:grpoff+SIZEOF_GROUP_CHUNK]
+
+        (from_track, to_track, group_name_idx, fringe) = struct.unpack('>HHH2s', chunk)
+
+        print(f'Group chunk {i}: {from_track=} {to_track=} {group_name_idx=} '
+              f'fringe={binascii.hexlify(fringe).decode()}')
+
+        i += 1
+        grpoff += SIZEOF_GROUP_CHUNK
 
 if args.tracks:
     trkoff = HIMD_TRACK_OFFSET
