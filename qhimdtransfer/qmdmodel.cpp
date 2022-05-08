@@ -96,13 +96,7 @@ QVariant QNetMDTracksModel::data(const QModelIndex & index, int role) const
             case CoTitle:
                 return track.title();
             case CoLength:
-            {
-                QTime t = track.duration();
-                if(t < QTime(1,0,0))
-                    return t.toString("m:ss");
-                else
-                    return t.toString("h:mm:ss");
-            }
+                return track.durationString();
             case CoCodec:
                 return track.codecname();
             case CoUploadable:
@@ -255,13 +249,7 @@ QVariant QHiMDTracksModel::data(const QModelIndex & index, int role) const
             case ColAlbum:
                 return track.album();
             case ColLength:
-            {
-                QTime t = track.duration();
-                if(t < QTime(1,0,0))
-                    return t.toString("m:ss");
-                else
-                    return t.toString("h:mm:ss");
-            }
+                return track.durationString();
             case ColCodec:
                 return track.codecname();
             case ColUploadable:

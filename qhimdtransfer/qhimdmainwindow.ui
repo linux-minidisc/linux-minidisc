@@ -25,8 +25,20 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1">
-        <item>
+       <layout class="QHBoxLayout" name="horizontalLayout"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4"/>
+      </item>
+      <item>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="2">
+         <widget class="QLineEdit" name="DiscTitle"/>
+        </item>
+        <item row="0" column="2">
+         <widget class="QComboBox" name="himd_devices"/>
+        </item>
+        <item row="0" column="0">
          <widget class="QLabel" name="himd_mountpoint">
           <property name="font">
            <font>
@@ -37,40 +49,68 @@
           <property name="text">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Device:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
          </widget>
         </item>
-        <item>
-         <widget class="QComboBox" name="himd_devices"/>
+        <item row="4" column="2">
+         <widget class="QLabel" name="LabelAvailable">
+          <property name="text">
+           <string>&lt;available info&gt;</string>
+          </property>
+         </widget>
         </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
+        <item row="1" column="0">
          <widget class="QLabel" name="disc_title_text">
           <property name="text">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Disc title:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
          </widget>
         </item>
-        <item>
-         <widget class="QLineEdit" name="DiscTitle"/>
+        <item row="2" column="0">
+         <widget class="QLabel" name="LabelRecordedHeader">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Recorded:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="LabelRecorded">
+          <property name="text">
+           <string>&lt;recorded info&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="LabelAvailableHeader">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Available:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QLabel" name="LabelRecorded">
-        <property name="text">
-         <string>Recorded: ...</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="LabelAvailable">
-        <property name="text">
-         <string>Available: ...</string>
-        </property>
-       </widget>
       </item>
       <item>
        <widget class="QTreeView" name="TrackList">
@@ -104,7 +144,7 @@
      <x>0</x>
      <y>0</y>
      <width>615</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_Action">

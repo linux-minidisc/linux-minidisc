@@ -4,8 +4,10 @@
 #include <QFile>
 #include <QProgressDialog>
 #include <QDir>
+#include <QStorageInfo>
 #include "wavefilewriter.h"
 #include "himd.h"
+#include "qmdutil.h"
 
 #include <tlist.h>
 #include <fileref.h>
@@ -215,7 +217,7 @@ QString QNetMDDevice::open()
             .arg(ntracks)
             .arg(percentage_used)
             .arg(total)
-            .arg(netmd_is_disc_writable(devh) ? "writable" : "write-protected");
+            .arg(isWritable() ? "writable" : "write-protected");
 
         availableLabelText = QString("%1 (SP) / %2 (LP2/Mono) / %3 (LP4)")
             .arg(available)
@@ -408,13 +410,13 @@ bool QNetMDDevice::formatDisk()
 QString
 QNetMDDevice::getRecordedLabelText()
 {
-    return "Recorded: " + recordedLabelText;
+    return recordedLabelText;
 }
 
 QString
 QNetMDDevice::getAvailableLabelText()
 {
-    return "Available: " + availableLabelText;
+    return availableLabelText;
 }
 
 /* himd device members */
@@ -454,6 +456,13 @@ QString QHiMDDevice::open()
     }
 
     trk_count = himd_track_count(himd);
+
+    int total = 0;
+    for (int i=0; i<trk_count; ++i) {
+        total += himdTrack(i).durationSeconds();
+    }
+    total_duration = QTime(0, 0).addSecs(total);
+
     is_open = true;
     md_inserted = true;
     emit opened();
@@ -753,7 +762,7 @@ QStringList QHiMDDevice::downloadableFileExtensions() const
 
 bool QHiMDDevice::isWritable()
 {
-    // TODO: Check if it's mounted read-only
+    // FIXME: Does not work properly yet: !QStorageInfo(device_path).isReadOnly();
     return true;
 }
 
@@ -772,11 +781,28 @@ bool QHiMDDevice::formatDisk()
 QString
 QHiMDDevice::getRecordedLabelText()
 {
-    return "Recorded: ...";
+    QStorageInfo info(device_path);
+
+    auto recordedLabelText = QString("%1 in %2 tracks (%3% of %4 MiB used, %5)")
+        .arg(util::formatDuration(total_duration))
+        .arg(trk_count)
+        .arg(int(100 * (float)(info.bytesTotal() - info.bytesFree()) / info.bytesTotal()))
+        .arg(int(info.bytesTotal() / (1024 * 1024)))
+        .arg(isWritable() ? "writable" : "write-protected");
+
+    return recordedLabelText;
 }
 
 QString
 QHiMDDevice::getAvailableLabelText()
 {
-    return "Available: ...";
+    QStorageInfo info(device_path);
+
+    auto availableLabelText = QString("%1 MiB (MP3: %2 @ 128k, ~ %3 @ 192k, ~ %4 @ 320k)")
+        .arg(int(info.bytesFree() / (1024 * 1024)))
+        .arg(util::formatDuration(QTime(0, 0).addSecs(info.bytesFree() / (128 * 1000 / 8))))
+        .arg(util::formatDuration(QTime(0, 0).addSecs(info.bytesFree() / (192 * 1000 / 8))))
+        .arg(util::formatDuration(QTime(0, 0).addSecs(info.bytesFree() / (320 * 1000 / 8))));
+
+    return availableLabelText;
 }

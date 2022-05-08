@@ -14,6 +14,8 @@
 
 #include "libnetmd.h"
 
+#include "qmdutil.h"
+
 /* define buffer size for netmd uploads */
 #define NETMD_RECV_BUF_SIZE 0x10000
 
@@ -31,6 +33,14 @@ public:
     virtual QTime duration() const {return QTime();}
     virtual bool copyprotected() const {return true;}
     virtual int blockcount() const {return 0;}
+
+    int durationSeconds() const {
+        return QTime(0, 0).secsTo(duration());
+    }
+
+    QString durationString() const {
+        return util::formatDuration(duration());
+    }
 };
 
 class QHiMDTrack : public QMDTrack{

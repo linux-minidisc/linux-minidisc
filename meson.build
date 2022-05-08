@@ -164,6 +164,7 @@ if get_option('with_gui')
     'qhimdtransfer/qmddevice.cpp',
     'qhimdtransfer/qmdmodel.cpp',
     'qhimdtransfer/qmdtrack.cpp',
+    'qhimdtransfer/qmdutil.cpp',
     'qhimdtransfer/wavefilewriter.cpp',
     'qhimdtransfer/editmetadatadialog.cpp',
   ]

@@ -113,6 +113,8 @@ public:
 class QHiMDDevice : public QMDDevice {
 
     struct himd * himd;
+    QTime total_duration;
+
 private:
     QString dumpmp3(const QHiMDTrack &trk, QString file);
     QString dumpoma(const QHiMDTrack & track, QString file);

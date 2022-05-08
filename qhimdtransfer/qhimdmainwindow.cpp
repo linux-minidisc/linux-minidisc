@@ -31,9 +31,10 @@ void QHiMDMainWindow::set_buttons_enable()
     ui->DiscTitle->setEnabled(have_device);
     ui->TrackList->setEnabled(have_device);
 
-    // TODO: Implement those two labels for Hi-MD as well
-    ui->LabelRecorded->setVisible(have_device && current_device->deviceType() == NETMD_DEVICE);
-    ui->LabelAvailable->setVisible(have_device && current_device->deviceType() == NETMD_DEVICE);
+    ui->LabelRecordedHeader->setVisible(have_device);
+    ui->LabelAvailableHeader->setVisible(have_device);
+    ui->LabelRecorded->setVisible(have_device);
+    ui->LabelAvailable->setVisible(have_device);
 }
 
 static QString
