@@ -245,21 +245,19 @@ netmd_set_raw_disc_title(netmd_dev_handle *dev, const char *title)
 
 /* AV/C Disc Subunit Specification ERASE (0x40),
  * subfunction "specific_object" (0x01) */
-int netmd_delete_track(netmd_dev_handle* dev, netmd_track_index track)
+int
+netmd_delete_track(netmd_dev_handle *dev, netmd_track_index track)
 {
-    int ret = 0;
-    unsigned char request[] = {0x00, 0x18, 0x40, 0xff, 0x01, 0x00,
-                               0x20, 0x10, 0x01, 0x00, 0x00};
-    unsigned char reply[255];
-    unsigned char *buf;
+    struct netmd_bytebuffer *query = netmd_format_query("1840 ff01 00 201001 %w", track);
+    struct netmd_bytebuffer *reply = netmd_send_query(dev, query);
 
-    // TODO: Need to update groups
+    if (netmd_scan_query_buffer(reply, "1840 0001 00 201001 %?%?")) {
+        // TODO: Need to update groups
 
-    buf = request + 9;
-    netmd_copy_word_to_buffer(&buf, track, 0);
-    ret = netmd_exch_message(dev, request, 11, reply);
+        return NETMD_NO_ERROR;
+    }
 
-    return ret;
+    return NETMD_ERROR;
 }
 
 bool
@@ -304,30 +302,6 @@ netmd_erase_disc(netmd_dev_handle *dev)
     }
 
     return error;
-}
-
-/* AV/C Description Spefication OPEN DESCRIPTOR (0x08),
- * subfunction "open for write" (0x03) */
-int netmd_cache_toc(netmd_dev_handle* dev)
-{
-    int ret = 0;
-    unsigned char request[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02, 0x03, 0x00};
-    unsigned char reply[255];
-
-    ret = netmd_exch_message(dev, request, sizeof(request), reply);
-    return ret;
-}
-
-/* AV/C Description Spefication OPEN DESCRIPTOR (0x08),
- * subfunction "close" (0x00) */
-int netmd_sync_toc(netmd_dev_handle* dev)
-{
-    int ret = 0;
-    unsigned char request[] = {0x00, 0x18, 0x08, 0x10, 0x18, 0x02, 0x00, 0x00};
-    unsigned char reply[255];
-
-    ret = netmd_exch_message(dev, request, sizeof(request), reply);
-    return ret;
 }
 
 /* Calls need for Sharp devices */

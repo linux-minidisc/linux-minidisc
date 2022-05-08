@@ -436,16 +436,11 @@ cmd_delete(struct netmdcli_context *ctx)
         return 1;
     }
 
-    netmd_cache_toc(ctx->devh);
-
     for (int track=end_track_id; track >= track_id && track >= 0; track--) {
         netmd_log(NETMD_LOG_VERBOSE, "delete: removing track %d\n", track);
 
         netmd_delete_track(ctx->devh, ((uint16_t) track) & 0xffff);
-        netmd_wait_for_sync(ctx->devh);
     }
-
-    netmd_sync_toc(ctx->devh);
 
     return 0;
 }
