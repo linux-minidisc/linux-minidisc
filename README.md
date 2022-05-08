@@ -447,3 +447,8 @@ callbacks.
 
 Add `himd_get_group_info()` and `himd_get_disc_title()` functions to libhimd.
 Display Hi-MD disc title in QHiMDTransfer, groups not exposed in GUI yet.
+
+
+## macOS mountpoint detection for QHiMDTransfer
+
+Detect mount points via DiskArbitration.

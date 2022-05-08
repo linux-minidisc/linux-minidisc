@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QtGlobal>
 #include "qhimddetection.h"
 #include "libusbmd.h"
 
@@ -212,7 +213,10 @@ void QHiMDDetection::add_hotplug_device(libusb_device * dev)
             add_netmddevice(dev, name);
         } else {
             /* wait some time (linux: let udev and udisks2 finish processing) */
+#if defined(Q_OS_LINUX)
+            // FIXME: Avoid sleeping and waith properly for the mountpoint
             QLibusbPoller::sleep(4);
+#endif
             add_himddevice(QString(), name, dev);
         }
     }
