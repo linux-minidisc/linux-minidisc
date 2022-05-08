@@ -33,6 +33,7 @@ public:
     virtual QTime duration() const {return QTime();}
     virtual bool copyprotected() const {return true;}
     virtual int blockcount() const {return 0;}
+    virtual bool deleteTrack() = 0;
 
     int durationSeconds() const {
         return QTime(0, 0).secsTo(duration());
@@ -66,6 +67,7 @@ public:
     QByteArray makeEA3Header() const;
 
     bool updateMetadata(const QString &title, const QString &artist, const QString &album);
+    virtual bool deleteTrack();
 };
 
 class QNetMDTrack : public QMDTrack {
@@ -87,6 +89,7 @@ public:
     virtual int blockcount() const;
 
     bool rename(const QString &);
+    virtual bool deleteTrack();
 };
 
 typedef QList<QMDTrack> QMDTrackList;

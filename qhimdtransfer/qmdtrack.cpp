@@ -153,6 +153,13 @@ QHiMDTrack::updateMetadata(const QString &title, const QString &artist, const QS
     return true;
 }
 
+bool
+QHiMDTrack::deleteTrack()
+{
+    // TODO
+    return false;
+}
+
 
 QNetMDTrack::QNetMDTrack(netmd_dev_handle * deviceh, int trackindex)
 {
@@ -241,4 +248,10 @@ bool
 QNetMDTrack::rename(const QString &name)
 {
     return netmd_set_track_title(devh, trkindex, name.toUtf8().data()) == NETMD_NO_ERROR;
+}
+
+bool
+QNetMDTrack::deleteTrack()
+{
+    return netmd_delete_track(devh, trkindex) == NETMD_NO_ERROR;
 }

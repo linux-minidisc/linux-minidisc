@@ -458,3 +458,9 @@ Detect mount points via DiskArbitration.
 Provide total track duration, number of tracks and disk usage, as well as
 available free space, and estimated recording time for MP3 files (as these
 are the only file types we can currenty "download" to Hi-MD media).
+
+
+## QHiMDTransfer: Implement track deletion for NetMD devices
+
+Deleting of selected tracks is now supported for NetMD devices in the GUI.
+Tracks on Hi-MD devices cannot be deleted yet.

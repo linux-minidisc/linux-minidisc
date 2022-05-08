@@ -364,7 +364,35 @@ void QHiMDMainWindow::on_action_Rename_triggered()
 
 void QHiMDMainWindow::on_action_Delete_triggered()
 {
-    QMessageBox::information(this, "Not implemented", "This feature is not implemented yet");
+    bool changed = false;
+
+    QMDTrackIndexList tracks = getSelectedTrackIndexList();
+
+    // Make sure the tracks are sorted in reverse order, because
+    // the track index will change once the track is deleted.
+    std::sort(tracks.begin(), tracks.end());
+    std::reverse(tracks.begin(), tracks.end());
+
+    if (QMessageBox::question(this,
+                tr("Delete tracks"),
+                tr("Really delete %1 track(s)?").arg(tracks.count())) == QMessageBox::Yes) {
+        auto *model = static_cast<QMDTracksModel *>(ui->TrackList->model());
+        for (auto index: tracks) {
+            auto *track = model->getTrack(index);
+
+            if (track->deleteTrack()) {
+                changed = true;
+            } else {
+                QMessageBox::information(this, tr("Operation failed"), tr("Could not delete track."));
+                break;
+            }
+        }
+    }
+
+    if (changed) {
+        // Reload track list
+        open_device(current_device);
+    }
 }
 
 void QHiMDMainWindow::on_action_Format_triggered()
