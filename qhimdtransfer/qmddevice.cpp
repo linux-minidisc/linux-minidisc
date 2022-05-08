@@ -474,6 +474,15 @@ void QHiMDDevice::close()
     emit closed();
 }
 
+QString QHiMDDevice::discTitle()
+{
+    char *str = himd_get_disc_title(himd, NULL);
+    QString result = QString::fromUtf8(str);
+    himd_free(str);
+
+    return result;
+}
+
 QHiMDTrack QHiMDDevice::himdTrack(unsigned int trkindex)
 {
     return QHiMDTrack(himd, trkindex);

@@ -122,6 +122,7 @@ public:
     virtual ~QHiMDDevice();
     virtual QString open();
     virtual void close();
+    virtual QString discTitle();
     virtual QHiMDTrack himdTrack(unsigned int trkindex);
     virtual void upload(unsigned int trackidx, QString path);
     virtual void batchUpload(QMDTrackIndexList tlist, QString path);
