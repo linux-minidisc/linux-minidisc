@@ -316,7 +316,9 @@ void QHiMDMainWindow::on_action_Rename_triggered()
                 continue;
             }
 
-            if (track->rename(dlg.textValue())) {
+            QNetMDTrack *netmdTrack = static_cast<QNetMDTrack *>(track);
+
+            if (netmdTrack->rename(dlg.textValue())) {
                 changed = true;
             } else {
                 QMessageBox::information(this,
