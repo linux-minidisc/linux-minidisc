@@ -32,6 +32,7 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "codecinfo.h"
 
 #ifdef __cplusplus
@@ -48,6 +49,8 @@ extern "C" {
 #define STRING_TYPE_ARTIST 9
 #define STRING_TYPE_ALBUM 10
 #define STRING_TYPE_GROUP 12 /*reportedly disk/group name */
+
+#define HIMD_NUM_GROUPS 256
 
 #define HIMD_FIRST_TRACK 1
 #define HIMD_LAST_TRACK 2047
@@ -147,6 +150,12 @@ struct himdstring {
     unsigned int nextstring : 12;
 };
 
+struct himdgroup {
+    uint16_t first_track_idx;
+    uint16_t last_track_idx;
+    uint16_t title_string_idx;
+};
+
 struct himd {
     /* everything below this line is private, i.e. no API stability. */
     char * rootpath;
@@ -181,6 +190,9 @@ int himd_get_fragment_info(struct himd * himd, unsigned int idx, struct fraginfo
 int himd_track_uploadable(struct himd * himd, const struct trackinfo * track);
 int himd_track_blocks(struct himd * himd, const struct trackinfo * track, struct himderrinfo * status);
 int himd_track_set_string(struct himd * himd, unsigned int idx, struct trackinfo * track, int string_type, const char * new_string_utf8, struct himderrinfo * status);
+
+int himd_get_group_info(struct himd *himd, unsigned int idx, struct himdgroup * group, struct himderrinfo * status);
+char *himd_get_disc_title(struct himd *himd, struct himderrinfo * status);
 
 int himd_get_free_trackindex(struct himd * himd);
 int himd_add_track_info(struct himd * himd, struct trackinfo * track, struct himderrinfo * status);

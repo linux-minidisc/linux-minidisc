@@ -441,3 +441,8 @@ Re-purpose the upload dialog for download progress information. For NetMD,
 download progress is quite fine-grained, for Hi-MD (MP3 download), it also
 works, but the granularity is on the level of files due to missing progress
 callbacks.
+
+
+## Support for disc title and groups in `libhimd`
+
+Add `himd_get_group_info()` and `himd_get_disc_title()` functions to libhimd.

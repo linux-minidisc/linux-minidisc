@@ -32,6 +32,11 @@
 
 #define _(x) (x)
 
+static unsigned char * get_group(struct himd * himd, unsigned int idx)
+{
+    return himd->tifdata +  0x2100 + 0x8 * idx;
+}
+
 static unsigned char * get_track(struct himd * himd, unsigned int idx)
 {
     return himd->tifdata +  0x8000 + 0x50 * idx;
@@ -671,4 +676,38 @@ int himd_track_set_string(struct himd * himd, unsigned int idx, struct trackinfo
     }
 
     return himd_update_track_info(himd, idx, track, status);
+}
+
+int himd_get_group_info(struct himd *himd, unsigned int idx, struct himdgroup * group, struct himderrinfo * status)
+{
+    g_return_val_if_fail(himd != NULL, -1);
+    g_return_val_if_fail(idx < HIMD_NUM_GROUPS, -1);
+    g_return_val_if_fail(group != NULL, -1);
+
+    unsigned char *groupdata = get_group(himd, idx);
+
+    group->first_track_idx = beword16(groupdata + 0);
+    group->last_track_idx = beword16(groupdata + 2);
+    group->title_string_idx = beword16(groupdata + 4);
+
+    // Additional data at offset 6, described in the wiki as "fringe", purpose unknown
+    uint16_t fringe = beword16(groupdata + 6);
+    (void)fringe;
+
+    return 0;
+}
+
+char *himd_get_disc_title(struct himd *himd, struct himderrinfo * status)
+{
+    struct himdgroup group;
+
+    if (himd_get_group_info(himd, 0, &group, status) != 0) {
+        return NULL;
+    }
+
+    if (group.title_string_idx == 0) {
+        return NULL;
+    }
+
+    return himd_get_string_utf8(himd, group.title_string_idx, NULL, status);
 }
