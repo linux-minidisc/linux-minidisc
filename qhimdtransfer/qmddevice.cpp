@@ -370,6 +370,11 @@ bool QNetMDDevice::download(const QString &filename)
 {
     downloadDialog.starttrack(filename);
 
+    // Calculate this before conversion, so the overall progress indicator
+    // is correct even if we decode the file to a PCM WAV later
+    download_reported_file_blocks = 0;
+    download_total_file_blocks = QFileInfo(filename).size();
+
     QString title = QFileInfo(filename).completeBaseName();
 
     QString fn = filename;
@@ -394,11 +399,6 @@ bool QNetMDDevice::download(const QString &filename)
     }
 
     // TODO: Could convert to LP2/LP4 using atracdenc here
-
-    download_reported_file_blocks = 0;
-
-    // FIXME: If the file has been converted, the total blocks set in batchDownload() will be wrong
-    download_total_file_blocks = QFileInfo(fn).size();
 
     int res = netmd_send_track(devh, fn.toUtf8().data(), title.toUtf8().data(), on_send_progress, this);
 
