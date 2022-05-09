@@ -38,6 +38,7 @@ static int LIBUSB_CALL hotplug_cb(struct libusb_context *ctx, struct libusb_devi
 
 QLibusbPoller::QLibusbPoller(QObject *parent, libusb_context *ctx) : QThread(parent), lct(ctx)
 {
+    t.start( 1000 );
 }
 
 QLibusbPoller::~QLibusbPoller()
@@ -49,7 +50,6 @@ QLibusbPoller::~QLibusbPoller()
 void QLibusbPoller::run()
 {
     connect( &t, SIGNAL( timeout() ), this, SLOT( poll() ) );
-    t.start( 1000 );
     exec();
 }
 

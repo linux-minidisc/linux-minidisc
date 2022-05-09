@@ -470,3 +470,10 @@ Tracks on Hi-MD devices cannot be deleted yet.
 
 Quick'n'dirty implementation of MP3 file upload to NetMD by using `ffmpeg`
 (the command-line tool) to decode the MP3 to a temporary PCM file.
+
+
+## Fix polling/monitoring of new USB devices
+
+The polling of USB devices was broken (at least with recent Qt versions).
+Fix this by starting the timer in the main thread, and hooking up timer
+events in the background (polling) thread.
