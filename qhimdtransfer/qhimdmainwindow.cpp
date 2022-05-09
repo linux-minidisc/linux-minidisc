@@ -207,7 +207,10 @@ QHiMDMainWindow::getSelectedTrackIndexList()
 
 void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
 {
-    current_device->batchUpload(getSelectedTrackIndexList(), UploadDirectory);
+    auto tracks = getSelectedTrackIndexList();
+    if (!tracks.isEmpty()) {
+        current_device->batchUpload(tracks, UploadDirectory);
+    }
 }
 
 QHiMDMainWindow::QHiMDMainWindow(QWidget *parent)
@@ -255,6 +258,10 @@ void QHiMDMainWindow::on_action_Download_triggered()
                          tr("Select files for download"),
                          QDir::currentPath(),
                          tr("Supported files") + " (" + extensions + ")");
+
+    if (DownloadFileList.isEmpty()) {
+        return;
+    }
 
     QApplication::processEvents();
 
