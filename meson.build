@@ -1,4 +1,4 @@
-project('minidisc', ['c', 'cpp', 'objcpp'],
+project('minidisc', ['c', 'cpp'],
   default_options: ['c_std=gnu11', 'cpp_std=c++11', 'werror=true'])
 
 libusb = dependency('libusb-1.0')
@@ -181,6 +181,7 @@ if get_option('with_gui')
     windows = import('windows')
     qhimdtransfer_sources += windows.compile_resources('qhimdtransfer/qhimdtransfer.rc')
   elif get_option('target_os') == 'macos'
+    add_languages('objc')
     qhimdtransfer_sources += 'qhimdtransfer/qhimdmacdetection.mm'
     additional_dependencies += dependency('appleframeworks', modules: ['IOKit', 'DiskArbitration', 'Foundation'])
   else
