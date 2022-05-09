@@ -491,7 +491,7 @@ QString QHiMDDevice::open()
     trk_count = himd_track_count(himd);
 
     int total = 0;
-    for (int i=0; i<trk_count; ++i) {
+    for (unsigned int i=0; i<trk_count; ++i) {
         total += himdTrack(i).durationSeconds();
     }
     total_duration = QTime(0, 0).addSecs(total);
