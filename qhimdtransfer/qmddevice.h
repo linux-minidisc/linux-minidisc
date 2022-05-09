@@ -66,6 +66,18 @@ public:
     virtual QString getRecordedLabelText() = 0;
     virtual QString getAvailableLabelText() = 0;
 
+    virtual bool hasPlaybackControls() const { return false; }
+
+    virtual void play() {}
+    virtual void pause() {}
+    virtual void stop() {}
+
+    virtual void startRewind() {}
+    virtual void startFastForward() {}
+
+    virtual void gotoPreviousTrack() {}
+    virtual void gotoNextTrack() {}
+
 signals:
     void opened();
     void closed();
@@ -99,6 +111,8 @@ public:
     virtual bool canUpload();
     virtual QStringList downloadableFileExtensions() const;
 
+    netmd_dev_handle *deviceHandle() { return devh; }
+
     virtual bool isWritable();
     virtual bool canFormatDisk();
     virtual bool formatDisk();
@@ -108,6 +122,18 @@ public:
 
     void onUploadProgress(float progress);
     void onDownloadProgress(float progress);
+
+    virtual bool hasPlaybackControls() const { return true; }
+
+    virtual void play();
+    virtual void pause();
+    virtual void stop();
+
+    virtual void startRewind();
+    virtual void startFastForward();
+
+    virtual void gotoPreviousTrack();
+    virtual void gotoNextTrack();
 };
 
 class QHiMDDevice : public QMDDevice {

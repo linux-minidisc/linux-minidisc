@@ -6,7 +6,7 @@ QString
 formatDuration(const QTime &duration)
 {
     if (duration < QTime(1, 0, 0)) {
-        return duration.toString("m:ss");
+        return duration.toString("mm:ss");
     } else {
         return duration.toString("h:mm:ss");
     }

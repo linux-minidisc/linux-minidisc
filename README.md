@@ -477,3 +477,10 @@ Quick'n'dirty implementation of MP3 file upload to NetMD by using `ffmpeg`
 The polling of USB devices was broken (at least with recent Qt versions).
 Fix this by starting the timer in the main thread, and hooking up timer
 events in the background (polling) thread.
+
+
+## QHiMDTransfer: Playback controls for NetMD devices
+
+Added a UI to QHiMDTransfer that allows controlling playback and showing
+the current playback position for NetMD devices (audio output happens on
+the NetMD device).

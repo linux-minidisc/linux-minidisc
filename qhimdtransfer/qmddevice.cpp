@@ -452,6 +452,48 @@ QNetMDDevice::getAvailableLabelText()
     return availableLabelText;
 }
 
+void
+QNetMDDevice::play()
+{
+    netmd_play(devh);
+}
+
+void
+QNetMDDevice::pause()
+{
+    netmd_pause(devh);
+}
+
+void
+QNetMDDevice::stop()
+{
+    netmd_stop(devh);
+}
+
+void
+QNetMDDevice::startRewind()
+{
+    netmd_rewind(devh);
+}
+
+void
+QNetMDDevice::startFastForward()
+{
+    netmd_fast_forward(devh);
+}
+
+void
+QNetMDDevice::gotoPreviousTrack()
+{
+    netmd_track_previous(devh);
+}
+
+void
+QNetMDDevice::gotoNextTrack()
+{
+    netmd_track_next(devh);
+}
+
 /* himd device members */
 
 QHiMDDevice::QHiMDDevice()

@@ -8,6 +8,7 @@
 
 #include "qhimdaboutdialog.h"
 #include "editmetadatadialog.h"
+#include "playbackcontrols.h"
 
 void QHiMDMainWindow::set_buttons_enable()
 {
@@ -28,6 +29,7 @@ void QHiMDMainWindow::set_buttons_enable()
     ui->action_Format->setEnabled(can_format);
     ui->action_Quit->setEnabled(true);
 
+    ui->action_PlaybackControls->setEnabled(have_device && current_device->hasPlaybackControls());
     ui->DiscTitle->setEnabled(have_device);
     ui->TrackList->setEnabled(have_device);
 
@@ -418,6 +420,12 @@ void QHiMDMainWindow::on_action_Format_triggered()
             open_device(current_device);
         }
     }
+}
+
+void QHiMDMainWindow::on_action_PlaybackControls_triggered()
+{
+    PlaybackControls controls(this, current_device, static_cast<QMDTracksModel *>(ui->TrackList->model()));
+    controls.exec();
 }
 
 void QHiMDMainWindow::handle_himd_selection_change(const QItemSelection&, const QItemSelection&)

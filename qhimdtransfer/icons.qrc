@@ -15,5 +15,12 @@
         <file>icons/arrow_upload.png</file>
         <file>icons/qhimdtransfer_24.png</file>
         <file>icons/undo.png</file>
+        <file>icons/media-playback-pause.png</file>
+        <file>icons/media-playback-start.png</file>
+        <file>icons/media-playback-stop.png</file>
+        <file>icons/media-seek-backward.png</file>
+        <file>icons/media-seek-forward.png</file>
+        <file>icons/media-skip-backward.png</file>
+        <file>icons/media-skip-forward.png</file>
     </qresource>
 </RCC>

@@ -49,6 +49,7 @@ private slots:
     void on_action_About_triggered();
     void on_action_Rename_triggered();
     void on_action_Delete_triggered();
+    void on_action_PlaybackControls_triggered();
     void handle_himd_selection_change(const QItemSelection&, const QItemSelection&);
     void device_list_changed(QMDDevicePtrList dplist);
     void on_himd_devices_activated(QString device);
