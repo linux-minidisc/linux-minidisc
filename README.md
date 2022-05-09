@@ -464,3 +464,9 @@ are the only file types we can currenty "download" to Hi-MD media).
 
 Deleting of selected tracks is now supported for NetMD devices in the GUI.
 Tracks on Hi-MD devices cannot be deleted yet.
+
+
+## QHiMDTransfer: Upload of MP3 files to NetMD using `ffmpeg`
+
+Quick'n'dirty implementation of MP3 file upload to NetMD by using `ffmpeg`
+(the command-line tool) to decode the MP3 to a temporary PCM file.

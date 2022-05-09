@@ -5,6 +5,8 @@
 #include <QProgressDialog>
 #include <QDir>
 #include <QStorageInfo>
+#include <QTemporaryFile>
+#include <QProcess>
 #include "wavefilewriter.h"
 #include "himd.h"
 #include "qmdutil.h"
@@ -268,7 +270,7 @@ bool QNetMDDevice::canUpload()
 
 QStringList QNetMDDevice::downloadableFileExtensions() const
 {
-    return QStringList() << "wav";
+    return QStringList() << "wav" << "mp3";
 }
 
 static void
@@ -368,12 +370,43 @@ bool QNetMDDevice::download(const QString &filename)
 {
     downloadDialog.starttrack(filename);
 
-    download_reported_file_blocks = 0;
-    download_total_file_blocks = QFileInfo(filename).size();
+    QString title = QFileInfo(filename).completeBaseName();
 
-    int res = netmd_send_track(devh, filename.toUtf8().data(), NULL, on_send_progress, this);
+    QString fn = filename;
+
+    // TODO: Properly check if we need to convert
+    if (filename.endsWith(".mp3")) {
+        // TODO: Could extract title from ID3 tags
+
+        QTemporaryFile temp("mdupload.XXXXXX.wav");
+        temp.open();
+
+        int res = QProcess::execute("ffmpeg", {"-i", filename, "-y", "-ar", "44100", "-ac", "2", "-c:a", "pcm_s16le", temp.fileName()});
+        if (res != 0) {
+            downloadDialog.trackFailed(QString("ffmpeg exited with status %1").arg(res));
+            // temp will be auto-removed here
+            return false;
+        }
+
+        // Keep the file around, we'll remove it after the transfer
+        temp.setAutoRemove(false);
+        fn = temp.fileName();
+    }
+
+    // TODO: Could convert to LP2/LP4 using atracdenc here
+
+    download_reported_file_blocks = 0;
+
+    // FIXME: If the file has been converted, the total blocks set in batchDownload() will be wrong
+    download_total_file_blocks = QFileInfo(fn).size();
+
+    int res = netmd_send_track(devh, fn.toUtf8().data(), title.toUtf8().data(), on_send_progress, this);
 
     onDownloadProgress(1.f);
+
+    if (fn != filename) {
+        QFile(fn).remove();
+    }
 
     if (res == NETMD_NO_ERROR) {
         downloadDialog.trackSucceeded();
