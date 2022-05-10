@@ -617,23 +617,25 @@ clean:
     return errmsg;
 }
 
-static inline TagLib::String QStringToTagString(const QString & s)
-{
-    return TagLib::String(s.toUtf8().data(), TagLib::String::UTF8);
-}
-
-static void addid3tag(QString title, QString artist, QString album, QString file)
+static TagLib::FileRef
+open_tag(const QString &filename)
 {
 #ifdef Q_OS_WIN
-    TagLib::FileRef f(file.toStdWString().c_str());
+    return TagLib::FileRef(filename.toStdWString().c_str());
 #else
-    TagLib::FileRef f(file.toUtf8().data());
+    return TagLib::FileRef(filename.toUtf8().data());
 #endif
+}
+
+static void
+addid3tag(const QString &title, const QString &artist, const QString &album, const QString &filename)
+{
+    TagLib::FileRef f = open_tag(filename);
+
     TagLib::Tag *t = f.tag();
-    t->setTitle(QStringToTagString(title));
-    t->setArtist(QStringToTagString(artist));
-    t->setAlbum(QStringToTagString(album));
-    t->setComment("*** imported from HiMD via QHiMDTransfer ***");
+    t->setTitle(QStringToTString(title));
+    t->setArtist(QStringToTString(artist));
+    t->setAlbum(QStringToTString(album));
     f.file()->save();
 }
 
@@ -807,7 +809,18 @@ bool QHiMDDevice::download(const QString &filename)
 {
     downloadDialog.starttrack(filename);
 
-    int res = himd_writemp3(himd, filename.toUtf8().data());
+    TagLib::FileRef taglib_file = open_tag(filename);
+
+    TagLib::Tag *tag = taglib_file.tag();
+
+    QString title = TStringToQString(tag->title());
+    QString artist = TStringToQString(tag->artist());
+    QString album = TStringToQString(tag->album());
+
+    int res = himd_writemp3(himd, filename.toUtf8().data(),
+            title.isEmpty() ? nullptr : title.toUtf8().data(),
+            artist.isEmpty() ? nullptr : artist.toUtf8().data(),
+            album.isEmpty() ? nullptr : album.toUtf8().data());
 
     // Until we have a progress callback for the himd_writemp3() function,
     // just progress the whole file at once after the transfer is complete.

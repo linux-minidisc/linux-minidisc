@@ -30,7 +30,7 @@ void usage(char * cmdname)
           dumptrack <TRK>  - dump track <TRK>\n\
           dumpmp3 <TRK>    - dump MP3 track <TRK>\n\
           dumpnonmp3 <TRK> - dump non-MP3 track <TRK>\n\
-          writemp3 <FILE>  - write mp3 to disc\n", cmdname);
+          writemp3 <FILE> <TITLE> <ARTIST> <ALBUM>  - write mp3 to disc\n", cmdname);
 }
 
 static const char * hexdump(unsigned char * input, int len)
@@ -463,10 +463,14 @@ int main(int argc, char ** argv)
           himd_dumpnonmp3(&h, idx, NULL);
         }
     }
-    else if(strcmp(argv[2],"writemp3") == 0 && argc > 3)
+    else if(strcmp(argv[2],"writemp3") == 0 && argc == 7)
     {
 #ifdef CONFIG_WITH_MAD
-  himd_writemp3(&h, argv[3]);
+        const char *filename = argv[3];
+        const char *title = argv[4];
+        const char *artist = argv[5];
+        const char *album = argv[6];
+        himd_writemp3(&h, filename, title, artist, album);
 #else
   fputs("Compiled without libmad - no MP3 download support\n", stderr);
 #endif

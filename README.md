@@ -484,3 +484,13 @@ events in the background (polling) thread.
 Added a UI to QHiMDTransfer that allows controlling playback and showing
 the current playback position for NetMD devices (audio output happens on
 the NetMD device).
+
+
+## Remove id3tag dependency from libhimd
+
+The `himd_writemp3()` now takes `title`, `artist` and `album` strings as
+parameters (can be `NULL`) so the caller can set those items. This removes
+the dependency on `libid3tag`. For `himdcli`, the user can specify those
+values on the command line. For QHiMDTransfer, the existing dependency of
+TagLib (which was used for writing tags of uploaded MP3 files) is now also
+used for retrieving metadata when downloading MP3 files to Hi-MD.

@@ -4,7 +4,6 @@ project('minidisc', ['c', 'cpp'],
 libusb = dependency('libusb-1.0')
 gcrypt = dependency('libgcrypt')
 glib = dependency('glib-2.0')
-id3tag = dependency('id3tag')
 taglib = dependency('taglib')
 jsonc = dependency('json-c')
 mad = dependency('mad', required: false)
@@ -101,7 +100,6 @@ libhimd_sources = [
   'libhimd/trackindex.c',
   'libhimd/sony_oma.c',
   'libhimd/frag.c',
-  'libhimd/mp3tools.c',
   'libhimd/mp3download.c',
 ]
 
@@ -124,7 +122,7 @@ install_headers(libhimd_headers, subdir: 'libhimd')
 
 libhimd = library('himd',
   libhimd_sources,
-  dependencies: [glib, id3tag, gcrypt, mad],
+  dependencies: [glib, gcrypt, mad],
   link_with: [libusbmd],
   soversion: '0',
   version: '0.0.1',

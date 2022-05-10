@@ -9,7 +9,6 @@
 #ifdef CONFIG_WITH_MAD
 
 #include <mad.h>
-#include <id3tag.h>
 
 void block_init(struct blockinfo * b, short int nframes, short int lendata, unsigned int serial_number, unsigned char * cid)
 {
@@ -241,7 +240,7 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
     return iblock;
 }
 
-int himd_writemp3(struct himd * h, const char *filepath)
+int himd_writemp3(struct himd * h, const char *filepath, const char *title, const char *artist, const char *album)
 {
     struct himderrinfo status;
     gint nblocks=0, nframes=0;
@@ -250,7 +249,6 @@ int himd_writemp3(struct himd * h, const char *filepath)
     GMappedFile * mp3file;
     unsigned long mp3size;
     gchar * mp3buffer;
-    gchar * artist=NULL, * title=NULL, * album=NULL;
     int i;
     unsigned char cid[20] = {0x02, 0x03, 0x00, 0x00};
     unsigned char mp3codecinfo[3];
@@ -259,19 +257,19 @@ int himd_writemp3(struct himd * h, const char *filepath)
     for(i = 4; i <=19; i++)
         cid[i] = g_random_int_range(0,0xFF);
 
-    // Get track ID3 information
-    if(himd_get_songinfo(filepath, &artist, &title, &album, &status) < 0)
-        printf("no tags\n");
-
-    // Fallback to filename for title
+    // Fallback to filename for title if not provided; if an empty title is
+    // desired, pass in a title of "" (a non-NULL pointer to an empty string)
+    gchar *title_allocated = NULL;
     if (title == NULL) {
         // Returned allocated string is free'd below
-        title = g_path_get_basename(filepath);
+        title_allocated = g_path_get_basename(filepath);
 
-        char *dot = strrchr(title, '.');
+        char *dot = strrchr(title_allocated, '.');
         if (dot != NULL) {
             *dot = '\0';
         }
+
+        title = title_allocated;
     }
 
     // Load mp3 stream
@@ -339,7 +337,7 @@ int himd_writemp3(struct himd * h, const char *filepath)
     // Add strings for title, album and artist. Retrieve string index numbers.
     gint idx_title=0, idx_album=0, idx_artist=0;
 
-    if(title != NULL) {
+    if(title != NULL && title[0] != '\0') {
 	idx_title  = himd_add_string(h, title, STRING_TYPE_TITLE, &status);
 	if(idx_title < 0)
 	    {
@@ -348,7 +346,7 @@ int himd_writemp3(struct himd * h, const char *filepath)
 	    }
     }
 
-    if(album != NULL) {
+    if(album != NULL && album[0] != '\0') {
 	idx_album  = himd_add_string(h, album, STRING_TYPE_ALBUM, &status);
 	if(idx_album < 0)
 	    {
@@ -357,7 +355,7 @@ int himd_writemp3(struct himd * h, const char *filepath)
 	    }
     }
 
-    if(artist != NULL) {
+    if(artist != NULL && artist[0] != '\0') {
 	idx_artist = himd_add_string(h, artist, STRING_TYPE_ARTIST, &status);
 	if(idx_artist < 0)
 	    {
@@ -410,7 +408,8 @@ int himd_writemp3(struct himd * h, const char *filepath)
     // Update TRACK-INDEX file with track strings, fragment descriptor and track-descriptor.
     //
     himd_write_tifdata(h, &status);
-    free(artist); free(album); free(title);
+
+    g_free(title_allocated);
 
     return 0;
 }
