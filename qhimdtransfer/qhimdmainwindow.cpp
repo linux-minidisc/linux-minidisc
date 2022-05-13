@@ -176,7 +176,10 @@ void QHiMDMainWindow::open_device(QMDDevice * dev)
 
     setCurrentDevice(dev);
     mod = (QMDTracksModel *)ui->TrackList->model();
-    error = mod->open(dev);
+
+    QHiMDUploadDialog::runSingleTask(this, QHiMDUploadDialog::REFRESH, tr("Getting track list"), [&] (TransferTask &task) {
+        error = mod->open(task, dev);
+    });
 
     if (!error.isEmpty())
     {
@@ -211,7 +214,8 @@ void QHiMDMainWindow::upload_to(const QString & UploadDirectory)
 {
     auto tracks = getSelectedTrackIndexList();
     if (!tracks.isEmpty()) {
-        current_device->batchUpload(tracks, UploadDirectory);
+        QHiMDUploadDialog dialog(this, QHiMDUploadDialog::UPLOAD);
+        current_device->batchUpload(&dialog, tracks, UploadDirectory);
     }
 }
 
@@ -265,9 +269,10 @@ void QHiMDMainWindow::on_action_Download_triggered()
         return;
     }
 
-    QApplication::processEvents();
-
-    current_device->batchDownload(DownloadFileList);
+    {
+        QHiMDUploadDialog dialog(this, QHiMDUploadDialog::DOWNLOAD);
+        current_device->batchDownload(&dialog, DownloadFileList);
+    }
 
     // Refresh the UI to show newly-downloaded tracks
     open_device(current_device);

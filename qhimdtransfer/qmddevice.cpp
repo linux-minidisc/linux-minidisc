@@ -7,6 +7,7 @@
 #include <QStorageInfo>
 #include <QTemporaryFile>
 #include <QProcess>
+#include <QThread>
 #include "wavefilewriter.h"
 #include "himd.h"
 #include "qmdutil.h"
@@ -20,8 +21,6 @@
 /* common device members */
 QMDDevice::QMDDevice()
     : dev_type(NO_DEVICE)
-    , uploadDialog(nullptr, QHiMDUploadDialog::UPLOAD)
-    , downloadDialog(nullptr, QHiMDUploadDialog::DOWNLOAD)
 {
 }
 
@@ -125,28 +124,36 @@ void QMDDevice::checkfile(QString UploadDirectory, QString &filename, QString ex
         filename = newname;
 }
 
-void QMDDevice::batchDownload(const QStringList &filenames)
+void
+QMDDevice::batchDownload(QHiMDUploadDialog *dialog, const QStringList &filenames)
 {
-    int allblocks = 0;
-
     setBusy(true);
 
     for (const QString &filename: filenames) {
-        allblocks += QFileInfo(filename).size();
+        dialog->addTask(-1, filename, QFileInfo(filename).size(), [this] (TransferTask &task) {
+            download(task);
+        });
     }
 
-    downloadDialog.init(filenames.length(), allblocks);
+    dialog->exec();
 
-    for (const QString &filename: filenames) {
-        download(filename);
+    setBusy(false);
+}
 
-        QApplication::processEvents();
-        if (downloadDialog.was_canceled()) {
-            break;
-        }
+void
+QMDDevice::batchUpload(QHiMDUploadDialog *dialog, QMDTrackIndexList tlist, QString path)
+{
+    setBusy(true);
+
+    for (int trackIndex: tlist) {
+        auto size = getTrackBlockCount(trackIndex);
+        dialog->addTask(trackIndex, QString("Track %1").arg(trackIndex + 1), size, [this, path] (TransferTask &task) {
+            upload(task, path);
+        });
     }
 
-    downloadDialog.finished();
+    dialog->exec();
+
     setBusy(false);
 }
 
@@ -276,33 +283,18 @@ QStringList QNetMDDevice::downloadableFileExtensions() const
 static void
 on_recv_progress(struct netmd_recv_progress *recv_progress)
 {
-    QNetMDDevice *self = static_cast<QNetMDDevice *>(recv_progress->user_data);
+    TransferTask *task = static_cast<TransferTask *>(recv_progress->user_data);
 
-    self->onUploadProgress(recv_progress->progress);
+    task->progress(recv_progress->progress);
 }
 
-void QNetMDDevice::onUploadProgress(float progress)
+void QNetMDDevice::upload(TransferTask &task, QString path)
 {
-    // This is weird due to the QHiMDUploadDialog API working only with "blocks"
-    int progress_blocks = progress * upload_total_track_blocks;
+    int trackidx = task.trackIndex();
 
-    uploadDialog.blockTransferred(progress_blocks - upload_reported_track_blocks);
-    upload_reported_track_blocks = progress_blocks;
-
-    QApplication::processEvents();
-}
-
-void QNetMDDevice::upload(unsigned int trackidx, QString path)
-{
     QString oldcwd = QDir::currentPath();
 
     QDir::setCurrent(path);
-
-    QNetMDTrack track = netmdTrack(trackidx);
-    uploadDialog.starttrack(track, track.title());
-
-    upload_reported_track_blocks = 0;
-    upload_total_track_blocks = track.blockcount();
 
     struct netmd_track_info info;
     netmd_error err = netmd_get_track_info(devh, trackidx, &info);
@@ -310,70 +302,31 @@ void QNetMDDevice::upload(unsigned int trackidx, QString path)
     if (err == NETMD_NO_ERROR) {
         char *filename = netmd_recv_get_default_filename(&info);
 
-        err = netmd_recv_track(devh, trackidx, filename, on_recv_progress, this);
-        onUploadProgress(1.f);
+        // TODO: use checkfile() for auto-rename
+        // TODO: Could report new filename
+
+        err = netmd_recv_track(devh, trackidx, filename, on_recv_progress, &task);
 
         netmd_free_string(filename);
     }
 
-    if (err == NETMD_NO_ERROR) {
-        uploadDialog.trackSucceeded();
-    } else {
-        uploadDialog.trackFailed(netmd_strerror(err));
-    }
+    task.finish(err == NETMD_NO_ERROR, netmd_strerror(err));
 
     QDir::setCurrent(oldcwd);
-}
-
-
-void QNetMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
-{
-    int allblocks = 0;
-
-    setBusy(true);
-
-    for(int i = 0;i < tlist.length(); i++) {
-        allblocks += netmdTrack(tlist.at(i)).blockcount();
-    }
-
-    uploadDialog.init(tlist.length(), allblocks);
-
-    for(int i = 0; i < tlist.length(); i++) {
-        upload(tlist[i], path);
-        QApplication::processEvents();
-        if(uploadDialog.was_canceled())
-            break;
-    }
-
-    uploadDialog.finished();
-    setBusy(false);
 }
 
 static void
 on_send_progress(struct netmd_send_progress *send_progress)
 {
-    QNetMDDevice *self = static_cast<QNetMDDevice *>(send_progress->user_data);
+    TransferTask *task = static_cast<TransferTask *>(send_progress->user_data);
 
-    self->onDownloadProgress(send_progress->progress);
+    task->progress(send_progress->progress);
 }
 
-void QNetMDDevice::onDownloadProgress(float progress)
+void
+QNetMDDevice::download(TransferTask &task)
 {
-    int progress_blocks = progress * download_total_file_blocks;
-    downloadDialog.blockTransferred(progress_blocks - download_reported_file_blocks);
-    download_reported_file_blocks = progress_blocks;
-
-    QApplication::processEvents();
-}
-
-bool QNetMDDevice::download(const QString &filename)
-{
-    downloadDialog.starttrack(filename);
-
-    // Calculate this before conversion, so the overall progress indicator
-    // is correct even if we decode the file to a PCM WAV later
-    download_reported_file_blocks = 0;
-    download_total_file_blocks = QFileInfo(filename).size();
+    QString filename = task.filename();
 
     QString title = QFileInfo(filename).completeBaseName();
 
@@ -388,9 +341,9 @@ bool QNetMDDevice::download(const QString &filename)
 
         int res = QProcess::execute("ffmpeg", {"-i", filename, "-y", "-ar", "44100", "-ac", "2", "-c:a", "pcm_s16le", temp.fileName()});
         if (res != 0) {
-            downloadDialog.trackFailed(QString("ffmpeg exited with status %1").arg(res));
             // temp will be auto-removed here
-            return false;
+            task.finish(false, QString("ffmpeg exited with status %1").arg(res));
+            return;
         }
 
         // Keep the file around, we'll remove it after the transfer
@@ -400,21 +353,13 @@ bool QNetMDDevice::download(const QString &filename)
 
     // TODO: Could convert to LP2/LP4 using atracdenc here
 
-    int res = netmd_send_track(devh, fn.toUtf8().data(), title.toUtf8().data(), on_send_progress, this);
-
-    onDownloadProgress(1.f);
+    netmd_error res = netmd_send_track(devh, fn.toUtf8().data(), title.toUtf8().data(), on_send_progress, &task);
 
     if (fn != filename) {
         QFile(fn).remove();
     }
 
-    if (res == NETMD_NO_ERROR) {
-        downloadDialog.trackSucceeded();
-        return true;
-    }
-
-    downloadDialog.trackFailed(QString("netmd_send_track() returned %1").arg(res));
-    return false;
+    task.finish(res == NETMD_NO_ERROR, netmd_strerror(res));
 }
 
 bool QNetMDDevice::isWritable()
@@ -492,6 +437,12 @@ void
 QNetMDDevice::gotoNextTrack()
 {
     netmd_track_next(devh);
+}
+
+qlonglong
+QNetMDDevice::getTrackBlockCount(int trackIndex)
+{
+    return netmdTrack(trackIndex).blockcount();
 }
 
 /* himd device members */
@@ -572,7 +523,7 @@ QHiMDTrack QHiMDDevice::himdTrack(unsigned int trkindex)
     return QHiMDTrack(himd, trkindex);
 }
 
-QString QHiMDDevice::dumpmp3(const QHiMDTrack &trk, QString file)
+QString QHiMDDevice::dumpmp3(TransferTask &task, const QHiMDTrack &trk, QString file)
 {
     QString errmsg;
     struct himd_mp3stream str;
@@ -590,6 +541,8 @@ QString QHiMDDevice::dumpmp3(const QHiMDTrack &trk, QString file)
         f.remove();
         return tr("Error opening track: ") + errmsg;
     }
+
+    int blocks_transferred = 0;
     while(himd_mp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
         if(f.write((const char*)data,len) == -1)
@@ -597,14 +550,13 @@ QString QHiMDDevice::dumpmp3(const QHiMDTrack &trk, QString file)
             errmsg = tr("Error writing audio data");
             goto clean;
         }
-        uploadDialog.blockTransferred();
-        QApplication::processEvents();
-        if(uploadDialog.was_canceled())
-        {
+
+        blocks_transferred++;
+        task.progress((float)blocks_transferred / (float)task.totalSize());
+        if (task.wasCanceled()) {
             errmsg = tr("upload aborted by the user");
             goto clean;
         }
-
     }
     if(status.status != HIMD_STATUS_AUDIO_EOF)
         errmsg = tr("Error reading audio data: ") + status.statusmsg;
@@ -639,7 +591,7 @@ addid3tag(const QString &title, const QString &artist, const QString &album, con
     f.file()->save();
 }
 
-QString QHiMDDevice::dumpoma(const QHiMDTrack &track, QString file)
+QString QHiMDDevice::dumpoma(TransferTask &task, const QHiMDTrack &track, QString file)
 {
     QString errmsg;
     struct himd_nonmp3stream str;
@@ -647,6 +599,7 @@ QString QHiMDDevice::dumpoma(const QHiMDTrack &track, QString file)
     unsigned int len;
     const unsigned char * data;
     QFile f(file);
+
 
     if(!f.open(QIODevice::ReadWrite))
         return tr("Error opening file for ATRAC output");
@@ -657,11 +610,14 @@ QString QHiMDDevice::dumpoma(const QHiMDTrack &track, QString file)
         return tr("Error opening track: ") + status.statusmsg;
     }
 
+    int blocks_transferred = 0;
+
     if(f.write(track.makeEA3Header()) == -1)
     {
         errmsg = tr("Error writing header");
         goto clean;
     }
+
     while(himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0)
     {
         if(f.write((const char*)data,len) == -1)
@@ -669,10 +625,10 @@ QString QHiMDDevice::dumpoma(const QHiMDTrack &track, QString file)
             errmsg = tr("Error writing audio data");
             goto clean;
         }
-        uploadDialog.blockTransferred();
-        QApplication::processEvents();
-        if(uploadDialog.was_canceled())
-        {
+        blocks_transferred++;
+        task.progress((float)blocks_transferred / (float)task.totalSize());
+
+        if (task.wasCanceled()) {
             errmsg = QString("upload aborted by the user");
             goto clean;
         }
@@ -689,7 +645,7 @@ clean:
     return errmsg;
 }
 
-QString QHiMDDevice::dumppcm(const QHiMDTrack &track, QString file)
+QString QHiMDDevice::dumppcm(TransferTask &task, const QHiMDTrack &track, QString file)
 {
     struct himd_nonmp3stream str;
     struct himderrinfo status;
@@ -707,15 +663,17 @@ QString QHiMDDevice::dumppcm(const QHiMDTrack &track, QString file)
         return tr("Error opening file for WAV output");
     }
 
+    int blocks_transferred = 0;
     while (himd_nonmp3stream_read_block(&str, &data, &len, NULL, &status) >= 0) {
         if (!waveFile.write_signed_big_endian(reinterpret_cast<const int16_t *>(data), len / 2)) {
             errmsg = tr("Error writing audio data");
             goto clean;
         }
 
-        uploadDialog.blockTransferred();
-        QApplication::processEvents();
-        if (uploadDialog.was_canceled()) {
+        blocks_transferred++;
+        task.progress((float)blocks_transferred / (float)task.totalSize());
+
+        if (task.wasCanceled()) {
             errmsg = QString("upload aborted by the user");
             goto clean;
         }
@@ -736,78 +694,53 @@ clean:
     return errmsg;
 }
 
-void QHiMDDevice::upload(unsigned int trackidx, QString path)
+void QHiMDDevice::upload(TransferTask &task, QString path)
 {
+    int trackidx = task.trackIndex();
+
     QString filename, errmsg;
+
     QHiMDTrack track = himdTrack(trackidx);
     QString title = track.title();
     QString artist = track.artist();
 
-    if(title.isEmpty()) {
-        filename = tr("Track %1").arg(track.tracknum()+1);
+    if (title.isEmpty()) {
+        filename = tr("Track %1").arg(trackidx+1);
     } else if (artist.isEmpty()) {
         filename = title;
     } else {
         filename = artist + " - " + title;
     }
 
-    uploadDialog.starttrack(track, filename);
-    if (!track.copyprotected())
-    {
+    if (!track.copyprotected()) {
+        // TODO: Use an enum for the codec, not string
         QString codec = track.codecname();
-        if (codec == "MPEG")
-        {
+        if (codec == "MPEG") {
             checkfile(path, filename, ".mp3");
-            errmsg = dumpmp3 (track, path + "/" + filename + ".mp3");
-            if(errmsg.isNull())
-                addid3tag (track.title(),track.artist(),track.album(), path + "/" +filename + ".mp3");
-        }
-        else if (codec == "LPCM")
-        {
+            // TODO: Could set new filename
+            errmsg = dumpmp3 (task, track, path + "/" + filename + ".mp3");
+            if (errmsg.isNull()) {
+                addid3tag(track.title(), track.artist(), track.album(), path + "/" +filename + ".mp3");
+            }
+        } else if (codec == "LPCM") {
             checkfile(path, filename, ".wav");
-            errmsg = dumppcm (track, path + "/" + filename + ".wav");
-        }
-        else if (codec == "AT3+" || codec == "AT3 ")
-        {
+            // TODO: Could set new filename
+            errmsg = dumppcm (task, track, path + "/" + filename + ".wav");
+        } else if (codec == "AT3+" || codec == "AT3 ") {
             checkfile(path, filename, ".oma");
-            errmsg = dumpoma (track, path + "/" + filename + ".oma");
+            // TODO: Could set new filename
+            errmsg = dumpoma (task, track, path + "/" + filename + ".oma");
         }
-    }
-    else
+    } else {
         errmsg = tr("upload disabled because of DRM encryption");
-
-    if(errmsg.isNull())
-        uploadDialog.trackSucceeded();
-    else
-        uploadDialog.trackFailed(errmsg);
-
-}
-
-void QHiMDDevice::batchUpload(QMDTrackIndexList tlist, QString path)
-{
-    int allblocks = 0;
-
-    setBusy(true);
-
-    for(int i = 0;i < tlist.length(); i++)
-        allblocks += himdTrack(tlist.at(i)).blockcount();
-
-    uploadDialog.init(tlist.length(), allblocks);
-
-    for(int i = 0; i < tlist.length(); i++) {
-        upload(tlist[i], path);
-        QApplication::processEvents();
-        if(uploadDialog.was_canceled())
-            break;
     }
 
-    uploadDialog.finished();
-    setBusy(false);
+    task.finish(errmsg.isNull(), errmsg);
 }
 
-bool QHiMDDevice::download(const QString &filename)
+void QHiMDDevice::download(TransferTask &task)
 {
-    downloadDialog.starttrack(filename);
+    QString filename = task.filename();
 
     TagLib::FileRef taglib_file = open_tag(filename);
 
@@ -817,22 +750,16 @@ bool QHiMDDevice::download(const QString &filename)
     QString artist = TStringToQString(tag->artist());
     QString album = TStringToQString(tag->album());
 
+    task.progress(0.f);
+
     int res = himd_writemp3(himd, filename.toUtf8().data(),
             title.isEmpty() ? nullptr : title.toUtf8().data(),
             artist.isEmpty() ? nullptr : artist.toUtf8().data(),
             album.isEmpty() ? nullptr : album.toUtf8().data());
 
-    // Until we have a progress callback for the himd_writemp3() function,
-    // just progress the whole file at once after the transfer is complete.
-    downloadDialog.blockTransferred(QFile(filename).size());
+    task.progress(1.f);
 
-    if (res == 0) {
-        downloadDialog.trackSucceeded();
-        return true;
-    }
-
-    downloadDialog.trackFailed(QString("himd_writemp3() returned %1").arg(res));
-    return false;
+    task.finish(res == 0, QString("himd_writemp3() returned %1").arg(res));
 }
 
 bool QHiMDDevice::canUpload()
@@ -893,4 +820,10 @@ QHiMDDevice::getAvailableLabelText()
         .arg(util::formatDuration(QTime(0, 0).addSecs(info.bytesFree() / (320 * 1000 / 8))));
 
     return availableLabelText;
+}
+
+qlonglong
+QHiMDDevice::getTrackBlockCount(int trackIndex)
+{
+    return himdTrack(trackIndex).blockcount();
 }

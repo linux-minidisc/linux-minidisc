@@ -6,6 +6,7 @@
 #include <QList>
 #include <QStringList>
 #include <qmddevice.h>
+#include "transfertask.h"
 
 class QMDTracksModel : public QAbstractListModel {
     Q_OBJECT
@@ -15,7 +16,7 @@ public:
     /* Make this method from QAbstractListModel public */
     virtual int columnCount(const QModelIndex & parent = QModelIndex() ) const = 0;
     /* dummy data for unknown devices */
-    virtual QString open(QMDDevice *device = NULL) = 0;
+    virtual QString open(TransferTask &task, QMDDevice *device = NULL) = 0;
     virtual bool is_open() {return false;}
     virtual void close() {}
     virtual QMDTrack *getTrack(int index) = 0;
@@ -34,7 +35,7 @@ public:
     virtual int rowCount(const QModelIndex & parent = QModelIndex() ) const;
     virtual int columnCount(const QModelIndex & parent = QModelIndex() ) const;
     /* NetMD device stuff */
-    QString open(QMDDevice *device);	/* returns null if OK, error message otherwise */
+    QString open(TransferTask &task, QMDDevice *device);	/* returns null if OK, error message otherwise */
     virtual bool is_open();
     void close();
     virtual QMDTrack *getTrack(int index);
@@ -53,7 +54,7 @@ public:
     virtual int rowCount(const QModelIndex & parent = QModelIndex() ) const;
     virtual int columnCount(const QModelIndex & parent = QModelIndex() ) const;
     /* HiMD containter stuff */
-    virtual QString open(QMDDevice *device);	/* returns null if OK, error message otherwise */
+    virtual QString open(TransferTask &task, QMDDevice *device);	/* returns null if OK, error message otherwise */
     virtual bool is_open();
     virtual void close();
     virtual QMDTrack *getTrack(int index);

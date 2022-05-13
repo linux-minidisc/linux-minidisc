@@ -159,6 +159,7 @@ if get_option('with_gui')
     'qhimdtransfer/qhimddetection.cpp',
     'qhimdtransfer/qhimdmainwindow.cpp',
     'qhimdtransfer/qhimduploaddialog.cpp',
+    'qhimdtransfer/transfertask.cpp',
     'qhimdtransfer/qmddevice.cpp',
     'qhimdtransfer/qmdmodel.cpp',
     'qhimdtransfer/qmdtrack.cpp',
@@ -197,6 +198,7 @@ if get_option('with_gui')
     'qhimdtransfer/qhimdaboutdialog.h',
     'qhimdtransfer/qhimdmainwindow.h',
     'qhimdtransfer/qhimduploaddialog.h',
+    'qhimdtransfer/transfertask.h',
     'qhimdtransfer/editmetadatadialog.h',
     'qhimdtransfer/playbackcontrols.h',
 

@@ -27,8 +27,6 @@ protected:
     unsigned int trk_count;
     bool md_inserted;
     void * mdChange;
-    QHiMDUploadDialog uploadDialog;
-    QHiMDUploadDialog downloadDialog;
     libusb_device * ldev;
 public:
     explicit QMDDevice();
@@ -55,16 +53,19 @@ public:
     virtual int trackCount() {return trk_count;}
     virtual QStringList downloadableFileExtensions() const = 0;
     virtual void checkfile(QString UploadDirectory, QString &filename, QString extension);
-    virtual void batchUpload(QMDTrackIndexList tlist, QString path) = 0;
-    virtual void upload(unsigned int trackidx, QString path) = 0;
-    virtual bool download(const QString &filename) = 0;
-    virtual void batchDownload(const QStringList &filenames);
+    virtual void upload(TransferTask &task, QString path) = 0;
+    virtual void download(TransferTask &task) = 0;
     virtual bool canUpload() = 0;
     virtual bool isWritable() = 0;
     virtual bool canFormatDisk() = 0;
     virtual bool formatDisk() = 0;
     virtual QString getRecordedLabelText() = 0;
     virtual QString getAvailableLabelText() = 0;
+
+    void batchUpload(QHiMDUploadDialog *dialog, QMDTrackIndexList tlist, QString path);
+    void batchDownload(QHiMDUploadDialog *dialog, const QStringList &filenames);
+
+    virtual qlonglong getTrackBlockCount(int trackIndex) = 0;
 
     virtual bool hasPlaybackControls() const { return false; }
 
@@ -105,9 +106,8 @@ public:
     virtual void close();
     virtual QString discTitle();
     virtual QNetMDTrack netmdTrack(unsigned int trkindex);
-    virtual void batchUpload(QMDTrackIndexList tlist, QString path);
-    virtual void upload(unsigned int trackidx, QString path);
-    virtual bool download(const QString &filename);
+    virtual void upload(TransferTask &task, QString path);
+    virtual void download(TransferTask &task);
     virtual bool canUpload();
     virtual QStringList downloadableFileExtensions() const;
 
@@ -120,8 +120,7 @@ public:
     virtual QString getRecordedLabelText();
     virtual QString getAvailableLabelText();
 
-    void onUploadProgress(float progress);
-    void onDownloadProgress(float progress);
+    virtual qlonglong getTrackBlockCount(int trackIndex);
 
     virtual bool hasPlaybackControls() const { return true; }
 
@@ -142,9 +141,9 @@ class QHiMDDevice : public QMDDevice {
     QTime total_duration;
 
 private:
-    QString dumpmp3(const QHiMDTrack &trk, QString file);
-    QString dumpoma(const QHiMDTrack & track, QString file);
-    QString dumppcm(const QHiMDTrack &track, QString file);
+    QString dumpmp3(TransferTask &task, const QHiMDTrack &trk, QString file);
+    QString dumpoma(TransferTask &task, const QHiMDTrack & track, QString file);
+    QString dumppcm(TransferTask &task, const QHiMDTrack &track, QString file);
 public:
     explicit QHiMDDevice();
     virtual ~QHiMDDevice();
@@ -152,9 +151,8 @@ public:
     virtual void close();
     virtual QString discTitle();
     virtual QHiMDTrack himdTrack(unsigned int trkindex);
-    virtual void upload(unsigned int trackidx, QString path);
-    virtual void batchUpload(QMDTrackIndexList tlist, QString path);
-    virtual bool download(const QString &filename);
+    virtual void upload(TransferTask &task, QString path);
+    virtual void download(TransferTask &task);
     virtual bool canUpload();
     virtual QStringList downloadableFileExtensions() const;
 
@@ -166,6 +164,8 @@ public:
 
     virtual QString getRecordedLabelText();
     virtual QString getAvailableLabelText();
+
+    virtual qlonglong getTrackBlockCount(int trackIndex);
 };
 
 #endif // QMDDEVICE_H

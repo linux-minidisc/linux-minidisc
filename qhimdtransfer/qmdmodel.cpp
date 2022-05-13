@@ -119,7 +119,7 @@ int QNetMDTracksModel::columnCount(const QModelIndex &) const
     return LAST_ncolumnnum+1;
 }
 
-QString QNetMDTracksModel::open(QMDDevice * device)
+QString QNetMDTracksModel::open(TransferTask &task, QMDDevice * device)
 {
     int i = 0;
     QString ret = "error opening net device";
@@ -140,8 +140,10 @@ QString QNetMDTracksModel::open(QMDDevice * device)
     }
 
     /* fetch track info for all tracks first, getting track info inside data() function is very slow */
-    for(; i < ndev->trackCount(); i++)
+    for(; i < ndev->trackCount(); i++) {
         allTracks.append(ndev->netmdTrack(i));
+        task.progress((float)i / (float)ndev->trackCount());
+    }
 
     endResetModel();	/* inform views that the model contents changed */
     return ret;
@@ -277,7 +279,7 @@ int QHiMDTracksModel::columnCount(const QModelIndex &) const
     return LAST_hcolumnnum+1;
 }
 
-QString QHiMDTracksModel::open(QMDDevice * device)
+QString QHiMDTracksModel::open(TransferTask &task, QMDDevice * device)
 {
     QString ret = "error opening himd device";
 
@@ -296,6 +298,7 @@ QString QHiMDTracksModel::open(QMDDevice * device)
 
     for (int i=0; i < hdev->trackCount(); i++) {
         allTracks.append(QHiMDTrack(hdev->deviceHandle(), i));
+        task.progress((float)i / (float)hdev->trackCount());
     }
 
     endResetModel();	/* inform views that the model contents changed */

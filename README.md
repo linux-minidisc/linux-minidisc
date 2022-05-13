@@ -494,3 +494,10 @@ the dependency on `libid3tag`. For `himdcli`, the user can specify those
 values on the command line. For QHiMDTransfer, the existing dependency of
 TagLib (which was used for writing tags of uploaded MP3 files) is now also
 used for retrieving metadata when downloading MP3 files to Hi-MD.
+
+
+## QHiMDTransfer: Carry out downloads, uploads and refresh in background task
+
+This avoids blocking the UI, making sure it's always responsible, even if
+the background task is blocking. Communication from background task to the
+UI thread happens via Qt signals/slots.
