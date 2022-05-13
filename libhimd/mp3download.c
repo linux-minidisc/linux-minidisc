@@ -416,10 +416,13 @@ int himd_writemp3(struct himd * h, const char *filepath, const char *title, cons
 
 #else
 
-int himd_writemp3(struct himd *h, const char *filepath)
+int himd_writemp3(struct himd *h, const char *filepath, const char *title, const char *artist, const char *album)
 {
     (void)h;
     (void)filepath;
+    (void)title;
+    (void)artist;
+    (void)album;
 
     // Not compiled with libmad
     return 2;
