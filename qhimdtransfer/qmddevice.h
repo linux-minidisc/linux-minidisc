@@ -7,6 +7,10 @@
 #include <qmdtrack.h>
 #include "qhimduploaddialog.h"
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif /* _WIN32 */
+
 enum device_type {
     NO_DEVICE,
     NETMD_DEVICE,
@@ -78,6 +82,10 @@ public:
 
     virtual void gotoPreviousTrack() {}
     virtual void gotoNextTrack() {}
+
+#if defined(_WIN32)
+    HANDLE winDeviceHandle;
+#endif /* _WIN32 */
 
 signals:
     void opened();

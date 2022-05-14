@@ -105,7 +105,7 @@ QMDDevice *QHiMDWinDetection::find_by_handle(HANDLE devhandle)
     {
         if(mddev->deviceType() != HIMD_DEVICE)
             continue;
-        if(mddev->deviceHandle() == devhandle)
+        if(mddev->winDeviceHandle == devhandle)
             return mddev;
     }
 
@@ -220,8 +220,8 @@ void QHiMDWinDetection::add_himddevice(QString path, QString name, libusb_device
     if(ddev == INVALID_HANDLE_VALUE)
         return;
 
-    new_device->setDeviceHandle(ddev);
-    new_device->registerMdChange(register_mediaChange(new_device->deviceHandle()));
+    new_device->winDeviceHandle = ddev;
+    new_device->registerMdChange(register_mediaChange(new_device->winDeviceHandle));
     new_device->setBusy(false);
     new_device->setPath(path);
     new_device->setName(name);
@@ -259,8 +259,8 @@ void QHiMDWinDetection::remove_himddevice(QString path, libusb_device * dev)
     {
         if(hdev->MdChange() != NULL)
             unregister_mediaChange((HDEVNOTIFY)hdev->MdChange());
-        if(hdev->deviceHandle() != NULL)
-             CloseHandle(hdev->deviceHandle());
+        if(hdev->winDeviceHandle != NULL)
+             CloseHandle(hdev->winDeviceHandle);
      }
 
     delete hdev;
