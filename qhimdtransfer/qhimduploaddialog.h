@@ -31,7 +31,7 @@ public:
 
     void addTask(int trackIndex, const QString &filename, qlonglong totalSize, std::function<void(TransferTask &)> task);
 
-    virtual int exec();
+    virtual int exec() override;
 
     static void runSingleTask(QWidget *parent, enum Mode mode, const QString &title, std::function<void(TransferTask &)> task);
 

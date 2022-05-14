@@ -181,7 +181,7 @@ if get_option('with_gui')
     windows = import('windows')
     qhimdtransfer_sources += windows.compile_resources('qhimdtransfer/qhimdtransfer.rc')
   elif get_option('target_os') == 'macos'
-    add_languages('objc')
+    add_languages('objcpp')
     qhimdtransfer_sources += 'qhimdtransfer/qhimdmacdetection.mm'
     additional_dependencies += dependency('appleframeworks', modules: ['IOKit', 'DiskArbitration', 'Foundation'])
   else
