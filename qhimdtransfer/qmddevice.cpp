@@ -277,7 +277,11 @@ bool QNetMDDevice::canUpload()
 
 QStringList QNetMDDevice::downloadableFileExtensions() const
 {
-    return QStringList() << "wav" << "mp3";
+    // Basically everything that ffmpeg can convert, but let's just list a few
+    // fan favorites here. Once we support OMA containers for ATRAC3, "oma"
+    // should also be added here. As we don't support transferring ATRAC1 files
+    // (.aea) without decompression, we don't list them here.
+    return QStringList() << "wav" << "mp3" << "flac" << "ogg" << "m4a";
 }
 
 static void
@@ -333,7 +337,7 @@ QNetMDDevice::download(TransferTask &task)
     QString fn = filename;
 
     // TODO: Properly check if we need to convert
-    if (filename.endsWith(".mp3")) {
+    if (!filename.endsWith(".wav")) {
         // TODO: Could extract title from ID3 tags
 
         QTemporaryFile temp("mdupload.XXXXXX.wav");
