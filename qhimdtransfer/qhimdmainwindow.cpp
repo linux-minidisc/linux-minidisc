@@ -207,6 +207,9 @@ QHiMDMainWindow::getSelectedTrackIndexList()
         tlist.append(index.row());
     }
 
+    // Sort the tracks, indepent of the order in which they were selected
+    std::sort(tlist.begin(), tlist.end());
+
     return tlist;
 }
 
@@ -384,7 +387,6 @@ void QHiMDMainWindow::on_action_Delete_triggered()
 
     // Make sure the tracks are sorted in reverse order, because
     // the track index will change once the track is deleted.
-    std::sort(tracks.begin(), tracks.end());
     std::reverse(tracks.begin(), tracks.end());
 
     if (QMessageBox::question(this,
