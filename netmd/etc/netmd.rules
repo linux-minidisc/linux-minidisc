@@ -108,3 +108,6 @@ ATTRS{idVendor}=="054c", ATTRS{idProduct}=="018a", MODE="0664", GROUP="plugdev"
 
 # Sony NetMD CMT-AH10
 ATTRS{idVendor}=="054c", ATTRS{idProduct}=="021d", MODE="0664", GROUP="plugdev"
+
+# Sony NetMD CMT-M333NT/M373NT
+ATTRS{idVendor}=="054c", ATTRS{idProduct}=="00e7", MODE="0664", GROUP="plugdev"
