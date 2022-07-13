@@ -323,7 +323,7 @@ void QHiMDMainWindow::on_action_Rename_triggered()
             QInputDialog dlg(this);
             dlg.setInputMode(QInputDialog::TextInput);
             dlg.setWindowTitle(tr("Rename track"));
-            dlg.setLabelText(tr("New title:"));
+            dlg.setLabelText(tr("New title for track %1:").arg(index + 1));
             dlg.setTextValue(track->title());
             dlg.resize(480, 100);
             if (!dlg.exec()) {
