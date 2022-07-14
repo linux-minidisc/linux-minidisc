@@ -399,23 +399,29 @@ void netmd_transfer_song_packets(netmd_dev_handle *dev,
     }
 }
 
-netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
+netmd_error netmd_prepare_packets(unsigned char* data, size_t data_length,
                                   netmd_track_packets **packets,
                                   size_t *packet_count, size_t *frames, size_t channels, size_t *packet_length,
                                   unsigned char *key_encryption_key, netmd_wireformat format)
 {
     size_t position = 0;
-    size_t chunksize, packet_data_length, first_chunk = 0x00800000U;     // limit chunksize to multiple of 16384 bytes (incl. 24 byte header data for first packet)
+    /* Limit chunksize to multiple of 16384 bytes (incl. 24 byte header data for first packet).
+     * Large sizes cause instability in some players especially with ATRAC3 files. */
+    size_t chunksize, packet_data_length, first_chunk = 0x00100000U;
     size_t frame_size = netmd_get_frame_size(format);
-    int padding = 0;
+    size_t frame_padding = 0;
     netmd_track_packets *last = NULL;
     netmd_track_packets *next = NULL;
 
     gcry_cipher_hd_t key_handle;
     gcry_cipher_hd_t data_handle;
-    unsigned char iv[8] = { 0 };
-    unsigned char rand[8] = { 0 };
-    unsigned char key[8] = { 0 };
+
+    /* We have no use for "security" (= DRM) so just use constant IV.
+     * However, the key has to be randomized, because the device apparently checks
+     * during track commit that the same key is not re-used during a single session. */
+    unsigned char iv[8] = { 0, 0, 0, 0, 0, 0, 0 ,0 };
+    unsigned char raw_key[8] = { 0 }; /* data encryption key */
+    unsigned char key[8] = { 0 }; /* data encryption key wrapped with session key */
 
     netmd_error error = NETMD_NO_ERROR;
 
@@ -426,18 +432,15 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
     gcry_cipher_open(&data_handle, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
     gcry_cipher_setkey(key_handle, key_encryption_key, 8);
 
-
-    /* generate initial iv */
-    gcry_create_nonce(iv, sizeof(iv));
-
     /* generate key, use same key for all packets */
-    gcry_randomize(rand, sizeof(rand), GCRY_STRONG_RANDOM);
-    gcry_cipher_decrypt(key_handle, key, 8, rand, sizeof(rand));
+    gcry_randomize(raw_key, sizeof(raw_key), GCRY_STRONG_RANDOM);
+    gcry_cipher_decrypt(key_handle, key, 8, raw_key, sizeof(raw_key));
+    gcry_cipher_setkey(data_handle, raw_key, sizeof(raw_key));
 
     *packet_count = 0;
-    while (position < data_lenght) {
+    while (position < data_length) {
 
-        /* decrease chunksize by 24 (length, iv and key) for 1st packet */
+        /* Decrease chunksize by 24 (length, iv and key) for 1st packet to keep packet size constant. */
         if ((*packet_count) > 0)
             chunksize = first_chunk;
         else
@@ -445,20 +448,19 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
 
        packet_data_length = chunksize;
 
-        if ((data_lenght - position) < chunksize) {                  // last packet
-            packet_data_length = data_lenght - position;             // do not encrypt padding bytes
-            /* adjust size for DES encryption, should not happen if input file is not corrupt, ensure buffer for input file is large enough */
-            if((packet_data_length % 8) != 0) {
-                padding = 8 - (packet_data_length % 8);
-                packet_data_length += padding;
-            }
-            /* do not truncate if last frame is incomplete, include padding bytes for DES encryption in size calculation */
-            if((data_lenght % frame_size) != 0 || padding != 0) {
-                padding = frame_size - (data_lenght % frame_size) - padding;
-                if(padding < 0)
-                    padding += frame_size;
-            }
-            chunksize = packet_data_length + padding;
+        if ((data_length - position) < chunksize) { /* last packet */
+            packet_data_length = data_length - position;
+
+            /* If input data is not an even multiple of the frame size, pad to frame size.
+             * Since all frame sizes are divisible by 8, cipher padding is a non-issue.
+             * Under rare circumstances the padding may lead to the last packet being slightly
+             * larger than first_chunk; this should not matter. */
+            if((data_length % frame_size) != 0)
+                frame_padding = frame_size - (data_length % frame_size);
+
+            chunksize = packet_data_length + frame_padding;
+            netmd_log(NETMD_LOG_VERBOSE, "last packet: packet_data_length=%d + frame_padding=%d = chunksize=%d\n",
+                packet_data_length, frame_padding, chunksize);
         }
 
         /* alloc memory */
@@ -482,10 +484,21 @@ netmd_error netmd_prepare_packets(unsigned char* data, size_t data_lenght,
         memcpy(next->iv, iv, 8);
         memcpy(next->key, key, 8);
         gcry_cipher_setiv(data_handle, iv, 8);
-        gcry_cipher_setkey(data_handle, rand, sizeof(rand));
-        gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, packet_data_length);
-        /* set last encrypted block as iv for the next packet */
-        memcpy(iv, data + position + packet_data_length - 8, 8);
+
+        if (chunksize > packet_data_length) {
+            /* If last frame is padded, copy plaintext to chunk buffer and encrypt in place.
+             * This avoids calling gcry_cipher_encrypt() with outsize > insize, which leads
+             * to noise at end of track. */
+            memcpy(next->data, data + position, packet_data_length);
+            gcry_cipher_encrypt(data_handle, next->data, chunksize, NULL, 0);
+        }
+        else {
+            gcry_cipher_encrypt(data_handle, next->data, chunksize, data + position, packet_data_length);
+        }
+
+        /* use last encrypted block as iv for the next packet so we keep
+         * on Cipher Block Chaining */
+        memcpy(iv, next->data + chunksize - 8, 8);
 
         /* next packet */
         position = position + chunksize;
