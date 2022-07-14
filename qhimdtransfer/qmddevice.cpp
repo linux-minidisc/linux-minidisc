@@ -339,6 +339,37 @@ QNetMDDevice::download(TransferTask &task)
     if (!filename.endsWith(".wav")) {
         // TODO: Could extract title from ID3 tags
 
+        QString ffmpeg;
+
+        static const QStringList CANDIDATES = {
+            // Prefer ffmpeg in $PATH if available
+            "ffmpeg",
+
+#if defined(Q_OS_MAC)
+            // Workaround for https://github.com/thp/linux-minidisc/issues/4
+            // TODO: Ship our own copy of ffmpeg for macOS builds, so we don't
+            // need to depend on Homebrew-installed binaries
+
+            // Prefer the ARM64-native Homebrew build
+            "/opt/homebrew/bin/ffmpeg",
+
+            // After that, use the AMD64-native Homebrew build
+            "/usr/local/bin/ffmpeg",
+#endif /* Q_OS_MAC */
+        };
+
+        for (const auto &candidate: CANDIDATES) {
+            if (QProcess::execute(candidate, {"-version"}) == 0) {
+                ffmpeg = candidate;
+                break;
+            }
+        }
+
+        if (ffmpeg.isEmpty()) {
+            task.finish(false, QString("ffmpeg not found in $PATH"));
+            return;
+        }
+
         QTemporaryFile temp("mdupload.XXXXXX.wav");
         temp.open();
 
@@ -347,9 +378,9 @@ QNetMDDevice::download(TransferTask &task)
         if (filename.endsWith(".oma")) {
             // Assume ATRAC3 audio for OMA files, and just remux using ffmpeg
             // (TODO: parse header properly and deal with non-ATRAC3 data)
-            res = QProcess::execute("ffmpeg", {"-i", filename, "-y", "-c:a", "copy", temp.fileName()});
+            res = QProcess::execute(ffmpeg, {"-i", filename, "-y", "-c:a", "copy", temp.fileName()});
         } else {
-            res = QProcess::execute("ffmpeg", {"-i", filename, "-y", "-ar", "44100", "-ac", "2", "-c:a", "pcm_s16le", temp.fileName()});
+            res = QProcess::execute(ffmpeg, {"-i", filename, "-y", "-ar", "44100", "-ac", "2", "-c:a", "pcm_s16le", temp.fileName()});
         }
 
         if (res != 0) {
