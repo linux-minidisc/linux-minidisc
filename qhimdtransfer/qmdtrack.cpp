@@ -229,7 +229,7 @@ QTime QNetMDTrack::duration() const
     if(trkindex < 0)
         return QTime();
 
-    return t.addSecs(info.duration.minute * 60 + info.duration.second);
+    return t.addSecs((info.duration.hour * 60 + info.duration.minute) * 60 + info.duration.second);
 }
 
 bool QNetMDTrack::copyprotected() const
