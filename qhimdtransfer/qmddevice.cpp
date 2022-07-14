@@ -278,10 +278,9 @@ bool QNetMDDevice::canUpload()
 QStringList QNetMDDevice::downloadableFileExtensions() const
 {
     // Basically everything that ffmpeg can convert, but let's just list a few
-    // fan favorites here. Once we support OMA containers for ATRAC3, "oma"
-    // should also be added here. As we don't support transferring ATRAC1 files
+    // fan favorites here. As we don't support transferring ATRAC1 files
     // (.aea) without decompression, we don't list them here.
-    return QStringList() << "wav" << "mp3" << "flac" << "ogg" << "m4a";
+    return QStringList() << "wav" << "mp3" << "flac" << "ogg" << "m4a" << "oma";
 }
 
 static void
@@ -343,7 +342,16 @@ QNetMDDevice::download(TransferTask &task)
         QTemporaryFile temp("mdupload.XXXXXX.wav");
         temp.open();
 
-        int res = QProcess::execute("ffmpeg", {"-i", filename, "-y", "-ar", "44100", "-ac", "2", "-c:a", "pcm_s16le", temp.fileName()});
+        int res = -1;
+
+        if (filename.endsWith(".oma")) {
+            // Assume ATRAC3 audio for OMA files, and just remux using ffmpeg
+            // (TODO: parse header properly and deal with non-ATRAC3 data)
+            res = QProcess::execute("ffmpeg", {"-i", filename, "-y", "-c:a", "copy", temp.fileName()});
+        } else {
+            res = QProcess::execute("ffmpeg", {"-i", filename, "-y", "-ar", "44100", "-ac", "2", "-c:a", "pcm_s16le", temp.fileName()});
+        }
+
         if (res != 0) {
             // temp will be auto-removed here
             task.finish(false, QString("ffmpeg exited with status %1").arg(res));
