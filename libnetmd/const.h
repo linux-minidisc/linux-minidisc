@@ -85,4 +85,9 @@
 #define NETMD_DATA_BLOCK_SIZE_LP2 384
 #define NETMD_DATA_BLOCK_SIZE_LP4 192
 
+/**
+   NetMD disc and track title responses' header size
+ */
+#define NETMD_TITLE_RESPONSE_HEADER_SIZE 25
+
 #endif

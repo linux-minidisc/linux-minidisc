@@ -23,7 +23,10 @@
  */
 
 #include <unistd.h>
+#include <glib.h>
+#include <stdbool.h>
 
+#include "kataconv.h"
 #include "libnetmd.h"
 #include "utils.h"
 
@@ -95,12 +98,18 @@ static unsigned char* sendcommand(netmd_dev_handle* devh, unsigned char* str, co
     return buf;
 }
 
-static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
+static int request_disc_title_raw(netmd_dev_handle* dev, char* buffer, size_t size, bool wide_chars)
 {
     int ret = -1;
-    size_t title_size = 0;
+    size_t title_response_size = 0;
+
+    unsigned char encoding = 0x00;
+    if (wide_chars) {
+        encoding = 0x01;
+    }
+
     unsigned char title_request[] = {0x00, 0x18, 0x06, 0x02, 0x20, 0x18,
-                                     0x01, 0x00, 0x00, 0x30, 0x00, 0xa,
+                                     0x01, 0x00, encoding, 0x30, 0x00, 0x0a,
                                      0x00, 0xff, 0x00, 0x00, 0x00, 0x00,
                                      0x00};
     unsigned char title[255];
@@ -108,27 +117,101 @@ static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
     ret = netmd_exch_message(dev, title_request, 0x13, title);
     if(ret < 0)
     {
-        fprintf(stderr, "request_disc_title: bad ret code, returning early\n");
+        fprintf(stderr, "request_disc_title_raw: bad ret code, returning early\n");
         return 0;
     }
 
-    title_size = (size_t)ret;
+    title_response_size = (size_t)ret;
 
-    if(title_size == 0 || title_size == 0x13)
+    if(title_response_size == 0 || title_response_size == 0x13)
         return -1; /* bail early somethings wrong */
 
-    if((title_size - 25) >= size)
+    const char *title_text = title + NETMD_TITLE_RESPONSE_HEADER_SIZE;
+    size_t title_size = title_response_size - NETMD_TITLE_RESPONSE_HEADER_SIZE;
+
+    if(title_size >= size)
     {
-        printf("request_disc_title: title too large for buffer\n");
-    }
-    else
-    {
-        memset(buffer, 0, size);
-        memcpy(buffer, (title + 25), title_size - 25);
-        buffer[title_size - 25] = 0;
+        printf("request_disc_title_raw: title too large for buffer\n");
+        return -1;
     }
 
-    return (int)title_size - 25;
+    memset(buffer, 0, size);
+    memcpy(buffer, title_text, title_size);
+
+    return title_response_size;
+}
+
+static int request_disc_title(netmd_dev_handle* dev, char* buffer, size_t size)
+{
+    int ret = -1;
+    size_t title_response_size = 0;
+    size_t title_text_size = 0;
+    char title[255];
+    GError * err = NULL;
+
+    // request the narrow (JIS X0201) disc title
+    ret = request_disc_title_raw(dev, title, size, false);
+    if(ret < 0)
+    {
+        return 0;
+    }
+
+    title_response_size = (size_t)ret;
+
+    // NOTE: request_disc_title returns the length of the entire response,
+    // header intact, not just the title string itself.
+    title_text_size = title_response_size - NETMD_TITLE_RESPONSE_HEADER_SIZE;
+
+    char * decoded_title_text;
+
+    // if the narrow title is zero-length, request the wide (Shift JIS) disc title
+    if (title_text_size == 0) {
+        ret = request_disc_title_raw(dev, title, size, true);
+        if(ret < 0)
+        {
+            return 0;
+        }
+
+        title_response_size = (size_t)ret;
+
+        // NOTE: request_disc_title returns the length of the entire response,
+        // header intact, not just the title string itself.
+        title_text_size = title_response_size - NETMD_TITLE_RESPONSE_HEADER_SIZE;
+
+        // convert the Shift JIS disc title to UTF-8
+        decoded_title_text = g_convert(title, title_text_size, "UTF-8", "SHIFT_JIS", NULL, NULL, &err);
+
+        if(err)
+        {
+            printf("request_disc_title: title couldn't be converted from SHIFT_JIS to UTF-8: %s\n", err->message);
+            return -1;
+        }
+    } else {
+        // convert the JIS X0201 disc title to UTF-8
+        decoded_title_text = g_convert(title, title_text_size, "UTF-8", "JIS_X0201", NULL, NULL, &err);
+
+        if(err)
+        {
+            printf("request_disc_title: title couldn't be converted from JIS_X0201 to UTF-8: %s\n", err->message);
+            return -1;
+        }
+
+        kata_half_to_full((uint8_t*)decoded_title_text);
+    }
+
+    size_t decoded_title_size = strlen(decoded_title_text);
+
+    if(decoded_title_size >= size)
+    {
+        printf("request_disc_title: title too large for buffer\n");
+        return -1;
+    }
+
+    memset(buffer, 0, size);
+    memcpy(buffer, decoded_title_text, decoded_title_size);
+    g_free(decoded_title_text);
+
+    return title_response_size;
 }
 
 int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct netmd_track* buffer)
@@ -158,12 +241,18 @@ int netmd_request_track_time(netmd_dev_handle* dev, const uint16_t track, struct
     return 1;
 }
 
-int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+int netmd_set_title_raw(netmd_dev_handle* dev, const uint16_t track, const char* const buffer, bool wide_chars)
 {
     int ret = 1;
+
+    unsigned char encoding = 0x02;
+    if (wide_chars) {
+        encoding = 0x03;
+    }
+
     unsigned char *title_request = NULL;
     unsigned char title_header[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
-                                    0x02, 0x00, 0x00, 0x30, 0x00, 0x0a,
+                                    encoding, 0x00, 0x00, 0x30, 0x00, 0x0a,
                                     0x00, 0x50, 0x00, 0x00, 0x0a, 0x00,
                                     0x00, 0x00, 0x0d};
     unsigned char reply[255];
@@ -172,11 +261,12 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     int oldsize;
 
     /* the title update command wants to now how many bytes to replace */
-    oldsize = netmd_request_title(dev, track, (char *)reply, sizeof(reply));
+    oldsize = netmd_request_title_raw(dev, track, (char *)reply, sizeof(reply), wide_chars);
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
     size = strlen(buffer);
+
     title_request = malloc(sizeof(char) * (0x15 + size));
     memcpy(title_request, title_header, 0x15);
     memcpy((title_request + 0x15), buffer, size);
@@ -187,13 +277,102 @@ int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* con
     title_request[20] = oldsize & 0xff;
 
     ret = netmd_exch_message(dev, title_request, 0x15 + size, reply);
+    free(title_request);
+
     if(ret < 0)
     {
         fprintf(stderr, "bad ret code, returning early\n");
         return 0;
     }
 
-    free(title_request);
+    return 1;
+}
+
+int netmd_set_title_narrow(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+{
+    int ret = 1;
+    size_t size = strlen(buffer);
+    GError * err = NULL;
+
+    // make a copy of the title to try turning into JIS X0201
+    char * halfwidth_converted_title_text[255];
+    strncpy((char *)halfwidth_converted_title_text, buffer, size);
+    kata_full_to_half((uint8_t*)halfwidth_converted_title_text);
+
+    char * encoded_title_text = g_convert((const char*)halfwidth_converted_title_text, size, "JIS_X0201", "UTF-8", NULL, NULL, &err);
+
+    if(err)
+    {
+        printf("netmd_set_title_narrow: title couldn't be converted from UTF-8 to JIS_X0201: '%s'\n", err->message);
+        return -1;
+    }
+
+    ret = netmd_set_title_raw(dev, track, encoded_title_text, false);
+    g_free(encoded_title_text);
+
+    if(ret < 1)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int netmd_set_title_wide(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+{
+    int ret = 1;
+    size_t size = strlen(buffer);
+    GError * err = NULL;
+
+    char * encoded_title_text = g_convert(buffer, size, "SHIFT_JIS", "UTF-8", NULL, NULL, &err);
+
+    if(err)
+    {
+        printf("netmd_set_title_wide: title couldn't be converted from UTF-8 to SHIFT_JIS: '%s'\n", err->message);
+        return -1;
+    }
+
+    ret = netmd_set_title_raw(dev, track, encoded_title_text, true);
+    g_free(encoded_title_text);
+
+    if(ret < 1)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int netmd_set_title(netmd_dev_handle* dev, const uint16_t track, const char* const buffer)
+{
+    int ret = 1;
+    int ret_secondary = 1;
+    const char * blank_title = "";
+
+    // first, try setting the narrow title
+    ret = netmd_set_title_narrow(dev, track, buffer);
+
+    // if we're successful, blank out the wide title
+    if (ret == 1) {
+        ret_secondary = netmd_set_title_wide(dev, track, blank_title);
+    }
+    // if we can't set the narrow title, try wide
+    else if(ret == -1)
+    {
+        ret = netmd_set_title_wide(dev, track, buffer);
+
+        // if that works, blank out the narrow title
+        if (ret == 1) {
+            ret_secondary = netmd_set_title_narrow(dev, track, blank_title);
+        }
+    }
+
+    // finally, massage the main return code
+    if(ret < 1)
+    {
+        return 0;
+    }
+
     return 1;
 }
 
@@ -462,18 +641,24 @@ int netmd_create_group(netmd_dev_handle* dev, minidisc* md, char* name)
     return 0;
 }
 
-int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length)
+int netmd_set_disc_title_raw(netmd_dev_handle* dev, char* title, size_t title_length, bool wide_chars)
 {
     unsigned char *request, *p;
+
+    unsigned char encoding = 0x00;
+    if (wide_chars) {
+        encoding = 0x01;
+    }
+
     unsigned char write_req[] = {0x00, 0x18, 0x07, 0x02, 0x20, 0x18,
-                                 0x01, 0x00, 0x00, 0x30, 0x00, 0x0a,
+                                 0x01, 0x00, encoding, 0x30, 0x00, 0x0a,
                                  0x00, 0x50, 0x00, 0x00};
     unsigned char reply[256];
     int result;
     int oldsize;
 
     /* the title update command wants to now how many bytes to replace */
-    oldsize = request_disc_title(dev, (char *)reply, sizeof(reply));
+    oldsize = request_disc_title_raw(dev, (char *)reply, sizeof(reply), wide_chars);
     if(oldsize == -1)
         oldsize = 0; /* Reading failed -> no title at all, replace 0 bytes */
 
@@ -488,6 +673,78 @@ int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length
     memcpy(p, title, title_length);
 
     result = netmd_exch_message(dev, request, 0x15 + title_length, reply);
+    free(request);
+
+    return result;
+}
+
+int netmd_set_disc_title_narrow(netmd_dev_handle* dev, char* title, size_t title_length)
+{
+    int result;
+    GError * err = NULL;
+
+    // make a copy of the title to try turning into JIS X0201
+    char * halfwidth_converted_title_text[255];
+    strncpy((char *)halfwidth_converted_title_text, title, title_length);
+    kata_full_to_half((uint8_t*)halfwidth_converted_title_text);
+
+    char * encoded_title_text = g_convert((const char*)halfwidth_converted_title_text, title_length, "JIS_X0201", "UTF-8", NULL, NULL, &err);
+
+    if(err)
+    {
+        printf("netmd_set_disc_title_narrow: title couldn't be converted from UTF-8 to JIS_X0201: '%s'\n", err->message);
+        return -1;
+    }
+
+    result = netmd_set_disc_title_raw(dev, encoded_title_text, title_length, false);
+    g_free(encoded_title_text);
+
+    return result;
+}
+
+int netmd_set_disc_title_wide(netmd_dev_handle* dev, char* title, size_t title_length)
+{
+    int result;
+    GError * err = NULL;
+
+    char * encoded_title_text = g_convert(title, title_length, "SHIFT_JIS", "UTF-8", NULL, NULL, &err);
+
+    if(err)
+    {
+        printf("netmd_set_disc_title_wide: title couldn't be converted from UTF-8 to SHIFT_JIS: '%s'\n", err->message);
+        return -1;
+    }
+
+    result = netmd_set_disc_title_raw(dev, encoded_title_text, title_length, true);
+    g_free(encoded_title_text);
+
+    return result;
+}
+
+int netmd_set_disc_title(netmd_dev_handle* dev, char* title, size_t title_length)
+{
+    int result;
+    int result_secondary;
+    char * blank_title = "";
+
+    // first, try setting the narrow title
+    result = netmd_set_disc_title_narrow(dev, title, title_length);
+
+    // if we're successful, blank out the wide title
+    if (result >= 0) {
+        result_secondary = netmd_set_disc_title_wide(dev, blank_title, 0);
+    }
+    // if we can't set the narrow title, try wide
+    else if(result == -1)
+    {
+        result = netmd_set_disc_title_wide(dev, title, title_length);
+
+        // if that works, blank out the narrow title
+        if (result >= 0) {
+            result_secondary = netmd_set_disc_title_narrow(dev, blank_title, 0);
+        }
+    }
+
     return result;
 }
 
