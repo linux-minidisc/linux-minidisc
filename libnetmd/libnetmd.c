@@ -812,7 +812,7 @@ char* netmd_generate_disc_header(minidisc* md, char* header, size_t header_lengt
     int result;
 
     position = header;
-    remaining = header_length - 1;
+    remaining = header_length;
 
     if (md->groups[0].start == 0)
     {
@@ -884,6 +884,7 @@ int netmd_write_disc_header(netmd_dev_handle* devh, minidisc* md)
 
     ret = netmd_exch_message(devh, request, request_size, reply);
     free(request);
+    free(header);
 
     return ret;
 }
