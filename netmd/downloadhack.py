@@ -68,15 +68,15 @@ def DownloadHack(md_iface):
     try:
         md_iface.disableNewTrackProtection(1)
     except libnetmd.NetMDNotImplemented:
-        print "Can't set device to non-protecting"
+        print("Can't set device to non-protecting")
     trk = MDTrack()
     md_session = libnetmd.MDSession(md_iface, EKBopensource())
 
     (track, uuid, ccid) = md_session.downloadtrack(trk)
 
-    print 'Track:', track
-    print "UUID:",''.join(["%02x"%ord(i) for i in uuid])
-    print "Confirmed Content ID:",''.join(["%02x"%ord(i) for i in ccid])
+    print('Track:', track)
+    print("UUID:",''.join(["%02x"%ord(i) for i in uuid]))
+    print("Confirmed Content ID:",''.join(["%02x"%ord(i) for i in ccid]))
     md_session.close()
 
 if __name__ == '__main__':
