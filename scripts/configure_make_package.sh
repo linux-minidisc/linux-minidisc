@@ -43,7 +43,10 @@ case "$BUILD_TYPE" in
                 export CXXFLAGS="$CXXFLAGS $BUILD_TYPE_CFLAGS"
             fi
 
-            build_and_package -Dtarget_os=windows --cross-file "scripts/mingw-cross-meson/$BUILD_TYPE_HOST.txt"
+            # Added "-Dwerror=false" temporarily for Qt error:
+            # error: 'uint qHash(const QKeySequence&, uint)' redeclared without
+            # dllimport attribute: previous dllimport ignored [-Werror=attributes]
+            build_and_package -Dtarget_os=windows --cross-file "scripts/mingw-cross-meson/$BUILD_TYPE_HOST.txt" -Dwerror=false
         else
             export INCEPTION=running-in-docker
             docker run \
