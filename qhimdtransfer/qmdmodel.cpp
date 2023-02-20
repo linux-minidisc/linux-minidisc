@@ -293,12 +293,13 @@ QString QHiMDTracksModel::open(TransferTask &task, QMDDevice * device)
         ret = hdev->open();
     }
 
-    if(!ret.isEmpty())
+    if (!ret.isEmpty()) {
         close();
-
-    for (int i=0; i < hdev->trackCount(); i++) {
-        allTracks.append(QHiMDTrack(hdev->deviceHandle(), i));
-        task.progress((float)i / (float)hdev->trackCount());
+    } else {
+        for (int i=0; i < hdev->trackCount(); i++) {
+            allTracks.append(QHiMDTrack(hdev->deviceHandle(), i));
+            task.progress((float)i / (float)hdev->trackCount());
+        }
     }
 
     endResetModel();	/* inform views that the model contents changed */
