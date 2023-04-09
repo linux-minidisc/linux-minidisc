@@ -328,7 +328,7 @@ int himd_writemp3(struct himd * h, const char *filepath, const char *title, cons
     memset(&fragment.key[0], 0, 8); /* use zero key on mp3 files */
     fragment.firstframe = 0;
     fragment.lastframe  = nframes;
-    fragment.fragtype   = 1;
+    fragment.fragtype   = 0;
     fragment.nextfrag   = 0;
 
     idx_frag  = himd_add_fragment_info(h, &fragment, &status);
