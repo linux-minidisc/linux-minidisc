@@ -149,12 +149,12 @@ gint write_blocks(struct mad_stream *stream, struct himd_writestream *write_stre
 	mad_timer_add(&mad_timer, header.duration);
 
 	if(firsttime) {
-            bmpegvers =     mpegvers;
-            bmpeglayer =    mpeglayer;
-            bmpegbitrate =  mpegbitrate;
-            bmpegsamprate = mpegsamprate;
-            bmpegchmode =   mpegchmode;
-            bmpegpreemph =  mpegpreemph;
+            mpegvers =     bmpegvers;
+            mpeglayer =    bmpeglayer;
+            mpegbitrate =  bmpegbitrate;
+            mpegsamprate = bmpegsamprate;
+            mpegchmode =   bmpegchmode;
+            mpegpreemph =  bmpegpreemph;
 	    firsttime = FALSE;
 	} else {
 	    if(bmpegvers != mpegvers) {
