@@ -171,7 +171,7 @@ static void setfrag(struct fraginfo *f, unsigned char * fragbuffer)
   setbeword16(fragbuffer+10, f->lastblock);
   fragbuffer[12] = f->firstframe;
   fragbuffer[13] = f->lastframe;
-  setbeword16(fragbuffer+14,f->nextfrag);
+  setbeword16(fragbuffer+14, (f->nextfrag) | (f->fragtype << 12));
 }
 
 int himd_get_free_trackindex(struct himd * himd)
