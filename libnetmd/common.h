@@ -1,7 +1,7 @@
 #ifndef LIBNETMD_COMMON_H
 #define LIBNETMD_COMMON_H
 
-#include <libusb.h>
+#include <libusb-1.0/libusb.h>
 
 /**
    Typedef that nearly all netmd_* functions use to identify the USB connection

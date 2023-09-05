@@ -8,3 +8,4 @@ Makefile*
 qtc-gdbmacros
 /.qmake.stash
 /qhimdtransfer/moc_predefs.h
+basictools/himddiskid

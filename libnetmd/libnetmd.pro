@@ -8,5 +8,5 @@ HEADERS += common.h const.h error.h libnetmd.h log.h netmd_dev.h playercontrol.h
 SOURCES += common.c error.c libnetmd.c log.c netmd_dev.c playercontrol.c secure.c trackinformation.c utils.c
 
 include(../build/libgcrypt.pri)
-include(../build/libusb.pri)
+# include(../build/libusb.pri)
 include(../build/common.pri)

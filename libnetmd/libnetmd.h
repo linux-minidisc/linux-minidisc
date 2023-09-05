@@ -32,7 +32,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#include <libusb.h>
+#include <libusb-1.0/libusb.h>
 
 #include "const.h"
 #include "error.h"
