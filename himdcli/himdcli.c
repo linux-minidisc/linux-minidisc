@@ -78,7 +78,7 @@ void himd_trackdump(struct himd * himd, int verbose)
         if(himd_get_track_info(himd, i, &t, NULL)  >= 0)
         {
             // TODO: malloc name in case of long title
-            char *title, *artist, *album, name[255], time[12];
+            char *title, *artist, *album, name[255], time[24];
             const char *codec;
             json_object* track = json_object_new_object();
             title = get_locale_str(himd, t.title);
@@ -154,7 +154,7 @@ void himd_trackdump(struct himd * himd, int verbose)
             }
         }
     }
-    char time[16];
+    char time[24];
     sprintf(time, "%02d:%02d:%02d.00", recordedTime/3600, (recordedTime % 3600)/60, recordedTime % 60);
     json_object_object_add(json, "recordedTime", json_object_new_string(time));
     json_object_object_add(json, "totalTime", json_object_new_string(time));
