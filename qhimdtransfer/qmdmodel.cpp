@@ -1,5 +1,6 @@
 #include <QFont>
 #include <QFontMetrics>
+#include <QtGlobal>
 #include <qmdmodel.h>
 
 enum hcolumnum {
@@ -26,11 +27,19 @@ QVariant QNetMDTracksModel::headerData(int section, Qt::Orientation orientation,
         switch((ncolumnum)section)
         {
             case CoId:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
                 return QSize(met.horizontalAdvance("9999")+5, 0);
+#else
+                return QSize(met.width("9999")+5, 0);
+#endif
             case CoGroup:
             case CoTitle:
             case CoLength:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
                 return QSize(met.horizontalAdvance("9:99:99"), 0);
+#else
+                return QSize(met.width("9:99:99"), 0);
+#endif
             case CoCodec:
             case CoUploadable:
                 /* Really use the header for the metric in these columns,
@@ -175,20 +184,32 @@ QVariant QHiMDTracksModel::headerData(int section, Qt::Orientation orientation, 
         switch((hcolumnum)section)
         {
             case ColId:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
                 return QSize(met.horizontalAdvance("9999")+5, 0);
+#else
+                return QSize(met.width("9999")+5, 0);
+#endif
             case ColTitle:
             case ColArtist:
             case ColAlbum:
                 return QSize(25*met.averageCharWidth(), 0);
             case ColLength:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
                 return QSize(met.horizontalAdvance("9:99:99"), 0);
+#else
+                return QSize(met.width("9:99:99"), 0);
+#endif
             case ColCodec:
             case ColUploadable:
                 /* Really use the header for the metric in these columns,
                    contents will be shorter */
                 return QAbstractListModel::headerData(section,orientation,role);
             case ColRecDate:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
                 return QSize(met.horizontalAdvance("yyyy.MM.dd hh:mm:ss"), 0);
+#else
+                return QSize(met.width("yyyy.MM.dd hh:mm:ss"), 0);
+#endif
         }
     }
 
